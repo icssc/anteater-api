@@ -29,7 +29,10 @@ app.doc("/openapi.json", {
     { name: "Other" },
   ],
 });
-app.get("/docs", apiReference({ spec: { url: "/openapi.json" } }));
+app.get("/docs", (c) => {
+  return c.redirect("/reference");
+});
+app.get("/reference", apiReference({ spec: { url: "/openapi.json" } }));
 app.onError((err, c) =>
   c.json<ErrorSchema>(
     { ok: false, message: err.message.replaceAll(/"/g, "'") },
