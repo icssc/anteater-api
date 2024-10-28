@@ -3,5 +3,6 @@ export * from "./courses";
 export * from "./enrollment-history";
 export * from "./grades";
 export * from "./instructors";
+export * from "./search";
 export * from "./websoc";
 export * from "./week";

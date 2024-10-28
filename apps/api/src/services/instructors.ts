@@ -1,5 +1,6 @@
 import type { coursePreviewSchema, instructorSchema, instructorsQuerySchema } from "$schema";
 import type { database } from "@packages/db";
+import type { SQL } from "@packages/db/drizzle";
 import { and, eq, ilike, inArray, ne, sql } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
@@ -11,6 +12,7 @@ import {
   websocSection,
   websocSectionToInstructor,
 } from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
@@ -58,58 +60,18 @@ function transformMetaRows(rows: InstructorMetaRow[]) {
 export class InstructorsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getInstructorByUCInetID(
-    ucinetid: string,
-  ): Promise<z.infer<typeof instructorSchema> | null> {
-    if (ucinetid === "student") return null;
-    const [row] = await this.db
-      .select()
-      .from(instructor)
-      .where(and(eq(instructor.ucinetid, ucinetid)));
-    if (!row) return null;
-    const metaRows = await this.db
-      .select({
-        shortenedName: instructorToWebsocInstructor.websocInstructorName,
-        term: { year: websocCourse.year, quarter: websocCourse.quarter },
-        course: {
-          id: course.id,
-          title: course.title,
-          department: course.department,
-          courseNumber: course.courseNumber,
-        },
-      })
-      .from(instructorToWebsocInstructor)
-      .innerJoin(
-        websocInstructor,
-        eq(websocInstructor.name, instructorToWebsocInstructor.websocInstructorName),
-      )
-      .innerJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
-      .innerJoin(websocSection, eq(websocSection.id, websocSectionToInstructor.sectionId))
-      .innerJoin(websocCourse, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(
-        course,
-        and(
-          eq(course.department, websocCourse.deptCode),
-          eq(course.courseNumber, websocCourse.courseNumber),
-        ),
-      )
-      .where(eq(instructorToWebsocInstructor.instructorUcinetid, row.ucinetid));
-    return {
-      ...row,
-      ...transformMetaRows(metaRows),
-    };
-  }
-
-  async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
+  async getInstructorsRaw(input: {
+    where?: SQL;
+    offset?: number;
+    limit?: number;
+  }): Promise<z.infer<typeof instructorSchema>[]> {
+    const { where, offset, limit } = input;
     const rows = await this.db
       .select()
       .from(instructor)
-      .where(buildQuery(input))
-      .offset(input.skip)
-      .limit(input.take)
+      .where(where)
+      .offset(offset ?? 0)
+      .limit(limit ?? 1)
       .orderBy(instructor.ucinetid)
       .then((rows) =>
         rows.reduce(
@@ -164,5 +126,23 @@ export class InstructorsService {
       ...row,
       ...transformMetaRows(metaRows.get(ucinetid) ?? []),
     }));
+  }
+
+  async getInstructorByUCInetID(
+    ucinetid: string,
+  ): Promise<z.infer<typeof instructorSchema> | null> {
+    return orNull(
+      await this.getInstructorsRaw({
+        where: and(eq(instructor.ucinetid, ucinetid), ne(instructor.ucinetid, "student")),
+      }).then((x) => x[0]),
+    );
+  }
+
+  async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
+    return this.getInstructorsRaw({
+      where: buildQuery(input),
+      offset: input.skip,
+      limit: input.take,
+    });
   }
 }

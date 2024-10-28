@@ -15,6 +15,13 @@
       "when": 1730094786942,
       "tag": "0001_fix_gen_course_id",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1730237796858,
+      "tag": "0002_search_indexes",
+      "breakpoints": true
     }
   ]
 }

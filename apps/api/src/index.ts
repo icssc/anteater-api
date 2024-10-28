@@ -38,12 +38,12 @@ app.doc("/openapi.json", {
     {
       name: "Grades",
       description:
-        "Historical grade data for UCI classes, sourced via California Public Records Act (PRA) requests. Plus / minus data not available. Data for sections with less than 10 students not available.",
+        "Historical grade data for UCI classes, sourced via California Public Records Act (CPRA) requests. Plus / minus data not available. Data for sections with less than 10 students not available.",
     },
     {
       name: "Courses",
       description:
-        "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog, and WebSoc.",
+        "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog,and WebSoc.",
     },
     {
       name: "Enrollment History",
@@ -51,7 +51,7 @@ app.doc("/openapi.json", {
     },
     {
       name: "Instructors",
-      description: "Instructor data, enriched with course data.",
+      description: "Instructor data enriched with course data.",
     },
     { name: "Calendar", description: "Core calendar dates and current week." },
     { name: "Other" },

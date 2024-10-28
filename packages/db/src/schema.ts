@@ -482,53 +482,84 @@ export const larcSection = pgTable(
 
 // Course/Instructor tables
 
-export const course = pgTable("course", {
-  id: varchar("id").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
-  department: varchar("department").notNull(),
-  courseNumber: varchar("course_number").notNull(),
-  courseNumeric: integer("course_numeric")
-    .notNull()
-    .generatedAlwaysAs(
-      (): SQL =>
-        sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
+export const course = pgTable(
+  "course",
+  {
+    id: varchar("id").primaryKey(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    department: varchar("department").notNull(),
+    departmentAlias: varchar("department_alias"),
+    courseNumber: varchar("course_number").notNull(),
+    courseNumeric: integer("course_numeric")
+      .notNull()
+      .generatedAlwaysAs(
+        (): SQL =>
+          sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
+      ),
+    school: varchar("school").notNull(),
+    title: varchar("title").notNull(),
+    courseLevel: courseLevel("course_level").notNull(),
+    minUnits: decimal("min_units", { precision: 4, scale: 2 }).notNull(),
+    maxUnits: decimal("max_units", { precision: 4, scale: 2 }).notNull(),
+    description: text("description").notNull(),
+    departmentName: varchar("department_name").notNull(),
+    prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
+    prerequisiteText: text("prerequisite_text").notNull(),
+    repeatability: varchar("repeatability").notNull(),
+    gradingOption: varchar("grading_option").notNull(),
+    concurrent: varchar("concurrent").notNull(),
+    sameAs: varchar("same_as").notNull(),
+    restriction: text("restriction").notNull(),
+    overlap: text("overlap").notNull(),
+    corequisites: text("corequisites").notNull(),
+    isGE1A: boolean("is_ge_1a").notNull(),
+    isGE1B: boolean("is_ge_1b").notNull(),
+    isGE2: boolean("is_ge_2").notNull(),
+    isGE3: boolean("is_ge_3").notNull(),
+    isGE4: boolean("is_ge_4").notNull(),
+    isGE5A: boolean("is_ge_5a").notNull(),
+    isGE5B: boolean("is_ge_5b").notNull(),
+    isGE6: boolean("is_ge_6").notNull(),
+    isGE7: boolean("is_ge_7").notNull(),
+    isGE8: boolean("is_ge_8").notNull(),
+    geText: varchar("ge_text").notNull(),
+  },
+  (table) => ({
+    searchIndex: index("course_search_index").using(
+      "gin",
+      sql`(
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.department}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.departmentAlias}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumber}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumeric}::TEXT, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'C') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
+)`,
     ),
-  school: varchar("school").notNull(),
-  title: varchar("title").notNull(),
-  courseLevel: courseLevel("course_level").notNull(),
-  minUnits: decimal("min_units", { precision: 4, scale: 2 }).notNull(),
-  maxUnits: decimal("max_units", { precision: 4, scale: 2 }).notNull(),
-  description: text("description").notNull(),
-  departmentName: varchar("department_name").notNull(),
-  prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
-  prerequisiteText: text("prerequisite_text").notNull(),
-  repeatability: varchar("repeatability").notNull(),
-  gradingOption: varchar("grading_option").notNull(),
-  concurrent: varchar("concurrent").notNull(),
-  sameAs: varchar("same_as").notNull(),
-  restriction: text("restriction").notNull(),
-  overlap: text("overlap").notNull(),
-  corequisites: text("corequisites").notNull(),
-  isGE1A: boolean("is_ge_1a").notNull(),
-  isGE1B: boolean("is_ge_1b").notNull(),
-  isGE2: boolean("is_ge_2").notNull(),
-  isGE3: boolean("is_ge_3").notNull(),
-  isGE4: boolean("is_ge_4").notNull(),
-  isGE5A: boolean("is_ge_5a").notNull(),
-  isGE5B: boolean("is_ge_5b").notNull(),
-  isGE6: boolean("is_ge_6").notNull(),
-  isGE7: boolean("is_ge_7").notNull(),
-  isGE8: boolean("is_ge_8").notNull(),
-  geText: varchar("ge_text").notNull(),
-});
+  }),
+);
 
-export const instructor = pgTable("instructor", {
-  ucinetid: varchar("ucinetid").primaryKey(),
-  name: varchar("name").notNull(),
-  title: varchar("title").notNull(),
-  email: varchar("email").notNull(),
-  department: varchar("department").notNull(),
-});
+export const instructor = pgTable(
+  "instructor",
+  {
+    ucinetid: varchar("ucinetid").primaryKey(),
+    name: varchar("name").notNull(),
+    title: varchar("title").notNull(),
+    email: varchar("email").notNull(),
+    department: varchar("department").notNull(),
+  },
+  (table) => ({
+    searchIndex: index("instructor_search_index").using(
+      "gin",
+      sql`(
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.ucinetid}, '')), 'A') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.name}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'B')
+)`,
+    ),
+  }),
+);
 
 export const prerequisite = pgTable(
   "prerequisite",

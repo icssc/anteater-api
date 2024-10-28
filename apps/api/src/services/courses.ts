@@ -32,6 +32,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
@@ -205,73 +206,21 @@ function transformMetaRows(rows: CourseMetaRow[]) {
 export class CoursesService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
-    const dependency = aliasedTable(prerequisite, "dependency");
-    const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
-    const dependencyCourse = aliasedTable(course, "dependency_course");
-    const [row] = await this.db
-      .select()
-      .from(course)
-      .where(and(eq(course.id, id)));
-    if (!row) return null;
-    const meta = await this.db
-      .select({
-        prerequisite: {
-          id: prerequisiteCourse.id,
-          title: prerequisiteCourse.title,
-          department: prerequisiteCourse.department,
-          courseNumber: prerequisiteCourse.courseNumber,
-        },
-        dependency: {
-          id: dependencyCourse.id,
-          title: dependencyCourse.title,
-          department: dependencyCourse.department,
-          courseNumber: dependencyCourse.courseNumber,
-        },
-        term: {
-          year: websocCourse.year,
-          quarter: websocCourse.quarter,
-        },
-        websocInstructor: websocInstructor.name,
-        instructor: getTableColumns(instructor),
-      })
-      .from(course)
-      .innerJoin(prerequisite, eq(prerequisite.dependencyId, course.id))
-      .innerJoin(prerequisiteCourse, eq(prerequisiteCourse.id, prerequisite.prerequisiteId))
-      .innerJoin(dependency, eq(dependency.prerequisiteId, course.id))
-      .innerJoin(dependencyCourse, eq(dependencyCourse.id, dependency.dependencyId))
-      .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
-      .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
-      .innerJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.sectionId, websocSection.id),
-      )
-      .innerJoin(
-        websocInstructor,
-        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
-      )
-      .innerJoin(
-        instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
-      )
-      .rightJoin(
-        instructor,
-        eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
-      )
-      .where(and(eq(course.id, id), ne(instructor.ucinetid, "student")));
-    return transformCourse({ row, ...transformMetaRows(meta) });
-  }
-
-  async getCourses(input: CoursesServiceInput): Promise<z.infer<typeof courseSchema>[]> {
+  async getCoursesRaw(input: {
+    where?: SQL;
+    offset?: number;
+    limit?: number;
+  }): Promise<z.infer<typeof courseSchema>[]> {
+    const { where, offset, limit } = input;
     const dependency = aliasedTable(prerequisite, "dependency");
     const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
     const dependencyCourse = aliasedTable(course, "dependency_course");
     const rows = await this.db
       .select(getTableColumns(course))
       .from(course)
-      .where(buildQuery(input))
-      .offset(input.skip)
-      .limit(input.take)
+      .where(where)
+      .offset(offset ?? 0)
+      .limit(limit ?? 1)
       .orderBy(course.id)
       .then((rows) =>
         rows.reduce(
@@ -339,5 +288,13 @@ export class CoursesService {
     return Array.from(rows.entries()).map(([id, row]) =>
       transformCourse({ row, ...transformMetaRows(metaRows.get(id) ?? []) }),
     );
+  }
+
+  async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
+    return orNull(await this.getCoursesRaw({ where: eq(course.id, id) }).then((x) => x[0]));
+  }
+
+  async getCourses(input: CoursesServiceInput): Promise<z.infer<typeof courseSchema>[]> {
+    return this.getCoursesRaw({ where: buildQuery(input), offset: input.skip, limit: input.take });
   }
 }

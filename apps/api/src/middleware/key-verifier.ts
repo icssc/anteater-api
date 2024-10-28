@@ -16,8 +16,7 @@ export const keyVerifier = createMiddleware<{ Bindings: Bindings }>(async (c, ne
     if (!keyData) throw new HTTPException(401, { message: "Invalid or expired API key" });
     if (keyData._type === "publishable") {
       if (!origin) throw new HTTPException(401, { message: "Origin not provided" });
-      if (!keyData.origins.includes(origin))
-        throw new HTTPException(401, { message: "Invalid origin" });
+      if (!keyData.origins[origin]) throw new HTTPException(401, { message: "Invalid origin" });
     }
   }
   await next();
