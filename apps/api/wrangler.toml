@@ -7,6 +7,7 @@ kv_namespaces = [
 ]
 workers_dev = false
 route = { pattern = "anteaterapi.com", zone_name = "anteaterapi.com", custom_domain = true }
+assets = { directory = "public" }
 
 [vars]
 CF_ENV = "prod"

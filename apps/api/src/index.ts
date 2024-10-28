@@ -32,7 +32,25 @@ app.doc("/openapi.json", {
 app.get("/docs", (c) => {
   return c.redirect("/reference");
 });
-app.get("/reference", apiReference({ spec: { url: "/openapi.json" } }));
+
+const ogTitle = "API Reference | Anteater API";
+const ogDescription = "API Reference for Anteater API, the unified API for UCI related data.";
+app.get(
+  "/reference",
+  apiReference({
+    spec: { url: "/openapi.json" },
+    pageTitle: ogTitle,
+    metaData: {
+      title: ogTitle,
+      description: ogDescription,
+      ogDescription: ogDescription,
+      ogTitle: ogTitle,
+      ogImage: "/og.jpg",
+      twitterCard: "summary_large_image",
+    },
+    favicon: "/favicon.svg",
+  }),
+);
 app.onError((err, c) =>
   c.json<ErrorSchema>(
     { ok: false, message: err.message.replaceAll(/"/g, "'") },
