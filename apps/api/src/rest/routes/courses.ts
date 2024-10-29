@@ -14,27 +14,6 @@ import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
 
-const allCoursesRoute = createRoute({
-  summary: "List all courses",
-  operationId: "allCourses",
-  tags: ["Courses"],
-  method: "get",
-  path: "/all",
-  description: "Retrieves all courses.",
-  responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(courseSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
-
 const courseByIdRoute = createRoute({
   summary: "Retrieve a course",
   operationId: "courseById",
@@ -93,17 +72,6 @@ coursesRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
-
-coursesRouter.openapi(allCoursesRoute, async (c) => {
-  const service = new CoursesService(database(c.env.DB.connectionString));
-  return c.json(
-    {
-      ok: true,
-      data: courseSchema.array().parse(await service.getAllCourses()),
-    },
-    200,
-  );
-});
 
 coursesRouter.openapi(courseByIdRoute, async (c) => {
   const { id } = c.req.valid("param");

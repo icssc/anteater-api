@@ -1,8 +1,8 @@
 import type { coursePreviewSchema, instructorSchema, instructorsQuerySchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, eq, ilike, ne, sql } from "@packages/db/drizzle";
+import { and, eq, ilike, inArray, ne, sql } from "@packages/db/drizzle";
+import type { Term } from "@packages/db/schema";
 import {
-  type Term,
   course,
   instructor,
   instructorToWebsocInstructor,
@@ -11,7 +11,6 @@ import {
   websocSection,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
 import type { z } from "zod";
 
 type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
@@ -109,6 +108,9 @@ export class InstructorsService {
       .select()
       .from(instructor)
       .where(buildQuery(input))
+      .offset(input.skip)
+      .limit(input.take)
+      .orderBy(instructor.ucinetid)
       .then((rows) =>
         rows.reduce(
           (acc, row) => acc.set(row.ucinetid, row),
@@ -147,7 +149,7 @@ export class InstructorsService {
         course,
         eq(course.id, sql`CONCAT(${websocCourse.deptCode},${websocCourse.courseNumber})`),
       )
-      .where(buildQuery(input))
+      .where(inArray(instructor.ucinetid, Array.from(rows.keys())))
       .then((rows) =>
         rows.reduce((acc, row) => {
           if (!row.ucinetid) return acc;
@@ -158,13 +160,9 @@ export class InstructorsService {
           return acc.set(row.ucinetid, [row]);
         }, new Map<string, InstructorMetaRow[]>()),
       );
-    return Array.from(metaRows.entries()).map(([ucinetid, metaRows]) => ({
-      ...getFromMapOrThrow(rows, ucinetid),
-      ...transformMetaRows(metaRows),
+    return Array.from(rows.entries()).map(([ucinetid, row]) => ({
+      ...row,
+      ...transformMetaRows(metaRows.get(ucinetid) ?? []),
     }));
-  }
-
-  async getAllInstructors() {
-    return this.getInstructors({});
   }
 }

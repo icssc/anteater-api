@@ -18,9 +18,5 @@ export const instructorsResolvers = {
       const service = new InstructorsService(db);
       return await service.getInstructors(instructorsQuerySchema.parse(args.query));
     },
-    allInstructors: async (_: unknown, __: unknown, { db }: GraphQLContext) => {
-      const service = new InstructorsService(db);
-      return await service.getAllInstructors();
-    },
   },
 };

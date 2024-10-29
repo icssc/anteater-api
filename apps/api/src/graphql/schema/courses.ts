@@ -45,11 +45,12 @@ input CoursesQuery {
     maxUnits: Float
     descriptionContains: String
     geCategory: String
+    take: Int
+    skip: Int
 }
 
 extend type Query {
     course(id: String!): Course!
     courses(query: CoursesQuery!): [Course!]!
-    allCourses: [Course!]!
 }
 `;

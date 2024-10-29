@@ -216,7 +216,9 @@ export const websocCourse = pgTable(
       .notNull(),
     courseId: varchar("course_id")
       .notNull()
-      .generatedAlwaysAs((): SQL => sql`${websocCourse.deptCode} || ${websocCourse.courseNumber}`),
+      .generatedAlwaysAs(
+        (): SQL => sql`REPLACE(${websocCourse.deptCode}, ' ', '') || ${websocCourse.courseNumber}`,
+      ),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),

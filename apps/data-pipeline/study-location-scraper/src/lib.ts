@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { lt } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import type { Cheerio, CheerioAPI } from "cheerio";
@@ -265,5 +266,6 @@ export async function doScrape(db: ReturnType<typeof database>) {
         target: studyRoomSlot.id,
         set: conflictUpdateSetAllCols(studyRoomSlot),
       });
+    await tx.delete(studyRoomSlot).where(lt(studyRoomSlot.end, new Date()));
   });
 }

@@ -6,16 +6,16 @@ export const instructorsPathSchema = z.object({
     .openapi({ param: { name: "ucinetid", in: "path" } }),
 });
 
-export const instructorsQuerySchema = z
-  .object({
-    nameContains: z.string().optional(),
-    titleContains: z.string().optional(),
-    departmentContains: z.string().optional(),
-  })
-  .refine((x) => Object.keys(x).length > 0, {
-    message:
-      "At least one filter must be provided. To get all instructors, use the /instructors/all REST endpoint or allInstructors GraphQL query.",
-  });
+export const instructorsQuerySchema = z.object({
+  nameContains: z.string().optional(),
+  titleContains: z.string().optional(),
+  departmentContains: z.string().optional(),
+  take: z.coerce
+    .number()
+    .default(100)
+    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+  skip: z.coerce.number().default(0),
+});
 
 export const instructorPreviewSchema = z.object({
   ucinetid: z.string().openapi({ example: "mikes" }),

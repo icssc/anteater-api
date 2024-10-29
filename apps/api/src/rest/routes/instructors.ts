@@ -16,29 +16,6 @@ const instructorsRouter = new OpenAPIHono<{ Bindings: Bindings }>({
   defaultHook,
 });
 
-const allInstructorsRoute = createRoute({
-  summary: "List Instructors",
-  operationId: "allInstructors",
-  tags: ["Instructors"],
-  method: "get",
-  path: "/all",
-  description: "Retrieves all instructors.",
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(instructorSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
-
 const instructorByIdRoute = createRoute({
   summary: "Retrieve a instructor",
   operationId: "instructorById",
@@ -101,17 +78,6 @@ instructorsRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
-
-instructorsRouter.openapi(allInstructorsRoute, async (c) => {
-  const service = new InstructorsService(database(c.env.DB.connectionString));
-  return c.json(
-    {
-      ok: true,
-      data: instructorSchema.array().parse(await service.getAllInstructors()),
-    },
-    200,
-  );
-});
 
 instructorsRouter.openapi(instructorByIdRoute, async (c) => {
   const { ucinetid } = c.req.valid("param");

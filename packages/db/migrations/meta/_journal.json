@@ -8,6 +8,13 @@
       "when": 1729283028285,
       "tag": "0000_init_db",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1730094786942,
+      "tag": "0001_fix_gen_course_id",
+      "breakpoints": true
     }
   ]
 }

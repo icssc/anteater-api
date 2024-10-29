@@ -1,40 +1,37 @@
-import {
-  type coursePreviewSchema,
-  type courseSchema,
-  type coursesQuerySchema,
-  type instructorPreviewSchema,
-  type outputCourseLevels,
-  outputGECategories,
+import type {
+  coursePreviewSchema,
+  courseSchema,
+  coursesQuerySchema,
+  instructorPreviewSchema,
+  outputCourseLevels,
 } from "$schema";
+import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
+import type { SQL } from "@packages/db/drizzle";
 import {
-  type SQL,
   aliasedTable,
   and,
   eq,
   getTableColumns,
   gte,
   ilike,
+  inArray,
   lt,
   lte,
   ne,
 } from "@packages/db/drizzle";
-import {
-  type CourseLevel,
-  type Term,
-  instructor,
-  instructorToWebsocInstructor,
-  websocInstructor,
-} from "@packages/db/schema";
+import type { CourseLevel, Term } from "@packages/db/schema";
 import {
   course,
+  instructor,
+  instructorToWebsocInstructor,
   prerequisite,
   websocCourse,
+  websocInstructor,
   websocSection,
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
-import { getFromMapOrThrow } from "@packages/stdlib";
 import type { z } from "zod";
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
@@ -273,6 +270,9 @@ export class CoursesService {
       .select(getTableColumns(course))
       .from(course)
       .where(buildQuery(input))
+      .offset(input.skip)
+      .limit(input.take)
+      .orderBy(course.id)
       .then((rows) =>
         rows.reduce(
           (acc, row) => acc.set(row.id, row),
@@ -325,7 +325,7 @@ export class CoursesService {
         instructor,
         eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
       )
-      .where(and(buildQuery(input), ne(instructor.ucinetid, "student")))
+      .where(and(inArray(course.id, Array.from(rows.keys())), ne(instructor.ucinetid, "student")))
       .then((rows) =>
         rows.reduce((acc, row) => {
           if (!row.courseId) return acc;
@@ -336,12 +336,8 @@ export class CoursesService {
           return acc.set(row.courseId, [row]);
         }, new Map<string, CourseMetaRow[]>()),
       );
-    return Array.from(metaRows.entries()).map(([id, meta]) =>
-      transformCourse({ row: getFromMapOrThrow(rows, id), ...transformMetaRows(meta) }),
+    return Array.from(rows.entries()).map(([id, row]) =>
+      transformCourse({ row, ...transformMetaRows(metaRows.get(id) ?? []) }),
     );
-  }
-
-  async getAllCourses() {
-    return this.getCourses({});
   }
 }

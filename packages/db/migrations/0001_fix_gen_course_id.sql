@@ -1,0 +1,2 @@
+ALTER TABLE "websoc_course" drop column "course_id";--> statement-breakpoint
+ALTER TABLE "websoc_course" ADD COLUMN "course_id" varchar GENERATED ALWAYS AS (REPLACE("websoc_course"."dept_code", ' ', '') || "websoc_course"."course_number") STORED NOT NULL;

@@ -30,11 +30,12 @@ input InstructorsQuery {
     nameContains: String
     titleContains: String
     departmentContains: String
+    take: Int
+    skip: Int
 }
 
 extend type Query {
     instructor(ucinetid: String!): Instructor!
     instructors(query: InstructorsQuery!): [Instructor!]!
-    allInstructors: [Instructor!]!
 }
 `;
