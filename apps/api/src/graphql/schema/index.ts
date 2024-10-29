@@ -5,6 +5,7 @@ import { enrollmentHistorySchema } from "./enrollment-history";
 import { enums } from "./enums";
 import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
+import { larcSchema } from "./larc";
 import { websocSchema } from "./websoc";
 import { weekSchema } from "./week";
 
@@ -36,4 +37,5 @@ export const typeDefs = mergeTypeDefs([
   instructorsSchema,
   websocSchema,
   weekSchema,
+  larcSchema,
 ]);
