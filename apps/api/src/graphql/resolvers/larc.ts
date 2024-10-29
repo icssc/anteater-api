@@ -8,9 +8,5 @@ export const larcResolvers = {
       const service = new LarcService(db);
       return await service.getLarcSections(larcQuerySchema.parse(args.query));
     },
-    allLarc: async (_: unknown, __: unknown, { db }: GraphQLContext) => {
-      const service = new LarcService(db);
-      return await service.getAllLarcSections();
-    },
   },
 };

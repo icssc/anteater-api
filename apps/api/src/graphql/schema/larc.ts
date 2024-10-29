@@ -19,6 +19,5 @@ input LarcQuery {
 
 extend type Query {
     larc(query: LarcQuery): [LarcSection!]!
-    allLarc: [LarcSection!]!
 }
 `;

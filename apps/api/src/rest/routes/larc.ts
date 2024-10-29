@@ -9,29 +9,6 @@ import { LarcService } from "../../services/larc.ts";
 
 const larcRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
 
-const allLarcSectionsRoute = createRoute({
-  summary: "List all LARC sections",
-  operationId: "allLarc",
-  tags: ["LARC"],
-  method: "get",
-  path: "/all",
-  description: "Retrieves all LARC sections data.",
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(larcSectionSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
-
 const larcSectionsRoute = createRoute({
   summary: "Query LARC sections",
   operationId: "larc",
@@ -62,20 +39,9 @@ const larcSectionsRoute = createRoute({
 
 larcRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }));
 
-larcRouter.openapi(allLarcSectionsRoute, async (c) => {
-  const service = new LarcService(database(c.env.DB.connectionString));
-  return c.json(
-    {
-      ok: true,
-      data: larcSectionSchema.array().parse(await service.getAllLarcSections()),
-    },
-    200,
-  );
-});
-
 larcRouter.openapi(larcSectionsRoute, async (c) => {
   const query = c.req.valid("query");
-  const service = new LarcService(database(c.env.DB.connectionString, { logger: true }));
+  const service = new LarcService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,

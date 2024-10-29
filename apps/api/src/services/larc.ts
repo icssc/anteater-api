@@ -59,8 +59,4 @@ export class LarcService {
 
     return rows;
   }
-
-  async getAllLarcSections() {
-    return await this.getLarcSections({});
-  }
 }
