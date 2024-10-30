@@ -252,10 +252,10 @@ export class CoursesService {
         instructor: getTableColumns(instructor),
       })
       .from(course)
-      .innerJoin(prerequisite, eq(prerequisite.dependencyId, course.id))
-      .innerJoin(prerequisiteCourse, eq(prerequisiteCourse.id, prerequisite.prerequisiteId))
-      .innerJoin(dependency, eq(dependency.prerequisiteId, course.id))
-      .innerJoin(dependencyCourse, eq(dependencyCourse.id, dependency.dependencyId))
+      .fullJoin(prerequisite, eq(prerequisite.dependencyId, course.id))
+      .fullJoin(prerequisiteCourse, eq(prerequisiteCourse.id, prerequisite.prerequisiteId))
+      .fullJoin(dependency, eq(dependency.prerequisiteId, course.id))
+      .fullJoin(dependencyCourse, eq(dependencyCourse.id, dependency.dependencyId))
       .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
       .innerJoin(
