@@ -49,8 +49,6 @@ export class LarcService {
           deptCode: websocCourse.deptCode,
           courseTitle: websocCourse.courseTitle,
           courseNumber: websocCourse.courseNumber,
-          year: websocCourse.year,
-          quarter: websocCourse.quarter,
         },
       })
       .from(larcSection)

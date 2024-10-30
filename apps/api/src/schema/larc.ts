@@ -7,16 +7,14 @@ export const larcQuerySchema = z.object({
   department: z.string().optional().openapi({ example: "I&C SCI" }),
   courseNumber: z.string().optional().openapi({ example: "46" }),
   year: z
-    .string()
+    .string({ message: "Parameter 'year' is required " })
     .regex(/^\d{4}$/, { message: "Invalid year provided" })
-    .optional()
     .openapi({ param: { name: "year", in: "query" }, example: "2024" }),
   quarter: z
     .enum(terms, {
       message:
-        "Parameter 'quarter' must be one of 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
+        "Parameter 'quarter' is required and must be one of 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
     })
-    .optional()
     .openapi({ param: { name: "quarter", in: "query" }, example: "Fall" }),
 });
 
@@ -29,7 +27,5 @@ export const larcSectionSchema = z.object({
     deptCode: z.string().openapi({ example: "I&C SCI" }),
     courseTitle: z.string().openapi({ example: "DATA STRC IMPL&ANLS" }),
     courseNumber: z.string().openapi({ example: "46" }),
-    year: z.string().openapi({ example: "2024" }),
-    quarter: z.string().openapi({ example: "Fall" }),
   }),
 });
