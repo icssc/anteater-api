@@ -20,11 +20,11 @@
   "dependencies": {
     "@biomejs/biome": "1.9.4",
     "dotenv-cli": "7.4.2",
-    "lefthook": "1.7.22",
+    "lefthook": "1.8.2",
     "prettier": "3.3.3",
     "prettier-plugin-packagejson": "2.5.3",
     "prettier-plugin-toml": "2.0.1",
-    "tsx": "4.19.1",
+    "tsx": "4.19.2",
     "typescript": "5.6.3"
   }
 }
