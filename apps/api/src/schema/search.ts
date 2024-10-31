@@ -3,7 +3,7 @@ import { courseSchema } from "./courses.ts";
 import { instructorSchema } from "./instructors.ts";
 
 export const searchQuerySchema = z.object({
-  query: z.string(),
+  query: z.string({ message: "Parameter 'query' is required" }),
   take: z.coerce
     .number()
     .default(100)
