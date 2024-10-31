@@ -6,7 +6,7 @@ import type {
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { asc, desc, inArray, sql } from "@packages/db/drizzle";
+import { inArray, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -57,16 +57,14 @@ export class SearchService {
           rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(course)
-        .where(sql`${COURSES_WEIGHTS} @@ ${query}`)
-        .orderBy((row) => [desc(row.rank), asc(row.id)]),
+        .where(sql`${COURSES_WEIGHTS} @@ ${query}`),
       this.db
         .select({
           id: instructor.ucinetid,
           rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(instructor)
-        .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)
-        .orderBy((row) => [desc(row.rank), asc(row.id)]),
+        .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
     )
       .offset(input.skip)
       .limit(input.take)
@@ -95,18 +93,27 @@ export class SearchService {
           new Map<string, z.infer<typeof instructorSchema>>(),
         ),
       );
-    return Array.from(results.keys()).map((key) =>
-      courses.has(key)
-        ? {
-            type: "course",
-            result: getFromMapOrThrow(courses, key),
-            rank: getFromMapOrThrow(results, key),
-          }
-        : {
-            type: "instructor",
-            result: getFromMapOrThrow(instructors, key),
-            rank: getFromMapOrThrow(results, key),
-          },
-    );
+    return Array.from(results.keys())
+      .map((key) =>
+        courses.has(key)
+          ? {
+              key,
+              type: "course" as const,
+              result: getFromMapOrThrow(courses, key),
+              rank: getFromMapOrThrow(results, key),
+            }
+          : {
+              key,
+              type: "instructor" as const,
+              result: getFromMapOrThrow(instructors, key),
+              rank: getFromMapOrThrow(results, key),
+            },
+      )
+      .toSorted((a, b) => {
+        const rankDiff = b.rank - a.rank;
+        return Math.abs(rankDiff) < Number.EPSILON
+          ? a.key.localeCompare(b.key)
+          : Math.sign(rankDiff);
+      });
   }
 }
