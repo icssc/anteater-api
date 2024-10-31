@@ -660,5 +660,8 @@ export const studyRoomSlot = pgTable(
     end: timestamp("end", { mode: "date" }).notNull(),
     isAvailable: boolean("is_available").notNull(),
   },
-  (table) => [index().on(table.studyRoomId)],
+  (table) => [
+    index().on(table.studyRoomId),
+    uniqueIndex().on(table.studyRoomId, table.start, table.end),
+  ],
 );
