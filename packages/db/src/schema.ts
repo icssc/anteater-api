@@ -30,6 +30,8 @@ export type ConfirmedWebsocSectionMeeting = {
   endTime: HourMinute;
 };
 
+export type FinalExamStatus = "SCHEDULED_FINAL" | "TBA_FINAL" | "NO_FINAL";
+
 export type WebsocSectionMeeting = TBAWebsocSectionMeeting | ConfirmedWebsocSectionMeeting;
 
 export type NoneOrTBAWebsocSectionFinalExam = {
@@ -137,10 +139,6 @@ export const websocStatuses = ["OPEN", "Waitl", "FULL", "NewOnly"] as const;
 export const websocStatus = pgEnum("websoc_status", websocStatuses);
 export type WebsocStatus = (typeof websocStatuses)[number];
 
-export const finalExamStatuses = ["SCHEDULED_FINAL", "TBA_FINAL", "NO_FINAL"] as const;
-export const finalExamStatus = pgEnum("final_exam_status", finalExamStatuses);
-export type FinalExamStatus = (typeof finalExamStatuses)[number];
-
 export const websocSectionTypes = [
   "Act",
   "Col",
@@ -175,9 +173,7 @@ export const websocSchool = pgTable(
     schoolName: varchar("school_name").notNull(),
     schoolComment: text("school_comment").notNull(),
   },
-  (table) => ({
-    idx: uniqueIndex("websoc_school_idx").on(table.year, table.quarter, table.schoolName),
-  }),
+  (table) => [uniqueIndex().on(table.year, table.quarter, table.schoolName)],
 );
 
 export const websocDepartment = pgTable(
@@ -196,15 +192,10 @@ export const websocDepartment = pgTable(
     sectionCodeRangeComments: text("section_code_range_comments").array().notNull(),
     courseNumberRangeComments: text("course_number_range_comments").array().notNull(),
   },
-  (table) => ({
-    schoolIdx: index("school_idx").on(table.schoolId),
-    idx: uniqueIndex("websoc_department_idx").on(
-      table.year,
-      table.quarter,
-      table.schoolId,
-      table.deptCode,
-    ),
-  }),
+  (table) => [
+    index().on(table.schoolId),
+    uniqueIndex().on(table.year, table.quarter, table.schoolId, table.deptCode),
+  ],
 );
 
 export const websocCourse = pgTable(
@@ -245,10 +236,10 @@ export const websocCourse = pgTable(
     isGE7: boolean("is_ge_7").notNull().default(false),
     isGE8: boolean("is_ge_8").notNull().default(false),
   },
-  (table) => ({
-    deptIdx: index("dept_idx").on(table.departmentId),
-    courseIdx: index("websoc_course_course_id_idx").on(table.courseId),
-    idx: uniqueIndex("websoc_course_idx").on(
+  (table) => [
+    index().on(table.departmentId),
+    index().on(table.courseId),
+    uniqueIndex().on(
       table.year,
       table.quarter,
       table.schoolName,
@@ -256,24 +247,19 @@ export const websocCourse = pgTable(
       table.courseNumber,
       table.courseTitle,
     ),
-    ge1AQueryIdx: index("ge_1a_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge1BQueryIdx: index("ge_1b_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge2QueryIdx: index("ge_2_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge3QueryIdx: index("ge_3_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge4QueryIdx: index("ge_4_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge5AQueryIdx: index("ge_5a_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge5BQueryIdx: index("ge_5b_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge6QueryIdx: index("ge_6_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge7QueryIdx: index("ge_7_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge8QueryIdx: index("ge_8_query_idx").on(table.year, table.quarter, table.isGE1A),
-    deptQueryIdx: index("dept_query_idx").on(table.year, table.quarter, table.deptCode),
-    courseQueryIdx: index("course_query_idx").on(
-      table.year,
-      table.quarter,
-      table.deptCode,
-      table.courseNumber,
-    ),
-  }),
+    index().on(table.year, table.quarter, table.isGE1A),
+    index().on(table.year, table.quarter, table.isGE1B),
+    index().on(table.year, table.quarter, table.isGE2),
+    index().on(table.year, table.quarter, table.isGE3),
+    index().on(table.year, table.quarter, table.isGE4),
+    index().on(table.year, table.quarter, table.isGE5A),
+    index().on(table.year, table.quarter, table.isGE5B),
+    index().on(table.year, table.quarter, table.isGE6),
+    index().on(table.year, table.quarter, table.isGE7),
+    index().on(table.year, table.quarter, table.isGE8),
+    index().on(table.year, table.quarter, table.deptCode),
+    index().on(table.year, table.quarter, table.deptCode, table.courseNumber),
+  ],
 );
 
 export const websocSection = pgTable(
@@ -328,10 +314,10 @@ export const websocSection = pgTable(
         (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
       ),
   },
-  (table) => ({
-    courseIdx: index("course_idx").on(table.courseId),
-    idx: uniqueIndex("websoc_section_idx").on(table.year, table.quarter, table.sectionCode),
-  }),
+  (table) => [
+    index().on(table.courseId),
+    uniqueIndex().on(table.year, table.quarter, table.sectionCode),
+  ],
 );
 
 export const websocSectionMeeting = pgTable(
@@ -359,9 +345,7 @@ export const websocSectionMeeting = pgTable(
     meetsSaturday: boolean("meets_saturday"),
     meetsSunday: boolean("meets_sunday"),
   },
-  (table) => ({
-    sectionIdx: index("section_idx").on(table.sectionId),
-  }),
+  (table) => [index().on(table.sectionId)],
 );
 
 export const websocLocation = pgTable(
@@ -372,7 +356,7 @@ export const websocLocation = pgTable(
     building: varchar("building").notNull(),
     room: varchar("room").notNull(),
   },
-  (table) => ({ idx: uniqueIndex("websoc_location_idx").on(table.building, table.room) }),
+  (table) => [uniqueIndex().on(table.building, table.room)],
 );
 
 export const websocInstructor = pgTable("websoc_instructor", {
@@ -391,10 +375,7 @@ export const websocSectionToInstructor = pgTable(
       .references(() => websocInstructor.name)
       .notNull(),
   },
-  (table) => ({
-    sectionIdx: index("websoc_section_to_instructor_section_idx").on(table.sectionId),
-    instructorIdx: index("websoc_section_to_instructor_instructor_idx").on(table.instructorName),
-  }),
+  (table) => [index().on(table.sectionId), index().on(table.instructorName)],
 );
 
 export const websocSectionMeetingToLocation = pgTable(
@@ -408,14 +389,11 @@ export const websocSectionMeetingToLocation = pgTable(
       .references(() => websocLocation.id)
       .notNull(),
   },
-  (table) => ({
-    meetingIdx: index("meeting_idx").on(table.meetingId),
-    locationIdx: index("location_idx").on(table.locationId),
-    idx: uniqueIndex("websoc_section_meeting_to_location_idx").on(
-      table.meetingId,
-      table.locationId,
-    ),
-  }),
+  (table) => [
+    index().on(table.meetingId),
+    index().on(table.locationId),
+    uniqueIndex().on(table.meetingId, table.locationId),
+  ],
 );
 
 // WebSoc-adjacent data tables
@@ -438,10 +416,7 @@ export const websocSectionEnrollment = pgTable(
     numNewOnlyReserved: integer("num_new_only_reserved"),
     status: websocStatus("status"),
   },
-  (table) => ({
-    sectionIdx: index("meeting_section_idx").on(table.sectionId),
-    idx: uniqueIndex("websoc_section_enrollment_idx").on(table.sectionId, table.createdAt),
-  }),
+  (table) => [index().on(table.sectionId), uniqueIndex().on(table.sectionId, table.createdAt)],
 );
 
 export const websocSectionGrade = pgTable(
@@ -462,7 +437,7 @@ export const websocSectionGrade = pgTable(
     gradeWCount: integer("grade_w_count").notNull(),
     averageGPA: decimal("average_gpa", { precision: 3, scale: 2 }),
   },
-  (table) => ({ sectionIdx: index("grade_section_idx").on(table.sectionId) }),
+  (table) => [index().on(table.sectionId)],
 );
 
 export const larcSection = pgTable(
@@ -477,7 +452,7 @@ export const larcSection = pgTable(
     instructor: varchar("instructor").notNull(),
     bldg: varchar("bldg").notNull(),
   },
-  (table) => ({ courseIdx: index("larc_section_course_idx").on(table.courseId) }),
+  (table) => [index().on(table.courseId)],
 );
 
 // Course/Instructor tables
@@ -524,8 +499,8 @@ export const course = pgTable(
     isGE8: boolean("is_ge_8").notNull(),
     geText: varchar("ge_text").notNull(),
   },
-  (table) => ({
-    searchIndex: index("course_search_index").using(
+  (table) => [
+    index("course_search_index").using(
       "gin",
       sql`(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
@@ -537,7 +512,7 @@ export const course = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
 )`,
     ),
-  }),
+  ],
 );
 
 export const instructor = pgTable(
@@ -549,8 +524,8 @@ export const instructor = pgTable(
     email: varchar("email").notNull(),
     department: varchar("department").notNull(),
   },
-  (table) => ({
-    searchIndex: index("instructor_search_index").using(
+  (table) => [
+    index("instructor_search_index").using(
       "gin",
       sql`(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.ucinetid}, '')), 'A') ||
@@ -558,7 +533,7 @@ export const instructor = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'B')
 )`,
     ),
-  }),
+  ],
 );
 
 export const prerequisite = pgTable(
@@ -569,12 +544,12 @@ export const prerequisite = pgTable(
     prerequisiteId: varchar("prerequisite_id").notNull(),
     dependencyId: varchar("dependency_id").notNull(),
   },
-  (table) => ({
-    dependencyDeptIdx: index("dependency_dept_idx").on(table.dependencyDept),
-    prereqIdx: index("prereq_id_idx").on(table.prerequisiteId),
-    dependIdx: index("depend_id_idx").on(table.dependencyId),
-    idx: uniqueIndex("prerequisite_idx").on(table.prerequisiteId, table.dependencyId),
-  }),
+  (table) => [
+    index().on(table.dependencyDept),
+    index().on(table.prerequisiteId),
+    index().on(table.dependencyId),
+    uniqueIndex().on(table.prerequisiteId, table.dependencyId),
+  ],
 );
 
 export const instructorToWebsocInstructor = pgTable(
@@ -586,14 +561,11 @@ export const instructorToWebsocInstructor = pgTable(
       .notNull()
       .references(() => websocInstructor.name),
   },
-  (table) => ({
-    instructorIdx: index("instructor_idx").on(table.instructorUcinetid),
-    websocInstructorIdx: index("websoc_instructor_idx").on(table.websocInstructorName),
-    idx: uniqueIndex("instructor_to_websoc_instructor_idx").on(
-      table.instructorUcinetid,
-      table.websocInstructorName,
-    ),
-  }),
+  (table) => [
+    index().on(table.instructorUcinetid),
+    index().on(table.websocInstructorName),
+    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
+  ],
 );
 
 // DegreeWorks data tables
@@ -615,7 +587,7 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
   },
-  (table) => ({ degreeIdx: index("degree_idx").on(table.degreeId) }),
+  (table) => [index().on(table.degreeId)],
 );
 
 export const minor = pgTable("minor", {
@@ -634,7 +606,7 @@ export const specialization = pgTable(
     name: varchar("name").notNull(),
     requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
   },
-  (table) => ({ majorIdx: index("major_idx").on(table.majorId) }),
+  (table) => [index().on(table.majorId)],
 );
 
 // Misc. tables
@@ -674,7 +646,7 @@ export const studyRoom = pgTable(
       .references(() => studyLocation.id)
       .notNull(),
   },
-  (table) => ({ studyLocationIdx: index("study_location_idx").on(table.studyLocationId) }),
+  (table) => [index().on(table.studyLocationId)],
 );
 
 export const studyRoomSlot = pgTable(
@@ -688,7 +660,5 @@ export const studyRoomSlot = pgTable(
     end: timestamp("end", { mode: "date" }).notNull(),
     isAvailable: boolean("is_available").notNull(),
   },
-  (table) => ({
-    studyRoomIdx: index("study_room_idx").on(table.studyRoomId),
-  }),
+  (table) => [index().on(table.studyRoomId)],
 );

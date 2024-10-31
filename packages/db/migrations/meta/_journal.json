@@ -22,6 +22,13 @@
       "when": 1730237796858,
       "tag": "0002_search_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1730401838437,
+      "tag": "0003_refactor",
+      "breakpoints": true
     }
   ]
 }
