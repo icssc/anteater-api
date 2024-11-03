@@ -11,6 +11,7 @@ async function main() {
   if (!url) throw new Error("Database URL not provided. Please check your .env file.");
   const db = database(url);
   await migrate(db, { migrationsFolder: join(__dirname, "../migrations") });
+  await db.$client.end({ timeout: 5 });
   exit(0);
 }
 

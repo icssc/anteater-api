@@ -293,8 +293,9 @@ function parseRawCourse(meta: {
   department: string;
   departmentName: string;
   prereqs: Map<string, PrerequisiteTree> | undefined;
+  updatedAt: Date;
 }): typeof course.$inferInsert {
-  const { rawCourse, school, department, departmentName, prereqs } = meta;
+  const { rawCourse, school, department, departmentName, prereqs, updatedAt } = meta;
   const deptAndCourseNumber = rawCourse[0].trim().split(". ")[0].trim();
   const title = rawCourse[0].trim().split(". ").slice(1, -1).join(". ").trim();
   const units =
@@ -327,6 +328,7 @@ function parseRawCourse(meta: {
     overlap: courseMetaOrEmpty(rawCourse, "Overlaps with "),
     corequisites: courseMetaOrEmpty(rawCourse, "Corequisite: "),
     ...generateGEs(rawCourse),
+    updatedAt,
   };
 }
 
@@ -351,6 +353,7 @@ async function scrapeCoursesInDepartment(meta: {
   deptPath: string;
   prereqs: Map<string, PrerequisiteTree> | undefined;
 }) {
+  const updatedAt = new Date();
   const { db, deptCode, deptPath, prereqs } = meta;
   if (!prereqs) {
     logger.warn(`${deptCode} does not have a prerequisite mapping.`);
@@ -402,6 +405,7 @@ async function scrapeCoursesInDepartment(meta: {
         department: deptCode,
         departmentName,
         prereqs,
+        updatedAt,
       }),
     ),
   );
