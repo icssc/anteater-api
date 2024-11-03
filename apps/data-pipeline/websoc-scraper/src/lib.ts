@@ -652,7 +652,7 @@ const doDepartmentUpsert = async (
       lastScraped: updatedAt,
       lastDeptScraped: department,
     };
-    await db
+    await tx
       .insert(websocMeta)
       .values(websocMetaValues)
       .onConflictDoUpdate({ target: websocMeta.name, set: websocMetaValues });
