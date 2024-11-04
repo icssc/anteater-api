@@ -110,7 +110,7 @@ export class SearchService {
         id: instructor.ucinetid,
         rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
       })
-      .from(course)
+      .from(instructor)
       .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)
       .offset(input.skip)
       .limit(input.take)
