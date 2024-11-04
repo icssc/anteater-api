@@ -84,10 +84,12 @@ const nameToTerm = (name: string): Term => ({
 const schoolMapper = (
   term: Term,
   { schoolName, schoolComment }: WebsocSchool,
+  updatedAt: Date,
 ): typeof websocSchool.$inferInsert => ({
   ...term,
   schoolName,
   schoolComment,
+  updatedAt,
 });
 
 const departmentMapper = (
@@ -100,6 +102,7 @@ const departmentMapper = (
     sectionCodeRangeComments,
     courseNumberRangeComments,
   }: WebsocDepartment,
+  updatedAt: Date,
 ): typeof websocDepartment.$inferInsert => ({
   ...term,
   schoolId,
@@ -108,6 +111,7 @@ const departmentMapper = (
   deptComment,
   sectionCodeRangeComments,
   courseNumberRangeComments,
+  updatedAt,
 });
 
 function courseMapper(
@@ -115,12 +119,14 @@ function courseMapper(
   departmentId: string,
   course: WebsocCourse,
   schoolName: string,
+  updatedAt: Date,
 ): typeof websocCourse.$inferInsert {
   return {
     ...term,
     departmentId,
     ...course,
     schoolName,
+    updatedAt,
   };
 }
 
@@ -306,6 +312,7 @@ function sectionMapper(
     numCurrentlyEnrolled,
     ...rest
   }: WebsocSection,
+  updatedAt: Date,
 ): typeof websocSection.$inferInsert {
   return {
     ...term,
@@ -325,6 +332,7 @@ function sectionMapper(
     numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved),
     numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled),
     numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled),
+    updatedAt,
   };
 }
 
@@ -334,6 +342,7 @@ function meetingMapper(
   sectionCode: number,
   meeting: WebsocSectionMeeting,
   meetingIndex: number,
+  updatedAt: Date,
 ): typeof websocSectionMeeting.$inferInsert {
   const res: typeof websocSectionMeeting.$inferInsert = {
     ...term,
@@ -342,6 +351,7 @@ function meetingMapper(
     sectionId,
     sectionCode,
     meetingIndex,
+    updatedAt,
   };
   if (meeting.time.trim() === "TBA") return res;
   const { startTime, endTime } = parseStartAndEndTimes(meeting.time);
@@ -379,11 +389,13 @@ const doDepartmentUpsert = async (
   db: ReturnType<typeof database>,
   term: Term,
   resp: WebsocResponse,
+  department: string,
 ) =>
   await db.transaction(async (tx) => {
+    const updatedAt = new Date();
     const schools = await tx
       .insert(websocSchool)
-      .values(resp.schools.map((school) => schoolMapper(term, school)))
+      .values(resp.schools.map((school) => schoolMapper(term, school, updatedAt)))
       .onConflictDoUpdate({
         target: [websocSchool.year, websocSchool.quarter, websocSchool.schoolName],
         set: conflictUpdateSetAllCols(websocSchool),
@@ -397,7 +409,7 @@ const doDepartmentUpsert = async (
           .flatMap((school) =>
             school.departments.map((dept) => {
               const maybeSchool = schools.get(school.schoolName);
-              return maybeSchool ? departmentMapper(term, maybeSchool, dept) : undefined;
+              return maybeSchool ? departmentMapper(term, maybeSchool, dept, updatedAt) : undefined;
             }),
           )
           .filter(notNull),
@@ -422,7 +434,7 @@ const doDepartmentUpsert = async (
               dept.courses.map((course) => {
                 const maybeDept = departments.get(dept.deptCode);
                 return maybeDept
-                  ? courseMapper(term, maybeDept, course, school.schoolName)
+                  ? courseMapper(term, maybeDept, course, school.schoolName, updatedAt)
                   : undefined;
               }),
             ),
@@ -460,7 +472,7 @@ const doDepartmentUpsert = async (
               const maybeCourse = courses.get(
                 `${course.deptCode} ${course.courseNumber} (${course.courseTitle})`,
               );
-              return maybeCourse ? sectionMapper(term, maybeCourse, section) : undefined;
+              return maybeCourse ? sectionMapper(term, maybeCourse, section, updatedAt) : undefined;
             }),
           ),
         )
@@ -514,7 +526,7 @@ const doDepartmentUpsert = async (
       .insert(websocInstructor)
       .values(
         Array.from(new Set(sectionsToInstructors.values())).flatMap((names) =>
-          names.map((name) => ({ name })),
+          names.map((name) => ({ name, updatedAt })),
         ),
       )
       .onConflictDoNothing();
@@ -556,6 +568,7 @@ const doDepartmentUpsert = async (
                           Number.parseInt(section.sectionCode, 10),
                           meeting,
                           index,
+                          updatedAt,
                         )
                       : undefined;
                   }),
@@ -604,7 +617,7 @@ const doDepartmentUpsert = async (
           const firstSpace = location.indexOf(" ");
           const building = location.slice(0, firstSpace);
           const room = location.slice(firstSpace + 1);
-          return { building, room };
+          return { building, room, updatedAt };
         }),
       )
       .onConflictDoUpdate({
@@ -634,7 +647,15 @@ const doDepartmentUpsert = async (
         ],
         set: conflictUpdateSetAllCols(websocSectionMeetingToLocation),
       });
-    console.log();
+    const websocMetaValues = {
+      name: termToName(term),
+      lastScraped: updatedAt,
+      lastDeptScraped: department,
+    };
+    await tx
+      .insert(websocMeta)
+      .values(websocMetaValues)
+      .onConflictDoUpdate({ target: websocMeta.name, set: websocMetaValues });
   });
 
 const getUniqueMeetings = (meetings: WebsocSectionMeeting[]) =>
@@ -760,23 +781,28 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(`Updated GE data for ${updates.size} courses`);
 }
 
-export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
+export async function scrapeTerm(
+  db: ReturnType<typeof database>,
+  term: Term,
+  departments: string[],
+) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
-  for (const department of await getDepts(db)) {
+  for (const department of departments) {
     console.log(`Scraping department ${department}`);
     const resp = await request(term, { department, cancelledCourses: "Include" }).then(
       normalizeResponse,
     );
-    if (resp.schools.length) await doDepartmentUpsert(db, term, resp);
+    if (resp.schools.length) await doDepartmentUpsert(db, term, resp, department);
     await sleep(500);
   }
   await scrapeGEsForTerm(db, term);
   const lastScraped = new Date();
+  const values = { name, lastScraped, lastDeptScraped: null };
   await db
     .insert(websocMeta)
-    .values({ name, lastScraped })
-    .onConflictDoUpdate({ target: websocMeta.name, set: { lastScraped } });
+    .values(values)
+    .onConflictDoUpdate({ target: websocMeta.name, set: values });
 }
 
 export async function doScrape(db: ReturnType<typeof database>) {
@@ -791,15 +817,24 @@ export async function doScrape(db: ReturnType<typeof database>) {
         termsToScrape.map((term) => term.id),
       ),
     )
-    .orderBy(asc(websocMeta.lastScraped))
-    .then((rows) =>
-      rows.reduce((acc, row) => acc.set(row.name, row.lastScraped), new Map<string, Date>()),
-    );
-  const term = termsInDatabase.keys().next().value;
-  if (term) {
-    await scrapeTerm(db, nameToTerm(term));
+    .orderBy(asc(websocMeta.lastScraped));
+  const term = termsInDatabase.find((x) => x.lastDeptScraped !== null) ?? termsInDatabase[0];
+  if (term?.name) {
+    try {
+      const departments = await getDepts(db);
+      await scrapeTerm(
+        db,
+        nameToTerm(term.name),
+        term?.lastDeptScraped
+          ? departments.slice(departments.indexOf(term.lastDeptScraped))
+          : departments,
+      );
+    } catch (e) {
+      console.error(e);
+    }
   } else {
     console.log("Nothing to do.");
   }
+  await db.$client.end({ timeout: 5 });
   console.log("All done!");
 }

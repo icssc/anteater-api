@@ -161,13 +161,14 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
+  lastDeptScraped: varchar("last_dept_scraped"),
 });
 
 export const websocSchool = pgTable(
   "websoc_school",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
@@ -183,7 +184,7 @@ export const websocDepartment = pgTable(
     schoolId: uuid("school_id")
       .references(() => websocSchool.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     deptCode: varchar("dept_code").notNull(),
@@ -210,7 +211,7 @@ export const websocCourse = pgTable(
       .generatedAlwaysAs(
         (): SQL => sql`REPLACE(${websocCourse.deptCode}, ' ', '') || ${websocCourse.courseNumber}`,
       ),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
@@ -269,7 +270,7 @@ export const websocSection = pgTable(
     courseId: uuid("course_id")
       .references(() => websocCourse.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     units: varchar("units").notNull(),
@@ -327,7 +328,7 @@ export const websocSectionMeeting = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     sectionCode: integer("section_code").notNull(),
     meetingIndex: integer("meeting_index").notNull(),
     timeString: varchar("time_string").notNull(),
@@ -352,7 +353,7 @@ export const websocLocation = pgTable(
   "websoc_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     building: varchar("building").notNull(),
     room: varchar("room").notNull(),
   },
@@ -361,7 +362,7 @@ export const websocLocation = pgTable(
 
 export const websocInstructor = pgTable("websoc_instructor", {
   name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
 export const websocSectionToInstructor = pgTable(
@@ -461,7 +462,7 @@ export const course = pgTable(
   "course",
   {
     id: varchar("id").primaryKey(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     department: varchar("department").notNull(),
     departmentAlias: varchar("department_alias"),
     courseNumber: varchar("course_number").notNull(),
@@ -660,5 +661,8 @@ export const studyRoomSlot = pgTable(
     end: timestamp("end", { mode: "date" }).notNull(),
     isAvailable: boolean("is_available").notNull(),
   },
-  (table) => [index().on(table.studyRoomId)],
+  (table) => [
+    index().on(table.studyRoomId),
+    uniqueIndex().on(table.studyRoomId, table.start, table.end),
+  ],
 );
