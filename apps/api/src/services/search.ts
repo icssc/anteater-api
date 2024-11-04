@@ -33,11 +33,19 @@ function splitAtLastNumber(s: string): string {
   const i = Array.from(s.matchAll(/\d+/g))
     .map((x) => x.index)
     .slice(-1)[0];
-  return (i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`).replaceAll(/ {2,}/g, " ");
+  return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`;
 }
 
-const toQuery = (query: string) =>
-  sql`TO_TSQUERY('english', WEBSEARCH_TO_TSQUERY('english', ${splitAtLastNumber(query)})::TEXT || ':*')`;
+function toQuery(query: string) {
+  const normalizedQuery = splitAtLastNumber(query)
+    .replaceAll(/ {2,}/g, " ")
+    .replaceAll(/-/g, "\\-")
+    .split(" ")
+    .map((x) => x.replace(/^\\-/, "-"))
+    .join(" ");
+  const tsQuery = sql`WEBSEARCH_TO_TSQUERY('english', ${normalizedQuery})`;
+  return sql`CASE WHEN NUMNODE(${tsQuery}) > 0 THEN TO_TSQUERY('english', ${tsQuery}::TEXT || ':*') ELSE '' END`;
+}
 
 type SearchServiceInput = z.infer<typeof searchQuerySchema>;
 
