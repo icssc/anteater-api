@@ -54,6 +54,11 @@ app.doc("/openapi.json", {
       description: "Instructor data enriched with course data.",
     },
     { name: "Calendar", description: "Core calendar dates and current week." },
+    {
+      name: "LARC",
+      description:
+        "Present and past LARC (https://larc.uci.edu/) sections. Sourced from LARC's enrollment site (https://enroll.larc.uci.edu/).",
+    },
     { name: "Other" },
   ],
 });
