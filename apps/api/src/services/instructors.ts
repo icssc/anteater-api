@@ -17,7 +17,7 @@ import {
   websocSection,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { notNull, orNull } from "@packages/stdlib";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
@@ -136,44 +136,83 @@ export class InstructorsService {
   async getInstructorByUCInetID(
     ucinetid: string,
   ): Promise<z.infer<typeof instructorSchema> | null> {
+    const shortenedNamesCte = this.db.$with("shortened_names_cte").as(
+      this.db
+        .select({
+          instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+          shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
+            "shortened_names",
+          ),
+        })
+        .from(instructorToWebsocInstructor)
+        .groupBy(instructorToWebsocInstructor.instructorUcinetid),
+    );
+    const termsCte = this.db.$with("terms_cte").as(
+      this.db
+        .selectDistinct({
+          courseId: course.id,
+          instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+          terms:
+            sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`.as(
+              "terms",
+            ),
+        })
+        .from(course)
+        .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
+        .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+        .innerJoin(
+          websocSectionToInstructor,
+          eq(websocSectionToInstructor.sectionId, websocSection.id),
+        )
+        .innerJoin(
+          websocInstructor,
+          eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+        )
+        .innerJoin(
+          instructorToWebsocInstructor,
+          eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+        )
+        .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
+    );
+    const coursesCte = this.db.$with("courses_cte").as(
+      this.db
+        .with(termsCte)
+        .selectDistinct({
+          instructorUcinetid: termsCte.instructorUcinetid,
+          courseId: course.id,
+          courseInfo: sql`
+          CASE WHEN ${course.id} IS NULL
+          THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+               'id', ${course.id},
+               'title', ${course.title},
+               'department', ${course.department},
+               'courseNumber', ${course.courseNumber},
+               'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
+          )
+          END
+          `.as("course_info"),
+        })
+        .from(course)
+        .innerJoin(termsCte, eq(termsCte.courseId, course.id))
+        .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
+    );
     return await this.db
+      .with(shortenedNamesCte, coursesCte)
       .select({
         ...getTableColumns(instructor),
-        shortenedNames: sql<string[]>`
-          ARRAY(
-            SELECT ${instructorToWebsocInstructor.websocInstructorName}
-            FROM ${instructorToWebsocInstructor}
-            WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
-          ) AS shortened_names`,
-        courses: sql`
-          ARRAY(
-            SELECT DISTINCT JSONB_BUILD_OBJECT(
-              'id', ${course}.${course.id},
-              'title', ${course}.${course.title},
-              'department', ${course}.${course.department},
-              'courseNumber', ${course}.${course.courseNumber},
-              'terms', COALESCE("t"."terms", ARRAY[]::TEXT[])
-            )
-            FROM ${course}
-            INNER JOIN ${websocCourse} ON ${websocCourse}.${websocCourse.courseId} = ${course}.${course.id}
-            INNER JOIN ${websocSection} ON ${websocSection}.${websocSection.courseId} = ${websocCourse}.${websocCourse.id}
-            INNER JOIN ${websocSectionToInstructor} ON ${websocSectionToInstructor.sectionId} = ${websocSection}.${websocSection.id}
-            INNER JOIN ${websocInstructor} ON ${websocInstructor.name} = ${websocSectionToInstructor.instructorName}
-            INNER JOIN ${instructorToWebsocInstructor} ON ${instructorToWebsocInstructor.websocInstructorName} = ${websocInstructor.name}
-            LEFT JOIN LATERAL (
-              SELECT ARRAY_AGG(DISTINCT CONCAT(${websocCourse}.${websocCourse.year}, ' ', ${websocCourse}.${websocCourse.quarter})) AS terms
-              FROM ${websocCourse}
-              WHERE ${websocCourse}.${websocCourse.courseId} = ${course}.${course.id}
-              GROUP BY ${websocCourse}.${websocCourse.courseId}
-            ) t ON TRUE
-            WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
-          )
-        `.mapWith((xs) =>
-          xs.filter((x: z.infer<typeof coursePreviewWithTermsSchema>) => notNull(x.id)),
-        ),
+        shortenedNames: sql<
+          string[]
+        >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
+        courses: sql<z.infer<typeof coursePreviewWithTermsSchema>[]>`
+          ARRAY_AGG(DISTINCT ${coursesCte.courseInfo})
+        `.as("courses"),
       })
       .from(instructor)
+      .innerJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
+      .innerJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
       .where(and(eq(instructor.ucinetid, ucinetid), ne(instructor.ucinetid, "student")))
+      .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames)
       .then((x) => orNull(x[0]));
   }
 
