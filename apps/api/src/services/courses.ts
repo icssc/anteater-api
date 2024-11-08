@@ -15,9 +15,11 @@ import {
   getTableColumns,
   gte,
   ilike,
+  isNull,
   lt,
   lte,
   ne,
+  or,
   sql,
 } from "@packages/db/drizzle";
 import type { CourseLevel } from "@packages/db/schema";
@@ -191,9 +193,10 @@ export class CoursesService {
          WHERE ${dependency.prerequisiteId} = ${course.id}
          ), ARRAY[]::JSON[]) AS dependencies
         `.mapWith((xs) => xs.filter((x: z.infer<typeof coursePreviewSchema>) => notNull(x.id))),
-        terms: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`,
+        terms:
+          sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`.mapWith(
+            (xs) => xs.filter((x: string) => x !== " "),
+          ),
         instructors: sql`
         COALESCE(ARRAY_AGG(DISTINCT JSONB_BUILD_OBJECT(
           'ucinetid', ${instructor.ucinetid},
@@ -212,25 +215,25 @@ export class CoursesService {
         ),
       })
       .from(course)
-      .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
-      .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
-      .innerJoin(
+      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
         websocSectionToInstructor,
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
-      .innerJoin(
+      .leftJoin(
         websocInstructor,
         eq(websocInstructor.name, websocSectionToInstructor.instructorName),
       )
-      .innerJoin(
+      .leftJoin(
         instructorToWebsocInstructor,
         eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
       )
-      .innerJoin(
+      .leftJoin(
         instructor,
         eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
       )
-      .where(and(where, ne(instructor.ucinetid, "student")))
+      .where(and(where, or(isNull(instructor.ucinetid), ne(instructor.ucinetid, "student"))))
       .orderBy(course.id)
       .groupBy(course.id)
       .offset(offset ?? 0)
