@@ -136,17 +136,16 @@ export class InstructorsService {
   async getInstructorByUCInetID(
     ucinetid: string,
   ): Promise<z.infer<typeof instructorSchema> | null> {
-    return orNull(
-      await this.db
-        .select({
-          ...getTableColumns(instructor),
-          shortenedNames: sql<string[]>`
+    return await this.db
+      .select({
+        ...getTableColumns(instructor),
+        shortenedNames: sql<string[]>`
           ARRAY(
             SELECT ${instructorToWebsocInstructor.websocInstructorName}
             FROM ${instructorToWebsocInstructor}
             WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
           ) AS shortened_names`,
-          courses: sql`
+        courses: sql`
           ARRAY(
             SELECT DISTINCT JSONB_BUILD_OBJECT(
               'id', ${course}.${course.id},
@@ -170,13 +169,12 @@ export class InstructorsService {
             WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
           )
         `.mapWith((xs) =>
-            xs.filter((x: z.infer<typeof coursePreviewWithTermsSchema>) => notNull(x.id)),
-          ),
-        })
-        .from(instructor)
-        .where(and(eq(instructor.ucinetid, ucinetid), ne(instructor.ucinetid, "student")))
-        .then((x) => x[0]),
-    );
+          xs.filter((x: z.infer<typeof coursePreviewWithTermsSchema>) => notNull(x.id)),
+        ),
+      })
+      .from(instructor)
+      .where(and(eq(instructor.ucinetid, ucinetid), ne(instructor.ucinetid, "student")))
+      .then((x) => orNull(x[0]));
   }
 
   async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
