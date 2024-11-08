@@ -15,12 +15,12 @@ import {
   getTableColumns,
   gte,
   ilike,
-  inArray,
   lt,
   lte,
   ne,
+  sql,
 } from "@packages/db/drizzle";
-import type { CourseLevel, Term } from "@packages/db/schema";
+import type { CourseLevel } from "@packages/db/schema";
 import {
   course,
   instructor,
@@ -32,7 +32,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
-import { orNull } from "@packages/stdlib";
+import { notNull, orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
@@ -60,30 +60,19 @@ const courseToGEList = (
     .filter((x) => typeof x !== "boolean")
     .map((x) => outputGECategories[x]);
 
-type RawCourse = {
-  row: typeof course.$inferSelect;
+type RawCourse = typeof course.$inferSelect & {
   prerequisites: z.infer<typeof coursePreviewSchema>[];
   dependencies: z.infer<typeof coursePreviewSchema>[];
   instructors: z.infer<typeof instructorPreviewSchema>[];
   terms: string[];
 };
 
-const transformCourse = ({
-  row,
-  prerequisites,
-  dependencies,
-  instructors,
-  terms,
-}: RawCourse): z.infer<typeof courseSchema> => ({
-  ...row,
-  minUnits: Number.parseFloat(row.minUnits),
-  maxUnits: Number.parseFloat(row.maxUnits),
-  courseLevel: mapCourseLevel(row.courseLevel),
-  geList: courseToGEList(row),
-  prerequisites,
-  dependencies,
-  instructors,
-  terms,
+const transformCourse = (course: RawCourse): z.infer<typeof courseSchema> => ({
+  ...course,
+  minUnits: Number.parseFloat(course.minUnits),
+  maxUnits: Number.parseFloat(course.maxUnits),
+  courseLevel: mapCourseLevel(course.courseLevel),
+  geList: courseToGEList(course),
 });
 
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
@@ -161,48 +150,6 @@ function buildQuery(input: CoursesServiceInput) {
   return and(...conditions);
 }
 
-type CourseMetaRow = {
-  prerequisite: z.infer<typeof coursePreviewSchema> | null;
-  dependency: z.infer<typeof coursePreviewSchema> | null;
-  term: {
-    year: string;
-    quarter: Term;
-  } | null;
-  websocInstructor: string | null;
-  instructor: Omit<z.infer<typeof instructorPreviewSchema>, "shortenedNames">;
-};
-
-function transformMetaRows(rows: CourseMetaRow[]) {
-  const prerequisites = new Map<string, NonNullable<CourseMetaRow["prerequisite"]>>();
-  const dependencies = new Map<string, NonNullable<CourseMetaRow["dependency"]>>();
-  const terms = new Set<string>();
-  const instructors = new Map<
-    string,
-    NonNullable<CourseMetaRow["instructor"]> & { shortenedNames: Set<string> }
-  >();
-  for (const { prerequisite, dependency, term, websocInstructor, instructor } of rows) {
-    prerequisite && prerequisites.set(prerequisite.id, prerequisite);
-    dependency && dependencies.set(dependency.id, dependency);
-    term && terms.add(`${term.year} ${term.quarter}`);
-    websocInstructor &&
-      instructors.set(instructor.ucinetid, {
-        ...instructor,
-        shortenedNames:
-          instructors.get(instructor.ucinetid)?.shortenedNames?.add(websocInstructor) ??
-          new Set([websocInstructor]),
-      });
-  }
-  return {
-    prerequisites: Array.from(prerequisites.values()),
-    dependencies: Array.from(dependencies.values()),
-    terms: Array.from(terms),
-    instructors: Array.from(instructors.values()).map(({ shortenedNames, ...rest }) => ({
-      ...rest,
-      shortenedNames: Array.from(new Set(shortenedNames)),
-    })),
-  };
-}
-
 export class CoursesService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
@@ -215,47 +162,56 @@ export class CoursesService {
     const dependency = aliasedTable(prerequisite, "dependency");
     const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
     const dependencyCourse = aliasedTable(course, "dependency_course");
-    const rows = await this.db
-      .select(getTableColumns(course))
-      .from(course)
-      .where(where)
-      .offset(offset ?? 0)
-      .limit(limit ?? 1)
-      .orderBy(course.id)
-      .then((rows) =>
-        rows.reduce(
-          (acc, row) => acc.set(row.id, row),
-          new Map<string, typeof course.$inferSelect>(),
-        ),
-      );
-    if (!rows.size) return [];
-    const metaRows = await this.db
+    return this.db
       .select({
-        courseId: course.id,
-        prerequisite: {
-          id: prerequisiteCourse.id,
-          title: prerequisiteCourse.title,
-          department: prerequisiteCourse.department,
-          courseNumber: prerequisiteCourse.courseNumber,
-        },
-        dependency: {
-          id: dependencyCourse.id,
-          title: dependencyCourse.title,
-          department: dependencyCourse.department,
-          courseNumber: dependencyCourse.courseNumber,
-        },
-        term: {
-          year: websocCourse.year,
-          quarter: websocCourse.quarter,
-        },
-        websocInstructor: websocInstructor.name,
-        instructor: getTableColumns(instructor),
+        ...getTableColumns(course),
+        prerequisites: sql`
+        COALESCE((
+          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
+            'id', ${prerequisiteCourse.id},
+            'title', ${prerequisiteCourse.title},
+            'department', ${prerequisiteCourse.department},
+            'courseNumber', ${prerequisiteCourse.courseNumber}
+          ))
+         FROM ${prerequisite}
+         LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
+         WHERE ${prerequisite.dependencyId} = ${course.id}
+         ), ARRAY[]::JSON[]) AS prerequisites
+        `.mapWith((xs) => xs.filter((x: z.infer<typeof coursePreviewSchema>) => notNull(x.id))),
+        dependencies: sql`
+        COALESCE((
+          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
+            'id', ${dependencyCourse.id},
+            'title', ${dependencyCourse.title},
+            'department', ${dependencyCourse.department},
+            'courseNumber', ${dependencyCourse.courseNumber}
+          ))
+         FROM ${prerequisite} ${dependency}
+         LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
+         WHERE ${dependency.prerequisiteId} = ${course.id}
+         ), ARRAY[]::JSON[]) AS dependencies
+        `.mapWith((xs) => xs.filter((x: z.infer<typeof coursePreviewSchema>) => notNull(x.id))),
+        terms: sql<
+          string[]
+        >`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`,
+        instructors: sql`
+        COALESCE(ARRAY_AGG(DISTINCT JSONB_BUILD_OBJECT(
+          'ucinetid', ${instructor.ucinetid},
+          'name', ${instructor.name},
+          'title', ${instructor.title},
+          'email', ${instructor.email},
+          'department', ${instructor.department},
+          'shortenedNames', ARRAY(
+            SELECT ${instructorToWebsocInstructor.websocInstructorName}
+            FROM ${instructorToWebsocInstructor}
+            WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
+          )
+        )), ARRAY[]::JSONB[]) AS instructors
+        `.mapWith((xs) =>
+          xs.filter((x: z.infer<typeof instructorPreviewSchema>) => notNull(x.ucinetid)),
+        ),
       })
       .from(course)
-      .fullJoin(prerequisite, eq(prerequisite.dependencyId, course.id))
-      .fullJoin(prerequisiteCourse, eq(prerequisiteCourse.id, prerequisite.prerequisiteId))
-      .fullJoin(dependency, eq(dependency.prerequisiteId, course.id))
-      .fullJoin(dependencyCourse, eq(dependencyCourse.id, dependency.dependencyId))
       .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
       .innerJoin(
@@ -270,24 +226,16 @@ export class CoursesService {
         instructorToWebsocInstructor,
         eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
       )
-      .rightJoin(
+      .innerJoin(
         instructor,
         eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
       )
-      .where(and(inArray(course.id, Array.from(rows.keys())), ne(instructor.ucinetid, "student")))
-      .then((rows) =>
-        rows.reduce((acc, row) => {
-          if (!row.courseId) return acc;
-          if (acc.has(row.courseId)) {
-            acc.get(row.courseId)?.push(row);
-            return acc;
-          }
-          return acc.set(row.courseId, [row]);
-        }, new Map<string, CourseMetaRow[]>()),
-      );
-    return Array.from(rows.entries()).map(([id, row]) =>
-      transformCourse({ row, ...transformMetaRows(metaRows.get(id) ?? []) }),
-    );
+      .where(and(where, ne(instructor.ucinetid, "student")))
+      .orderBy(course.id)
+      .groupBy(course.id)
+      .offset(offset ?? 0)
+      .limit(limit ?? 1)
+      .then((courses) => courses.map(transformCourse));
   }
 
   async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
