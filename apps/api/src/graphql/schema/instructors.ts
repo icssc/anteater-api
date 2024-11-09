@@ -37,5 +37,6 @@ input InstructorsQuery {
 extend type Query {
     instructor(ucinetid: String!): Instructor!
     instructors(query: InstructorsQuery!): [Instructor!]!
+    batchInstructors(ucinetids: [String!]!): [Instructor!]!
 }
 `;

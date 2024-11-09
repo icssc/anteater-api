@@ -18,5 +18,13 @@ export const instructorsResolvers = {
       const service = new InstructorsService(db);
       return await service.getInstructors(instructorsQuerySchema.parse(args.query));
     },
+    batchInstructors: async (
+      _: unknown,
+      { ucinetids }: { ucinetids: string[] },
+      { db }: GraphQLContext,
+    ) => {
+      const service = new InstructorsService(db);
+      return await service.batchGetInstructors(ucinetids);
+    },
   },
 };
