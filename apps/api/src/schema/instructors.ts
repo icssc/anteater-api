@@ -6,6 +6,10 @@ export const instructorsPathSchema = z.object({
     .openapi({ param: { name: "ucinetid", in: "path" } }),
 });
 
+export const batchInstructorsQuerySchema = z.object({
+  ucinetids: z.string().transform((xs) => xs.split(",")),
+});
+
 export const instructorsQuerySchema = z.object({
   nameContains: z.string().optional(),
   titleContains: z.string().optional(),

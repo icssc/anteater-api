@@ -35,6 +35,10 @@ import { isTrue } from "@packages/db/utils";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
+type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
+
+type CoursesServiceOutput = z.infer<typeof courseSchema>;
+
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
   courseLevel === "LowerDiv"
     ? "Lower Division (1-99)"
@@ -74,7 +78,7 @@ const transformCourse = ({
   dependencies,
   instructors,
   terms,
-}: RawCourse): z.infer<typeof courseSchema> => ({
+}: RawCourse): CoursesServiceOutput => ({
   ...row,
   minUnits: Number.parseFloat(row.minUnits),
   maxUnits: Number.parseFloat(row.maxUnits),
@@ -85,8 +89,6 @@ const transformCourse = ({
   instructors,
   terms,
 });
-
-type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 function buildQuery(input: CoursesServiceInput) {
   const conditions: Array<SQL | undefined> = [];
@@ -210,7 +212,7 @@ export class CoursesService {
     where?: SQL;
     offset?: number;
     limit?: number;
-  }): Promise<z.infer<typeof courseSchema>[]> {
+  }): Promise<CoursesServiceOutput[]> {
     const { where, offset, limit } = input;
     const dependency = aliasedTable(prerequisite, "dependency");
     const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
@@ -290,11 +292,15 @@ export class CoursesService {
     );
   }
 
-  async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
+  async getCourseById(id: string): Promise<CoursesServiceOutput | null> {
     return orNull(await this.getCoursesRaw({ where: eq(course.id, id) }).then((x) => x[0]));
   }
 
-  async getCourses(input: CoursesServiceInput): Promise<z.infer<typeof courseSchema>[]> {
+  async batchGetCourses(ids: string[]): Promise<CoursesServiceOutput[]> {
+    return this.getCoursesRaw({ where: inArray(course.id, ids), limit: ids.length });
+  }
+
+  async getCourses(input: CoursesServiceInput): Promise<CoursesServiceOutput[]> {
     return this.getCoursesRaw({ where: buildQuery(input), offset: input.skip, limit: input.take });
   }
 }

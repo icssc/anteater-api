@@ -41,6 +41,10 @@ export const coursesPathSchema = z.object({
     .openapi({ param: { name: "id", in: "path" } }),
 });
 
+export const batchCoursesQuerySchema = z.object({
+  ids: z.string().transform((xs) => xs.split(",")),
+});
+
 export const coursesQuerySchema = z.object({
   department: z.string().optional(),
   courseNumber: z.string().optional(),

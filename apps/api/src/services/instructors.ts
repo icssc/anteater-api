@@ -15,9 +15,11 @@ import {
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
-type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
+type InstructorsServiceInput = z.infer<typeof instructorsQuerySchema>;
 
-function buildQuery(input: InstructorServiceInput) {
+type InstructorsServiceOutput = z.infer<typeof instructorSchema>;
+
+function buildQuery(input: InstructorsServiceInput) {
   const conditions = [ne(instructor.ucinetid, "student")];
   if (input.nameContains) {
     conditions.push(ilike(instructor.name, `%${input.nameContains}%`));
@@ -64,7 +66,7 @@ export class InstructorsService {
     where?: SQL;
     offset?: number;
     limit?: number;
-  }): Promise<z.infer<typeof instructorSchema>[]> {
+  }): Promise<InstructorsServiceOutput[]> {
     const { where, offset, limit } = input;
     const rows = await this.db
       .select()
@@ -128,9 +130,7 @@ export class InstructorsService {
     }));
   }
 
-  async getInstructorByUCInetID(
-    ucinetid: string,
-  ): Promise<z.infer<typeof instructorSchema> | null> {
+  async getInstructorByUCInetID(ucinetid: string): Promise<InstructorsServiceOutput | null> {
     return orNull(
       await this.getInstructorsRaw({
         where: and(eq(instructor.ucinetid, ucinetid), ne(instructor.ucinetid, "student")),
@@ -138,7 +138,14 @@ export class InstructorsService {
     );
   }
 
-  async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
+  async batchGetInstructors(ucinetids: string[]): Promise<InstructorsServiceOutput[]> {
+    return this.getInstructorsRaw({
+      where: inArray(instructor.ucinetid, ucinetids),
+      limit: ucinetids.length,
+    });
+  }
+
+  async getInstructors(input: InstructorsServiceInput): Promise<InstructorsServiceOutput[]> {
     return this.getInstructorsRaw({
       where: buildQuery(input),
       offset: input.skip,

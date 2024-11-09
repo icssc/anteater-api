@@ -6,7 +6,7 @@ import type {
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { asc, desc, inArray, sql } from "@packages/db/drizzle";
+import { asc, desc, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -58,10 +58,7 @@ export class SearchService {
 
   private async courseMappingFromResults(results: Map<string, number>) {
     return await this.coursesService
-      .getCoursesRaw({
-        where: inArray(course.id, Array.from(results.keys())),
-        limit: results.size,
-      })
+      .batchGetCourses(Array.from(results.keys()))
       .then((courses) =>
         courses.reduce(
           (acc, course) => acc.set(course.id, course),
@@ -72,10 +69,7 @@ export class SearchService {
 
   private async instructorMappingFromResults(results: Map<string, number>) {
     return await this.instructorsService
-      .getInstructorsRaw({
-        where: inArray(instructor.ucinetid, Array.from(results.keys())),
-        limit: results.size,
-      })
+      .batchGetInstructors(Array.from(results.keys()))
       .then((instructors) =>
         instructors.reduce(
           (acc, instructor) => acc.set(instructor.ucinetid, instructor),
