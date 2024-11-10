@@ -36,6 +36,13 @@
       "when": 1730675191549,
       "tag": "0004_enhance_scraper",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1731200501672,
+      "tag": "0005_mviews",
+      "breakpoints": true
     }
   ]
 }

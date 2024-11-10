@@ -90,7 +90,7 @@ instructorsRouter.openapi(instructorByIdRoute, async (c) => {
 
 instructorsRouter.openapi(instructorsByFiltersRoute, async (c) => {
   const query = c.req.valid("query");
-  const service = new InstructorsService(database(c.env.DB.connectionString, { logger: true }));
+  const service = new InstructorsService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,
