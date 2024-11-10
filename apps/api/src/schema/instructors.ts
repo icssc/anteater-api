@@ -7,7 +7,10 @@ export const instructorsPathSchema = z.object({
 });
 
 export const batchInstructorsQuerySchema = z.object({
-  ucinetids: z.string().transform((xs) => xs.split(",")),
+  ucinetids: z
+    .string({ message: "Parameter 'ucinetids' is required" })
+    .transform((xs) => xs.split(","))
+    .openapi({ example: "mikes,klefstad" }),
 });
 
 export const instructorsQuerySchema = z.object({
