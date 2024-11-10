@@ -8,33 +8,11 @@ import type {
 import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import {
-  aliasedTable,
-  and,
-  eq,
-  getTableColumns,
-  gte,
-  ilike,
-  isNull,
-  lt,
-  lte,
-  ne,
-  or,
-  sql,
-} from "@packages/db/drizzle";
-import type { CourseLevel } from "@packages/db/schema";
-import {
-  course,
-  instructor,
-  instructorToWebsocInstructor,
-  prerequisite,
-  websocCourse,
-  websocInstructor,
-  websocSection,
-  websocSectionToInstructor,
-} from "@packages/db/schema";
+import { and, eq, gte, ilike, lt, lte } from "@packages/db/drizzle";
+import type { CourseLevel, course } from "@packages/db/schema";
+import { courseView } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
-import { notNull, orNull } from "@packages/stdlib";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
@@ -82,70 +60,70 @@ type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 function buildQuery(input: CoursesServiceInput) {
   const conditions: Array<SQL | undefined> = [];
   if (input.department) {
-    conditions.push(eq(course.department, input.department));
+    conditions.push(eq(courseView.department, input.department));
   }
   if (input.courseNumber) {
-    conditions.push(eq(course.courseNumber, input.courseNumber));
+    conditions.push(eq(courseView.courseNumber, input.courseNumber));
   }
   if (input.courseNumeric) {
-    conditions.push(eq(course.courseNumeric, input.courseNumeric));
+    conditions.push(eq(courseView.courseNumeric, input.courseNumeric));
   }
   if (input.titleContains) {
-    conditions.push(ilike(course.title, `%${input.titleContains}%`));
+    conditions.push(ilike(courseView.title, `%${input.titleContains}%`));
   }
   if (input.courseLevel) {
     switch (input.courseLevel) {
       case "LowerDiv":
-        conditions.push(and(gte(course.courseNumeric, 0), lt(course.courseNumeric, 100)));
+        conditions.push(and(gte(courseView.courseNumeric, 0), lt(courseView.courseNumeric, 100)));
         break;
       case "UpperDiv":
-        conditions.push(and(gte(course.courseNumeric, 100), lt(course.courseNumeric, 200)));
+        conditions.push(and(gte(courseView.courseNumeric, 100), lt(courseView.courseNumeric, 200)));
         break;
       case "Graduate":
-        conditions.push(gte(course.courseNumeric, 200));
+        conditions.push(gte(courseView.courseNumeric, 200));
         break;
     }
   }
   if (input.minUnits) {
-    conditions.push(gte(course.minUnits, input.minUnits.toString(10)));
+    conditions.push(gte(courseView.minUnits, input.minUnits.toString(10)));
   }
   if (input.maxUnits) {
-    conditions.push(lte(course.maxUnits, input.maxUnits.toString(10)));
+    conditions.push(lte(courseView.maxUnits, input.maxUnits.toString(10)));
   }
   if (input.descriptionContains) {
-    conditions.push(ilike(course.description, `%${input.descriptionContains}%`));
+    conditions.push(ilike(courseView.description, `%${input.descriptionContains}%`));
   }
   if (input.geCategory) {
     switch (input.geCategory) {
       case "GE-1A":
-        conditions.push(isTrue(course.isGE1A));
+        conditions.push(isTrue(courseView.isGE1A));
         break;
       case "GE-1B":
-        conditions.push(isTrue(course.isGE1B));
+        conditions.push(isTrue(courseView.isGE1B));
         break;
       case "GE-2":
-        conditions.push(isTrue(course.isGE2));
+        conditions.push(isTrue(courseView.isGE2));
         break;
       case "GE-3":
-        conditions.push(isTrue(course.isGE3));
+        conditions.push(isTrue(courseView.isGE3));
         break;
       case "GE-4":
-        conditions.push(isTrue(course.isGE4));
+        conditions.push(isTrue(courseView.isGE4));
         break;
       case "GE-5A":
-        conditions.push(isTrue(course.isGE5A));
+        conditions.push(isTrue(courseView.isGE5A));
         break;
       case "GE-5B":
-        conditions.push(isTrue(course.isGE5B));
+        conditions.push(isTrue(courseView.isGE5B));
         break;
       case "GE-6":
-        conditions.push(isTrue(course.isGE6));
+        conditions.push(isTrue(courseView.isGE6));
         break;
       case "GE-7":
-        conditions.push(isTrue(course.isGE7));
+        conditions.push(isTrue(courseView.isGE7));
         break;
       case "GE-8":
-        conditions.push(isTrue(course.isGE8));
+        conditions.push(isTrue(courseView.isGE8));
         break;
     }
   }
@@ -161,88 +139,17 @@ export class CoursesService {
     limit?: number;
   }): Promise<z.infer<typeof courseSchema>[]> {
     const { where, offset, limit } = input;
-    const dependency = aliasedTable(prerequisite, "dependency");
-    const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
-    const dependencyCourse = aliasedTable(course, "dependency_course");
     return this.db
-      .select({
-        ...getTableColumns(course),
-        prerequisites: sql`
-        COALESCE((
-          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
-            'id', ${prerequisiteCourse.id},
-            'title', ${prerequisiteCourse.title},
-            'department', ${prerequisiteCourse.department},
-            'courseNumber', ${prerequisiteCourse.courseNumber}
-          ))
-         FROM ${prerequisite}
-         LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
-         WHERE ${prerequisite.dependencyId} = ${course.id}
-         ), ARRAY[]::JSON[]) AS prerequisites
-        `.mapWith((xs) => xs.filter((x: z.infer<typeof coursePreviewSchema>) => notNull(x.id))),
-        dependencies: sql`
-        COALESCE((
-          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
-            'id', ${dependencyCourse.id},
-            'title', ${dependencyCourse.title},
-            'department', ${dependencyCourse.department},
-            'courseNumber', ${dependencyCourse.courseNumber}
-          ))
-         FROM ${prerequisite} ${dependency}
-         LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
-         WHERE ${dependency.prerequisiteId} = ${course.id}
-         ), ARRAY[]::JSON[]) AS dependencies
-        `.mapWith((xs) => xs.filter((x: z.infer<typeof coursePreviewSchema>) => notNull(x.id))),
-        terms:
-          sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`.mapWith(
-            (xs) => xs.filter((x: string) => x !== " "),
-          ),
-        instructors: sql`
-        COALESCE(ARRAY_AGG(DISTINCT JSONB_BUILD_OBJECT(
-          'ucinetid', ${instructor.ucinetid},
-          'name', ${instructor.name},
-          'title', ${instructor.title},
-          'email', ${instructor.email},
-          'department', ${instructor.department},
-          'shortenedNames', ARRAY(
-            SELECT ${instructorToWebsocInstructor.websocInstructorName}
-            FROM ${instructorToWebsocInstructor}
-            WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
-          )
-        )), ARRAY[]::JSONB[]) AS instructors
-        `.mapWith((xs) =>
-          xs.filter((x: z.infer<typeof instructorPreviewSchema>) => notNull(x.ucinetid)),
-        ),
-      })
-      .from(course)
-      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
-      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
-      .leftJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.sectionId, websocSection.id),
-      )
-      .leftJoin(
-        websocInstructor,
-        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
-      )
-      .leftJoin(
-        instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
-      )
-      .leftJoin(
-        instructor,
-        eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
-      )
-      .where(and(where, or(isNull(instructor.ucinetid), ne(instructor.ucinetid, "student"))))
-      .orderBy(course.id)
-      .groupBy(course.id)
+      .select()
+      .from(courseView)
+      .where(where)
       .offset(offset ?? 0)
       .limit(limit ?? 1)
       .then((courses) => courses.map(transformCourse));
   }
 
   async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
-    return orNull(await this.getCoursesRaw({ where: eq(course.id, id) }).then((x) => x[0]));
+    return this.getCoursesRaw({ where: eq(courseView.id, id) }).then((x) => orNull(x[0]));
   }
 
   async getCourses(input: CoursesServiceInput): Promise<z.infer<typeof courseSchema>[]> {
