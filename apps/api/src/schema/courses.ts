@@ -42,7 +42,10 @@ export const coursesPathSchema = z.object({
 });
 
 export const batchCoursesQuerySchema = z.object({
-  ids: z.string().transform((xs) => xs.split(",")),
+  ids: z
+    .string({ message: "Parameter 'ids' is required" })
+    .transform((xs) => xs.split(","))
+    .openapi({ example: "COMPSCI161,COMPSCI162" }),
 });
 
 export const coursesQuerySchema = z.object({
