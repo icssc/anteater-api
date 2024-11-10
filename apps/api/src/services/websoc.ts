@@ -415,7 +415,7 @@ export class WebsocService {
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
       .then((rows) =>
-        Array.from(new Set(rows))
+        Array.from(new Map(rows.map((row) => [`${row.year} ${row.quarter}`, row])).values())
           .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
             y1 === y2
               ? termOrder[q1] - termOrder[q2]
