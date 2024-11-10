@@ -41,14 +41,22 @@ const courseToGEList = (
     .map((x) => outputGECategories[x]);
 
 type RawCourse = typeof course.$inferSelect & {
-  prerequisites: z.infer<typeof coursePreviewSchema>[];
-  dependencies: z.infer<typeof coursePreviewSchema>[];
-  instructors: z.infer<typeof instructorPreviewSchema>[];
+  prerequisites: unknown;
+  dependencies: unknown;
+  instructors: unknown;
   terms: string[];
 };
 
-const transformCourse = (course: RawCourse): z.infer<typeof courseSchema> => ({
+const transformCourse = ({
+  prerequisites,
+  dependencies,
+  instructors,
+  ...course
+}: RawCourse): z.infer<typeof courseSchema> => ({
   ...course,
+  prerequisites: prerequisites as z.infer<typeof coursePreviewSchema>[],
+  dependencies: dependencies as z.infer<typeof coursePreviewSchema>[],
+  instructors: instructors as z.infer<typeof instructorPreviewSchema>[],
   minUnits: Number.parseFloat(course.minUnits),
   maxUnits: Number.parseFloat(course.maxUnits),
   courseLevel: mapCourseLevel(course.courseLevel),

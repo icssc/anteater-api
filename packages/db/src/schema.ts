@@ -716,7 +716,7 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
           ),
         ARRAY[]::JSONB[]), NULL)
         `.as("dependencies"),
-      terms: sql`
+      terms: sql<string[]>`
           ARRAY_REMOVE(ARRAY_AGG(DISTINCT
             CASE WHEN ${websocCourse.year} IS NULL THEN NULL
             ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
