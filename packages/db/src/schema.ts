@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { eq, getTableColumns, ne, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -16,7 +16,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { aliasedTable, isNull, or } from "./drizzle.ts";
+import { aliasedTable } from "./drizzle.ts";
 
 // Types
 
@@ -679,54 +679,68 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
     .select({
       ...getTableColumns(course),
       prerequisites: sql`
-        COALESCE((
-          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
-            'id', ${prerequisiteCourse.id},
-            'title', ${prerequisiteCourse.title},
-            'department', ${prerequisiteCourse.department},
-            'courseNumber', ${prerequisiteCourse.courseNumber}
-          ))
-         FROM ${prerequisite}
-         LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
-         WHERE ${prerequisite.dependencyId} = ${course.id}
-         ), ARRAY[]::JSON[])
-        `
-        .mapWith((xs) => xs.filter((x: { id?: string }) => !!x.id))
-        .as("prerequisites"),
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${prerequisiteCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+              'id', ${prerequisiteCourse.id},
+              'title', ${prerequisiteCourse.title},
+              'department', ${prerequisiteCourse.department},
+              'courseNumber', ${prerequisiteCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite}
+            LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
+            WHERE ${prerequisite.dependencyId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("prerequisites"),
       dependencies: sql`
-        COALESCE((
-          SELECT ARRAY_AGG(JSON_BUILD_OBJECT(
-            'id', ${dependencyCourse.id},
-            'title', ${dependencyCourse.title},
-            'department', ${dependencyCourse.department},
-            'courseNumber', ${dependencyCourse.courseNumber}
-          ))
-         FROM ${prerequisite} ${dependency}
-         LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
-         WHERE ${dependency.prerequisiteId} = ${course.id}
-         ), ARRAY[]::JSON[])
-        `
-        .mapWith((xs) => xs.filter((x: { id?: string }) => !!x.id))
-        .as("dependencies"),
-      terms: sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`
-        .mapWith((xs) => xs.filter((x: string) => x !== " "))
-        .as("terms"),
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${dependencyCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+                'id', ${dependencyCourse.id},
+                'title', ${dependencyCourse.title},
+                'department', ${dependencyCourse.department},
+                'courseNumber', ${dependencyCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite} ${dependency}
+            LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
+            WHERE ${dependency.prerequisiteId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("dependencies"),
+      terms: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)
+          `.as("terms"),
       instructors: sql`
-        COALESCE(ARRAY_AGG(DISTINCT JSONB_BUILD_OBJECT(
-          'ucinetid', ${instructor.ucinetid},
-          'name', ${instructor.name},
-          'title', ${instructor.title},
-          'email', ${instructor.email},
-          'department', ${instructor.department},
-          'shortenedNames', ARRAY(
-            SELECT ${instructorToWebsocInstructor.websocInstructorName}
-            FROM ${instructorToWebsocInstructor}
-            WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
+        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT
+          CASE WHEN ${instructor.ucinetid} IS NULL THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+            'ucinetid', ${instructor.ucinetid},
+            'name', ${instructor.name},
+            'title', ${instructor.title},
+            'email', ${instructor.email},
+            'department', ${instructor.department},
+            'shortenedNames', ARRAY(
+              SELECT ${instructorToWebsocInstructor.websocInstructorName}
+              FROM ${instructorToWebsocInstructor}
+              WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
+            )
           )
-        )), ARRAY[]::JSONB[])
-        `
-        .mapWith((xs) => xs.filter((x: { ucinetid?: string }) => !!x.ucinetid))
-        .as("instructors"),
+          END
+        ), ARRAY[]::JSONB[]), NULL)
+        `.as("instructors"),
     })
     .from(course)
     .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
@@ -737,8 +751,14 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
       instructorToWebsocInstructor,
       eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
     )
-    .leftJoin(instructor, eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid))
-    .where(or(isNull(instructor.ucinetid), ne(instructor.ucinetid, "student")))
+    .leftJoin(
+      instructor,
+      and(
+        eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
+        isNotNull(instructor.ucinetid),
+        ne(instructor.ucinetid, "student"),
+      ),
+    )
     .groupBy(course.id);
 });
 
@@ -759,23 +779,25 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
       .select({
         courseId: course.id,
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        terms:
-          sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`.as(
-            "terms",
-          ),
+        terms: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)`.as("terms"),
       })
       .from(course)
-      .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
-      .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
-      .innerJoin(
+      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
         websocSectionToInstructor,
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
-      .innerJoin(
+      .leftJoin(
         websocInstructor,
         eq(websocInstructor.name, websocSectionToInstructor.instructorName),
       )
-      .innerJoin(
+      .leftJoin(
         instructorToWebsocInstructor,
         eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
       )
@@ -801,7 +823,7 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
           `.as("course_info"),
       })
       .from(course)
-      .innerJoin(termsCte, eq(termsCte.courseId, course.id))
+      .leftJoin(termsCte, eq(termsCte.courseId, course.id))
       .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
   );
   return qb
@@ -812,12 +834,12 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
         string[]
       >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
       courses: sql`
-          ARRAY_AGG(DISTINCT ${coursesCte.courseInfo})
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${coursesCte.courseInfo}), NULL)
         `.as("courses"),
     })
     .from(instructor)
-    .innerJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
-    .innerJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
+    .leftJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
+    .leftJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
     .where(ne(instructor.ucinetid, "student"))
     .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
 });
