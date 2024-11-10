@@ -2,7 +2,7 @@ import type {
   courseSchema,
   instructorSchema,
   searchQuerySchema,
-  searchResultSchema,
+  searchResponseSchema,
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
@@ -80,7 +80,7 @@ export class SearchService {
 
   private async doSearchForCourses(
     input: SearchServiceInput,
-  ): Promise<z.infer<typeof searchResultSchema>[]> {
+  ): Promise<z.infer<typeof searchResponseSchema>> {
     const query = toQuery(input.query);
     const results = await this.db
       .select({
@@ -89,23 +89,26 @@ export class SearchService {
       })
       .from(course)
       .where(sql`${COURSES_WEIGHTS} @@ ${query}`)
-      .offset(input.skip)
-      .limit(input.take)
       .orderBy((t) => [desc(t.rank), asc(t.id)])
       .then((rows) =>
         rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
       );
     const courses = await this.courseMappingFromResults(results);
-    return Array.from(results.entries()).map(([key, rank]) => ({
-      type: "course",
-      result: getFromMapOrThrow(courses, key),
-      rank,
-    }));
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) => ({
+          type: "course" as const,
+          result: getFromMapOrThrow(courses, key),
+          rank,
+        }))
+        .slice(input.skip, input.skip + input.take),
+    };
   }
 
   private async doSearchForInstructors(
     input: SearchServiceInput,
-  ): Promise<z.infer<typeof searchResultSchema>[]> {
+  ): Promise<z.infer<typeof searchResponseSchema>> {
     const query = toQuery(input.query);
     const results = await this.db
       .select({
@@ -121,14 +124,19 @@ export class SearchService {
         rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
       );
     const instructors = await this.instructorMappingFromResults(results);
-    return Array.from(results.entries()).map(([key, rank]) => ({
-      type: "instructor",
-      result: getFromMapOrThrow(instructors, key),
-      rank,
-    }));
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) => ({
+          type: "instructor" as const,
+          result: getFromMapOrThrow(instructors, key),
+          rank,
+        }))
+        .slice(input.skip, input.skip + input.take),
+    };
   }
 
-  async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResultSchema>[]> {
+  async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
     if (input.resultType === "course") {
       return this.doSearchForCourses(input);
     }
@@ -151,35 +159,36 @@ export class SearchService {
         })
         .from(instructor)
         .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
-    )
-      .offset(input.skip)
-      .limit(input.take)
-      .then((rows) =>
-        rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
-      );
+    ).then((rows) =>
+      rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
+    );
     const courses = await this.courseMappingFromResults(results);
     const instructors = await this.instructorMappingFromResults(results);
-    return Array.from(results.entries())
-      .map(([key, rank]) =>
-        courses.has(key)
-          ? {
-              key,
-              type: "course" as const,
-              result: getFromMapOrThrow(courses, key),
-              rank,
-            }
-          : {
-              key,
-              type: "instructor" as const,
-              result: getFromMapOrThrow(instructors, key),
-              rank,
-            },
-      )
-      .toSorted((a, b) => {
-        const rankDiff = b.rank - a.rank;
-        return Math.abs(rankDiff) < Number.EPSILON
-          ? a.key.localeCompare(b.key)
-          : Math.sign(rankDiff);
-      });
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) =>
+          courses.has(key)
+            ? {
+                key,
+                type: "course" as const,
+                result: getFromMapOrThrow(courses, key),
+                rank,
+              }
+            : {
+                key,
+                type: "instructor" as const,
+                result: getFromMapOrThrow(instructors, key),
+                rank,
+              },
+        )
+        .toSorted((a, b) => {
+          const rankDiff = b.rank - a.rank;
+          return Math.abs(rankDiff) < Number.EPSILON
+            ? a.key.localeCompare(b.key)
+            : Math.sign(rankDiff);
+        })
+        .slice(input.skip, input.skip + input.take),
+    };
   }
 }

@@ -1,9 +1,14 @@
 export const searchSchema = `#graphql
 union CourseOrInstructor = Course | Instructor
 
-type SearchResponse @cacheControl(maxAge: 86400) {
+type SearchResult @cacheControl(maxAge: 86400) {
     result: CourseOrInstructor!
     rank: Float!
+}
+
+type SearchResponse {
+    count: Float!
+    results: [SearchResult!]!
 }
 
 input SearchQuery {
@@ -13,6 +18,6 @@ input SearchQuery {
 }
 
 extend type Query {
-    search(query: SearchQuery!): [SearchResponse!]!
+    search(query: SearchQuery!): SearchResponse!
 }
 `;

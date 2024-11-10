@@ -24,3 +24,8 @@ export const searchResultSchema = z.discriminatedUnion("type", [
     rank: z.number(),
   }),
 ]);
+
+export const searchResponseSchema = z.object({
+  count: z.number(),
+  results: searchResultSchema.array(),
+});
