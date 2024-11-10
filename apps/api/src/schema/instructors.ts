@@ -6,6 +6,13 @@ export const instructorsPathSchema = z.object({
     .openapi({ param: { name: "ucinetid", in: "path" } }),
 });
 
+export const batchInstructorsQuerySchema = z.object({
+  ucinetids: z
+    .string({ message: "Parameter 'ucinetids' is required" })
+    .transform((xs) => xs.split(","))
+    .openapi({ example: "mikes,klefstad" }),
+});
+
 export const instructorsQuerySchema = z.object({
   nameContains: z.string().optional(),
   titleContains: z.string().optional(),

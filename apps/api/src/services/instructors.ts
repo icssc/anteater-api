@@ -1,14 +1,16 @@
 import type { instructorSchema, instructorsQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, ilike } from "@packages/db/drizzle";
+import { and, eq, ilike, inArray } from "@packages/db/drizzle";
 import { instructorView } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
-type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
+type InstructorsServiceInput = z.infer<typeof instructorsQuerySchema>;
 
-function buildQuery(input: InstructorServiceInput) {
+type InstructorsServiceOutput = z.infer<typeof instructorSchema>;
+
+function buildQuery(input: InstructorsServiceInput) {
   const conditions = [];
   if (input.nameContains) {
     conditions.push(ilike(instructorView.name, `%${input.nameContains}%`));
@@ -36,18 +38,23 @@ export class InstructorsService {
       .from(instructorView)
       .where(where)
       .offset(offset ?? 0)
-      .limit(limit ?? 1)) as z.infer<typeof instructorSchema>[];
+      .limit(limit ?? 1)) as InstructorsServiceOutput[];
   }
 
-  async getInstructorByUCInetID(
-    ucinetid: string,
-  ): Promise<z.infer<typeof instructorSchema> | null> {
+  async getInstructorByUCInetID(ucinetid: string): Promise<InstructorsServiceOutput | null> {
     return this.getInstructorsRaw({
       where: and(eq(instructorView.ucinetid, ucinetid)),
     }).then((xs) => orNull(xs[0]));
   }
 
-  async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
+  async batchGetInstructors(ucinetids: string[]): Promise<InstructorsServiceOutput[]> {
+    return this.getInstructorsRaw({
+      where: inArray(instructorView.ucinetid, ucinetids),
+      limit: ucinetids.length,
+    });
+  }
+
+  async getInstructors(input: InstructorsServiceInput): Promise<InstructorsServiceOutput[]> {
     return this.getInstructorsRaw({
       where: buildQuery(input),
       offset: input.skip,

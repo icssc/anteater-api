@@ -8,12 +8,16 @@ import type {
 import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, gte, ilike, lt, lte } from "@packages/db/drizzle";
+import { and, eq, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
 import type { CourseLevel, course } from "@packages/db/schema";
 import { courseView } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
+
+type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
+
+type CoursesServiceOutput = z.infer<typeof courseSchema>;
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
   courseLevel === "LowerDiv"
@@ -52,7 +56,7 @@ const transformCourse = ({
   dependencies,
   instructors,
   ...course
-}: RawCourse): z.infer<typeof courseSchema> => ({
+}: RawCourse): CoursesServiceOutput => ({
   ...course,
   prerequisites: prerequisites as z.infer<typeof coursePreviewSchema>[],
   dependencies: dependencies as z.infer<typeof coursePreviewSchema>[],
@@ -62,8 +66,6 @@ const transformCourse = ({
   courseLevel: mapCourseLevel(course.courseLevel),
   geList: courseToGEList(course),
 });
-
-type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 function buildQuery(input: CoursesServiceInput) {
   const conditions: Array<SQL | undefined> = [];
@@ -145,7 +147,7 @@ export class CoursesService {
     where?: SQL;
     offset?: number;
     limit?: number;
-  }): Promise<z.infer<typeof courseSchema>[]> {
+  }): Promise<CoursesServiceOutput[]> {
     const { where, offset, limit } = input;
     return this.db
       .select()
@@ -156,11 +158,15 @@ export class CoursesService {
       .then((courses) => courses.map(transformCourse));
   }
 
-  async getCourseById(id: string): Promise<z.infer<typeof courseSchema> | null> {
+  async getCourseById(id: string): Promise<CoursesServiceOutput | null> {
     return this.getCoursesRaw({ where: eq(courseView.id, id) }).then((x) => orNull(x[0]));
   }
 
-  async getCourses(input: CoursesServiceInput): Promise<z.infer<typeof courseSchema>[]> {
+  async batchGetCourses(ids: string[]): Promise<CoursesServiceOutput[]> {
+    return this.getCoursesRaw({ where: inArray(courseView.id, ids), limit: ids.length });
+  }
+
+  async getCourses(input: CoursesServiceInput): Promise<CoursesServiceOutput[]> {
     return this.getCoursesRaw({ where: buildQuery(input), offset: input.skip, limit: input.take });
   }
 }

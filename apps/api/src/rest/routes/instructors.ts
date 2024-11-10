@@ -1,6 +1,7 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
+  batchInstructorsQuerySchema,
   errorSchema,
   instructorSchema,
   instructorsPathSchema,
@@ -14,6 +15,34 @@ import { database } from "@packages/db";
 
 const instructorsRouter = new OpenAPIHono<{ Bindings: Bindings }>({
   defaultHook,
+});
+
+const batchInstructorsRoute = createRoute({
+  summary: "Retrieve instructors with UCINetIDs",
+  operationId: "batchInstructors",
+  tags: ["Instructors"],
+  method: "get",
+  path: "/batch",
+  request: { query: batchInstructorsQuerySchema },
+  description: "Retrieves instructors with the UCINetIDs provided.",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: responseSchema(instructorSchema.array()),
+        },
+      },
+      description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
 });
 
 const instructorByIdRoute = createRoute({
@@ -78,6 +107,18 @@ instructorsRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
+
+instructorsRouter.openapi(batchInstructorsRoute, async (c) => {
+  const { ucinetids } = c.req.valid("query");
+  const service = new InstructorsService(database(c.env.DB.connectionString));
+  return c.json(
+    {
+      ok: true,
+      data: instructorSchema.array().parse(await service.batchGetInstructors(ucinetids)),
+    },
+    200,
+  );
+});
 
 instructorsRouter.openapi(instructorByIdRoute, async (c) => {
   const { ucinetid } = c.req.valid("param");
