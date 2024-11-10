@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, getTableColumns, ne, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +8,7 @@ import {
   integer,
   json,
   pgEnum,
+  pgMaterializedView,
   pgTable,
   text,
   timestamp,
@@ -666,3 +667,85 @@ export const studyRoomSlot = pgTable(
     uniqueIndex().on(table.studyRoomId, table.start, table.end),
   ],
 );
+
+// Materialized views
+
+export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
+  const shortenedNamesCte = qb.$with("shortened_names_cte").as(
+    qb
+      .select({
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
+          "shortened_names",
+        ),
+      })
+      .from(instructorToWebsocInstructor)
+      .groupBy(instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const termsCte = qb.$with("terms_cte").as(
+    qb
+      .select({
+        courseId: course.id,
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        terms:
+          sql`ARRAY_AGG(DISTINCT CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter}))`.as(
+            "terms",
+          ),
+      })
+      .from(course)
+      .innerJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+      .innerJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .innerJoin(
+        websocInstructor,
+        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+      )
+      .innerJoin(
+        instructorToWebsocInstructor,
+        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      )
+      .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const coursesCte = qb.$with("courses_cte").as(
+    qb
+      .with(termsCte)
+      .select({
+        instructorUcinetid: termsCte.instructorUcinetid,
+        courseId: course.id,
+        courseInfo: sql`
+          CASE WHEN ${course.id} IS NULL
+          THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+               'id', ${course.id},
+               'title', ${course.title},
+               'department', ${course.department},
+               'courseNumber', ${course.courseNumber},
+               'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
+          )
+          END
+          `.as("course_info"),
+      })
+      .from(course)
+      .innerJoin(termsCte, eq(termsCte.courseId, course.id))
+      .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
+  );
+  return qb
+    .with(shortenedNamesCte, coursesCte)
+    .select({
+      ...getTableColumns(instructor),
+      shortenedNames: sql<
+        string[]
+      >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
+      courses: sql`
+          ARRAY_AGG(DISTINCT ${coursesCte.courseInfo})
+        `.as("courses"),
+    })
+    .from(instructor)
+    .innerJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
+    .innerJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
+    .where(ne(instructor.ucinetid, "student"))
+    .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
+});
