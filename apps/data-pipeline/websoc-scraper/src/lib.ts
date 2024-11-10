@@ -11,7 +11,7 @@ import type {
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
 import { and, asc, eq, gte, inArray, lte } from "@packages/db/drizzle";
-import type { WebsocSectionFinalExam } from "@packages/db/schema";
+import { type WebsocSectionFinalExam, courseView, instructorView } from "@packages/db/schema";
 import {
   calendarTerm,
   course,
@@ -799,10 +799,14 @@ export async function scrapeTerm(
   await scrapeGEsForTerm(db, term);
   const lastScraped = new Date();
   const values = { name, lastScraped, lastDeptScraped: null };
-  await db
-    .insert(websocMeta)
-    .values(values)
-    .onConflictDoUpdate({ target: websocMeta.name, set: values });
+  await db.transaction(async (tx) => {
+    await tx.refreshMaterializedView(courseView);
+    await tx.refreshMaterializedView(instructorView);
+    await tx
+      .insert(websocMeta)
+      .values(values)
+      .onConflictDoUpdate({ target: websocMeta.name, set: values });
+  });
 }
 
 export async function doScrape(db: ReturnType<typeof database>) {
