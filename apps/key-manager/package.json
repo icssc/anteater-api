@@ -31,7 +31,6 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241106.0",
     "@opennextjs/cloudflare": "^0.2.1",
     "@types/node": "^20",
     "@types/react": "^18",
