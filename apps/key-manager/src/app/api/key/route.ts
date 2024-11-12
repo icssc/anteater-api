@@ -16,7 +16,7 @@ const createUserKeyHelper = async (userId: string) => {
   const prefix = getUserPrefix(userId);
   const type = "sk";
   const uniqueId = createId();
-  const completeKey = `${prefix}:${type}:${uniqueId}`;
+  const completeKey = `${prefix}.${type}.${uniqueId}`;
 
   const ctx = await getCloudflareContext();
   await ctx.env.API_KEYS.put(completeKey, '{"_type":"secret","resources":{"FUZZY_SEARCH":true}}');
