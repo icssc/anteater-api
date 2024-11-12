@@ -6,3 +6,4 @@ export * from "./grades";
 export * from "./instructors.ts";
 export * from "./websoc";
 export * from "./week";
+export * from "./study-rooms";

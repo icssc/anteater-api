@@ -5,3 +5,4 @@ export * from "./grades";
 export * from "./instructors";
 export * from "./websoc";
 export * from "./week";
+export * from "./study-rooms";
