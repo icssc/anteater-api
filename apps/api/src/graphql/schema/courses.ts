@@ -52,5 +52,6 @@ input CoursesQuery {
 extend type Query {
     course(id: String!): Course!
     courses(query: CoursesQuery!): [Course!]!
+    batchCourses(ids: [String!]!): [Course!]!
 }
 `;

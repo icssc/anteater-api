@@ -16,5 +16,9 @@ export const coursesResolvers = {
       const service = new CoursesService(db);
       return await service.getCourses(coursesQuerySchema.parse(args.query));
     },
+    batchCourses: async (_: unknown, { ids }: { ids: string[] }, { db }: GraphQLContext) => {
+      const service = new CoursesService(db);
+      return await service.batchGetCourses(ids);
+    },
   },
 };

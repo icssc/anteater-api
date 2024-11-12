@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +8,7 @@ import {
   integer,
   json,
   pgEnum,
+  pgMaterializedView,
   pgTable,
   text,
   timestamp,
@@ -15,6 +16,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { aliasedTable } from "./drizzle.ts";
 
 // Types
 
@@ -161,13 +163,14 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
+  lastDeptScraped: varchar("last_dept_scraped"),
 });
 
 export const websocSchool = pgTable(
   "websoc_school",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
@@ -183,7 +186,7 @@ export const websocDepartment = pgTable(
     schoolId: uuid("school_id")
       .references(() => websocSchool.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     deptCode: varchar("dept_code").notNull(),
@@ -210,7 +213,7 @@ export const websocCourse = pgTable(
       .generatedAlwaysAs(
         (): SQL => sql`REPLACE(${websocCourse.deptCode}, ' ', '') || ${websocCourse.courseNumber}`,
       ),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
@@ -269,7 +272,7 @@ export const websocSection = pgTable(
     courseId: uuid("course_id")
       .references(() => websocCourse.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     units: varchar("units").notNull(),
@@ -327,7 +330,7 @@ export const websocSectionMeeting = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     sectionCode: integer("section_code").notNull(),
     meetingIndex: integer("meeting_index").notNull(),
     timeString: varchar("time_string").notNull(),
@@ -352,7 +355,7 @@ export const websocLocation = pgTable(
   "websoc_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     building: varchar("building").notNull(),
     room: varchar("room").notNull(),
   },
@@ -361,7 +364,7 @@ export const websocLocation = pgTable(
 
 export const websocInstructor = pgTable("websoc_instructor", {
   name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
 export const websocSectionToInstructor = pgTable(
@@ -461,7 +464,7 @@ export const course = pgTable(
   "course",
   {
     id: varchar("id").primaryKey(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     department: varchar("department").notNull(),
     departmentAlias: varchar("department_alias"),
     courseNumber: varchar("course_number").notNull(),
@@ -660,5 +663,183 @@ export const studyRoomSlot = pgTable(
     end: timestamp("end", { mode: "date" }).notNull(),
     isAvailable: boolean("is_available").notNull(),
   },
-  (table) => [index().on(table.studyRoomId)],
+  (table) => [
+    index().on(table.studyRoomId),
+    uniqueIndex().on(table.studyRoomId, table.start, table.end),
+  ],
 );
+
+// Materialized views
+
+export const courseView = pgMaterializedView("course_view").as((qb) => {
+  const dependency = aliasedTable(prerequisite, "dependency");
+  const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
+  const dependencyCourse = aliasedTable(course, "dependency_course");
+  return qb
+    .select({
+      ...getTableColumns(course),
+      prerequisites: sql`
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${prerequisiteCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+              'id', ${prerequisiteCourse.id},
+              'title', ${prerequisiteCourse.title},
+              'department', ${prerequisiteCourse.department},
+              'courseNumber', ${prerequisiteCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite}
+            LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
+            WHERE ${prerequisite.dependencyId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("prerequisites"),
+      dependencies: sql`
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${dependencyCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+                'id', ${dependencyCourse.id},
+                'title', ${dependencyCourse.title},
+                'department', ${dependencyCourse.department},
+                'courseNumber', ${dependencyCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite} ${dependency}
+            LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
+            WHERE ${dependency.prerequisiteId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("dependencies"),
+      terms: sql<string[]>`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)
+          `.as("terms"),
+      instructors: sql`
+        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT
+          CASE WHEN ${instructor.ucinetid} IS NULL THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+            'ucinetid', ${instructor.ucinetid},
+            'name', ${instructor.name},
+            'title', ${instructor.title},
+            'email', ${instructor.email},
+            'department', ${instructor.department},
+            'shortenedNames', ARRAY(
+              SELECT ${instructorToWebsocInstructor.websocInstructorName}
+              FROM ${instructorToWebsocInstructor}
+              WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
+            )
+          )
+          END
+        ), ARRAY[]::JSONB[]), NULL)
+        `.as("instructors"),
+    })
+    .from(course)
+    .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+    .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+    .leftJoin(websocSectionToInstructor, eq(websocSectionToInstructor.sectionId, websocSection.id))
+    .leftJoin(websocInstructor, eq(websocInstructor.name, websocSectionToInstructor.instructorName))
+    .leftJoin(
+      instructorToWebsocInstructor,
+      eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+    )
+    .leftJoin(
+      instructor,
+      and(
+        eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
+        isNotNull(instructor.ucinetid),
+        ne(instructor.ucinetid, "student"),
+      ),
+    )
+    .groupBy(course.id);
+});
+
+export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
+  const shortenedNamesCte = qb.$with("shortened_names_cte").as(
+    qb
+      .select({
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
+          "shortened_names",
+        ),
+      })
+      .from(instructorToWebsocInstructor)
+      .groupBy(instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const termsCte = qb.$with("terms_cte").as(
+    qb
+      .select({
+        courseId: course.id,
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        terms: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)`.as("terms"),
+      })
+      .from(course)
+      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .leftJoin(
+        websocInstructor,
+        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+      )
+      .leftJoin(
+        instructorToWebsocInstructor,
+        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      )
+      .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const coursesCte = qb.$with("courses_cte").as(
+    qb
+      .with(termsCte)
+      .select({
+        instructorUcinetid: termsCte.instructorUcinetid,
+        courseId: course.id,
+        courseInfo: sql`
+          CASE WHEN ${course.id} IS NULL
+          THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+               'id', ${course.id},
+               'title', ${course.title},
+               'department', ${course.department},
+               'courseNumber', ${course.courseNumber},
+               'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
+          )
+          END
+          `.as("course_info"),
+      })
+      .from(course)
+      .leftJoin(termsCte, eq(termsCte.courseId, course.id))
+      .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
+  );
+  return qb
+    .with(shortenedNamesCte, coursesCte)
+    .select({
+      ...getTableColumns(instructor),
+      shortenedNames: sql<
+        string[]
+      >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
+      courses: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${coursesCte.courseInfo}), NULL)
+        `.as("courses"),
+    })
+    .from(instructor)
+    .leftJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
+    .leftJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
+    .where(ne(instructor.ucinetid, "student"))
+    .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
+});

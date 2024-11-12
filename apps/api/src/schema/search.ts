@@ -9,6 +9,7 @@ export const searchQuerySchema = z.object({
     .default(100)
     .refine((x) => x <= 100, "Page size must be smaller than 100"),
   skip: z.coerce.number().default(0),
+  resultType: z.union([z.literal("course"), z.literal("instructor")]).optional(),
 });
 
 export const searchResultSchema = z.discriminatedUnion("type", [
@@ -23,3 +24,8 @@ export const searchResultSchema = z.discriminatedUnion("type", [
     rank: z.number(),
   }),
 ]);
+
+export const searchResponseSchema = z.object({
+  count: z.number(),
+  results: searchResultSchema.array(),
+});

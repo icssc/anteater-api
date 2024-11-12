@@ -2,11 +2,11 @@ import type {
   courseSchema,
   instructorSchema,
   searchQuerySchema,
-  searchResultSchema,
+  searchResponseSchema,
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { inArray, sql } from "@packages/db/drizzle";
+import { asc, desc, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -33,11 +33,19 @@ function splitAtLastNumber(s: string): string {
   const i = Array.from(s.matchAll(/\d+/g))
     .map((x) => x.index)
     .slice(-1)[0];
-  return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`.replaceAll(/ {2,}/g, " ");
+  return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`;
 }
 
-const toQuery = (query: string) =>
-  sql`TO_TSQUERY('english', WEBSEARCH_TO_TSQUERY('english', ${splitAtLastNumber(query)})::TEXT || ':*')`;
+function toQuery(query: string) {
+  const normalizedQuery = splitAtLastNumber(query)
+    .replaceAll(/ {2,}/g, " ")
+    .replaceAll(/-/g, "\\-")
+    .split(" ")
+    .map((x) => x.replace(/^\\-/, "-"))
+    .join(" ");
+  const tsQuery = sql`WEBSEARCH_TO_TSQUERY('english', ${normalizedQuery})`;
+  return sql`CASE WHEN NUMNODE(${tsQuery}) > 0 THEN TO_TSQUERY('english', ${tsQuery}::TEXT || ':*') ELSE '' END`;
+}
 
 type SearchServiceInput = z.infer<typeof searchQuerySchema>;
 
@@ -48,7 +56,93 @@ export class SearchService {
     private readonly instructorsService: InstructorsService,
   ) {}
 
-  async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResultSchema>[]> {
+  private async courseMappingFromResults(results: Map<string, number>) {
+    return await this.coursesService
+      .batchGetCourses(Array.from(results.keys()))
+      .then((courses) =>
+        courses.reduce(
+          (acc, course) => acc.set(course.id, course),
+          new Map<string, z.infer<typeof courseSchema>>(),
+        ),
+      );
+  }
+
+  private async instructorMappingFromResults(results: Map<string, number>) {
+    return await this.instructorsService
+      .batchGetInstructors(Array.from(results.keys()))
+      .then((instructors) =>
+        instructors.reduce(
+          (acc, instructor) => acc.set(instructor.ucinetid, instructor),
+          new Map<string, z.infer<typeof instructorSchema>>(),
+        ),
+      );
+  }
+
+  private async doSearchForCourses(
+    input: SearchServiceInput,
+  ): Promise<z.infer<typeof searchResponseSchema>> {
+    const query = toQuery(input.query);
+    const results = await this.db
+      .select({
+        id: course.id,
+        rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
+      })
+      .from(course)
+      .where(sql`${COURSES_WEIGHTS} @@ ${query}`)
+      .orderBy((t) => [desc(t.rank), asc(t.id)])
+      .then((rows) =>
+        rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
+      );
+    const courses = await this.courseMappingFromResults(results);
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) => ({
+          type: "course" as const,
+          result: getFromMapOrThrow(courses, key),
+          rank,
+        }))
+        .slice(input.skip, input.skip + input.take),
+    };
+  }
+
+  private async doSearchForInstructors(
+    input: SearchServiceInput,
+  ): Promise<z.infer<typeof searchResponseSchema>> {
+    const query = toQuery(input.query);
+    const results = await this.db
+      .select({
+        id: instructor.ucinetid,
+        rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
+      })
+      .from(instructor)
+      .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)
+      .offset(input.skip)
+      .limit(input.take)
+      .orderBy((t) => [desc(t.rank), asc(t.id)])
+      .then((rows) =>
+        rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
+      );
+    const instructors = await this.instructorMappingFromResults(results);
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) => ({
+          type: "instructor" as const,
+          result: getFromMapOrThrow(instructors, key),
+          rank,
+        }))
+        .slice(input.skip, input.skip + input.take),
+    };
+  }
+
+  async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
+    if (input.resultType === "course") {
+      return this.doSearchForCourses(input);
+    }
+    if (input.resultType === "instructor") {
+      return this.doSearchForInstructors(input);
+    }
     const query = toQuery(input.query);
     const results = await unionAll(
       this.db
@@ -65,55 +159,36 @@ export class SearchService {
         })
         .from(instructor)
         .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
-    )
-      .offset(input.skip)
-      .limit(input.take)
-      .then((rows) =>
-        rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
-      );
-    const courses = await this.coursesService
-      .getCoursesRaw({
-        where: inArray(course.id, Array.from(results.keys())),
-        limit: results.size,
-      })
-      .then((courses) =>
-        courses.reduce(
-          (acc, course) => acc.set(course.id, course),
-          new Map<string, z.infer<typeof courseSchema>>(),
-        ),
-      );
-    const instructors = await this.instructorsService
-      .getInstructorsRaw({
-        where: inArray(instructor.ucinetid, Array.from(results.keys())),
-        limit: results.size,
-      })
-      .then((instructors) =>
-        instructors.reduce(
-          (acc, instructor) => acc.set(instructor.ucinetid, instructor),
-          new Map<string, z.infer<typeof instructorSchema>>(),
-        ),
-      );
-    return Array.from(results.keys())
-      .map((key) =>
-        courses.has(key)
-          ? {
-              key,
-              type: "course" as const,
-              result: getFromMapOrThrow(courses, key),
-              rank: getFromMapOrThrow(results, key),
-            }
-          : {
-              key,
-              type: "instructor" as const,
-              result: getFromMapOrThrow(instructors, key),
-              rank: getFromMapOrThrow(results, key),
-            },
-      )
-      .toSorted((a, b) => {
-        const rankDiff = b.rank - a.rank;
-        return Math.abs(rankDiff) < Number.EPSILON
-          ? a.key.localeCompare(b.key)
-          : Math.sign(rankDiff);
-      });
+    ).then((rows) =>
+      rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
+    );
+    const courses = await this.courseMappingFromResults(results);
+    const instructors = await this.instructorMappingFromResults(results);
+    return {
+      count: results.size,
+      results: Array.from(results.entries())
+        .map(([key, rank]) =>
+          courses.has(key)
+            ? {
+                key,
+                type: "course" as const,
+                result: getFromMapOrThrow(courses, key),
+                rank,
+              }
+            : {
+                key,
+                type: "instructor" as const,
+                result: getFromMapOrThrow(instructors, key),
+                rank,
+              },
+        )
+        .toSorted((a, b) => {
+          const rankDiff = b.rank - a.rank;
+          return Math.abs(rankDiff) < Number.EPSILON
+            ? a.key.localeCompare(b.key)
+            : Math.sign(rankDiff);
+        })
+        .slice(input.skip, input.skip + input.take),
+    };
   }
 }
