@@ -8,6 +8,7 @@
     "deploy": "cloudflare && wrangler deploy",
     "dev": "next dev",
     "generate": "drizzle-kit generate",
+    "postinstall": "cloudflare && wrangler types --x-include-runtime",
     "lint": "next lint",
     "migrate": "tsx src/db/migrate.ts",
     "preview": "cloudflare && wrangler dev",

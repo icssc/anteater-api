@@ -7,7 +7,7 @@ import {
   createUserApiKey,
   deleteUserApiKey,
   getUserApiKey,
-} from "@/app/api/key/route";
+} from "@/app/actions/keys";
 
 export default function ApiKeyManager() {
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);

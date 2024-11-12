@@ -34,7 +34,7 @@ const getUserKeyHelper = async (id: string) => {
   const ctx = await getCloudflareContext();
 
   const prefix = getUserPrefix(id);
-  const listResult = await ctx.env.API_KEYS.list({ prefix, limit: 1 });
+  const listResult = await ctx.env.API_KEYS.list({ prefix, limit: 50 });
 
   if (listResult.keys.length > 0) {
     return listResult.keys[0].name;
