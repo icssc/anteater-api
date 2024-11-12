@@ -1,5 +1,5 @@
 {
-  "id": "2e5e4ec2-b387-4d0a-aeb9-7e9386f81e24",
+  "id": "8d988d12-c2fc-4c09-aeba-f0bab28955cb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -254,6 +254,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "isAdmin": {
+          "name": "isAdmin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},

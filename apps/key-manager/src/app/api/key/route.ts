@@ -1,3 +1,5 @@
+"use server";
+
 import { createHash } from "node:crypto";
 import { auth } from "@/auth";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
@@ -10,13 +12,16 @@ const getUserPrefix = (userId: string) => {
   return prefix;
 };
 
-const createUserKey = async (userId: string) => {
+const createUserKeyHelper = async (userId: string) => {
   const prefix = getUserPrefix(userId);
   const type = "sk";
   const uniqueId = createId();
+  const completeKey = `${prefix}:${type}:${uniqueId}`;
 
   const ctx = await getCloudflareContext();
-  await ctx.env.API_KEYS.put(`${prefix}:${type}:${uniqueId}`, "");
+  await ctx.env.API_KEYS.put(completeKey, '{"_type":"secret","resources":{"FUZZY_SEARCH":true}}');
+
+  return completeKey;
 };
 
 /**
@@ -25,64 +30,68 @@ const createUserKey = async (userId: string) => {
  * @param id user's id
  * @return the user's api key if it exists, otherwise null
  */
-const getUserKey = async (id: string) => {
+const getUserKeyHelper = async (id: string) => {
   const ctx = await getCloudflareContext();
 
-  await ctx.env.API_KEYS.list({ prefix: getUserPrefix(id), limit: 1 });
+  const prefix = getUserPrefix(id);
+  const listResult = await ctx.env.API_KEYS.list({ prefix, limit: 1 });
+
+  if (listResult.keys.length > 0) {
+    return listResult.keys[0].name;
+  }
+  return null;
 };
 
 /**
- * TODO Return the authed user's api key
+ * Return the authed user's API key
  */
-export const GET = async () => {
+export async function getUserApiKey() {
   const session = await auth();
   if (!session || !session.user?.id) {
-    // TODO 401
+    throw new Error("Unauthorized");
   }
 
-  const ctx = await getCloudflareContext();
-  ctx.env.API_KEYS;
-
-  // TODO get key
-};
+  const key = await getUserKeyHelper(session.user.id);
+  return key;
+}
 
 /**
- * TODO Create the authed user's api key
+ * Create the authed user's API key
  */
-export const POST = async () => {
+export async function createUserApiKey() {
   const session = await auth();
-  if (!session || !session.user?.id) {
-    // TODO 401
-    return null;
+  if (!session || !session.user?.id || !session.user?.email) {
+    throw new Error("Unauthorized");
   }
 
-  if ((await getUserKey(session.user.id)) != null /** TODO user already has key*/) {
-    // TODO prevent creating another key
+  if (session.user.email.split("@")[1] !== "uci.edu") {
+    throw new Error("User must have an @uci.edu email address");
   }
 
-  const ctx = await getCloudflareContext();
+  if ((await getUserKeyHelper(session.user.id)) != null) {
+    throw new Error("User already has an API key");
+  }
 
-  // TODO create key
-  await createUserKey(session.user.id);
+  const key = await createUserKeyHelper(session.user.id);
 
-  // TODO return okay response
-};
+  return key;
+}
 
 /**
- * TODO Delete the authed user's api key
+ * Delete the authed user's API key
  */
-export const DELETE = async () => {
+export async function deleteUserApiKey() {
   const session = await auth();
   if (!session || !session.user?.id) {
-    // TODO 401
-    return null;
+    throw new Error("Unauthorized");
   }
 
-  if ((await getUserKey(session.user.id)) == null /** TODO user does not have key*/) {
-    // TODO prevent deleting non-existent key
+  const key = await getUserKeyHelper(session.user.id);
+
+  if (key == null) {
+    throw new Error("User does not have an API key");
   }
 
   const ctx = await getCloudflareContext();
-
-  // TODO create key
-};
+  await ctx.env.API_KEYS.delete(key);
+}

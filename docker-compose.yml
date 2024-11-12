@@ -14,7 +14,7 @@ services:
 
   users-db:
     build:
-      context: apps/key-manager2/src/db
+      context: apps/key-manager/src/db
       dockerfile: Dockerfile
     ports:
       - "5433:5432"
