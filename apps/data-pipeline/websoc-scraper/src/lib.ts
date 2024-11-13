@@ -28,10 +28,10 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { baseTenIntOrNull, notNull, sleep } from "@packages/stdlib";
+import { baseTenIntOrNull, intersectAll, notNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 
-async function getDepts(db: ReturnType<typeof database>) {
+export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
   const $ = load(response);
@@ -510,7 +510,12 @@ const doDepartmentUpsert = async (
         school.departments.flatMap((dept) =>
           dept.courses.flatMap((course) =>
             course.sections.flatMap((section) =>
-              section.instructors.map((instructor) => [section.sectionCode, instructor]),
+              Array.from(
+                intersectAll(
+                  new Set(course.sections[0].instructors),
+                  ...course.sections.slice(1).map((section) => new Set(section.instructors)),
+                ),
+              ).map((instructor) => [section.sectionCode, instructor]),
             ),
           ),
         ),
@@ -522,14 +527,12 @@ const doDepartmentUpsert = async (
         }
         return acc.set(sectionCode, [instructor]);
       }, new Map<string, string[]>());
-    await tx
-      .insert(websocInstructor)
-      .values(
-        Array.from(new Set(sectionsToInstructors.values())).flatMap((names) =>
-          names.map((name) => ({ name, updatedAt })),
-        ),
-      )
-      .onConflictDoNothing();
+    const instructorsToInsert = Array.from(new Set(sectionsToInstructors.values())).flatMap(
+      (names) => names.map((name) => ({ name, updatedAt })),
+    );
+    if (instructorsToInsert.length) {
+      await tx.insert(websocInstructor).values(instructorsToInsert).onConflictDoNothing();
+    }
     await tx.delete(websocSectionToInstructor).where(
       inArray(
         websocSectionToInstructor.sectionId,
@@ -538,16 +541,17 @@ const doDepartmentUpsert = async (
           .filter(notNull),
       ),
     );
-    await tx.insert(websocSectionToInstructor).values(
-      Array.from(sectionsToInstructors.entries())
-        .flatMap(([k, names]) =>
-          names.map((instructorName) => {
-            const sectionId = sections.get(k);
-            return sectionId ? { sectionId, instructorName } : undefined;
-          }),
-        )
-        .filter(notNull),
-    );
+    const instructorAssociationsToInsert = Array.from(sectionsToInstructors.entries())
+      .flatMap(([k, names]) =>
+        names.map((instructorName) => {
+          const sectionId = sections.get(k);
+          return sectionId ? { sectionId, instructorName } : undefined;
+        }),
+      )
+      .filter(notNull);
+    if (instructorAssociationsToInsert.length) {
+      await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
+    }
     await tx
       .delete(websocSectionMeeting)
       .where(inArray(websocSectionMeeting.sectionId, Array.from(sections.values())));
