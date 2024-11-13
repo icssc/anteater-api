@@ -20,6 +20,7 @@ export default async function LogIn() {
               "use server";
               await signIn("google");
             }}
+            className={"w-full"}
           >
             Sign in with Google
           </Button>
