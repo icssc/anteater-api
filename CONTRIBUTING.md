@@ -45,7 +45,6 @@ Thank you for your interest in contributing to Anteater API!
    ```
 
    If the checksum does not match, the database dump may be corrupt or have been tampered with. You should delete it immediately and try downloading it again.
-   n
 
 5. Start the local Postgres database.
 
