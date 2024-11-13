@@ -6,6 +6,8 @@ import {
   coursesPathSchema,
   coursesQuerySchema,
   errorSchema,
+  prerequisiteSchema,
+  prerequisiteTreeSchema,
   responseSchema,
 } from "$schema";
 import { CoursesService } from "$services";
@@ -14,6 +16,9 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+
+coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
+coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
 
 const batchCoursesRoute = createRoute({
   summary: "Retrieve courses with IDs",

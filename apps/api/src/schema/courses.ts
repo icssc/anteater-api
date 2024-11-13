@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
 
 const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
@@ -74,19 +75,65 @@ export const coursesQuerySchema = z.object({
   skip: z.coerce.number().default(0),
 });
 
-export const prerequisiteTreeSchema = z.object({
-  AND: z.any().array().optional().openapi({
-    description:
-      "All of these prerequisites must have been fulfilled before this course can be taken.",
+export const prerequisiteSchema = z.union([
+  z.object({
+    prereqType: z.literal("course"),
+    coreq: z.literal(false),
+    courseId: z.string(),
+    minGrade: z.string().optional(),
   }),
-  OR: z.any().array().optional().openapi({
-    description:
-      "At least one of these prerequisites must have been fulfilled before this course can be taken.",
+  z.object({
+    prereqType: z.literal("course"),
+    coreq: z.literal(true),
+    courseId: z.string(),
   }),
-  NOT: z.any().array().optional().openapi({
-    description:
-      "None of these prerequisites must have been fulfilled before this course can be taken.",
+  z.object({
+    prereqType: z.literal("exam"),
+    examName: z.string(),
+    minGrade: z.string().optional(),
   }),
+]);
+
+export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({
+  AND: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "All of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
+  OR: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "At least one of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
+  NOT: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "None of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
 });
 
 export const coursePreviewSchema = z.object({
