@@ -71,7 +71,7 @@ websocRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl:
 
 websocRouter.openapi(websocRoute, async (c) => {
   const query = c.req.valid("query");
-  const service = new WebsocService(database(c.env.DB.connectionString, { logger: true }));
+  const service = new WebsocService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,

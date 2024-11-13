@@ -1,170 +1,64 @@
-import type { coursePreviewSchema, instructorSchema, instructorsQuerySchema } from "$schema";
+import type { instructorSchema, instructorsQuerySchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, eq, ilike, ne, sql } from "@packages/db/drizzle";
-import {
-  type Term,
-  course,
-  instructor,
-  instructorToWebsocInstructor,
-  websocCourse,
-  websocInstructor,
-  websocSection,
-  websocSectionToInstructor,
-} from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
+import type { SQL } from "@packages/db/drizzle";
+import { and, eq, ilike, inArray } from "@packages/db/drizzle";
+import { instructorView } from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
-type InstructorServiceInput = z.infer<typeof instructorsQuerySchema>;
+type InstructorsServiceInput = z.infer<typeof instructorsQuerySchema>;
 
-function buildQuery(input: InstructorServiceInput) {
-  const conditions = [ne(instructor.ucinetid, "student")];
+type InstructorsServiceOutput = z.infer<typeof instructorSchema>;
+
+function buildQuery(input: InstructorsServiceInput) {
+  const conditions = [];
   if (input.nameContains) {
-    conditions.push(ilike(instructor.name, `%${input.nameContains}%`));
+    conditions.push(ilike(instructorView.name, `%${input.nameContains}%`));
   }
   if (input.titleContains) {
-    conditions.push(ilike(instructor.title, `%${input.titleContains}%`));
+    conditions.push(ilike(instructorView.title, `%${input.titleContains}%`));
   }
   if (input.departmentContains) {
-    conditions.push(ilike(instructor.department, `%${input.departmentContains}%`));
+    conditions.push(ilike(instructorView.department, `%${input.departmentContains}%`));
   }
   return and(...conditions);
-}
-
-type InstructorMetaRow = {
-  shortenedName: string;
-  term: { year: string; quarter: Term };
-  course: z.infer<typeof coursePreviewSchema>;
-};
-
-function transformMetaRows(rows: InstructorMetaRow[]) {
-  const shortenedNames = new Set<string>();
-  const courses = new Map<string, InstructorMetaRow["course"] & { terms: Set<string> }>();
-  for (const { shortenedName, term, course } of rows) {
-    const termString = `${term.year} ${term.quarter}`;
-    shortenedNames.add(shortenedName);
-    courses.set(course.id, {
-      ...course,
-      terms: courses.get(course.id)?.terms.add(termString) ?? new Set([termString]),
-    });
-  }
-  return {
-    shortenedNames: Array.from(shortenedNames),
-    courses: Array.from(courses.values()).map(({ terms, ...rest }) => ({
-      ...rest,
-      terms: Array.from(terms),
-    })),
-  };
 }
 
 export class InstructorsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getInstructorByUCInetID(
-    ucinetid: string,
-  ): Promise<z.infer<typeof instructorSchema> | null> {
-    if (ucinetid === "student") return null;
-    const [row] = await this.db
+  async getInstructorsRaw(input: {
+    where?: SQL;
+    offset?: number;
+    limit?: number;
+  }) {
+    const { where, offset, limit } = input;
+    return (await this.db
       .select()
-      .from(instructor)
-      .where(and(eq(instructor.ucinetid, ucinetid)));
-    if (!row) return null;
-    const metaRows = await this.db
-      .select({
-        shortenedName: instructorToWebsocInstructor.websocInstructorName,
-        term: { year: websocCourse.year, quarter: websocCourse.quarter },
-        course: {
-          id: course.id,
-          title: course.title,
-          department: course.department,
-          courseNumber: course.courseNumber,
-        },
-      })
-      .from(instructorToWebsocInstructor)
-      .innerJoin(
-        websocInstructor,
-        eq(websocInstructor.name, instructorToWebsocInstructor.websocInstructorName),
-      )
-      .innerJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
-      .innerJoin(websocSection, eq(websocSection.id, websocSectionToInstructor.sectionId))
-      .innerJoin(websocCourse, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(
-        course,
-        and(
-          eq(course.department, websocCourse.deptCode),
-          eq(course.courseNumber, websocCourse.courseNumber),
-        ),
-      )
-      .where(eq(instructorToWebsocInstructor.instructorUcinetid, row.ucinetid));
-    return {
-      ...row,
-      ...transformMetaRows(metaRows),
-    };
+      .from(instructorView)
+      .where(where)
+      .offset(offset ?? 0)
+      .limit(limit ?? 1)) as InstructorsServiceOutput[];
   }
 
-  async getInstructors(input: InstructorServiceInput): Promise<z.infer<typeof instructorSchema>[]> {
-    const rows = await this.db
-      .select()
-      .from(instructor)
-      .where(buildQuery(input))
-      .then((rows) =>
-        rows.reduce(
-          (acc, row) => acc.set(row.ucinetid, row),
-          new Map<string, typeof instructor.$inferSelect>(),
-        ),
-      );
-    if (!rows.size) return [];
-    const metaRows = await this.db
-      .select({
-        ucinetid: instructorToWebsocInstructor.instructorUcinetid,
-        shortenedName: instructorToWebsocInstructor.websocInstructorName,
-        term: { year: websocCourse.year, quarter: websocCourse.quarter },
-        course: {
-          id: course.id,
-          title: course.title,
-          department: course.department,
-          courseNumber: course.courseNumber,
-        },
-      })
-      .from(instructor)
-      .innerJoin(
-        instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.instructorUcinetid, instructor.ucinetid),
-      )
-      .innerJoin(
-        websocInstructor,
-        eq(websocInstructor.name, instructorToWebsocInstructor.websocInstructorName),
-      )
-      .innerJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
-      .innerJoin(websocSection, eq(websocSection.id, websocSectionToInstructor.sectionId))
-      .innerJoin(websocCourse, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(
-        course,
-        eq(course.id, sql`CONCAT(${websocCourse.deptCode},${websocCourse.courseNumber})`),
-      )
-      .where(buildQuery(input))
-      .then((rows) =>
-        rows.reduce((acc, row) => {
-          if (!row.ucinetid) return acc;
-          if (acc.has(row.ucinetid)) {
-            acc.get(row.ucinetid)?.push(row);
-            return acc;
-          }
-          return acc.set(row.ucinetid, [row]);
-        }, new Map<string, InstructorMetaRow[]>()),
-      );
-    return Array.from(metaRows.entries()).map(([ucinetid, metaRows]) => ({
-      ...getFromMapOrThrow(rows, ucinetid),
-      ...transformMetaRows(metaRows),
-    }));
+  async getInstructorByUCInetID(ucinetid: string): Promise<InstructorsServiceOutput | null> {
+    return this.getInstructorsRaw({
+      where: and(eq(instructorView.ucinetid, ucinetid)),
+    }).then((xs) => orNull(xs[0]));
   }
 
-  async getAllInstructors() {
-    return this.getInstructors({});
+  async batchGetInstructors(ucinetids: string[]): Promise<InstructorsServiceOutput[]> {
+    return this.getInstructorsRaw({
+      where: inArray(instructorView.ucinetid, ucinetids),
+      limit: ucinetids.length,
+    });
+  }
+
+  async getInstructors(input: InstructorsServiceInput): Promise<InstructorsServiceOutput[]> {
+    return this.getInstructorsRaw({
+      where: buildQuery(input),
+      offset: input.skip,
+      limit: input.take,
+    });
   }
 }

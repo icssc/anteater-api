@@ -11,22 +11,22 @@
     "postinstall": "wrangler types --x-include-runtime"
   },
   "dependencies": {
-    "@escape.tech/graphql-armor": "3.1.0",
+    "@escape.tech/graphql-armor": "3.1.1",
     "@graphql-tools/merge": "9.0.8",
-    "@graphql-yoga/plugin-response-cache": "3.9.0",
+    "@graphql-yoga/plugin-response-cache": "3.10.0",
     "@hono-rate-limiter/cloudflare": "0.2.1",
     "@hono/zod-openapi": "0.16.4",
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "@scalar/hono-api-reference": "0.5.155",
+    "@scalar/hono-api-reference": "0.5.158",
     "graphql": "16.9.0",
-    "graphql-yoga": "5.7.0",
-    "hono": "4.6.5",
+    "graphql-yoga": "5.8.0",
+    "hono": "4.6.8",
     "hono-rate-limiter": "0.4.0",
     "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/node": "20.8.3",
-    "wrangler": "3.81.0"
+    "wrangler": "3.84.1"
   }
 }

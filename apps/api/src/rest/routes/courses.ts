@@ -1,10 +1,13 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
+  batchCoursesQuerySchema,
   courseSchema,
   coursesPathSchema,
   coursesQuerySchema,
   errorSchema,
+  prerequisiteSchema,
+  prerequisiteTreeSchema,
   responseSchema,
 } from "$schema";
 import { CoursesService } from "$services";
@@ -14,19 +17,27 @@ import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
 
-const allCoursesRoute = createRoute({
-  summary: "List all courses",
-  operationId: "allCourses",
+coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
+coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
+
+const batchCoursesRoute = createRoute({
+  summary: "Retrieve courses with IDs",
+  operationId: "batchCourses",
   tags: ["Courses"],
   method: "get",
-  path: "/all",
-  description: "Retrieves all courses.",
+  path: "/batch",
+  request: { query: batchCoursesQuerySchema },
+  description: "Retrieves courses with the IDs provided",
   responses: {
     200: {
       content: {
         "application/json": { schema: responseSchema(courseSchema.array()) },
       },
       description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -94,12 +105,13 @@ coursesRouter.get(
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
-coursesRouter.openapi(allCoursesRoute, async (c) => {
+coursesRouter.openapi(batchCoursesRoute, async (c) => {
+  const { ids } = c.req.valid("query");
   const service = new CoursesService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,
-      data: courseSchema.array().parse(await service.getAllCourses()),
+      data: courseSchema.array().parse(await service.batchGetCourses(ids)),
     },
     200,
   );

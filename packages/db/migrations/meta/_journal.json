@@ -8,6 +8,41 @@
       "when": 1729283028285,
       "tag": "0000_init_db",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1730094786942,
+      "tag": "0001_fix_gen_course_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1730237796858,
+      "tag": "0002_search_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1730401838437,
+      "tag": "0003_refactor",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1730675191549,
+      "tag": "0004_enhance_scraper",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1731266926267,
+      "tag": "0005_mviews",
+      "breakpoints": true
     }
   ]
 }

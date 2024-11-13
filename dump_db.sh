@@ -8,6 +8,7 @@ pg_dump \
 --clean \
 --no-owner \
 --schema=public \
+--schema=drizzle \
 --no-privileges \
 --if-exists \
 --dbname=anteater_api \

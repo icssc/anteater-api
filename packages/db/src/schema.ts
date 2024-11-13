@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +8,7 @@ import {
   integer,
   json,
   pgEnum,
+  pgMaterializedView,
   pgTable,
   text,
   timestamp,
@@ -15,6 +16,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { aliasedTable } from "./drizzle.ts";
 
 // Types
 
@@ -29,6 +31,8 @@ export type ConfirmedWebsocSectionMeeting = {
   startTime: HourMinute;
   endTime: HourMinute;
 };
+
+export type FinalExamStatus = "SCHEDULED_FINAL" | "TBA_FINAL" | "NO_FINAL";
 
 export type WebsocSectionMeeting = TBAWebsocSectionMeeting | ConfirmedWebsocSectionMeeting;
 
@@ -137,10 +141,6 @@ export const websocStatuses = ["OPEN", "Waitl", "FULL", "NewOnly"] as const;
 export const websocStatus = pgEnum("websoc_status", websocStatuses);
 export type WebsocStatus = (typeof websocStatuses)[number];
 
-export const finalExamStatuses = ["SCHEDULED_FINAL", "TBA_FINAL", "NO_FINAL"] as const;
-export const finalExamStatus = pgEnum("final_exam_status", finalExamStatuses);
-export type FinalExamStatus = (typeof finalExamStatuses)[number];
-
 export const websocSectionTypes = [
   "Act",
   "Col",
@@ -163,21 +163,20 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
+  lastDeptScraped: varchar("last_dept_scraped"),
 });
 
 export const websocSchool = pgTable(
   "websoc_school",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
     schoolComment: text("school_comment").notNull(),
   },
-  (table) => ({
-    idx: uniqueIndex("websoc_school_idx").on(table.year, table.quarter, table.schoolName),
-  }),
+  (table) => [uniqueIndex().on(table.year, table.quarter, table.schoolName)],
 );
 
 export const websocDepartment = pgTable(
@@ -187,7 +186,7 @@ export const websocDepartment = pgTable(
     schoolId: uuid("school_id")
       .references(() => websocSchool.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     deptCode: varchar("dept_code").notNull(),
@@ -196,15 +195,10 @@ export const websocDepartment = pgTable(
     sectionCodeRangeComments: text("section_code_range_comments").array().notNull(),
     courseNumberRangeComments: text("course_number_range_comments").array().notNull(),
   },
-  (table) => ({
-    schoolIdx: index("school_idx").on(table.schoolId),
-    idx: uniqueIndex("websoc_department_idx").on(
-      table.year,
-      table.quarter,
-      table.schoolId,
-      table.deptCode,
-    ),
-  }),
+  (table) => [
+    index().on(table.schoolId),
+    uniqueIndex().on(table.year, table.quarter, table.schoolId, table.deptCode),
+  ],
 );
 
 export const websocCourse = pgTable(
@@ -216,8 +210,10 @@ export const websocCourse = pgTable(
       .notNull(),
     courseId: varchar("course_id")
       .notNull()
-      .generatedAlwaysAs((): SQL => sql`${websocCourse.deptCode} || ${websocCourse.courseNumber}`),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+      .generatedAlwaysAs(
+        (): SQL => sql`REPLACE(${websocCourse.deptCode}, ' ', '') || ${websocCourse.courseNumber}`,
+      ),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     schoolName: varchar("school_name").notNull(),
@@ -243,10 +239,10 @@ export const websocCourse = pgTable(
     isGE7: boolean("is_ge_7").notNull().default(false),
     isGE8: boolean("is_ge_8").notNull().default(false),
   },
-  (table) => ({
-    deptIdx: index("dept_idx").on(table.departmentId),
-    courseIdx: index("websoc_course_course_id_idx").on(table.courseId),
-    idx: uniqueIndex("websoc_course_idx").on(
+  (table) => [
+    index().on(table.departmentId),
+    index().on(table.courseId),
+    uniqueIndex().on(
       table.year,
       table.quarter,
       table.schoolName,
@@ -254,24 +250,19 @@ export const websocCourse = pgTable(
       table.courseNumber,
       table.courseTitle,
     ),
-    ge1AQueryIdx: index("ge_1a_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge1BQueryIdx: index("ge_1b_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge2QueryIdx: index("ge_2_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge3QueryIdx: index("ge_3_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge4QueryIdx: index("ge_4_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge5AQueryIdx: index("ge_5a_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge5BQueryIdx: index("ge_5b_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge6QueryIdx: index("ge_6_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge7QueryIdx: index("ge_7_query_idx").on(table.year, table.quarter, table.isGE1A),
-    ge8QueryIdx: index("ge_8_query_idx").on(table.year, table.quarter, table.isGE1A),
-    deptQueryIdx: index("dept_query_idx").on(table.year, table.quarter, table.deptCode),
-    courseQueryIdx: index("course_query_idx").on(
-      table.year,
-      table.quarter,
-      table.deptCode,
-      table.courseNumber,
-    ),
-  }),
+    index().on(table.year, table.quarter, table.isGE1A),
+    index().on(table.year, table.quarter, table.isGE1B),
+    index().on(table.year, table.quarter, table.isGE2),
+    index().on(table.year, table.quarter, table.isGE3),
+    index().on(table.year, table.quarter, table.isGE4),
+    index().on(table.year, table.quarter, table.isGE5A),
+    index().on(table.year, table.quarter, table.isGE5B),
+    index().on(table.year, table.quarter, table.isGE6),
+    index().on(table.year, table.quarter, table.isGE7),
+    index().on(table.year, table.quarter, table.isGE8),
+    index().on(table.year, table.quarter, table.deptCode),
+    index().on(table.year, table.quarter, table.deptCode, table.courseNumber),
+  ],
 );
 
 export const websocSection = pgTable(
@@ -281,7 +272,7 @@ export const websocSection = pgTable(
     courseId: uuid("course_id")
       .references(() => websocCourse.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     units: varchar("units").notNull(),
@@ -326,10 +317,10 @@ export const websocSection = pgTable(
         (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
       ),
   },
-  (table) => ({
-    courseIdx: index("course_idx").on(table.courseId),
-    idx: uniqueIndex("websoc_section_idx").on(table.year, table.quarter, table.sectionCode),
-  }),
+  (table) => [
+    index().on(table.courseId),
+    uniqueIndex().on(table.year, table.quarter, table.sectionCode),
+  ],
 );
 
 export const websocSectionMeeting = pgTable(
@@ -339,7 +330,7 @@ export const websocSectionMeeting = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     sectionCode: integer("section_code").notNull(),
     meetingIndex: integer("meeting_index").notNull(),
     timeString: varchar("time_string").notNull(),
@@ -357,25 +348,23 @@ export const websocSectionMeeting = pgTable(
     meetsSaturday: boolean("meets_saturday"),
     meetsSunday: boolean("meets_sunday"),
   },
-  (table) => ({
-    sectionIdx: index("section_idx").on(table.sectionId),
-  }),
+  (table) => [index().on(table.sectionId)],
 );
 
 export const websocLocation = pgTable(
   "websoc_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     building: varchar("building").notNull(),
     room: varchar("room").notNull(),
   },
-  (table) => ({ idx: uniqueIndex("websoc_location_idx").on(table.building, table.room) }),
+  (table) => [uniqueIndex().on(table.building, table.room)],
 );
 
 export const websocInstructor = pgTable("websoc_instructor", {
   name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
 export const websocSectionToInstructor = pgTable(
@@ -389,10 +378,7 @@ export const websocSectionToInstructor = pgTable(
       .references(() => websocInstructor.name)
       .notNull(),
   },
-  (table) => ({
-    sectionIdx: index("websoc_section_to_instructor_section_idx").on(table.sectionId),
-    instructorIdx: index("websoc_section_to_instructor_instructor_idx").on(table.instructorName),
-  }),
+  (table) => [index().on(table.sectionId), index().on(table.instructorName)],
 );
 
 export const websocSectionMeetingToLocation = pgTable(
@@ -406,14 +392,11 @@ export const websocSectionMeetingToLocation = pgTable(
       .references(() => websocLocation.id)
       .notNull(),
   },
-  (table) => ({
-    meetingIdx: index("meeting_idx").on(table.meetingId),
-    locationIdx: index("location_idx").on(table.locationId),
-    idx: uniqueIndex("websoc_section_meeting_to_location_idx").on(
-      table.meetingId,
-      table.locationId,
-    ),
-  }),
+  (table) => [
+    index().on(table.meetingId),
+    index().on(table.locationId),
+    uniqueIndex().on(table.meetingId, table.locationId),
+  ],
 );
 
 // WebSoc-adjacent data tables
@@ -436,10 +419,7 @@ export const websocSectionEnrollment = pgTable(
     numNewOnlyReserved: integer("num_new_only_reserved"),
     status: websocStatus("status"),
   },
-  (table) => ({
-    sectionIdx: index("meeting_section_idx").on(table.sectionId),
-    idx: uniqueIndex("websoc_section_enrollment_idx").on(table.sectionId, table.createdAt),
-  }),
+  (table) => [index().on(table.sectionId), uniqueIndex().on(table.sectionId, table.createdAt)],
 );
 
 export const websocSectionGrade = pgTable(
@@ -460,7 +440,7 @@ export const websocSectionGrade = pgTable(
     gradeWCount: integer("grade_w_count").notNull(),
     averageGPA: decimal("average_gpa", { precision: 3, scale: 2 }),
   },
-  (table) => ({ sectionIdx: index("grade_section_idx").on(table.sectionId) }),
+  (table) => [index().on(table.sectionId)],
 );
 
 export const larcSection = pgTable(
@@ -475,58 +455,89 @@ export const larcSection = pgTable(
     instructor: varchar("instructor").notNull(),
     bldg: varchar("bldg").notNull(),
   },
-  (table) => ({ courseIdx: index("larc_section_course_idx").on(table.courseId) }),
+  (table) => [index().on(table.courseId)],
 );
 
 // Course/Instructor tables
 
-export const course = pgTable("course", {
-  id: varchar("id").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
-  department: varchar("department").notNull(),
-  courseNumber: varchar("course_number").notNull(),
-  courseNumeric: integer("course_numeric")
-    .notNull()
-    .generatedAlwaysAs(
-      (): SQL =>
-        sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
+export const course = pgTable(
+  "course",
+  {
+    id: varchar("id").primaryKey(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+    department: varchar("department").notNull(),
+    departmentAlias: varchar("department_alias"),
+    courseNumber: varchar("course_number").notNull(),
+    courseNumeric: integer("course_numeric")
+      .notNull()
+      .generatedAlwaysAs(
+        (): SQL =>
+          sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
+      ),
+    school: varchar("school").notNull(),
+    title: varchar("title").notNull(),
+    courseLevel: courseLevel("course_level").notNull(),
+    minUnits: decimal("min_units", { precision: 4, scale: 2 }).notNull(),
+    maxUnits: decimal("max_units", { precision: 4, scale: 2 }).notNull(),
+    description: text("description").notNull(),
+    departmentName: varchar("department_name").notNull(),
+    prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
+    prerequisiteText: text("prerequisite_text").notNull(),
+    repeatability: varchar("repeatability").notNull(),
+    gradingOption: varchar("grading_option").notNull(),
+    concurrent: varchar("concurrent").notNull(),
+    sameAs: varchar("same_as").notNull(),
+    restriction: text("restriction").notNull(),
+    overlap: text("overlap").notNull(),
+    corequisites: text("corequisites").notNull(),
+    isGE1A: boolean("is_ge_1a").notNull(),
+    isGE1B: boolean("is_ge_1b").notNull(),
+    isGE2: boolean("is_ge_2").notNull(),
+    isGE3: boolean("is_ge_3").notNull(),
+    isGE4: boolean("is_ge_4").notNull(),
+    isGE5A: boolean("is_ge_5a").notNull(),
+    isGE5B: boolean("is_ge_5b").notNull(),
+    isGE6: boolean("is_ge_6").notNull(),
+    isGE7: boolean("is_ge_7").notNull(),
+    isGE8: boolean("is_ge_8").notNull(),
+    geText: varchar("ge_text").notNull(),
+  },
+  (table) => [
+    index("course_search_index").using(
+      "gin",
+      sql`(
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.department}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.departmentAlias}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumber}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumeric}::TEXT, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'C') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
+)`,
     ),
-  school: varchar("school").notNull(),
-  title: varchar("title").notNull(),
-  courseLevel: courseLevel("course_level").notNull(),
-  minUnits: decimal("min_units", { precision: 4, scale: 2 }).notNull(),
-  maxUnits: decimal("max_units", { precision: 4, scale: 2 }).notNull(),
-  description: text("description").notNull(),
-  departmentName: varchar("department_name").notNull(),
-  prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
-  prerequisiteText: text("prerequisite_text").notNull(),
-  repeatability: varchar("repeatability").notNull(),
-  gradingOption: varchar("grading_option").notNull(),
-  concurrent: varchar("concurrent").notNull(),
-  sameAs: varchar("same_as").notNull(),
-  restriction: text("restriction").notNull(),
-  overlap: text("overlap").notNull(),
-  corequisites: text("corequisites").notNull(),
-  isGE1A: boolean("is_ge_1a").notNull(),
-  isGE1B: boolean("is_ge_1b").notNull(),
-  isGE2: boolean("is_ge_2").notNull(),
-  isGE3: boolean("is_ge_3").notNull(),
-  isGE4: boolean("is_ge_4").notNull(),
-  isGE5A: boolean("is_ge_5a").notNull(),
-  isGE5B: boolean("is_ge_5b").notNull(),
-  isGE6: boolean("is_ge_6").notNull(),
-  isGE7: boolean("is_ge_7").notNull(),
-  isGE8: boolean("is_ge_8").notNull(),
-  geText: varchar("ge_text").notNull(),
-});
+  ],
+);
 
-export const instructor = pgTable("instructor", {
-  ucinetid: varchar("ucinetid").primaryKey(),
-  name: varchar("name").notNull(),
-  title: varchar("title").notNull(),
-  email: varchar("email").notNull(),
-  department: varchar("department").notNull(),
-});
+export const instructor = pgTable(
+  "instructor",
+  {
+    ucinetid: varchar("ucinetid").primaryKey(),
+    name: varchar("name").notNull(),
+    title: varchar("title").notNull(),
+    email: varchar("email").notNull(),
+    department: varchar("department").notNull(),
+  },
+  (table) => [
+    index("instructor_search_index").using(
+      "gin",
+      sql`(
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.ucinetid}, '')), 'A') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.name}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'B')
+)`,
+    ),
+  ],
+);
 
 export const prerequisite = pgTable(
   "prerequisite",
@@ -536,12 +547,12 @@ export const prerequisite = pgTable(
     prerequisiteId: varchar("prerequisite_id").notNull(),
     dependencyId: varchar("dependency_id").notNull(),
   },
-  (table) => ({
-    dependencyDeptIdx: index("dependency_dept_idx").on(table.dependencyDept),
-    prereqIdx: index("prereq_id_idx").on(table.prerequisiteId),
-    dependIdx: index("depend_id_idx").on(table.dependencyId),
-    idx: uniqueIndex("prerequisite_idx").on(table.prerequisiteId, table.dependencyId),
-  }),
+  (table) => [
+    index().on(table.dependencyDept),
+    index().on(table.prerequisiteId),
+    index().on(table.dependencyId),
+    uniqueIndex().on(table.prerequisiteId, table.dependencyId),
+  ],
 );
 
 export const instructorToWebsocInstructor = pgTable(
@@ -553,14 +564,11 @@ export const instructorToWebsocInstructor = pgTable(
       .notNull()
       .references(() => websocInstructor.name),
   },
-  (table) => ({
-    instructorIdx: index("instructor_idx").on(table.instructorUcinetid),
-    websocInstructorIdx: index("websoc_instructor_idx").on(table.websocInstructorName),
-    idx: uniqueIndex("instructor_to_websoc_instructor_idx").on(
-      table.instructorUcinetid,
-      table.websocInstructorName,
-    ),
-  }),
+  (table) => [
+    index().on(table.instructorUcinetid),
+    index().on(table.websocInstructorName),
+    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
+  ],
 );
 
 // DegreeWorks data tables
@@ -582,7 +590,7 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
   },
-  (table) => ({ degreeIdx: index("degree_idx").on(table.degreeId) }),
+  (table) => [index().on(table.degreeId)],
 );
 
 export const minor = pgTable("minor", {
@@ -601,7 +609,7 @@ export const specialization = pgTable(
     name: varchar("name").notNull(),
     requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
   },
-  (table) => ({ majorIdx: index("major_idx").on(table.majorId) }),
+  (table) => [index().on(table.majorId)],
 );
 
 // Misc. tables
@@ -641,7 +649,7 @@ export const studyRoom = pgTable(
       .references(() => studyLocation.id)
       .notNull(),
   },
-  (table) => ({ studyLocationIdx: index("study_location_idx").on(table.studyLocationId) }),
+  (table) => [index().on(table.studyLocationId)],
 );
 
 export const studyRoomSlot = pgTable(
@@ -655,7 +663,183 @@ export const studyRoomSlot = pgTable(
     end: timestamp("end", { mode: "date" }).notNull(),
     isAvailable: boolean("is_available").notNull(),
   },
-  (table) => ({
-    studyRoomIdx: index("study_room_idx").on(table.studyRoomId),
-  }),
+  (table) => [
+    index().on(table.studyRoomId),
+    uniqueIndex().on(table.studyRoomId, table.start, table.end),
+  ],
 );
+
+// Materialized views
+
+export const courseView = pgMaterializedView("course_view").as((qb) => {
+  const dependency = aliasedTable(prerequisite, "dependency");
+  const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
+  const dependencyCourse = aliasedTable(course, "dependency_course");
+  return qb
+    .select({
+      ...getTableColumns(course),
+      prerequisites: sql`
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${prerequisiteCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+              'id', ${prerequisiteCourse.id},
+              'title', ${prerequisiteCourse.title},
+              'department', ${prerequisiteCourse.department},
+              'courseNumber', ${prerequisiteCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite}
+            LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
+            WHERE ${prerequisite.dependencyId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("prerequisites"),
+      dependencies: sql`
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG(
+              CASE WHEN ${dependencyCourse.id} IS NULL THEN NULL
+              ELSE JSONB_BUILD_OBJECT(
+                'id', ${dependencyCourse.id},
+                'title', ${dependencyCourse.title},
+                'department', ${dependencyCourse.department},
+                'courseNumber', ${dependencyCourse.courseNumber}
+              )
+              END
+            )
+            FROM ${prerequisite} ${dependency}
+            LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
+            WHERE ${dependency.prerequisiteId} = ${course.id}
+          ),
+        ARRAY[]::JSONB[]), NULL)
+        `.as("dependencies"),
+      terms: sql<string[]>`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)
+          `.as("terms"),
+      instructors: sql`
+        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT
+          CASE WHEN ${instructor.ucinetid} IS NULL THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+            'ucinetid', ${instructor.ucinetid},
+            'name', ${instructor.name},
+            'title', ${instructor.title},
+            'email', ${instructor.email},
+            'department', ${instructor.department},
+            'shortenedNames', ARRAY(
+              SELECT ${instructorToWebsocInstructor.websocInstructorName}
+              FROM ${instructorToWebsocInstructor}
+              WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
+            )
+          )
+          END
+        ), ARRAY[]::JSONB[]), NULL)
+        `.as("instructors"),
+    })
+    .from(course)
+    .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+    .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+    .leftJoin(websocSectionToInstructor, eq(websocSectionToInstructor.sectionId, websocSection.id))
+    .leftJoin(websocInstructor, eq(websocInstructor.name, websocSectionToInstructor.instructorName))
+    .leftJoin(
+      instructorToWebsocInstructor,
+      eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+    )
+    .leftJoin(
+      instructor,
+      and(
+        eq(instructor.ucinetid, instructorToWebsocInstructor.instructorUcinetid),
+        isNotNull(instructor.ucinetid),
+        ne(instructor.ucinetid, "student"),
+      ),
+    )
+    .groupBy(course.id);
+});
+
+export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
+  const shortenedNamesCte = qb.$with("shortened_names_cte").as(
+    qb
+      .select({
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
+          "shortened_names",
+        ),
+      })
+      .from(instructorToWebsocInstructor)
+      .groupBy(instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const termsCte = qb.$with("terms_cte").as(
+    qb
+      .select({
+        courseId: course.id,
+        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
+        terms: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
+            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
+            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
+            END
+          ), NULL)`.as("terms"),
+      })
+      .from(course)
+      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .leftJoin(
+        websocInstructor,
+        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+      )
+      .leftJoin(
+        instructorToWebsocInstructor,
+        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      )
+      .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
+  );
+  const coursesCte = qb.$with("courses_cte").as(
+    qb
+      .with(termsCte)
+      .select({
+        instructorUcinetid: termsCte.instructorUcinetid,
+        courseId: course.id,
+        courseInfo: sql`
+          CASE WHEN ${course.id} IS NULL
+          THEN NULL
+          ELSE JSONB_BUILD_OBJECT(
+               'id', ${course.id},
+               'title', ${course.title},
+               'department', ${course.department},
+               'courseNumber', ${course.courseNumber},
+               'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
+          )
+          END
+          `.as("course_info"),
+      })
+      .from(course)
+      .leftJoin(termsCte, eq(termsCte.courseId, course.id))
+      .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
+  );
+  return qb
+    .with(shortenedNamesCte, coursesCte)
+    .select({
+      ...getTableColumns(instructor),
+      shortenedNames: sql<
+        string[]
+      >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
+      courses: sql`
+          ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${coursesCte.courseInfo}), NULL)
+        `.as("courses"),
+    })
+    .from(instructor)
+    .leftJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
+    .leftJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
+    .where(ne(instructor.ucinetid, "student"))
+    .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
+});

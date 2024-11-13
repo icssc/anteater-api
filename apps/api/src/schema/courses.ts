@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
 
 const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
@@ -41,71 +42,98 @@ export const coursesPathSchema = z.object({
     .openapi({ param: { name: "id", in: "path" } }),
 });
 
-export const coursesQuerySchema = z
-  .object({
-    department: z.string().optional(),
-    courseNumber: z.string().optional(),
-    courseNumeric: z.coerce.number().optional(),
-    titleContains: z.string().optional(),
-    courseLevel: z
-      .enum(inputCourseLevels, {
-        message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
-      })
-      .optional(),
-    minUnits: z.coerce.number().optional(),
-    maxUnits: z.coerce.number().optional(),
-    descriptionContains: z.string().optional(),
-    geCategory: z
-      .enum(inputGECategories, {
-        message:
-          "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
-      })
-      .optional(),
-  })
-  .refine((x) => Object.keys(x).length > 0, {
-    message:
-      "At least one filter must be provided. To get all courses, use the /courses/all REST endpoint or allCourses GraphQL query.",
-  });
+export const batchCoursesQuerySchema = z.object({
+  ids: z
+    .string({ message: "Parameter 'ids' is required" })
+    .transform((xs) => xs.split(","))
+    .openapi({ example: "COMPSCI161,COMPSCI162" }),
+});
 
-export const prerequisiteSchema = z.discriminatedUnion("prereqType", [
+export const coursesQuerySchema = z.object({
+  department: z.string().optional(),
+  courseNumber: z.string().optional(),
+  courseNumeric: z.coerce.number().optional(),
+  titleContains: z.string().optional(),
+  courseLevel: z
+    .enum(inputCourseLevels, {
+      message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
+    })
+    .optional(),
+  minUnits: z.coerce.number().optional(),
+  maxUnits: z.coerce.number().optional(),
+  descriptionContains: z.string().optional(),
+  geCategory: z
+    .enum(inputGECategories, {
+      message:
+        "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
+    })
+    .optional(),
+  take: z.coerce
+    .number()
+    .default(100)
+    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+  skip: z.coerce.number().default(0),
+});
+
+export const prerequisiteSchema = z.union([
   z.object({
-    prereqType: z.literal<string>("course"),
-    courseId: z.string().openapi({
-      description: "The ID of the course that is a prerequisite/corequisite",
-      example: "I&C SCI 46",
-    }),
-    minGrade: z.string().optional().openapi({
-      description: "The minimum grade, if any, required to satisfy the prerequisite",
-      example: "C",
-    }),
-    coreq: z.boolean().openapi({ description: "Whether this course is a corequisite" }),
+    prereqType: z.literal("course"),
+    coreq: z.literal(false),
+    courseId: z.string(),
+    minGrade: z.string().optional(),
   }),
   z.object({
-    prereqType: z.literal<string>("exam"),
-    examName: z.string().openapi({
-      description: "The name of the exam that is a prerequisite",
-      example: "AP CALCULUS BC",
-    }),
-    minGrade: z.string().optional().openapi({
-      description: "The minimum grade, if any, required to satisfy the prerequisite",
-      example: "4",
-    }),
+    prereqType: z.literal("course"),
+    coreq: z.literal(true),
+    courseId: z.string(),
+  }),
+  z.object({
+    prereqType: z.literal("exam"),
+    examName: z.string(),
+    minGrade: z.string().optional(),
   }),
 ]);
 
-export const prerequisiteTreeSchema = z.object({
-  AND: z.object({}).array().optional().openapi({
-    description:
-      "All of these prerequisites must have been fulfilled before this course can be taken.",
-  }),
-  OR: z.object({}).array().optional().openapi({
-    description:
-      "At least one of these prerequisites must have been fulfilled before this course can be taken.",
-  }),
-  NOT: z.object({}).array().optional().openapi({
-    description:
-      "None of these prerequisites must have been fulfilled before this course can be taken.",
-  }),
+export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({
+  AND: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "All of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
+  OR: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "At least one of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
+  NOT: z
+    .lazy(() => z.union([prerequisiteSchema, prerequisiteTreeSchema]).array().optional())
+    .openapi({
+      description:
+        "None of these prerequisites must have been fulfilled before this course can be taken.",
+      type: "array",
+      items: {
+        anyOf: [
+          { $ref: "#/components/schemas/prereq" },
+          { $ref: "#/components/schemas/prereqTree" },
+        ],
+      },
+    }),
 });
 
 export const coursePreviewSchema = z.object({

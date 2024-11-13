@@ -57,6 +57,14 @@ type WebsocCourse @cacheControl(maxAge: 300) {
     updatedAt: String!
 }
 
+type WebsocCoursePreview @cacheControl(maxAge: 300) {
+    deptCode: String!
+    courseTitle: String!
+    courseNumber: String!
+    year: String!
+    quarter: Term!
+}
+
 type WebsocDepartment @cacheControl(maxAge: 300) {
     courses: [WebsocCourse!]!
     deptCode: String!
