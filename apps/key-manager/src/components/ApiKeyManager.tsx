@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { CopyIcon, TrashIcon, PlusIcon, CheckIcon } from "lucide-react";
+import { createUserApiKey, deleteUserApiKey, getUserApiKeys } from "@/app/actions/keys";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,12 +10,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  createUserApiKey,
-  deleteUserApiKey,
-  getUserApiKeys,
-} from "@/app/actions/keys";
 import { MAX_API_KEYS } from "@/lib/utils";
+import { CheckIcon, CopyIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
 
 export default function ApiKeyManager() {
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
@@ -86,10 +82,7 @@ export default function ApiKeyManager() {
               {copiedKey === key ? (
                 <CheckIcon className="text-green-500 shrink-0" />
               ) : (
-                <CopyIcon
-                  className="cursor-pointer shrink-0"
-                  onClick={() => handleCopyKey(key)}
-                />
+                <CopyIcon className="cursor-pointer shrink-0" onClick={() => handleCopyKey(key)} />
               )}
             </div>
             <Dialog>
@@ -105,9 +98,7 @@ export default function ApiKeyManager() {
                 <div className={"space-y-4"}>
                   <div>Are you sure you want to delete this API key?</div>
                   <div className="bg-gray-800 p-2 rounded flex items-center justify-between space-x-2 flex-1">
-                    <pre className="overflow-x-auto">
-                      {"..." + key.split(".")[2]}
-                    </pre>
+                    <pre className="overflow-x-auto">{"..." + key.split(".")[2]}</pre>
                   </div>
                 </div>
                 <DialogFooter>
@@ -124,11 +115,7 @@ export default function ApiKeyManager() {
           </div>
         ))}
       </div>
-      <Button
-        className={"w-full"}
-        onClick={handleCreateKey}
-        disabled={isPending}
-      >
+      <Button className={"w-full"} onClick={handleCreateKey} disabled={isPending}>
         <PlusIcon />
         <p>
           Create Key ({keys.length}/{MAX_API_KEYS})

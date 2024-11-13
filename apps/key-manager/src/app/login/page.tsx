@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 
 export default async function LogIn() {
   const session = await auth();

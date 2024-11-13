@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import {
   DropdownMenu,
@@ -6,8 +5,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React from "react";
 import { LogOutIcon } from "lucide-react";
+import Image from "next/image";
 
 const Header = async () => {
   const session = await auth();
