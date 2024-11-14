@@ -16,15 +16,20 @@ const Header = async () => {
       <span className={"text-3xl font-bold"}>Anteater API</span>
       {session && session.user && (
         <DropdownMenu>
-          <DropdownMenuTrigger className={"focus:outline-none"}>
-            <Image
-              className={"rounded-full"}
-              width={40}
-              height={40}
-              src={session.user.image!}
-              alt={session.user.email!}
-            />
-          </DropdownMenuTrigger>
+          <div className={"flex items-center space-x-4"}>
+            {session.user.isAdmin && (
+              <p className={"text-destructive text-xl select-none"}>ADMIN</p>
+            )}
+            <DropdownMenuTrigger className={"focus:outline-none"}>
+              <Image
+                className={"rounded-full"}
+                width={40}
+                height={40}
+                src={session.user.image!}
+                alt={session.user.email!}
+              />
+            </DropdownMenuTrigger>
+          </div>
           <DropdownMenuContent align={"end"}>
             <DropdownMenuItem
               onClick={async () => {

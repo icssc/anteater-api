@@ -8,7 +8,7 @@
     "deploy": "cloudflare && wrangler deploy",
     "dev": "next dev",
     "generate": "drizzle-kit generate",
-    "postinstall": "cloudflare && wrangler types --x-include-runtime --env-interface CloudflareEnv",
+    "postinstall": "wrangler types --x-include-runtime --env-interface CloudflareEnv",
     "lint": "next lint",
     "migrate": "tsx src/db/migrate.ts",
     "preview": "cloudflare && wrangler dev",
@@ -19,7 +19,9 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
+    "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "0.36.0",
@@ -29,7 +31,8 @@
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^0.2.1",
