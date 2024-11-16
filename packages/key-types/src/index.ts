@@ -1,7 +1,11 @@
 /**
  * The set of additional resources where access must be granted on a per-key basis.
  */
-export type AccessControlledResource = "FUZZY_SEARCH"; // Access to the fuzzy search route.
+export const accessControlledResources = [
+  "FUZZY_SEARCH", // Access to the fuzzy search route.
+] as const;
+
+export type AccessControlledResource = (typeof accessControlledResources)[number];
 
 /**
  * Data that is specific to a publishable key.
@@ -26,12 +30,23 @@ type SecretKeyData = {
 /**
  * Data that is common to all types of keys.
  */
-type BaseKeyData = {
+export type BaseKeyData = {
+  /**
+   * User assigned name for the key.
+   */
+  name: string;
+
+  /**
+   * Date the key was created.
+   */
+  createdAt: Date;
+
   /**
    * If present, requests made using this key will be subject to a rate limit of this many requests per hour,
    * instead of the default limit.
    */
   rateLimitOverride?: number;
+
   /**
    * If present, specifies which additional resources requests made using this key are allowed to access.
    */

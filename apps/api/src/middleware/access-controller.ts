@@ -1,5 +1,5 @@
 import type { Bindings } from "$types/bindings";
-import type { AccessControlledResource, KeyData } from "$types/keys";
+import type { AccessControlledResource, KeyData } from "@packages/key-types";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 

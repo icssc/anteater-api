@@ -1,7 +1,7 @@
 import type { ErrorSchema } from "$schema";
 import type { Bindings } from "$types/bindings";
-import type { KeyData } from "$types/keys";
 import { DurableObjectStore } from "@hono-rate-limiter/cloudflare";
+import type { KeyData } from "@packages/key-types";
 import type { Context } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { createMiddleware } from "hono/factory";
