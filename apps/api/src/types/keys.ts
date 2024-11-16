@@ -1,7 +1,9 @@
 /**
  * The set of additional resources where access must be granted on a per-key basis.
  */
-export const accessControlledResources = ["FUZZY_SEARCH"]; // Access to the fuzzy search route.
+export const accessControlledResources = [
+  "FUZZY_SEARCH", // Access to the fuzzy search route.
+] as const;
 
 export type AccessControlledResource = (typeof accessControlledResources)[number];
 
