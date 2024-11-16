@@ -7,13 +7,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOutIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Header = async () => {
   const session = await auth();
 
   return (
     <header className={"px-6 my-4 flex justify-between items-center"}>
-      <span className={"text-3xl font-bold"}>Anteater API</span>
+      <Link href={"/"} className={"text-3xl font-bold"}>
+        Anteater API
+      </Link>
       {session && session.user && (
         <DropdownMenu>
           <div className={"flex items-center space-x-4"}>

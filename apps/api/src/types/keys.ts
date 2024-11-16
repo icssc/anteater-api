@@ -52,5 +52,3 @@ export type BaseKeyData = {
 };
 
 export type KeyData = BaseKeyData & (PublishableKeyData | SecretKeyData);
-
-export type KeyType = KeyData["_type"];

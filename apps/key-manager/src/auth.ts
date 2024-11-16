@@ -1,9 +1,9 @@
+import authConfig from "@/auth.config";
 import { database } from "@/db";
 import { users } from "@/db/schema";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import NextAuth, { type DefaultSession } from "next-auth";
 
 if (!process.env.USERS_DB_URL) {
   throw new Error("USERS_DB_URL is required");
@@ -12,6 +12,10 @@ if (!process.env.USERS_DB_URL) {
 const db = database(process.env.USERS_DB_URL);
 
 declare module "next-auth" {
+  interface Session {
+    user: User & DefaultSession["user"];
+  }
+
   interface User {
     isAdmin: boolean;
   }
@@ -19,12 +23,12 @@ declare module "next-auth" {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db),
-  providers: [Google],
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
     async session({ session, user }) {
+      if (!user) {
+        return session;
+      }
+
       const result = await db
         .select({ isAdmin: users.isAdmin })
         .from(users)
@@ -36,4 +40,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
+  pages: {
+    signIn: "/login",
+  },
+  session: {
+    strategy: "database",
+  },
+  ...authConfig,
 });

@@ -40,3 +40,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.content {
+  @apply max-w-5xl mx-auto p-5 space-y-8;
+}

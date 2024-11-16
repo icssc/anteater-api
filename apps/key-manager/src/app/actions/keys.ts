@@ -3,10 +3,9 @@
 import { createHash } from "node:crypto";
 import type { KeyData } from "@/../../api/src/types/keys";
 import {
-  baseKeySchema,
-  privilegedBaseKeySchema,
-  publishableKeySchema,
-  secretKeySchema,
+  type CreateKeyFormValues,
+  createKeyTransform,
+  unprivilegedKeySchema,
 } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
@@ -20,31 +19,14 @@ const getUserPrefix = (userId: string) => {
   return prefix;
 };
 
-export const validateKeyInput = async (input: Partial<KeyData>): Promise<KeyData> => {
+export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyData> => {
   const session = await auth();
 
-  if (session?.user?.isAdmin) {
-    privilegedBaseKeySchema.parse(input);
-  } else {
-    baseKeySchema.parse(input);
+  if (!session?.user?.isAdmin) {
+    unprivilegedKeySchema.parse(input);
   }
 
-  let validatedKey: KeyData;
-
-  if (input._type === "publishable") {
-    validatedKey = publishableKeySchema.parse({
-      ...input,
-      origins: input.origins,
-    });
-  } else if (input._type === "secret") {
-    validatedKey = secretKeySchema.parse({
-      ...input,
-    });
-  } else {
-    throw new Error("Invalid key type");
-  }
-
-  return validatedKey;
+  return createKeyTransform.parse(input);
 };
 
 const createUserKeyHelper = async (userId: string, key: KeyData) => {
@@ -59,7 +41,7 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   return completeKey;
 };
 
-const getUserKeysNames = async (id: string) => {
+export const getUserKeysNames = async (id: string) => {
   const ctx = await getCloudflareContext();
 
   const prefix = getUserPrefix(id);
@@ -69,6 +51,13 @@ const getUserKeysNames = async (id: string) => {
   });
 
   return listResult.keys.map((key) => key.name);
+};
+
+export const getUserApiKeyData = async (key: string) => {
+  const ctx = await getCloudflareContext();
+
+  const keyData = await ctx.env.API_KEYS.get<KeyData>(key, { type: "json" });
+  return keyData;
 };
 
 /**
@@ -85,7 +74,7 @@ const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> =
   const keysDataEntries = await Promise.all(
     keys.map(async (key) => {
       const data = await ctx.env.API_KEYS.get<KeyData>(key, { type: "json" });
-      return data ? [key, data] : null; // return key-data pair or null
+      return data ? [key, data] : null;
     }),
   );
 
@@ -101,14 +90,14 @@ export async function getUserApiKeys() {
     throw new Error("Unauthorized");
   }
 
-  const key = await getUserKeysHelper(session.user.id);
-  return key;
+  const keys = await getUserKeysHelper(session.user.id);
+  return keys;
 }
 
 /**
  * Create the authed user's API key
  */
-export async function createUserApiKey(keyData: Partial<KeyData>) {
+export async function createUserApiKey(keyData: CreateKeyFormValues) {
   const validatedKeyData = await validateKeyInput(keyData);
 
   const session = await auth();
@@ -134,13 +123,13 @@ export async function createUserApiKey(keyData: Partial<KeyData>) {
 /**
  * Edit the authed user's API key
  */
-export async function editUserApiKey(key: string, keyData: Partial<KeyData>) {
-  const validatedKeyData = await validateKeyInput(keyData);
-
+export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) {
   const session = await auth();
   if (!session || !session.user?.id) {
     throw new Error("Unauthorized");
   }
+
+  const validatedKeyData = await validateKeyInput(keyData);
 
   const keys = await getUserKeysNames(session.user.id);
 

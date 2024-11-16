@@ -1,14 +1,13 @@
-import { auth, signIn } from "@/auth";
-import ApiKeyManager from "@/components/ApiKeyManager";
-import { SessionProvider } from "next-auth/react";
+import KeyManager from "@/components/key/KeyManager";
+import {auth, signIn} from "@/auth";
 
 export default async function Home() {
   const session = await auth();
-  if (!session) return signIn();
+  if (!session) {
+    return signIn();
+  }
 
   return (
-    <SessionProvider>
-      <ApiKeyManager />
-    </SessionProvider>
+      <KeyManager />
   );
 }

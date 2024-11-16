@@ -14,27 +14,35 @@ import { deleteUserApiKey } from "@/app/actions/keys";
 
 interface Props {
   apiKey: string;
-  apiKeyData: KeyData;
-  apiKeys: Record<string, KeyData>;
-  isPending: boolean;
-  setApiKeys: React.Dispatch<React.SetStateAction<Record<string, KeyData>>>;
+  apiKeyName: string;
+  apiKeys?: Record<string, KeyData>;
+  setApiKeys?: React.Dispatch<React.SetStateAction<Record<string, KeyData>>>;
+  isPending?: boolean;
+  afterDelete?: () => void;
 }
 
 const DeleteKey: React.FC<Props> = ({
   apiKey,
+  apiKeyName,
   apiKeys,
-  apiKeyData,
   isPending,
   setApiKeys,
+  afterDelete,
 }) => {
   const handleDeleteKey = (key: string) => {
     startTransition(async () => {
       await deleteUserApiKey(key);
 
-      const newApiKeys = { ...apiKeys };
-      delete newApiKeys[key];
+      if (setApiKeys) {
+        const newApiKeys = { ...apiKeys };
+        delete newApiKeys[key];
 
-      setApiKeys(newApiKeys);
+        setApiKeys(newApiKeys);
+      }
+
+      if (afterDelete) {
+        afterDelete();
+      }
     });
   };
 
@@ -47,15 +55,13 @@ const DeleteKey: React.FC<Props> = ({
           <TrashIcon />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent aria-describedby="">
         <DialogHeader>
           <DialogTitle>Delete API Key</DialogTitle>
         </DialogHeader>
         <div className={"space-y-4"}>
           <div>Are you sure you want to delete this API key?</div>
-          <p className={"truncate max-w-96 font-bold"}>
-            {apiKeyData.name}
-          </p>
+          <p className={"truncate max-w-96 font-bold"}>{apiKeyName}</p>
           <div className="bg-gray-900 p-2 rounded flex-1">
             <pre className="overflow-x-auto">{abbreviatedKey}</pre>
           </div>

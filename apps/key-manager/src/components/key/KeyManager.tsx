@@ -1,11 +1,7 @@
 "use client";
 
-import { getUserApiKeys } from "@/app/actions/keys";
-
 import React, { useEffect, useState, useTransition } from "react";
-import KeyTableRow from "@/components/KeyTableRow";
-import CreateKey from "@/components/CreateKey";
-import { KeyData } from "@/../../api/src/types/keys";
+import { getUserApiKeys } from "@/app/actions/keys";
 import {
   Table,
   TableBody,
@@ -13,13 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import KeyTableRow from "@/components/key/view/KeyTableRow";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { KeyData } from "@/../../api/src/types/keys";
 import { Button } from "@/components/ui/button";
 import { MAX_API_KEYS } from "@/lib/utils";
-import { PlusIcon } from "lucide-react";
+import HeadingText from "@/components/layout/HeadingText.";
 
-
-export default function ApiKeyManager() {
-  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
+const KeyManager = () => {
+  const [loading, setLoading] = useState<boolean>(true);
   const [apiKeys, setApiKeys] = useState<Record<string, KeyData>>({});
 
   const [isPending, startTransition] = useTransition();
@@ -28,19 +27,14 @@ export default function ApiKeyManager() {
     startTransition(async () => {
       const keys = await getUserApiKeys();
       setApiKeys(keys);
-      setIsInitialLoad(false);
+      setLoading(false);
     });
   }, []);
 
   return (
-    <div className={"max-w-6xl mx-auto py-10 space-y-6"}>
-      <div className={"space-y-2"}>
-        <h1 className={"text-3xl"}>API Keys</h1>
-        <hr />
-      </div>
-      {isInitialLoad ? (
-        <p>Loading...</p>
-      ) : (
+    <div className={"content"}>
+      <HeadingText>API Keys</HeadingText>
+      {!loading && (
         <>
           <Table>
             <TableHeader>
@@ -63,21 +57,18 @@ export default function ApiKeyManager() {
               ))}
             </TableBody>
           </Table>
-
-          <CreateKey
-            apiKeys={apiKeys}
-            setApiKeys={setApiKeys}
-            isPending={isPending}
-          >
-            <Button className={"w-full"} disabled={isPending}>
+          <Button className={"w-full"} asChild>
+            <Link href="/create">
               <PlusIcon />
               <p>
                 Create Key ({Object.keys(apiKeys).length}/{MAX_API_KEYS})
               </p>
-            </Button>
-          </CreateKey>
+            </Link>
+          </Button>
         </>
       )}
     </div>
   );
-}
+};
+
+export default KeyManager;
