@@ -4,13 +4,12 @@
   "private": true,
   "scripts": {
     "build": "cloudflare",
-    "cf-typegen": "wrangler types --x-include-runtime --env-interface CloudflareEnv",
-    "deploy": "cloudflare && wrangler deploy",
+    "deploy": "cloudflare && wrangler deploy --minify .worker-next/index.mjs",
     "dev": "next dev",
     "generate": "drizzle-kit generate",
     "postinstall": "wrangler types --x-include-runtime --env-interface CloudflareEnv",
     "migrate": "tsx src/db/migrate.ts",
-    "preview": "cloudflare && wrangler dev",
+    "preview": "cloudflare && wrangler dev .worker-next/index.mjs",
     "start": "next start"
   },
   "dependencies": {
