@@ -2,7 +2,7 @@ pre-commit:
   parallel: true
   commands:
     check-biome:
-      glob: "*.{ts,cjs}"
+      glob: "*.{ts,tsx,cjs}"
       run: pnpm check:biome -- {staged_files}
       stage_fixed: true
     check-prettier:
