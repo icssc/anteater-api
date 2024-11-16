@@ -1,4 +1,3 @@
-import { accessControlledResources } from "@/../../api/src/types/keys";
 import type { CreateKeyFormValues } from "@/app/actions/types";
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { accessControlledResources } from "@packages/key-types";
 import type React from "react";
 import type { UseFormReturn } from "react-hook-form";
 

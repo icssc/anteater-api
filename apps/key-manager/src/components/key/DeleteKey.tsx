@@ -1,4 +1,3 @@
-import type { KeyData } from "@/../../api/src/types/keys";
 import { deleteUserApiKey } from "@/app/actions/keys";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { KeyData } from "@packages/key-types";
 import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { startTransition } from "react";
