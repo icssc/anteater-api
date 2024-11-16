@@ -4,7 +4,6 @@ import DisplayKey from "@/components/key/view/DisplayKey";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import isAdminKey from "@/lib/isAdminKey";
 import { GlobeIcon, LockIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
@@ -31,8 +30,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, isPending, apiKeys, 
   });
 
   const keyTypeToIcon = (keyType: string) => {
-    const isAdmin = isAdminKey(apiKeyData);
-    const className = `size-4 ${isAdmin ? "text-red-500" : ""}`;
+    const className = "size-4";
 
     let icon: React.ReactElement | null;
 
@@ -52,9 +50,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, isPending, apiKeys, 
         <Tooltip delayDuration={100}>
           <TooltipTrigger>{icon}</TooltipTrigger>
           <TooltipContent>
-            <p>
-              {keyType} {isAdmin && "admin"} key
-            </p>
+            <p>{keyType} key</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
