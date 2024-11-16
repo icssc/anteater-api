@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 interface Props {
   children: React.ReactNode;
@@ -12,6 +12,5 @@ const HeadingText: React.FC<Props> = ({ children }) => {
     </div>
   );
 };
-
 
 export default HeadingText;

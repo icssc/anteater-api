@@ -1,12 +1,6 @@
-import React from "react";
-import { UseFormReturn } from "react-hook-form";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { CreateKeyFormValues } from "@/app/actions/types";
+import type { CreateKeyFormValues } from "@/app/actions/types";
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -15,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { accessControlledResources } from "@/../../api/src/types/keys";
+import { accessControlledResources } from "@packages/key-types";
+import type React from "react";
+import type { UseFormReturn } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;
@@ -45,10 +40,7 @@ const ResourcesField: React.FC<Props> = ({ form }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Switch
-                            checked={field.value || false}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

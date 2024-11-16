@@ -1,10 +1,5 @@
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import type { CreateKeyFormValues } from "@/app/actions/types";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -12,10 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React from "react";
-import { CreateKeyFormValues } from "@/app/actions/types";
-import { UseFormReturn } from "react-hook-form";
 import { GlobeIcon, LockIcon } from "lucide-react";
+import type React from "react";
+import type { UseFormReturn } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;
@@ -30,11 +24,7 @@ const TypeField: React.FC<Props> = ({ form, disabled }) => {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Type</FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            defaultValue={field.value}
-            disabled={disabled}
-          >
+          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Key Type" />
@@ -43,19 +33,19 @@ const TypeField: React.FC<Props> = ({ form, disabled }) => {
             <SelectContent>
               <SelectItem value="publishable">
                 <div className={"flex items-center space-x-2"}>
-                  <GlobeIcon className={"size-4"}/>
+                  <GlobeIcon className={"size-4"} />
                   <p>publishable</p>
                 </div>
               </SelectItem>
               <SelectItem value="secret">
                 <div className={"flex items-center space-x-2"}>
-                  <LockIcon className={"size-4"}/>
+                  <LockIcon className={"size-4"} />
                   <p>secret</p>
                 </div>
               </SelectItem>
             </SelectContent>
           </Select>
-          <FormMessage/>
+          <FormMessage />
         </FormItem>
       )}
     />

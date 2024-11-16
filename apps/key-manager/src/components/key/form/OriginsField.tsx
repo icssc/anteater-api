@@ -1,16 +1,10 @@
-import React from "react";
-import { UseFormReturn, useFieldArray } from "react-hook-form";
-import { CreateKeyFormValues } from "@/app/actions/types";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import type { CreateKeyFormValues } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
-import { TrashIcon, PlusIcon } from "lucide-react";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { PlusIcon, TrashIcon } from "lucide-react";
+import type React from "react";
+import { type UseFormReturn, useFieldArray } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;
@@ -56,12 +50,7 @@ const OriginsField: React.FC<Props> = ({ form }) => {
             />
           ))}
 
-          <Button
-            variant="link"
-            className="px-0"
-            onClick={() => append({ url: "" })}
-            type="button"
-          >
+          <Button variant="link" className="px-0" onClick={() => append({ url: "" })} type="button">
             <PlusIcon />
             <div>Add Origin</div>
           </Button>

@@ -1,21 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
 import { getUserApiKeys } from "@/app/actions/keys";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import KeyTableRow from "@/components/key/view/KeyTableRow";
+import HeadingText from "@/components/layout/HeadingText.";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MAX_API_KEYS } from "@/lib/utils";
+import type { KeyData } from "@packages/key-types";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { KeyData } from "@/../../api/src/types/keys";
-import { Button } from "@/components/ui/button";
-import { MAX_API_KEYS } from "@/lib/utils";
-import HeadingText from "@/components/layout/HeadingText.";
+import { useEffect, useState, useTransition } from "react";
 
 const KeyManager = () => {
   const [loading, setLoading] = useState<boolean>(true);

@@ -1,7 +1,6 @@
 "use server";
 
 import { createHash } from "node:crypto";
-import type { KeyData } from "@/../../api/src/types/keys";
 import {
   type CreateKeyFormValues,
   createKeyTransform,
@@ -10,6 +9,7 @@ import {
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
 
 const getUserPrefix = (userId: string) => {

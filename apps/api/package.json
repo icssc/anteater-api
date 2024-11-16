@@ -26,6 +26,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@packages/key-types": "workspace:*",
     "@types/node": "20.8.3",
     "wrangler": "3.84.1"
   }
