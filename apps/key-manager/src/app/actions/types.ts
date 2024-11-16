@@ -8,9 +8,7 @@ export const createKeySchema = z
     createdAt: z.date(),
     origins: z.array(z.object({ url: z.string() })).optional(),
     rateLimitOverride: z.number().positive().or(z.nan()).optional(),
-    resources: z
-      .record(z.enum(accessControlledResources as [string, ...string[]]), z.boolean())
-      .optional(),
+    resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
   })
   .strict();
 
