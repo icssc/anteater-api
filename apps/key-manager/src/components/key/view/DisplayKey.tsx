@@ -1,11 +1,6 @@
-import React from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import React from "react";
 
 interface Props {
   keyText: string;
@@ -14,12 +9,7 @@ interface Props {
   label?: string;
 }
 
-const DisplayKey: React.FC<Props> = ({
-  keyText,
-  copyText,
-  background,
-  label,
-}) => {
+const DisplayKey: React.FC<Props> = ({ keyText, copyText, background, label }) => {
   const [copied, setCopied] = React.useState<boolean>(false);
 
   const handleCopyKey = (apiKey: string) => {

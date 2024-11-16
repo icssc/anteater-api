@@ -17,20 +17,22 @@ const Header = async () => {
       <Link href={"/"} className={"text-3xl font-bold"}>
         Anteater API
       </Link>
-      {session && session.user && (
+      {session?.user && (
         <DropdownMenu>
           <div className={"flex items-center space-x-4"}>
             {session.user.isAdmin && (
               <p className={"text-destructive text-xl select-none"}>ADMIN</p>
             )}
             <DropdownMenuTrigger className={"focus:outline-none"}>
-              <Image
-                className={"rounded-full"}
-                width={40}
-                height={40}
-                src={session.user.image!}
-                alt={session.user.email!}
-              />
+              {session.user.image && session.user.email && (
+                <Image
+                  className={"rounded-full"}
+                  width={40}
+                  height={40}
+                  src={session.user.image}
+                  alt={session.user.email}
+                />
+              )}
             </DropdownMenuTrigger>
           </div>
           <DropdownMenuContent align={"end"}>

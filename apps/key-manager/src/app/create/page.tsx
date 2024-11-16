@@ -1,34 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import React, { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { createUserApiKey } from "@/app/actions/keys";
+import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import NameField from "@/components/key/form/NameField";
+import OriginsField from "@/components/key/form/OriginsField";
+import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
+import ResourcesField from "@/components/key/form/ResourcesField";
+import TypeField from "@/components/key/form/TypeField";
+import DisplayKey from "@/components/key/view/DisplayKey";
+import HeadingText from "@/components/layout/HeadingText.";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronLeft } from "lucide-react";
 import { AlertCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import NameField from "@/components/key/form/NameField";
-import TypeField from "@/components/key/form/TypeField";
-import OriginsField from "@/components/key/form/OriginsField";
-import ResourcesField from "@/components/key/form/ResourcesField";
-import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
-import {
-  CreateKeyFormValues,
-  createRefinedKeySchema,
-} from "@/app/actions/types";
-import HeadingText from "@/components/layout/HeadingText.";
 import Link from "next/link";
-import { createUserApiKey } from "@/app/actions/keys";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import DisplayKey from "@/components/key/view/DisplayKey";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
 const CreateKey = () => {
   const { data: session } = useSession();
@@ -63,8 +55,8 @@ const CreateKey = () => {
       const { key } = await createUserApiKey(values);
       setKey(key);
       setIsDialogOpen(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred while creating the key.");
     }
   }
 
@@ -94,9 +86,7 @@ const CreateKey = () => {
           <TypeField form={form} />
 
           {/* Origins */}
-          {form.watch("_type") === "publishable" && (
-            <OriginsField form={form} />
-          )}
+          {form.watch("_type") === "publishable" && <OriginsField form={form} />}
 
           {session?.user?.isAdmin && (
             <Alert variant={"destructive"} className={"space-y-6 text-white"}>

@@ -1,5 +1,5 @@
+import { auth, signIn } from "@/auth";
 import KeyManager from "@/components/key/KeyManager";
-import {auth, signIn} from "@/auth";
 
 export default async function Home() {
   const session = await auth();
@@ -7,7 +7,5 @@ export default async function Home() {
     return signIn();
   }
 
-  return (
-      <KeyManager />
-  );
+  return <KeyManager />;
 }

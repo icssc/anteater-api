@@ -1,3 +1,6 @@
+import type { KeyData } from "@/../../api/src/types/keys";
+import { deleteUserApiKey } from "@/app/actions/keys";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,15 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import React, { startTransition } from "react";
 import { TrashIcon } from "lucide-react";
-import { KeyData } from "@/../../api/src/types/keys";
-import { deleteUserApiKey } from "@/app/actions/keys";
+import type React from "react";
+import { startTransition } from "react";
 
 interface Props {
   apiKey: string;
-  apiKeyName: string;
+  apiKeyName?: string;
   apiKeys?: Record<string, KeyData>;
   setApiKeys?: React.Dispatch<React.SetStateAction<Record<string, KeyData>>>;
   isPending?: boolean;
@@ -46,7 +47,7 @@ const DeleteKey: React.FC<Props> = ({
     });
   };
 
-  const abbreviatedKey = "..." + apiKey.substring(apiKey.indexOf(".") + 1);
+  const abbreviatedKey = `...${apiKey.substring(apiKey.indexOf(".") + 1)}`;
 
   return (
     <Dialog>
@@ -55,7 +56,7 @@ const DeleteKey: React.FC<Props> = ({
           <TrashIcon />
         </Button>
       </DialogTrigger>
-      <DialogContent aria-describedby="">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete API Key</DialogTitle>
         </DialogHeader>

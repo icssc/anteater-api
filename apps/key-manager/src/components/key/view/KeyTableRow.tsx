@@ -1,18 +1,14 @@
-import React, { SetStateAction } from "react";
-import { KeyData } from "@/../../api/src/types/keys";
-import { TableCell, TableRow } from "@/components/ui/table";
+import type { KeyData } from "@/../../api/src/types/keys";
 import DeleteKey from "@/components/key/DeleteKey";
-import { Button } from "@/components/ui/button";
-import { PencilIcon, GlobeIcon, LockIcon } from "lucide-react";
 import DisplayKey from "@/components/key/view/DisplayKey";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import isAdminKey from "@/lib/isAdminKey";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { GlobeIcon, LockIcon, PencilIcon } from "lucide-react";
+import Link from "next/link";
+import type React from "react";
+import type { SetStateAction } from "react";
 
 interface Props {
   apiKey: string;
@@ -22,14 +18,8 @@ interface Props {
   setApiKeys: React.Dispatch<SetStateAction<Record<string, KeyData>>>;
 }
 
-const KeyTableRow: React.FC<Props> = ({
-  apiKey,
-  apiKeyData,
-  isPending,
-  apiKeys,
-  setApiKeys,
-}) => {
-  const abbreviatedKey = "..." + apiKey.substring(apiKey.indexOf(".") + 1);
+const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, isPending, apiKeys, setApiKeys }) => {
+  const abbreviatedKey = `...${apiKey.substring(apiKey.indexOf(".") + 1)}`;
 
   const createdAtFormat = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -44,7 +34,7 @@ const KeyTableRow: React.FC<Props> = ({
     const isAdmin = isAdminKey(apiKeyData);
     const className = `size-4 ${isAdmin ? "text-red-500" : ""}`;
 
-    let icon;
+    let icon: React.ReactElement | null;
 
     switch (keyType) {
       case "publishable":
@@ -54,7 +44,7 @@ const KeyTableRow: React.FC<Props> = ({
         icon = <LockIcon className={className} />;
         break;
       default:
-        icon = <> </>;
+        icon = null;
     }
 
     return (
@@ -62,7 +52,9 @@ const KeyTableRow: React.FC<Props> = ({
         <Tooltip delayDuration={100}>
           <TooltipTrigger>{icon}</TooltipTrigger>
           <TooltipContent>
-            <p>{keyType} {isAdmin && "admin"} key</p>
+            <p>
+              {keyType} {isAdmin && "admin"} key
+            </p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -77,9 +69,7 @@ const KeyTableRow: React.FC<Props> = ({
           <p> {apiKeyData.name}</p>
         </div>
       </TableCell>
-      <TableCell>
-        {createdAtFormat.format(new Date(apiKeyData.createdAt))}
-      </TableCell>
+      <TableCell>{createdAtFormat.format(new Date(apiKeyData.createdAt))}</TableCell>
       <TableCell>
         <DisplayKey keyText={abbreviatedKey} copyText={apiKey} />
       </TableCell>

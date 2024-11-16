@@ -1,35 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ChevronLeft, CheckIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckIcon, ChevronLeft } from "lucide-react";
 
-import { Form } from "@/components/ui/form";
-import NameField from "@/components/key/form/NameField";
-import TypeField from "@/components/key/form/TypeField";
-import OriginsField from "@/components/key/form/OriginsField";
-import ResourcesField from "@/components/key/form/ResourcesField";
-import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
-import HeadingText from "@/components/layout/HeadingText.";
-import DisplayKey from "@/components/key/view/DisplayKey";
 import DeleteKey from "@/components/key/DeleteKey";
+import NameField from "@/components/key/form/NameField";
+import OriginsField from "@/components/key/form/OriginsField";
+import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
+import ResourcesField from "@/components/key/form/ResourcesField";
+import TypeField from "@/components/key/form/TypeField";
+import DisplayKey from "@/components/key/view/DisplayKey";
+import HeadingText from "@/components/layout/HeadingText.";
+import { Form } from "@/components/ui/form";
 
-import {
-  CreateKeyFormValues,
-  createRefinedKeySchema,
-} from "@/app/actions/types";
-import {
-  editUserApiKey,
-  getUserApiKeyData,
-  getUserKeysNames,
-} from "@/app/actions/keys";
+import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";
+import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
 
 const EditKey = () => {
   const { data: session } = useSession();
@@ -59,15 +52,19 @@ const EditKey = () => {
         return;
       }
 
-      try {
-        const validKeys = await getUserKeysNames(session.user.id);
+      const validKeys = await getUserKeysNames(session.user.id);
+      if (!validKeys.includes(key)) {
+        router.push("/");
+        return;
+      }
 
-        if (!validKeys.includes(key)) {
-          router.push("/");
+      try {
+        const data = await getUserApiKeyData(key);
+
+        if (!data) {
+          setError(`Key ${key} does not exist`);
           return;
         }
-
-        const data = (await getUserApiKeyData(key))!;
 
         const formattedData = {
           ...data,
@@ -84,8 +81,8 @@ const EditKey = () => {
 
         setKeyData(formattedData);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || "An error occurred while fetching key data.");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "An error occurred while fetching key data.");
       }
     };
 
@@ -100,8 +97,8 @@ const EditKey = () => {
       setTimeout(() => {
         setIsSaved(false);
       }, 1000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred while editing the key.");
     }
   };
 
@@ -129,16 +126,11 @@ const EditKey = () => {
               <TypeField form={form} disabled />
 
               {/* Origins */}
-              {form.watch("_type") === "publishable" && (
-                <OriginsField form={form} />
-              )}
+              {form.watch("_type") === "publishable" && <OriginsField form={form} />}
 
               {/* Admin Fields */}
               {session?.user?.isAdmin && (
-                <Alert
-                  variant={"destructive"}
-                  className={"space-y-6 text-white"}
-                >
+                <Alert variant={"destructive"} className={"space-y-6 text-white"}>
                   <ResourcesField form={form} />
                   <RateLimitOverrideField form={form} />
                 </Alert>
@@ -156,7 +148,7 @@ const EditKey = () => {
               <div className="w-full flex justify-between pt-4">
                 <DeleteKey
                   apiKey={key}
-                  apiKeyName={keyData!.name}
+                  apiKeyName={keyData?.name}
                   afterDelete={() => router.push("/")}
                 />
                 <Button variant="default" type="submit" disabled={isSaved}>
