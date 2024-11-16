@@ -465,14 +465,17 @@ async function scrapeCoursesInDepartment(meta: {
     logger.info(
       `No difference found between database and scraped prerequisite data for ${deptCode}.`,
     );
+  } else {
+    console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
+    console.log(prereqDiff);
+    if (!readlineSync.keyInYNStrict("Is this ok")) {
+      logger.error("Cancelling scraping run.");
+      exit(1);
+    }
+  }
+  if (!courseDiff.length && !prereqDiff.length) {
     logger.info("Nothing to do.");
     return;
-  }
-  console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
-  console.log(prereqDiff);
-  if (!readlineSync.keyInYNStrict("Is this ok")) {
-    logger.error("Cancelling scraping run.");
-    exit(1);
   }
   await db.transaction(async (tx) => {
     if (courses.length) {

@@ -1,4 +1,4 @@
-import { notNull } from "./not-null";
+import { notNull } from "./null-utils";
 
 /**
  * Gets the value corresponding to the `key` from the `map` provided,
