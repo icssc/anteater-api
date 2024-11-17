@@ -8,7 +8,6 @@ import {
 } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
 
@@ -35,15 +34,12 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   const type = key._type === "publishable" ? "pk" : "sk";
   const completeKey = `${prefix}.${type}.${uniqueId}`;
 
-  const ctx = await getCloudflareContext();
   await ctx.env.API_KEYS.put(completeKey, JSON.stringify(key));
 
   return completeKey;
 };
 
 export const getUserKeysNames = async (id: string) => {
-  const ctx = await getCloudflareContext();
-
   const prefix = getUserPrefix(id);
   const listResult = await ctx.env.API_KEYS.list({
     prefix,
@@ -54,8 +50,6 @@ export const getUserKeysNames = async (id: string) => {
 };
 
 export const getUserApiKeyData = async (key: string) => {
-  const ctx = await getCloudflareContext();
-
   const keyData = await ctx.env.API_KEYS.get<KeyData>(key, { type: "json" });
   return keyData;
 };
@@ -67,8 +61,6 @@ export const getUserApiKeyData = async (key: string) => {
  * @return the user's api key if it exists, otherwise null
  */
 const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> => {
-  const ctx = await getCloudflareContext();
-
   const keys = await getUserKeysNames(id);
 
   const keysDataEntries = await Promise.all(
@@ -137,7 +129,6 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
     throw new Error("API key does not exist on user");
   }
 
-  const ctx = await getCloudflareContext();
   await ctx.env.API_KEYS.put(key, JSON.stringify(validatedKeyData));
 
   return validatedKeyData;
@@ -158,6 +149,5 @@ export async function deleteUserApiKey(key: string) {
     throw new Error("API key does not exist on user");
   }
 
-  const ctx = await getCloudflareContext();
   await ctx.env.API_KEYS.delete(key);
 }
