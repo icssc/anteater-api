@@ -3,14 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "cloudflare",
-    "deploy": "cloudflare && wrangler deploy --minify .worker-next/index.mjs",
-    "dev": "next dev",
+    "build": "next build",
+    "deploy": "dotenv -- sst deploy --stage production",
+    "dev": "next dev --turbopack",
     "generate": "drizzle-kit generate",
-    "postinstall": "wrangler types --x-include-runtime --env-interface CloudflareEnv",
-    "migrate": "tsx src/db/migrate.ts",
-    "preview": "cloudflare && wrangler dev .worker-next/index.mjs",
-    "start": "next start"
+    "migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "1.7.2",
@@ -25,20 +22,21 @@
     "@radix-ui/react-toast": "1.2.2",
     "@radix-ui/react-tooltip": "1.1.4",
     "class-variance-authority": "0.7.0",
+    "cloudflare": "3.5.0",
     "clsx": "2.1.1",
     "drizzle-orm": "0.36.0",
     "lucide-react": "0.460.0",
-    "next": "14.2.18",
+    "next": "15.0.3",
     "next-auth": "5.0.0-beta.25",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "7.53.2",
+    "sst": "3.3.22",
     "tailwind-merge": "2.5.4",
     "tailwindcss-animate": "1.0.7",
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "0.2.1",
     "@packages/key-types": "workspace:*",
     "@types/node": "20.8.3",
     "@types/react": "18.3.12",
