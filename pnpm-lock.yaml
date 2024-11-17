@@ -377,6 +377,9 @@ importers:
       react-hook-form:
         specifier: 7.53.2
         version: 7.53.2(react@18.3.1)
+      sst:
+        specifier: 3.3.22
+        version: 3.3.22(hono@4.6.8)
       tailwind-merge:
         specifier: 2.5.4
         version: 2.5.4
@@ -2446,6 +2449,9 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
+  aws4fetch@1.0.20:
+    resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -3171,6 +3177,12 @@ packages:
     resolution: {integrity: sha512-2yTgeWTWzMWkHu6Jp9NKgePDaYHbntiwvYuuJLbbN9vl7DC9DvXKOB2BC3ZZ92D3cvV/aflH0osDfwpHepQ53w==}
     hasBin: true
 
+  jose@4.15.9:
+    resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
+
+  jose@5.2.3:
+    resolution: {integrity: sha512-KUXdbctm1uHVL8BYhnyHkgp3zDX5KW8ZhAKVFEfUbU2P8Alpzjb+48hHvjOdQIyPshoblhzsuqOwEEAbtHVirA==}
+
   jose@5.9.6:
     resolution: {integrity: sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==}
 
@@ -3281,6 +3293,10 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
+
+  lru-cache@6.0.0:
+    resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
+    engines: {node: '>=10'}
 
   lru-cache@7.18.3:
     resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
@@ -3449,6 +3465,10 @@ packages:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
 
+  object-hash@2.2.0:
+    resolution: {integrity: sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==}
+    engines: {node: '>= 6'}
+
   object-hash@3.0.0:
     resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
     engines: {node: '>= 6'}
@@ -3460,6 +3480,10 @@ packages:
   ohash@1.1.4:
     resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
 
+  oidc-token-hash@5.0.3:
+    resolution: {integrity: sha512-IF4PcGgzAr6XXSff26Sk/+P4KZFJVuHAJZj3wgO3vX2bMdNVp/QXTP3P7CEm9V1IdG8lDLY3HhiqpsE/nOwpPw==}
+    engines: {node: ^10.13.0 || >=12.0.0}
+
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
     engines: {node: '>= 0.8'}
@@ -3469,6 +3493,9 @@ packages:
 
   openapi3-ts@4.4.0:
     resolution: {integrity: sha512-9asTNB9IkKEzWMcHmVZE7Ts3kC9G7AFHfs8i7caD8HbI76gEjdkId4z/AkP83xdZsH7PLAnnbl47qZkXuxpArw==}
+
+  openid-client@5.6.4:
+    resolution: {integrity: sha512-T1h3B10BRPKfcObdBklX639tVz+xh34O7GjofqrqiAQdm7eHsQ00ih18x6wuJ/E6FxdtS2u3FmUGPDeEcMwzNA==}
 
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
@@ -3863,6 +3890,43 @@ packages:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
     deprecated: Please use @jridgewell/sourcemap-codec instead
 
+  sst-darwin-arm64@3.3.22:
+    resolution: {integrity: sha512-Ma08E1jeuHu8lRbx+1De8DQWF1Uq6ckyfgb3ccFZ2mFiJr/DMuv56fBmCXNymLmOsFvJcm1ImwKU0lNIJv6m4Q==}
+    cpu: [arm64]
+    os: [darwin]
+
+  sst-darwin-x64@3.3.22:
+    resolution: {integrity: sha512-e9X3rO7ZDS3tjQLzoNfttAlg9sUWlZQhJtGhTCrdcEsVMohMqr41oFnFo+UmEZIaGRTbiOQgNnjb6ogGuaDQhg==}
+    cpu: [x64]
+    os: [darwin]
+
+  sst-linux-arm64@3.3.22:
+    resolution: {integrity: sha512-LyAqEg1BNVGiH96VrY7vLrYaOUjm5lxW7Rg6jni1ZVo+dyT9I2ZKhiUpOzQIwMYqHFooWPn5U0WWQrWjdxR5Iw==}
+    cpu: [arm64]
+    os: [linux]
+
+  sst-linux-x64@3.3.22:
+    resolution: {integrity: sha512-ad3wvd8Vsqopzfz7aWhgqYB16DwpHkHPhzTexBnWvNQhn78+2NydtglDK9B6/Lxl0YsPkHsl7Ct33SXU5Ib0IQ==}
+    cpu: [x64]
+    os: [linux]
+
+  sst-linux-x86@3.3.22:
+    resolution: {integrity: sha512-6cAzTRddB7iifL5Mjj+pmpiID49qyc5CmmWhPHJzfpjaB6zJ3IWkpFBgilh67dGzn1zbEu9K9I87xkXoqGv0fQ==}
+    cpu: [x86]
+    os: [linux]
+
+  sst@3.3.22:
+    resolution: {integrity: sha512-Wl1lf8woQ2vwBNHXm7c6ga+DmNdCMcLxdxbI8NSuibIY1yKvX4NWwZ2VOLsF3SDI8eT7lYazW7Y2Q5VnMAuvew==}
+    hasBin: true
+    peerDependencies:
+      hono: 4.x
+      valibot: 0.30.x
+    peerDependenciesMeta:
+      hono:
+        optional: true
+      valibot:
+        optional: true
+
   stack-trace@0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
 
@@ -4181,6 +4245,9 @@ packages:
 
   xxhash-wasm@1.0.2:
     resolution: {integrity: sha512-ibF0Or+FivM9lNrg+HGJfVX8WJqgo+kCLDc4vx6xMeTce7Aj+DLttKbxxRR/gNLSAelRc1omAPlJ77N/Jem07A==}
+
+  yallist@4.0.0:
+    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
   yaml@2.6.0:
     resolution: {integrity: sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==}
@@ -5827,6 +5894,8 @@ snapshots:
 
   asynckit@0.4.0: {}
 
+  aws4fetch@1.0.20: {}
+
   balanced-match@1.0.2: {}
 
   base64-js@1.5.1: {}
@@ -6629,6 +6698,10 @@ snapshots:
 
   jiti@1.21.6: {}
 
+  jose@4.15.9: {}
+
+  jose@5.2.3: {}
+
   jose@5.9.6: {}
 
   joycon@3.1.1: {}
@@ -6718,6 +6791,10 @@ snapshots:
       js-tokens: 4.0.0
 
   lru-cache@10.4.3: {}
+
+  lru-cache@6.0.0:
+    dependencies:
+      yallist: 4.0.0
 
   lru-cache@7.18.3:
     optional: true
@@ -6861,11 +6938,15 @@ snapshots:
 
   object-assign@4.1.1: {}
 
+  object-hash@2.2.0: {}
+
   object-hash@3.0.0: {}
 
   object-inspect@1.13.2: {}
 
   ohash@1.1.4: {}
+
+  oidc-token-hash@5.0.3: {}
 
   on-finished@2.4.1:
     dependencies:
@@ -6879,6 +6960,13 @@ snapshots:
   openapi3-ts@4.4.0:
     dependencies:
       yaml: 2.6.0
+
+  openid-client@5.6.4:
+    dependencies:
+      jose: 4.15.9
+      lru-cache: 6.0.0
+      object-hash: 2.2.0
+      oidc-token-hash: 5.0.3
 
   package-json-from-dist@1.0.1: {}
 
@@ -7303,6 +7391,34 @@ snapshots:
 
   sourcemap-codec@1.4.8: {}
 
+  sst-darwin-arm64@3.3.22:
+    optional: true
+
+  sst-darwin-x64@3.3.22:
+    optional: true
+
+  sst-linux-arm64@3.3.22:
+    optional: true
+
+  sst-linux-x64@3.3.22:
+    optional: true
+
+  sst-linux-x86@3.3.22:
+    optional: true
+
+  sst@3.3.22(hono@4.6.8):
+    dependencies:
+      aws4fetch: 1.0.20
+      jose: 5.2.3
+      openid-client: 5.6.4
+    optionalDependencies:
+      hono: 4.6.8
+      sst-darwin-arm64: 3.3.22
+      sst-darwin-x64: 3.3.22
+      sst-linux-arm64: 3.3.22
+      sst-linux-x64: 3.3.22
+      sst-linux-x86: 3.3.22
+
   stack-trace@0.0.10: {}
 
   stacktracey@2.1.8:
@@ -7640,6 +7756,8 @@ snapshots:
   xlsx@https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz: {}
 
   xxhash-wasm@1.0.2: {}
+
+  yallist@4.0.0: {}
 
   yaml@2.6.0: {}
 

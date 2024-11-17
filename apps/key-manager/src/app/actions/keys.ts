@@ -13,8 +13,8 @@ import { createId } from "@paralleldrive/cuid2";
 import Cloudflare from "cloudflare";
 import { z } from "zod";
 
-const { CLOUDFLARE_KV_NAMESPACE_ID, CLOUDFLARE_ACCOUNT_ID } = z
-  .object({ CLOUDFLARE_KV_NAMESPACE_ID: z.string(), CLOUDFLARE_ACCOUNT_ID: z.string() })
+const { CLOUDFLARE_KV_NAMESPACE_ID, CLOUDFLARE_DEFAULT_ACCOUNT_ID } = z
+  .object({ CLOUDFLARE_KV_NAMESPACE_ID: z.string(), CLOUDFLARE_DEFAULT_ACCOUNT_ID: z.string() })
   .parse(process.env);
 
 const cf = new Cloudflare();
@@ -38,7 +38,7 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   const completeKey = `${prefix}.${type}.${uniqueId}`;
 
   await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, completeKey, {
-    account_id: CLOUDFLARE_ACCOUNT_ID,
+    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
     value: JSON.stringify(key),
     metadata: "{}",
   });
@@ -49,7 +49,7 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
 export const getUserKeysNames = async (id: string) => {
   const prefix = getUserPrefix(id);
   const listResult = await cf.kv.namespaces.keys.list(CLOUDFLARE_KV_NAMESPACE_ID, {
-    account_id: CLOUDFLARE_ACCOUNT_ID,
+    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
     prefix,
     limit: MAX_API_KEYS,
   });
@@ -60,7 +60,7 @@ export const getUserKeysNames = async (id: string) => {
 export const getUserApiKeyData = async (key: string) => {
   return JSON.parse(
     await cf.kv.namespaces.values
-      .get(CLOUDFLARE_KV_NAMESPACE_ID, key, { account_id: CLOUDFLARE_ACCOUNT_ID })
+      .get(CLOUDFLARE_KV_NAMESPACE_ID, key, { account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID })
       .then((r) => r.text()),
   );
 };
@@ -141,7 +141,7 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
   }
 
   await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, key, {
-    account_id: CLOUDFLARE_ACCOUNT_ID,
+    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
     value: JSON.stringify(keyData),
     metadata: "{}",
   });
@@ -165,6 +165,6 @@ export async function deleteUserApiKey(key: string) {
   }
 
   await cf.kv.namespaces.values.delete(CLOUDFLARE_KV_NAMESPACE_ID, key, {
-    account_id: CLOUDFLARE_ACCOUNT_ID,
+    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
   });
 }
