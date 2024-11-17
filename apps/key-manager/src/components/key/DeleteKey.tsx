@@ -1,4 +1,5 @@
 import { deleteUserApiKey } from "@/app/actions/keys";
+import DisplayKey from "@/components/key/view/DisplayKey";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -63,9 +64,7 @@ const DeleteKey: React.FC<Props> = ({
         <div className={"space-y-4"}>
           <div>Are you sure you want to delete this API key?</div>
           <p className={"truncate max-w-96 font-bold"}>{apiKeyName}</p>
-          <div className="bg-gray-900 p-2 rounded flex-1">
-            <pre className="overflow-x-auto">{abbreviatedKey}</pre>
-          </div>
+          <DisplayKey keyText={abbreviatedKey} background copy={false} />
         </div>
         <DialogFooter>
           <Button
