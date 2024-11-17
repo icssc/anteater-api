@@ -1,11 +1,10 @@
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
+import SignOutButton from "@/components/auth/SignOutButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOutIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -36,16 +35,7 @@ const Header = async () => {
             </DropdownMenuTrigger>
           </div>
           <DropdownMenuContent align={"end"}>
-            <DropdownMenuItem
-              onClick={async () => {
-                "use server";
-                await signOut();
-              }}
-              className={"cursor-pointer"}
-            >
-              <LogOutIcon />
-              <span>Log Out</span>
-            </DropdownMenuItem>
+            <SignOutButton />
           </DropdownMenuContent>
         </DropdownMenu>
       )}
