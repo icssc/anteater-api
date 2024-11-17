@@ -8,7 +8,7 @@ import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField
 import ResourcesField from "@/components/key/form/ResourcesField";
 import TypeField from "@/components/key/form/TypeField";
 import DisplayKey from "@/components/key/view/DisplayKey";
-import HeadingText from "@/components/layout/HeadingText.";
+import HeadingText from "@/components/layout/HeadingText";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import ButtonSpinner from "@/components/ui/button-spinner";

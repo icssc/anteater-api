@@ -18,7 +18,7 @@ import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField
 import ResourcesField from "@/components/key/form/ResourcesField";
 import TypeField from "@/components/key/form/TypeField";
 import DisplayKey from "@/components/key/view/DisplayKey";
-import HeadingText from "@/components/layout/HeadingText.";
+import HeadingText from "@/components/layout/HeadingText";
 import { Form } from "@/components/ui/form";
 
 import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";

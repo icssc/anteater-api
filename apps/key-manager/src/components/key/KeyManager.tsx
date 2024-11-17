@@ -2,7 +2,7 @@
 
 import { getUserApiKeys } from "@/app/actions/keys";
 import KeyTableRow from "@/components/key/view/KeyTableRow";
-import HeadingText from "@/components/layout/HeadingText.";
+import HeadingText from "@/components/layout/HeadingText";
 import { Button } from "@/components/ui/button";
 import Placeholder from "@/components/ui/placeholder";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";

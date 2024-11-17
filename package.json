@@ -15,9 +15,7 @@
     "db:studio": "dotenv -- pnpm --filter '@packages/db' studio",
     "deploy": "dotenv -- pnpm -r run deploy",
     "dev": "dotenv -- pnpm --filter '@apps/api' dev",
-    "postinstall": "lefthook install",
-    "users-db:generate": "dotenv -- pnpm --filter '@apps/key-manager' generate",
-    "users-db:migrate": "dotenv -- pnpm --filter '@apps/key-manager' migrate"
+    "postinstall": "lefthook install"
   },
   "dependencies": {
     "@biomejs/biome": "1.9.4",
