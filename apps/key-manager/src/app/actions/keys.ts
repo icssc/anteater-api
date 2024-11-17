@@ -10,13 +10,16 @@ import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
+import Cloudflare from "cloudflare";
+import { z } from "zod";
 
-const getUserPrefix = (userId: string) => {
-  const hash = createHash("sha256");
-  const prefix = hash.update(userId).digest("base64url");
+const { CLOUDFLARE_KV_NAMESPACE_ID, CLOUDFLARE_ACCOUNT_ID } = z
+  .object({ CLOUDFLARE_KV_NAMESPACE_ID: z.string(), CLOUDFLARE_ACCOUNT_ID: z.string() })
+  .parse(process.env);
 
-  return prefix;
-};
+const cf = new Cloudflare();
+
+const getUserPrefix = (userId: string) => createHash("sha256").update(userId).digest("base64url");
 
 export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyData> => {
   const session = await auth();
@@ -34,24 +37,32 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   const type = key._type === "publishable" ? "pk" : "sk";
   const completeKey = `${prefix}.${type}.${uniqueId}`;
 
-  await ctx.env.API_KEYS.put(completeKey, JSON.stringify(key));
+  await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, completeKey, {
+    account_id: CLOUDFLARE_ACCOUNT_ID,
+    value: JSON.stringify(key),
+    metadata: "{}",
+  });
 
   return completeKey;
 };
 
 export const getUserKeysNames = async (id: string) => {
   const prefix = getUserPrefix(id);
-  const listResult = await ctx.env.API_KEYS.list({
+  const listResult = await cf.kv.namespaces.keys.list(CLOUDFLARE_KV_NAMESPACE_ID, {
+    account_id: CLOUDFLARE_ACCOUNT_ID,
     prefix,
     limit: MAX_API_KEYS,
   });
 
-  return listResult.keys.map((key) => key.name);
+  return listResult.result.map((key) => key.name);
 };
 
 export const getUserApiKeyData = async (key: string) => {
-  const keyData = await ctx.env.API_KEYS.get<KeyData>(key, { type: "json" });
-  return keyData;
+  return JSON.parse(
+    await cf.kv.namespaces.values
+      .get(CLOUDFLARE_KV_NAMESPACE_ID, key, { account_id: CLOUDFLARE_ACCOUNT_ID })
+      .then((r) => r.text()),
+  );
 };
 
 /**
@@ -65,7 +76,7 @@ const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> =
 
   const keysDataEntries = await Promise.all(
     keys.map(async (key) => {
-      const data = await ctx.env.API_KEYS.get<KeyData>(key, { type: "json" });
+      const data = await getUserApiKeyData(key);
       return data ? [key, data] : null;
     }),
   );
@@ -129,7 +140,11 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
     throw new Error("API key does not exist on user");
   }
 
-  await ctx.env.API_KEYS.put(key, JSON.stringify(validatedKeyData));
+  await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, key, {
+    account_id: CLOUDFLARE_ACCOUNT_ID,
+    value: JSON.stringify(keyData),
+    metadata: "{}",
+  });
 
   return validatedKeyData;
 }
@@ -149,5 +164,7 @@ export async function deleteUserApiKey(key: string) {
     throw new Error("API key does not exist on user");
   }
 
-  await ctx.env.API_KEYS.delete(key);
+  await cf.kv.namespaces.values.delete(CLOUDFLARE_KV_NAMESPACE_ID, key, {
+    account_id: CLOUDFLARE_ACCOUNT_ID,
+  });
 }
