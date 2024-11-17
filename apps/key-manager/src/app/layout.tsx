@@ -5,7 +5,10 @@ import { SessionProvider } from "next-auth/react";
 import { Inter } from "next/font/google";
 import type React from "react";
 
-export const metadata: Metadata = {};
+export const metadata: Metadata = {
+  title: "Key Manager",
+  description: "Manage your Anteater API keys",
+};
 
 const inter = Inter({
   subsets: ["latin"],

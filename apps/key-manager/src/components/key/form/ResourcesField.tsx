@@ -40,7 +40,11 @@ const ResourcesField: React.FC<Props> = ({ form }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:bg-destructive"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

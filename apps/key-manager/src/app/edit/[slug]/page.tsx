@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckIcon, ChevronLeft } from "lucide-react";
+import { AlertCircle, ChevronLeft } from "lucide-react";
 
 import DeleteKey from "@/components/key/DeleteKey";
 import NameField from "@/components/key/form/NameField";
@@ -23,16 +23,20 @@ import { Form } from "@/components/ui/form";
 
 import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";
 import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import ButtonSpinner from "@/components/ui/button-spinner";
+import Placeholder from "@/components/ui/placeholder";
 
 const EditKey = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
+    if (status === "loading") return;
+
     if (!session) {
       router.push("/login");
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
   const params = useParams();
   const key = params.slug as string;
@@ -40,7 +44,7 @@ const EditKey = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [keyData, setKeyData] = useState<CreateKeyFormValues | null>(null);
-  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const form = useForm<CreateKeyFormValues>({
     resolver: zodResolver(createRefinedKeySchema),
@@ -48,14 +52,15 @@ const EditKey = () => {
 
   useEffect(() => {
     const fetchKeyData = async () => {
+      if (status === "loading") return;
+
       if (!session?.user?.id) {
-        return;
+        return router.push("/");
       }
 
       const validKeys = await getUserKeysNames(session.user.id);
       if (!validKeys.includes(key)) {
-        router.push("/");
-        return;
+        return router.push("/");
       }
 
       try {
@@ -87,16 +92,13 @@ const EditKey = () => {
     };
 
     fetchKeyData().then();
-  }, [session, key, router, form]);
+  }, [session, key, router, form, status]);
 
   const onSubmit = async (values: CreateKeyFormValues) => {
     try {
+      setIsSaving(true);
       await editUserApiKey(key, values);
-      setIsSaved(true);
-
-      setTimeout(() => {
-        setIsSaved(false);
-      }, 1000);
+      setIsSaving(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred while editing the key.");
     }
@@ -113,7 +115,9 @@ const EditKey = () => {
         <HeadingText>Edit Key</HeadingText>
       </div>
 
-      {!loading && (
+      {loading ? (
+        <Placeholder className="h-48" />
+      ) : (
         <>
           <DisplayKey keyText={key} background label={"Key"} />
 
@@ -151,10 +155,9 @@ const EditKey = () => {
                   apiKeyName={keyData?.name}
                   afterDelete={() => router.push("/")}
                 />
-                <Button variant="default" type="submit" disabled={isSaved}>
+                <ButtonSpinner variant="default" type="submit" isLoading={isSaving}>
                   Save
-                  {isSaved && <CheckIcon className="h-4 w-4" />}
-                </Button>
+                </ButtonSpinner>
               </div>
             </form>
           </Form>

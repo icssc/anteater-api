@@ -68,5 +68,5 @@
 }
 
 .content {
-  @apply max-w-5xl mx-auto p-5 space-y-8;
+  @apply max-w-5xl mx-auto p-5 space-y-6;
 }
