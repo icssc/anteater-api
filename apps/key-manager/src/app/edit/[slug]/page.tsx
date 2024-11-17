@@ -130,7 +130,7 @@ const EditKey = () => {
 
               {/* Admin Fields */}
               {session?.user?.isAdmin && (
-                <Alert variant={"destructive"} className={"space-y-6 text-white"}>
+                <Alert variant={"destructive"} className={"space-y-6 text-foreground"}>
                   <ResourcesField form={form} />
                   <RateLimitOverrideField form={form} />
                 </Alert>

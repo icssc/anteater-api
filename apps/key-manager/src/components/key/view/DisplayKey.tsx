@@ -7,9 +7,10 @@ interface Props {
   copyText?: string;
   background?: boolean;
   label?: string;
+  copy?: boolean;
 }
 
-const DisplayKey: React.FC<Props> = ({ keyText, copyText, background, label }) => {
+const DisplayKey: React.FC<Props> = ({ keyText, copyText, background, label, copy = true }) => {
   const [copied, setCopied] = React.useState<boolean>(false);
 
   const handleCopyKey = (apiKey: string) => {
@@ -23,26 +24,27 @@ const DisplayKey: React.FC<Props> = ({ keyText, copyText, background, label }) =
       {label && <p>{label}</p>}
 
       <div
-        className={`flex space-x-2 items-center justify-between ${background ? "bg-gray-900 p-2 rounded" : ""}`}
+        className={`flex space-x-2 items-center justify-between ${background ? "bg-foreground text-background p-2 rounded" : ""}`}
       >
         <code className="overflow-x-auto">{keyText}</code>
-        {copied ? (
-          <CheckIcon className="text-green-700 shrink-0" />
-        ) : (
-          <TooltipProvider>
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger>
-                <CopyIcon
-                  className="cursor-pointer shrink-0"
-                  onClick={() => handleCopyKey(copyText ? copyText : keyText)}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        {copy &&
+          (copied ? (
+            <CheckIcon className="text-green-700 shrink-0" />
+          ) : (
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger>
+                  <CopyIcon
+                    className="cursor-pointer shrink-0"
+                    onClick={() => handleCopyKey(copyText ? copyText : keyText)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
       </div>
     </div>
   );
