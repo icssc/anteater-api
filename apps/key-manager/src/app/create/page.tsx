@@ -11,11 +11,11 @@ import DisplayKey from "@/components/key/view/DisplayKey";
 import HeadingText from "@/components/layout/HeadingText";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import ButtonSpinner from "@/components/ui/button-spinner";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft } from "lucide-react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronLeft } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,12 +49,15 @@ const CreateKey = () => {
   const [error, setError] = useState<string | null>(null);
   const [key, setKey] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   async function onSubmit(values: CreateKeyFormValues) {
+    setIsCreating(true);
     try {
       const { key } = await createUserApiKey(values);
       setKey(key);
       setIsDialogOpen(true);
+      setIsCreating(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred while creating the key.");
     }
@@ -103,9 +106,9 @@ const CreateKey = () => {
             </Alert>
           )}
           <div className={"w-full flex justify-end pt-4"}>
-            <Button variant="default" type="submit">
+            <ButtonSpinner variant="default" type="submit" isLoading={isCreating}>
               Create
-            </Button>
+            </ButtonSpinner>
           </div>
         </form>
       </Form>

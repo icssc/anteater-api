@@ -12,12 +12,11 @@ import type { SetStateAction } from "react";
 interface Props {
   apiKey: string;
   apiKeyData: KeyData;
-  isPending: boolean;
   apiKeys: Record<string, KeyData>;
   setApiKeys: React.Dispatch<SetStateAction<Record<string, KeyData>>>;
 }
 
-const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, isPending, apiKeys, setApiKeys }) => {
+const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys }) => {
   const abbreviatedKey = `...${apiKey.substring(apiKey.indexOf(".") + 1)}`;
 
   const createdAtFormat = new Intl.DateTimeFormat("en-US", {
@@ -82,7 +81,6 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, isPending, apiKeys, 
             apiKeyName={apiKeyData.name}
             apiKeys={apiKeys}
             setApiKeys={setApiKeys}
-            isPending={isPending}
           />
         </div>
       </TableCell>

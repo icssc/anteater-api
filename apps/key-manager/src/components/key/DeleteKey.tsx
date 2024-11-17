@@ -1,6 +1,7 @@
 import { deleteUserApiKey } from "@/app/actions/keys";
 import DisplayKey from "@/components/key/view/DisplayKey";
 import { Button } from "@/components/ui/button";
+import ButtonSpinner from "@/components/ui/button-spinner";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
 import type { KeyData } from "@packages/key-types";
 import { TrashIcon } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
 import { startTransition } from "react";
 
 interface Props {
@@ -19,19 +21,15 @@ interface Props {
   apiKeyName?: string;
   apiKeys?: Record<string, KeyData>;
   setApiKeys?: React.Dispatch<React.SetStateAction<Record<string, KeyData>>>;
-  isPending?: boolean;
   afterDelete?: () => void;
 }
 
-const DeleteKey: React.FC<Props> = ({
-  apiKey,
-  apiKeyName,
-  apiKeys,
-  isPending,
-  setApiKeys,
-  afterDelete,
-}) => {
+const DeleteKey: React.FC<Props> = ({ apiKey, apiKeyName, apiKeys, setApiKeys, afterDelete }) => {
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   const handleDeleteKey = (key: string) => {
+    setIsDeleting(true);
+
     startTransition(async () => {
       await deleteUserApiKey(key);
 
@@ -45,6 +43,8 @@ const DeleteKey: React.FC<Props> = ({
       if (afterDelete) {
         afterDelete();
       }
+
+      setIsDeleting(false);
     });
   };
 
@@ -53,7 +53,7 @@ const DeleteKey: React.FC<Props> = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="destructive" disabled={isPending}>
+        <Button variant="destructive">
           <TrashIcon />
         </Button>
       </DialogTrigger>
@@ -67,13 +67,13 @@ const DeleteKey: React.FC<Props> = ({
           <DisplayKey keyText={abbreviatedKey} background copy={false} />
         </div>
         <DialogFooter>
-          <Button
+          <ButtonSpinner
             variant="destructive"
             onClick={() => handleDeleteKey(apiKey)}
-            disabled={isPending}
+            isLoading={isDeleting}
           >
             Delete
-          </Button>
+          </ButtonSpinner>
         </DialogFooter>
       </DialogContent>
     </Dialog>
