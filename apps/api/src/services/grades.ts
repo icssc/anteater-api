@@ -10,6 +10,8 @@ import {
 import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
 
+const toNumberOrZero = (x: unknown) => Number(x) ?? 0;
+
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
 function buildQuery(input: GradesServiceInput) {
@@ -268,6 +270,21 @@ export class GradesService {
           });
         }, new Map<string, z.infer<typeof aggregateGradesSchema>["sectionList"][number]>()),
       );
+    if (!sectionMapping.size)
+      return {
+        sectionList: [],
+        gradeDistribution: {
+          gradeACount: 0,
+          gradeBCount: 0,
+          gradeCCount: 0,
+          gradeDCount: 0,
+          gradeFCount: 0,
+          gradePCount: 0,
+          gradeNPCount: 0,
+          gradeWCount: 0,
+          averageGPA: null,
+        },
+      };
     const [gradeDistribution] = await this.db
       .select({
         gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
