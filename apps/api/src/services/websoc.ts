@@ -392,20 +392,20 @@ export class WebsocService {
       .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
       .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
       .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(
+      .leftJoin(
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
-      .innerJoin(
+      .leftJoin(
         websocInstructor,
         eq(websocSectionToInstructor.instructorName, websocInstructor.name),
       )
-      .innerJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
-      .innerJoin(
+      .leftJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
+      .leftJoin(
         websocSectionMeetingToLocation,
         eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
       )
-      .innerJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
+      .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
       .where(buildQuery(input))
       .then(transformRows);
   }
