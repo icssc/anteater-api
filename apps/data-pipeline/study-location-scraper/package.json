@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
-    "deploy": "wrangler deploy --minify src/handler.ts",
-    "dev": "dotenv -e ../../../.env -- wrangler dev --test-scheduled src/handler.ts",
+    "deploy": "wrangler deploy",
     "postinstall": "wrangler types --x-include-runtime",
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
@@ -20,6 +19,6 @@
   "devDependencies": {
     "@types/node": "20.8.3",
     "domhandler": "5.0.3",
-    "wrangler": "3.84.1"
+    "wrangler": "3.88.0"
   }
 }

@@ -11,11 +11,10 @@ import {
   responseSchema,
 } from "$schema";
 import { CoursesService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const coursesRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const coursesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
 coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);

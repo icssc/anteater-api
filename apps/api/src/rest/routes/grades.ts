@@ -11,11 +11,10 @@ import {
   responseSchema,
 } from "$schema";
 import { GradesService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const gradesRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const gradesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const rawGradesRoute = createRoute({
   summary: "Filter grades",

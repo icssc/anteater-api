@@ -1,5 +1,4 @@
 import type { ErrorSchema } from "$schema";
-import type { Bindings } from "$types/bindings";
 import { DurableObjectStore } from "@hono-rate-limiter/cloudflare";
 import type { KeyData } from "@packages/key-types";
 import { rateLimiter } from "hono-rate-limiter";
@@ -8,8 +7,8 @@ import { createMiddleware } from "hono/factory";
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1_000;
 const REQUESTS_PER_HOUR = 25_000;
 
-export const globalRateLimiter = createMiddleware<{ Bindings: Bindings }>((c, next) =>
-  rateLimiter<{ Bindings: Bindings }>({
+export const globalRateLimiter = createMiddleware<{ Bindings: Env }>((c, next) =>
+  rateLimiter<{ Bindings: Env }>({
     windowMs: MILLISECONDS_PER_HOUR,
     limit: async (c) => {
       const key = c.req.header("authorization");

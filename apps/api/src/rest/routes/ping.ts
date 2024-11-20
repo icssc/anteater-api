@@ -1,9 +1,8 @@
 import { defaultHook } from "$hooks";
 import { errorSchema, responseSchema } from "$schema";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 
-const pingRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const pingRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const pingRoute = createRoute({
   summary: "Ping",

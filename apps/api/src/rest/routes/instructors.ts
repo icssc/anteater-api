@@ -9,11 +9,10 @@ import {
   responseSchema,
 } from "$schema";
 import { InstructorsService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const instructorsRouter = new OpenAPIHono<{ Bindings: Bindings }>({
+const instructorsRouter = new OpenAPIHono<{ Bindings: Env }>({
   defaultHook,
 });
 

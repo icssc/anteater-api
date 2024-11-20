@@ -7,11 +7,10 @@ import {
   responseSchema,
 } from "$schema";
 import { EnrollmentHistoryService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const enrollmentHistoryRouter = new OpenAPIHono<{ Bindings: Bindings }>({
+const enrollmentHistoryRouter = new OpenAPIHono<{ Bindings: Env }>({
   defaultHook,
 });
 

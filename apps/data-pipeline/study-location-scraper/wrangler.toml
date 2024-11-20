@@ -1,7 +1,10 @@
+#:schema node_modules/wrangler/config-schema.json
 name = "anteater-api_study-location-scraper"
 compatibility_date = "2024-09-28"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = false
+main = "src/index.ts"
+minify = true
 
 [triggers]
 crons = ["*/2 * * * *"]

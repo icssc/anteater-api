@@ -1,3 +1,4 @@
+#:schema node_modules/wrangler/config-schema.json
 name = "anteater-api"
 compatibility_date = "2024-09-28"
 compatibility_flags = ["nodejs_compat"]
@@ -8,6 +9,8 @@ kv_namespaces = [
 workers_dev = false
 route = { pattern = "anteaterapi.com", zone_name = "anteaterapi.com", custom_domain = true }
 assets = { directory = "public" }
+main = "src/index.ts"
+minify = true
 
 [vars]
 CF_ENV = "prod"

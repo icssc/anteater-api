@@ -3,11 +3,10 @@ import { productionCache } from "$middleware";
 import { accessController } from "$middleware";
 import { errorSchema, responseSchema, searchQuerySchema, searchResponseSchema } from "$schema";
 import { CoursesService, InstructorsService, SearchService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const searchRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const searchRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const searchRoute = createRoute({
   summary: "Retrieve search results",

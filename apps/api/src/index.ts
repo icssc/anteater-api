@@ -10,13 +10,12 @@ import {
 } from "$middleware";
 import { restRouter } from "$rest";
 import type { ErrorSchema } from "$schema";
-import type { Bindings } from "$types/bindings";
 import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 
-const app = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 // OpenAPI and API reference configuration
 

@@ -1,11 +1,10 @@
 import { defaultHook } from "$hooks";
 import { errorSchema, responseSchema, weekQuerySchema, weekSchema } from "$schema";
 import { WeekService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const weekRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const weekRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const weekRoute = createRoute({
   summary: "Retrieve current week",

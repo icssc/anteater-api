@@ -1,9 +1,8 @@
-import type { Bindings } from "$types/bindings";
 import type { KeyData } from "@packages/key-types";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 
-export const keyVerifier = createMiddleware<{ Bindings: Bindings }>(async (c, next) => {
+export const keyVerifier = createMiddleware<{ Bindings: Env }>(async (c, next) => {
   const header = c.req.header("authorization");
   if (header) {
     const origin = c.req.header("origin");

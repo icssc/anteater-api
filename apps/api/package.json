@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
-    "deploy": "wrangler deploy --minify src/index.ts",
-    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
     "postinstall": "wrangler types --x-include-runtime"
   },
   "dependencies": {
@@ -28,6 +28,6 @@
   "devDependencies": {
     "@packages/key-types": "workspace:*",
     "@types/node": "20.8.3",
-    "wrangler": "3.84.1"
+    "wrangler": "3.88.0"
   }
 }

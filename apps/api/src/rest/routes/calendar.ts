@@ -2,11 +2,10 @@ import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import { calendarQuerySchema, calendarTermSchema, errorSchema, responseSchema } from "$schema";
 import { CalendarService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const calendarRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const calendarRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const calendarTermRoute = createRoute({
   summary: "Retrieve term calendar",

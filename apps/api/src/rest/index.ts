@@ -1,5 +1,4 @@
 import { defaultHook } from "$hooks";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { calendarRouter } from "./routes/calendar";
 import { coursesRouter } from "./routes/courses";
@@ -13,7 +12,7 @@ import { searchRouter } from "./routes/search";
 import { websocRouter } from "./routes/websoc";
 import { weekRouter } from "./routes/week";
 
-const restRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 restRouter.route("/calendar", calendarRouter);
 restRouter.route("/courses", coursesRouter);

@@ -8,11 +8,10 @@ import {
   websocTermResponseSchema,
 } from "$schema";
 import { WebsocService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const websocRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const websocRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const websocRoute = createRoute({
   summary: "Query WebSoc",

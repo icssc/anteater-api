@@ -1,5 +1,4 @@
 import type { ErrorSchema } from "$schema";
-import type { Bindings } from "$types/bindings";
 import { DurableObjectStore } from "@hono-rate-limiter/cloudflare";
 import { rateLimiter } from "hono-rate-limiter";
 import { createMiddleware } from "hono/factory";
@@ -7,8 +6,8 @@ import { createMiddleware } from "hono/factory";
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1_000;
 const REQUESTS_PER_HOUR = 1_000;
 
-export const ipBasedRateLimiter = createMiddleware<{ Bindings: Bindings }>((c, next) =>
-  rateLimiter<{ Bindings: Bindings }>({
+export const ipBasedRateLimiter = createMiddleware<{ Bindings: Env }>((c, next) =>
+  rateLimiter<{ Bindings: Env }>({
     windowMs: MILLISECONDS_PER_HOUR,
     limit: REQUESTS_PER_HOUR,
     store: new DurableObjectStore({ namespace: c.env.RATE_LIMITER }),

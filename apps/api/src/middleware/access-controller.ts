@@ -1,4 +1,3 @@
-import type { Bindings } from "$types/bindings";
 import type { AccessControlledResource, KeyData } from "@packages/key-types";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
@@ -10,7 +9,7 @@ import { HTTPException } from "hono/http-exception";
  * and we validate API keys at the top level.
  */
 export const accessController = (resource: AccessControlledResource) =>
-  createMiddleware<{ Bindings: Bindings }>(async (c, next) => {
+  createMiddleware<{ Bindings: Env }>(async (c, next) => {
     const header = c.req.header("authorization");
     if (!header) {
       throw new HTTPException(401, { message: "An API key is required to access this resource" });
