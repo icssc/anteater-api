@@ -189,8 +189,8 @@ function parseFinalExamString(
   return {
     examStatus: "SCHEDULED_FINAL" as const,
     dayOfWeek: days[startDate.getUTCDay()],
-    month: startDate.getUTCMonth() + 1,
-    day: startDate.getUTCDay(),
+    month: startDate.getUTCMonth(),
+    day: startDate.getUTCDate(),
     startTime: {
       hour: startDate.getUTCHours(),
       minute: startDate.getUTCMinutes(),
