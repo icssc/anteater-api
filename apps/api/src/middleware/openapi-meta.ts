@@ -1,7 +1,6 @@
-import type { Bindings } from "$types/bindings.ts";
 import type { OpenAPIObjectConfigure } from "@hono/zod-openapi";
 
-export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Bindings }, string> = {
+export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
   openapi: "3.0.0",
   info: {
     version: "2.0.0",
