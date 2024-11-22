@@ -22,13 +22,9 @@ export const studyRoomsPathSchema = z.object({
   id: z.string(),
 });
 
-export const studyRoomsQuerySchema = z
-  .object({
-    location: z.string().optional(),
-    capacityMin: z.coerce.number().int().optional(), // Coerce to number
-    capacityMax: z.coerce.number().int().optional(), // Coerce to number
-    isTechEnhanced: z.coerce.boolean().optional(), // Coerce to boolean
-  })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one filter must be provided.",
-  });
+export const studyRoomsQuerySchema = z.object({
+  location: z.string().optional(),
+  capacityMin: z.coerce.number().int().optional(),
+  capacityMax: z.coerce.number().int().optional(),
+  isTechEnhanced: z.coerce.boolean().optional(),
+});

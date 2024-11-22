@@ -24,7 +24,7 @@ restRouter.route("/ping", pingRouter);
 restRouter.route("/search", searchRouter);
 restRouter.route("/websoc", websocRouter);
 restRouter.route("/week", weekRouter);
-restRouter.route("/study-rooms", studyRoomsRouter);
+restRouter.route("/studyRooms", studyRoomsRouter);
 restRouter.route("/larc", larcRouter);
 
 export { restRouter };

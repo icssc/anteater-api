@@ -14,14 +14,10 @@ export const studyRoomsResolvers = {
         });
       return res;
     },
-    studyRooms: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+    studyRooms: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const service = new StudyRoomsService(db);
-      const validatedQuery = studyRoomsQuerySchema.parse(args.query); // Validate and parse the input
+      const validatedQuery = args.query ? studyRoomsQuerySchema.parse(args.query) : {};
       return await service.getStudyRooms(validatedQuery);
-    },
-    allStudyRooms: async (_: unknown, __: unknown, { db }: GraphQLContext) => {
-      const service = new StudyRoomsService(db);
-      return await service.getAllStudyRooms();
     },
   },
 };

@@ -60,6 +60,7 @@ app.doc("/openapi.json", {
         "Present and past LARC (https://larc.uci.edu/) sections. Sourced from LARC's enrollment site (https://enroll.larc.uci.edu/).",
     },
     { name: "Other" },
+    { name: "Study Rooms" },
   ],
 });
 app.get("/docs", (c) => {

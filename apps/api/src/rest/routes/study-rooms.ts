@@ -1,5 +1,4 @@
 import { defaultHook } from "$hooks";
-import { productionCache } from "$middleware";
 import {
   errorSchema,
   responseSchema,
@@ -13,27 +12,6 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const studyRoomsRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
-
-const allStudyRoomsRoute = createRoute({
-  summary: "List all study rooms",
-  operationId: "allStudyRooms",
-  tags: ["Study Rooms"],
-  method: "get",
-  path: "/all",
-  description: "Retrieves all available study rooms.",
-  responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(studyRoomSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
 
 const studyRoomByIdRoute = createRoute({
   summary: "Retrieve a study room",
@@ -64,23 +42,20 @@ const studyRoomByIdRoute = createRoute({
 });
 
 const studyRoomsByFiltersRoute = createRoute({
-  summary: "Filter study rooms",
+  summary: "Retrieve study rooms",
   operationId: "studyRoomsByFilters",
   tags: ["Study Rooms"],
   method: "get",
   path: "/",
   request: { query: studyRoomsQuerySchema },
-  description: "Retrieves study rooms matching the given filters.",
+  description:
+    "Retrieves study rooms matching the given filters. If no filters are provided, all rooms are returned.",
   responses: {
     200: {
       content: {
         "application/json": { schema: responseSchema(studyRoomSchema.array()) },
       },
       description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -89,21 +64,7 @@ const studyRoomsByFiltersRoute = createRoute({
   },
 });
 
-studyRoomsRouter.get(
-  "*",
-  productionCache({ cacheName: "study-room-api", cacheControl: "max-age=86400" }),
-);
-
-studyRoomsRouter.openapi(allStudyRoomsRoute, async (c) => {
-  const service = new StudyRoomsService(database(c.env.DB.connectionString));
-  return c.json(
-    {
-      ok: true,
-      data: studyRoomSchema.array().parse(await service.getAllStudyRooms()),
-    },
-    200,
-  );
-});
+// studyRoomsRouter.get("*");
 
 studyRoomsRouter.openapi(studyRoomByIdRoute, async (c) => {
   const { id } = c.req.valid("param");
@@ -115,7 +76,7 @@ studyRoomsRouter.openapi(studyRoomByIdRoute, async (c) => {
 });
 
 studyRoomsRouter.openapi(studyRoomsByFiltersRoute, async (c) => {
-  const query = c.req.valid("query");
+  const query = c.req.valid("query") || {}; // no filters required
   const service = new StudyRoomsService(database(c.env.DB.connectionString));
   return c.json(
     {

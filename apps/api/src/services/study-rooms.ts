@@ -1,23 +1,13 @@
+import type { studyRoomsQuerySchema } from "$schema";
+import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
 import { and, eq, gte, lte } from "@packages/db/drizzle";
 import { studyRoom } from "@packages/db/schema";
 
-type StudyRoomsServiceInput = {
-  location?: string;
-  capacityMin?: number;
-  capacityMax?: number;
-  isTechEnhanced?: boolean;
-};
+type StudyRoomsServiceInput = z.infer<typeof studyRoomsQuerySchema>;
 
 export class StudyRoomsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
-
-  async getAllStudyRooms() {
-    return this.db
-      .select()
-      .from(studyRoom)
-      .then((rows) => rows);
-  }
 
   async getStudyRoomById(id: string) {
     const [room] = await this.db.select().from(studyRoom).where(eq(studyRoom.id, id));
@@ -32,10 +22,9 @@ export class StudyRoomsService {
     if (input.isTechEnhanced !== undefined)
       conditions.push(eq(studyRoom.techEnhanced, input.isTechEnhanced));
 
-    return this.db
+    return await this.db
       .select()
       .from(studyRoom)
-      .where(and(...conditions))
-      .then((rows) => rows);
+      .where(conditions.length ? and(...conditions) : undefined);
   }
 }
