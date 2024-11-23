@@ -1,8 +1,7 @@
 import type { database } from "@packages/db";
 import { and, eq } from "@packages/db/drizzle";
-import { type Term, larcSection } from "@packages/db/schema";
-import { websocCourse } from "@packages/db/schema";
-import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import type { Term } from "@packages/db/schema";
+import { larcSection, websocCourse } from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import { fetch } from "cross-fetch";
@@ -141,13 +140,11 @@ export async function doScrape(db: ReturnType<typeof database>) {
       if (!courseId) {
         continue;
       }
+      await tx.delete(larcSection).where(eq(larcSection.courseId, courseId));
       await tx
         .insert(larcSection)
         .values(v.map((x) => ({ ...x, courseId })))
-        .onConflictDoUpdate({
-          target: larcSection.id,
-          set: conflictUpdateSetAllCols(larcSection),
-        });
+        .onConflictDoNothing();
     }
   });
 }

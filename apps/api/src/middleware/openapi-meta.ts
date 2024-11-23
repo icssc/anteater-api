@@ -15,6 +15,11 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
   servers: [
     {
       url: "https://anteaterapi.com",
+      description: "Anteater API Production",
+    },
+    {
+      url: "http://localhost:8787",
+      description: "Anteater API Local Development Instance",
     },
   ],
   tags: [
@@ -31,7 +36,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Courses",
       description:
-        "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog,and WebSoc.",
+        "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog and WebSoc.",
     },
     {
       name: "Enrollment History",
