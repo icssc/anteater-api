@@ -7,6 +7,7 @@ import { gradesRouter } from "./routes/grades";
 import { instructorsRouter } from "./routes/instructors";
 import { larcRouter } from "./routes/larc.ts";
 import { pingRouter } from "./routes/ping";
+import { studyRoomsRouter } from "./routes/study-rooms";
 import { searchRouter } from "./routes/search";
 import { websocRouter } from "./routes/websoc";
 import { weekRouter } from "./routes/week";
@@ -22,6 +23,7 @@ restRouter.route("/ping", pingRouter);
 restRouter.route("/search", searchRouter);
 restRouter.route("/websoc", websocRouter);
 restRouter.route("/week", weekRouter);
+restRouter.route("/studyRooms", studyRoomsRouter);
 restRouter.route("/larc", larcRouter);
 
 export { restRouter };
