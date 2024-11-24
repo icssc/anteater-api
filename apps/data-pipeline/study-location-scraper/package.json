@@ -17,8 +17,7 @@
     "cross-fetch": "4.0.0"
   },
   "devDependencies": {
-    "@types/node": "20.8.3",
     "domhandler": "5.0.3",
-    "wrangler": "3.88.0"
+    "wrangler": "3.85.0"
   }
 }

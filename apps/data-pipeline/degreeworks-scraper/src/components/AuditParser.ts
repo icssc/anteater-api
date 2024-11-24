@@ -28,8 +28,10 @@ export class AuditParser {
   lexOrd = new Intl.Collator().compare;
 
   parseSpecs = (block: Block): string[] =>
-    Array.from(JSON.stringify(block).matchAll(AuditParser.specOrOtherMatcher))
+    JSON.stringify(block)
+      .matchAll(AuditParser.specOrOtherMatcher)
       .map((x) => JSON.parse(`{${x[0]}}`).value)
+      .toArray()
       .sort();
 
   flattenIfStmt(ruleArray: Rule[]): Rule[] {

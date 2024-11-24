@@ -23,7 +23,6 @@
     "postgres": "3.4.5"
   },
   "devDependencies": {
-    "@types/node": "20.8.3",
     "dotenv": "16.4.5",
     "drizzle-kit": "0.27.0"
   }

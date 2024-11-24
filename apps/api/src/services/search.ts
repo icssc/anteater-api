@@ -30,8 +30,10 @@ const INSTRUCTORS_WEIGHTS = sql`(
   )`;
 
 function splitAtLastNumber(s: string): string {
-  const i = Array.from(s.matchAll(/\d+/g))
+  const i = s
+    .matchAll(/\d+/g)
     .map((x) => x.index)
+    .toArray()
     .slice(-1)[0];
   return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`;
 }
@@ -58,7 +60,7 @@ export class SearchService {
 
   private async courseMappingFromResults(results: Map<string, number>) {
     return await this.coursesService
-      .batchGetCourses(Array.from(results.keys()))
+      .batchGetCourses(results.keys().toArray())
       .then((courses) =>
         courses.reduce(
           (acc, course) => acc.set(course.id, course),
@@ -69,7 +71,7 @@ export class SearchService {
 
   private async instructorMappingFromResults(results: Map<string, number>) {
     return await this.instructorsService
-      .batchGetInstructors(Array.from(results.keys()))
+      .batchGetInstructors(results.keys().toArray())
       .then((instructors) =>
         instructors.reduce(
           (acc, instructor) => acc.set(instructor.ucinetid, instructor),
@@ -96,12 +98,14 @@ export class SearchService {
     const courses = await this.courseMappingFromResults(results);
     return {
       count: results.size,
-      results: Array.from(results.entries())
+      results: results
+        .entries()
         .map(([key, rank]) => ({
           type: "course" as const,
           result: getFromMapOrThrow(courses, key),
           rank,
         }))
+        .toArray()
         .slice(input.skip, input.skip + input.take),
     };
   }
@@ -126,12 +130,14 @@ export class SearchService {
     const instructors = await this.instructorMappingFromResults(results);
     return {
       count: results.size,
-      results: Array.from(results.entries())
+      results: results
+        .entries()
         .map(([key, rank]) => ({
           type: "instructor" as const,
           result: getFromMapOrThrow(instructors, key),
           rank,
         }))
+        .toArray()
         .slice(input.skip, input.skip + input.take),
     };
   }
@@ -166,7 +172,8 @@ export class SearchService {
     const instructors = await this.instructorMappingFromResults(results);
     return {
       count: results.size,
-      results: Array.from(results.entries())
+      results: results
+        .entries()
         .map(([key, rank]) =>
           courses.has(key)
             ? {
@@ -182,6 +189,7 @@ export class SearchService {
                 rank,
               },
         )
+        .toArray()
         .toSorted((a, b) => {
           const rankDiff = b.rank - a.rank;
           return Math.abs(rankDiff) < Number.EPSILON

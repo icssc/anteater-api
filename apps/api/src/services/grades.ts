@@ -169,7 +169,7 @@ export class GradesService {
           });
         }, new Map<string, z.infer<typeof rawGradeSchema>>()),
       );
-    return Array.from(data.values());
+    return data.values().toArray();
   }
 
   async getGradesOptions(input: GradesServiceInput) {
@@ -298,9 +298,9 @@ export class GradesService {
         averageGPA: avg(websocSectionGrade.averageGPA).mapWith(Number),
       })
       .from(websocSectionGrade)
-      .where(inArray(websocSectionGrade.sectionId, Array.from(sectionMapping.keys())));
+      .where(inArray(websocSectionGrade.sectionId, sectionMapping.keys().toArray()));
     return {
-      sectionList: Array.from(sectionMapping.values()),
+      sectionList: sectionMapping.values().toArray(),
       gradeDistribution,
     };
   }
