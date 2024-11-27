@@ -545,14 +545,14 @@ const doDepartmentUpsert = async (
     );
     const instructorAssociationsToInsert = sectionsToInstructors
       .entries()
-      .toArray()
       .flatMap(([k, names]) =>
         names.map((instructorName) => {
           const sectionId = sections.get(k);
           return sectionId ? { sectionId, instructorName } : undefined;
         }),
       )
-      .filter(notNull);
+      .filter(notNull)
+      .toArray();
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }

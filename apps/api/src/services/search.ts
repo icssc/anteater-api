@@ -137,8 +137,9 @@ export class SearchService {
           result: getFromMapOrThrow(instructors, key),
           rank,
         }))
-        .toArray()
-        .slice(input.skip, input.skip + input.take),
+        .drop(input.skip)
+        .take(input.take)
+        .toArray(),
     };
   }
 

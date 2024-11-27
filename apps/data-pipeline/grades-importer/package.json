@@ -12,6 +12,5 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "node-xlsx": "0.24.0"
-  },
-  "devDependencies": {}
+  }
 }
