@@ -7,7 +7,12 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist/**", "**/.next/**", "**/.worker-next/**"]
+    "ignore": [
+      "dist/**",
+      "**/.next/**",
+      "**/.worker-next/**",
+      "**/migrations/meta/*.json"
+    ]
   },
   "formatter": {
     "enabled": true,

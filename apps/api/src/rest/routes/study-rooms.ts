@@ -7,11 +7,10 @@ import {
   studyRoomsQuerySchema,
 } from "$schema";
 import { StudyRoomsService } from "$services";
-import type { Bindings } from "$types/bindings";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
-const studyRoomsRouter = new OpenAPIHono<{ Bindings: Bindings }>({ defaultHook });
+const studyRoomsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const studyRoomByIdRoute = createRoute({
   summary: "Retrieve a study room",
