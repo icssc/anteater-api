@@ -22,7 +22,7 @@ export class StudyRoomsService {
     if (input.isTechEnhanced !== undefined)
       conditions.push(eq(studyRoom.techEnhanced, input.isTechEnhanced));
 
-    return await this.db
+    return this.db
       .select()
       .from(studyRoom)
       .where(conditions.length ? and(...conditions) : undefined);

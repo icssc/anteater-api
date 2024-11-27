@@ -137,7 +137,7 @@ function buildQuery(input: WebsocServiceInput) {
           break;
       }
     }
-    return or(...daysConditions);
+    conditions.push(or(...daysConditions));
   }
   if (input.building) {
     conditions.push(eq(websocLocation.building, input.building.toUpperCase()));

@@ -1,23 +1,41 @@
 export const larcSchema = `#graphql
 
+type LarcSectionMeeting @cacheControl(maxAge: 300) {
+    bldg: [String!]!
+    days: String
+    startTime: HourMinute
+    endTime: HourMinute
+}
+
 type LarcSection @cacheControl(maxAge: 300) {
-    days: String!
-    time: String!
-    instructor: String!
-    bldg: String!
-    websocCourse: WebsocCoursePreview!
+    meetings: [LarcSectionMeeting!]!
+    instructors: [String!]!
+}
+
+type LarcCourse @cacheControl(maxAge: 300) {
+    deptCode: String!
+    courseTitle: String!
+    courseNumber: String!
+    sections: [LarcSection!]!
+}
+
+type LarcResponse @cacheControl(maxAge: 300) {
+    courses: [LarcCourse!]!
 }
 
 input LarcQuery {
-    instructor: String
-    bldg: String
+    instructorName: String
+    building: String
     department: String
     courseNumber: String
     year: String
     quarter: String
+    days: String
+    startTime: String
+    endTime: String
 }
 
 extend type Query {
-    larc(query: LarcQuery): [LarcSection!]!
+    larc(query: LarcQuery): LarcResponse!
 }
 `;

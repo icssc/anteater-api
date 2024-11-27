@@ -1,7 +1,9 @@
 import { z } from "@hono/zod-openapi";
 import type { FinalExamStatus } from "@packages/db/schema";
 import { courseLevels, terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
-import { isBaseTenInt } from "@packages/stdlib";
+import { isBaseTenInt, timeSchema } from "@packages/stdlib";
+import { courseNumberTransform } from "./lib/course-utils.ts";
+import { daysTransform } from "./lib/day-utils.ts";
 
 const anyArray = ["ANY"] as const;
 
@@ -18,54 +20,6 @@ const geCategories = [
   "GE-7",
   "GE-8",
 ] as const;
-
-const allDays = [
-  "M",
-  "Mo",
-  "Mon",
-  "Tu",
-  "Tue",
-  "Tues",
-  "W",
-  "We",
-  "Wed",
-  "Th",
-  "Thu",
-  "Thur",
-  "F",
-  "Fr",
-  "Fri",
-  "S",
-  "Sa",
-  "Sat",
-  "Su",
-  "Sun",
-] as const;
-
-const normalizedDays = ["M", "Tu", "W", "Th", "F", "S", "Su"] as const;
-
-const dayMapping: Record<(typeof allDays)[number], (typeof normalizedDays)[number]> = {
-  M: "M",
-  Mo: "M",
-  Mon: "M",
-  Tu: "Tu",
-  Tue: "Tu",
-  Tues: "Tu",
-  W: "W",
-  We: "W",
-  Wed: "W",
-  Th: "Th",
-  Thu: "Th",
-  Thur: "Th",
-  F: "F",
-  Fr: "F",
-  Fri: "F",
-  S: "S",
-  Sa: "S",
-  Sat: "S",
-  Su: "Su",
-  Sun: "Su",
-};
 
 const fullCoursesOptions = [
   "ANY",
@@ -116,28 +70,8 @@ export type ParsedRange = {
 
 export type ParsedNumber = ParsedInteger | ParsedString | ParsedRange;
 
-const isValidDay = (day: string): day is (typeof allDays)[number] =>
-  !!(dayMapping as Record<string, unknown>)[day];
-
 const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)[number] =>
   (restrictionCodes as readonly string[]).includes(code);
-
-const MILLISECONDS_PER_MINUTE = 60 * 1000;
-const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
-
-const transformTime = (time?: string): Date | undefined => {
-  if (!time || time === "") return undefined;
-  const [hourString, minuteString] = time.split(":");
-  return new Date(
-    (hourString === "12"
-      ? minuteString.endsWith("am")
-        ? 0
-        : 12 * MILLISECONDS_PER_HOUR
-      : Number.parseInt(hourString, 10) * MILLISECONDS_PER_HOUR) +
-      Number.parseInt(minuteString, 10) * MILLISECONDS_PER_MINUTE +
-      (hourString === "12" ? 0 : minuteString.endsWith("am") ? 0 : 12 * MILLISECONDS_PER_HOUR),
-  );
-};
 
 export const websocQuerySchema = z.object({
   year: z
@@ -150,37 +84,7 @@ export const websocQuerySchema = z.object({
     .transform((x) => (x === "ANY" ? undefined : x)),
   department: z.string().optional(),
   courseTitle: z.string().optional(),
-  courseNumber: z
-    .string()
-    .optional()
-    .transform((nums, ctx) => {
-      if (!nums) return undefined;
-      const parsedNums: ParsedNumber[] = [];
-      for (const num of nums.split(",").map((num) => num.trim())) {
-        if (num.includes("-")) {
-          const [lower, upper] = num.split("-");
-          if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `'${num}' is not a valid course number range. The lower and upper bounds of a course number range must both be base-10 integers.`,
-            });
-            return z.NEVER;
-          }
-          parsedNums.push({
-            _type: "ParsedRange",
-            min: Number.parseInt(lower, 10),
-            max: Number.parseInt(upper, 10),
-          });
-          continue;
-        }
-        if (!isBaseTenInt(num)) {
-          parsedNums.push({ _type: "ParsedString", value: num });
-        } else {
-          parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(num, 10) });
-        }
-      }
-      return parsedNums;
-    }),
+  courseNumber: z.string().optional().transform(courseNumberTransform),
   sectionCodes: z
     .string()
     .optional()
@@ -216,24 +120,7 @@ export const websocQuerySchema = z.object({
       return parsedNums;
     }),
   instructorName: z.string().optional(),
-  days: z
-    .string()
-    .optional()
-    .transform((days, ctx) => {
-      if (!days) return undefined;
-      const parsedDays: Array<(typeof normalizedDays)[number]> = [];
-      for (const day of days.split(",").map((day) => day.trim())) {
-        if (!isValidDay(day)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `'${day}' is not a valid day of the week. Valid days of the week are ${allDays.join(", ")}.`,
-          });
-          return z.NEVER;
-        }
-        parsedDays.push(dayMapping[day]);
-      }
-      return parsedDays;
-    }),
+  days: z.string().optional().transform(daysTransform),
   building: z.string().optional(),
   room: z.string().optional(),
   division: z
@@ -251,12 +138,8 @@ export const websocQuerySchema = z.object({
     .transform((x) => (x === "ANY" ? undefined : x)),
   cancelledCourses: z.enum(cancelledCoursesOptions).optional(),
   units: z.optional(z.literal("VAR").or(z.string())),
-  startTime: z
-    .optional(z.literal("").or(z.string().regex(/([1-9]|1[0-2]):[0-5][0-9][ap]m/)))
-    .transform(transformTime),
-  endTime: z
-    .optional(z.literal("").or(z.string().regex(/([1-9]|1[0-2]):[0-5][0-9][ap]m/)))
-    .transform(transformTime),
+  startTime: timeSchema.optional(),
+  endTime: timeSchema.optional(),
   excludeRestrictionCodes: z
     .string()
     .optional()

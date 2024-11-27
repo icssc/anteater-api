@@ -3,7 +3,7 @@ import { productionCache } from "$middleware";
 import { errorSchema, responseSchema } from "$schema";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { larcQuerySchema, larcSectionSchema } from "../../schema/larc.ts";
+import { larcQuerySchema, larcResponseSchema } from "../../schema/larc.ts";
 import { LarcService } from "../../services/larc.ts";
 
 const larcRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
@@ -20,7 +20,7 @@ const larcSectionsRoute = createRoute({
     200: {
       content: {
         "application/json": {
-          schema: responseSchema(larcSectionSchema.array()),
+          schema: responseSchema(larcResponseSchema),
         },
       },
       description: "Successful operation",
@@ -44,7 +44,7 @@ larcRouter.openapi(larcSectionsRoute, async (c) => {
   return c.json(
     {
       ok: true,
-      data: larcSectionSchema.array().parse(await service.getLarcSections(query)),
+      data: larcResponseSchema.parse(await service.getLarcSections(query)),
     },
     200,
   );

@@ -2,15 +2,25 @@ import type { database } from "@packages/db";
 import { and, eq } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import { larcSection, websocCourse } from "@packages/db/schema";
-import { sleep } from "@packages/stdlib";
+import { parseStartAndEndTimes, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import { fetch } from "cross-fetch";
+import { parseMeetingDays } from "../../../api/src/schema/lib/day-utils.ts";
 
 type LarcSection = {
-  days: string;
-  time: string;
+  daysString: string;
+  timeString: string;
+  startTime: Date;
+  endTime: Date;
   instructor: string;
-  bldg: string;
+  building: string;
+  meetsMonday: boolean;
+  meetsTuesday: boolean;
+  meetsWednesday: boolean;
+  meetsThursday: boolean;
+  meetsFriday: boolean;
+  meetsSaturday: boolean;
+  meetsSunday: boolean;
 };
 
 type FlattenedLarcResponse = {
@@ -88,10 +98,10 @@ export async function doScrape(db: ReturnType<typeof database>) {
                 .map((_, col) => $(col).text().trim());
 
               return {
-                days: fmtDays(days),
-                time: fmtTime(time),
+                daysString: fmtDays(days),
+                timeString: fmtTime(time),
                 instructor,
-                bldg: fmtBldg(building),
+                building: fmtBldg(building),
               };
             });
 
@@ -100,7 +110,23 @@ export async function doScrape(db: ReturnType<typeof database>) {
             courseNumber: match?.groups?.courseNumber ?? "",
           }));
         });
-      data.push(...courses.map((course) => ({ ...course, year: year.toString(10), quarter })));
+      data.push(
+        ...courses.map((course) => {
+          const { startTime, endTime } = parseStartAndEndTimes(course.timeString);
+          const meetingDays = parseMeetingDays(course.daysString);
+
+          const res = {
+            ...course,
+            year: year.toString(10),
+            quarter,
+            startTime: new Date(startTime * 60 * 1000),
+            endTime: new Date(endTime * 60 * 1000),
+            ...meetingDays,
+          };
+
+          return res;
+        }),
+      );
       await sleep(1000);
     }
   }
