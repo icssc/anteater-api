@@ -29,9 +29,8 @@ import {
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { baseTenIntOrNull, intersectAll, notNull, sleep } from "@packages/stdlib";
-import { parseStartAndEndTimes } from "@packages/stdlib";
+import { parseMeetingDays, parseStartAndEndTimes } from "@packages/stdlib";
 import { load } from "cheerio";
-import { parseMeetingDays } from "../../../api/src/schema/lib/day-utils.ts";
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());

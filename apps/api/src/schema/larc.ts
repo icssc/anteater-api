@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
-import { courseNumberTransform } from "./lib/course-utils.ts";
-import { daysTransform } from "./lib/day-utils.ts";
-import { timeSchema } from "./lib/time-utils.ts";
+import { courseNumberSchema, daysSchema, timeSchema } from "./lib";
 
 export const larcQuerySchema = z.object({
   instructorName: z
@@ -17,10 +15,9 @@ export const larcQuerySchema = z.object({
     description: "The department of the LARC section's related course",
     example: "I&C SCI",
   }),
-  courseNumber: z.string().optional().transform(courseNumberTransform).openapi({
-    description: "The course number(s) of the LARC section's related course.",
-    example: "46,6B,51-53",
-  }),
+  courseNumber: courseNumberSchema
+    .optional()
+    .openapi({ description: "The course number(s) of the LARC section's related course." }),
   year: z
     .string({ message: "Parameter 'year' is required " })
     .regex(/^\d{4}$/, { message: "Invalid year provided" })
@@ -31,13 +28,8 @@ export const larcQuerySchema = z.object({
         "Parameter 'quarter' is required and must be one of 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
     })
     .openapi({ description: "The quarter of the LARC section", example: "Fall" }),
-  days: z
-    .string()
-    .transform(daysTransform)
+  days: daysSchema
     .optional()
-    .openapi({
-      example: "M,Tu,W,Th,F",
-    })
     .openapi({ description: "Selects LARC sections held on any of the given days" }),
   startTime: timeSchema.optional(),
   endTime: timeSchema.optional(),

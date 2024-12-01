@@ -1,9 +1,8 @@
 import { z } from "@hono/zod-openapi";
 import type { FinalExamStatus } from "@packages/db/schema";
 import { courseLevels, terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
-import { isBaseTenInt, timeSchema } from "@packages/stdlib";
-import { courseNumberTransform } from "./lib/course-utils.ts";
-import { daysTransform } from "./lib/day-utils.ts";
+import { isBaseTenInt } from "@packages/stdlib";
+import { courseNumberSchema, timeSchema } from "./lib";
 
 const anyArray = ["ANY"] as const;
 
@@ -84,7 +83,7 @@ export const websocQuerySchema = z.object({
     .transform((x) => (x === "ANY" ? undefined : x)),
   department: z.string().optional(),
   courseTitle: z.string().optional(),
-  courseNumber: z.string().optional().transform(courseNumberTransform),
+  courseNumber: courseNumberSchema.optional(),
   sectionCodes: z
     .string()
     .optional()
@@ -120,7 +119,7 @@ export const websocQuerySchema = z.object({
       return parsedNums;
     }),
   instructorName: z.string().optional(),
-  days: z.string().optional().transform(daysTransform),
+  days: courseNumberSchema.optional(),
   building: z.string().optional(),
   room: z.string().optional(),
   division: z

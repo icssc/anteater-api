@@ -1,5 +1,5 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
-import { larcQuerySchema } from "../../schema/larc.ts";
+import { larcQuerySchema } from "$schema";
 import { LarcService } from "../../services/larc.ts";
 
 export const larcResolvers = {

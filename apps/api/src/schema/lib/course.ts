@@ -8,18 +8,18 @@ import { isBaseTenInt } from "@packages/stdlib";
  *
  * @example
  * courseNumberTransform("46,6B,51-53")
- * [
- *   { _type: 'ParsedInteger', value: 46 },
- *   { _type: 'ParsedString', value: '6B' },
- *   { _type: 'ParsedRange', min: 51, max: 53 }
- * ]
+ * // [
+ * //   { _type: 'ParsedInteger', value: 46 },
+ * //   { _type: 'ParsedString', value: '6B' },
+ * //   { _type: 'ParsedRange', min: 51, max: 53 }
+ * // ]
  *
  * @param nums string of course numbers
  * @param ctx
  *
  * @returns a list of ParsedNumber objects
  */
-export const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) => {
+const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) => {
   if (!nums) return undefined;
   const parsedNums: ParsedNumber[] = [];
   for (const num of nums.split(",").map((num) => num.trim())) {
@@ -47,3 +47,7 @@ export const courseNumberTransform = (nums: string | undefined, ctx: z.Refinemen
   }
   return parsedNums;
 };
+
+export const courseNumberSchema = z.string().transform(courseNumberTransform).openapi({
+  example: "46,6B,51-53",
+});

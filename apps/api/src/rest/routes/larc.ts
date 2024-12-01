@@ -1,9 +1,9 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import { errorSchema, responseSchema } from "$schema";
+import { larcQuerySchema, larcResponseSchema } from "$schema";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { larcQuerySchema, larcResponseSchema } from "../../schema/larc.ts";
 import { LarcService } from "../../services/larc.ts";
 
 const larcRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
