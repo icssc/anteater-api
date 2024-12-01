@@ -643,12 +643,12 @@ const doDepartmentUpsert = async (
       .values(
         meetingsToLocations
           .entries()
-          .toArray()
           .map(([meetingId, v]) => {
             const locationId = locations.get(v);
             return locationId ? { meetingId, locationId } : undefined;
           })
-          .filter(notNull),
+          .filter(notNull)
+          .toArray(),
       )
       .onConflictDoUpdate({
         target: [
