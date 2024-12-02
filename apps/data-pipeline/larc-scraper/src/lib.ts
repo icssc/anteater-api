@@ -3,9 +3,9 @@ import { and, eq } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import { larcSection, websocCourse } from "@packages/db/schema";
 import { parseStartAndEndTimes, sleep } from "@packages/stdlib";
+import { parseMeetingDays } from "@packages/stdlib";
 import { load } from "cheerio";
 import { fetch } from "cross-fetch";
-import { parseMeetingDays } from "../../../api/src/schema/lib/day.ts";
 
 type LarcSection = {
   daysString: string;
