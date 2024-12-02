@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4
+      '@types/node':
+        specifier: 22.9.3
+        version: 22.9.3
       dotenv-cli:
         specifier: 7.4.2
         version: 7.4.2
@@ -78,9 +81,6 @@ importers:
       '@packages/key-types':
         specifier: workspace:*
         version: link:../../packages/key-types
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       wrangler:
         specifier: 3.85.0
         version: 3.85.0(@cloudflare/workers-types@4.20241106.0)
@@ -112,9 +112,6 @@ importers:
       '@types/json-diff':
         specifier: 1.0.3
         version: 1.0.3
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       '@types/readline-sync':
         specifier: 1.4.8
         version: 1.4.8
@@ -152,9 +149,6 @@ importers:
       '@types/json-diff':
         specifier: 1.0.3
         version: 1.0.3
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       '@types/readline-sync':
         specifier: 1.4.8
         version: 1.4.8
@@ -170,10 +164,6 @@ importers:
       jwt-decode:
         specifier: 4.0.0
         version: 4.0.0
-    devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
 
   apps/data-pipeline/grades-importer:
     dependencies:
@@ -186,10 +176,6 @@ importers:
       node-xlsx:
         specifier: 0.24.0
         version: 0.24.0
-    devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
 
   apps/data-pipeline/instructor-scraper:
     dependencies:
@@ -233,9 +219,6 @@ importers:
       '@types/json-diff':
         specifier: 1.0.3
         version: 1.0.3
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       '@types/readline-sync':
         specifier: 1.4.8
         version: 1.4.8
@@ -255,9 +238,6 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
     devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       wrangler:
         specifier: 3.85.0
         version: 3.85.0(@cloudflare/workers-types@4.20241106.0)
@@ -277,9 +257,6 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
     devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       domhandler:
         specifier: 5.0.3
         version: 5.0.3
@@ -305,9 +282,6 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
     devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       wrangler:
         specifier: 3.85.0
         version: 3.85.0(@cloudflare/workers-types@4.20241106.0)
@@ -393,9 +367,6 @@ importers:
       '@packages/key-types':
         specifier: workspace:*
         version: link:../../packages/key-types
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       '@types/react':
         specifier: 18.3.12
         version: 18.3.12
@@ -427,9 +398,6 @@ importers:
         specifier: 3.4.5
         version: 3.4.5
     devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
       dotenv:
         specifier: 16.4.5
         version: 16.4.5
@@ -455,11 +423,7 @@ importers:
         specifier: 5.6.3
         version: 5.6.3
 
-  packages/stdlib:
-    devDependencies:
-      '@types/node':
-        specifier: 20.8.3
-        version: 20.8.3
+  packages/stdlib: {}
 
 packages:
 
@@ -2334,8 +2298,8 @@ packages:
   '@types/node@18.19.64':
     resolution: {integrity: sha512-955mDqvO2vFf/oL7V3WiUtiz+BugyX8uVbaT2H8oj3+8dRyH2FLiNdowe7eNqRM7IOIZvzDH76EoAT+gwm6aIQ==}
 
-  '@types/node@20.8.3':
-    resolution: {integrity: sha512-jxiZQFpb+NlH5kjW49vXxvxTjeeqlbsnTAdBTKpzEdPs9itay7MscYXz3Fo9VYFEsfQ6LJFitHad3faerLAjCw==}
+  '@types/node@22.9.3':
+    resolution: {integrity: sha512-F3u1fs/fce3FFk+DAxbxc78DF8x0cY09RRL8GnXLmkJ1jvx3TtPdWoTT5/NiYfI5ASqXBmfqJi9dZ3gxMx4lzw==}
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
@@ -4097,6 +4061,9 @@ packages:
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
+  undici-types@6.19.8:
+    resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
+
   undici@5.28.4:
     resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
     engines: {node: '>=14.0'}
@@ -5720,12 +5687,12 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
     optional: true
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
     optional: true
 
   '@types/cookie@0.6.0': {}
@@ -5734,7 +5701,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
       '@types/qs': 6.9.16
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -5763,18 +5730,20 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
       form-data: 4.0.1
 
   '@types/node-forge@1.3.11':
     dependencies:
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
 
   '@types/node@18.19.64':
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@20.8.3': {}
+  '@types/node@22.9.3':
+    dependencies:
+      undici-types: 6.19.8
 
   '@types/prop-types@15.7.13': {}
 
@@ -5797,13 +5766,13 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
     optional: true
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 20.8.3
+      '@types/node': 22.9.3
       '@types/send': 0.17.4
     optional: true
 
@@ -7601,6 +7570,8 @@ snapshots:
   uint8array-extras@1.4.0: {}
 
   undici-types@5.26.5: {}
+
+  undici-types@6.19.8: {}
 
   undici@5.28.4:
     dependencies:

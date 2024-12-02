@@ -144,7 +144,7 @@ export class EnrollmentHistoryService {
     const enrollmentRows = await this.db
       .select()
       .from(websocSectionEnrollment)
-      .where(inArray(websocSectionEnrollment.sectionId, Array.from(transformedSectionRows.keys())))
+      .where(inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()))
       .orderBy(websocSectionEnrollment.createdAt);
     for (const row of enrollmentRows) {
       const section = transformedSectionRows.get(row.sectionId);
@@ -159,12 +159,13 @@ export class EnrollmentHistoryService {
         section.statusHistory.push(row.status ?? "");
       }
     }
-    return Array.from(transformedSectionRows.values()).map(
-      ({ instructors, meetings, ...rest }) => ({
+    return transformedSectionRows
+      .values()
+      .map(({ instructors, meetings, ...rest }) => ({
         instructors: Array.from(instructors),
         meetings: meetings.map(({ bldg, ...rest }) => ({ bldg: Array.from(bldg), ...rest })),
         ...rest,
-      }),
-    );
+      }))
+      .toArray();
   }
 }

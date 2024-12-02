@@ -11,8 +11,5 @@
     "@packages/db": "workspace:*",
     "cross-fetch": "4.0.0",
     "jwt-decode": "4.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "20.8.3"
   }
 }

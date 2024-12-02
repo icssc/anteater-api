@@ -21,32 +21,36 @@ async function main() {
     parsedMinorPrograms,
     parsedUgradPrograms,
   } = scraper.get();
-  const degreeData = Array.from(degreesAwarded.entries()).map(([id, name]) => ({
-    id,
-    name,
-    division: (id.startsWith("B") ? "Undergraduate" : "Graduate") as Division,
-  }));
-  const majorData = [
-    ...Array.from(parsedUgradPrograms.values()),
-    ...Array.from(parsedGradPrograms.values()),
-  ].map(({ name, degreeType, code, requirements }) => ({
-    id: `${degreeType}-${code}`,
-    degreeId: degreeType ?? "",
-    code,
-    name,
-    requirements,
-  }));
-  const minorData = Array.from(parsedMinorPrograms.values()).map(
-    ({ name, code: id, requirements }) => ({ id, name, requirements }),
-  );
-  const specData = Array.from(parsedSpecializations.values()).map(
+  const degreeData = degreesAwarded
+    .entries()
+    .map(([id, name]) => ({
+      id,
+      name,
+      division: (id.startsWith("B") ? "Undergraduate" : "Graduate") as Division,
+    }))
+    .toArray();
+  const majorData = [...parsedUgradPrograms.values(), ...parsedGradPrograms.values()].map(
     ({ name, degreeType, code, requirements }) => ({
       id: `${degreeType}-${code}`,
-      majorId: `${degreeType}-${code.slice(0, code.length - 1)}`,
+      degreeId: degreeType ?? "",
+      code,
       name,
       requirements,
     }),
   );
+  const minorData = parsedMinorPrograms
+    .values()
+    .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
+    .toArray();
+  const specData = parsedSpecializations
+    .values()
+    .map(({ name, degreeType, code, requirements }) => ({
+      id: `${degreeType}-${code}`,
+      majorId: `${degreeType}-${code.slice(0, code.length - 1)}`,
+      name,
+      requirements,
+    }))
+    .toArray();
   await db.transaction(async (tx) => {
     await tx
       .insert(degree)

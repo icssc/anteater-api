@@ -338,16 +338,19 @@ function transformRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
     schools.get(department.schoolId)?.departments.push(department);
   }
   return {
-    schools: Array.from(schools.values()).map((school) => ({
-      ...school,
-      departments: school.departments.map((department) => ({
-        ...department,
-        courses: department.courses.map((course) => ({
-          ...course,
-          sections: course.sections.map(transformSection),
+    schools: schools
+      .values()
+      .map((school) => ({
+        ...school,
+        departments: school.departments.map((department) => ({
+          ...department,
+          courses: department.courses.map((course) => ({
+            ...course,
+            sections: course.sections.map(transformSection),
+          })),
         })),
-      })),
-    })),
+      }))
+      .toArray(),
   };
 }
 
@@ -415,7 +418,9 @@ export class WebsocService {
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
       .then((rows) =>
-        Array.from(new Map(rows.map((row) => [`${row.year} ${row.quarter}`, row])).values())
+        new Map(rows.map((row) => [`${row.year} ${row.quarter}`, row]))
+          .values()
+          .toArray()
           .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
             y1 === y2
               ? termOrder[q1] - termOrder[q2]

@@ -7,8 +7,5 @@
   "main": "src/index.ts",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "20.8.3"
   }
 }

@@ -273,7 +273,7 @@ async function main() {
   await db.transaction(async (tx) => {
     await tx
       .insert(instructor)
-      .values(Array.from(ucinetidToInstructorObject.values()))
+      .values(ucinetidToInstructorObject.values().toArray())
       .onConflictDoUpdate({
         target: instructor.ucinetid,
         set: conflictUpdateSetAllCols(instructor),

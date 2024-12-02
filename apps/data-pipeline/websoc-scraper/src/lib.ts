@@ -501,25 +501,29 @@ const doDepartmentUpsert = async (
     await tx.delete(websocSectionToInstructor).where(
       inArray(
         websocSectionToInstructor.sectionId,
-        Array.from(sectionsToInstructors.keys())
+        sectionsToInstructors
+          .keys()
           .map((key) => sections.get(key))
-          .filter(notNull),
+          .filter(notNull)
+          .toArray(),
       ),
     );
-    const instructorAssociationsToInsert = Array.from(sectionsToInstructors.entries())
+    const instructorAssociationsToInsert = sectionsToInstructors
+      .entries()
       .flatMap(([k, names]) =>
         names.map((instructorName) => {
           const sectionId = sections.get(k);
           return sectionId ? { sectionId, instructorName } : undefined;
         }),
       )
-      .filter(notNull);
+      .filter(notNull)
+      .toArray();
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }
     await tx
       .delete(websocSectionMeeting)
-      .where(inArray(websocSectionMeeting.sectionId, Array.from(sections.values())));
+      .where(inArray(websocSectionMeeting.sectionId, sections.values().toArray()));
     const meetings = await tx
       .insert(websocSectionMeeting)
       .values(
@@ -602,12 +606,14 @@ const doDepartmentUpsert = async (
     await tx
       .insert(websocSectionMeetingToLocation)
       .values(
-        Array.from(meetingsToLocations.entries())
+        meetingsToLocations
+          .entries()
           .map(([meetingId, v]) => {
             const locationId = locations.get(v);
             return locationId ? { meetingId, locationId } : undefined;
           })
-          .filter(notNull),
+          .filter(notNull)
+          .toArray(),
       )
       .onConflictDoUpdate({
         target: [
@@ -663,7 +669,7 @@ function normalizeResponse(json: WebsocResponse): WebsocResponse {
           courseMapping.get(courseKey)?.sections.push(...course.sections);
         }
       }
-      dept.courses = Array.from(courseMapping.values());
+      dept.courses = courseMapping.values().toArray();
     }
   }
   return json;

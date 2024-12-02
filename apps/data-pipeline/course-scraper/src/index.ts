@@ -525,10 +525,7 @@ async function main() {
       "./prerequisites.json",
       JSON.stringify(
         Object.fromEntries(
-          Array.from(prerequisites.entries()).map(([k, v]) => [
-            k,
-            Object.fromEntries(Array.from(v.entries())),
-          ]),
+          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
         ),
       ),
     );

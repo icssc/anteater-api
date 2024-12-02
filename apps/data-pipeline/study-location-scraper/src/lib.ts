@@ -231,7 +231,7 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
     }
     locations.push({
       ...studyLocation,
-      rooms: Array.from(studyLocation.rooms.values()),
+      rooms: studyLocation.rooms.values().toArray(),
     });
   }
   return locations;
