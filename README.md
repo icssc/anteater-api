@@ -16,6 +16,10 @@ Anteater API (formerly known as PeterPortal API) is a student-developed and main
 
 We welcome all open-source contributions! Please start by reading the contributing guide.
 
+## 🧑💻 Usage
+
+Take a look at the [docs](https://docs.icssc.club/docs/developer/anteaterapi) and [API reference](https://anteaterapi.com/reference) to get started! **Note that if you use Anteater API, you must give proper attribution in accordance with the [attribution policy](https://docs.icssc.club/docs/developer/anteaterapi/attribution-policy)**.
+
 ## ⚠️ Caveats
 
 Please note that while our data is obtained directly from official UCI sources, such as the Catalogue, the Public Records Office, and the Registrar, this is not an official UCI tool. While we strive to keep our data as accurate as possible with the limited support we have from the University, errors can and do happen; please take this into consideration when using this API.
