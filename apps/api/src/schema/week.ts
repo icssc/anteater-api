@@ -5,38 +5,24 @@ const isLeap = (x: number) => x % 4 === 0 && (x % 100 === 0 ? x % 400 === 0 : tr
 
 export const weekQuerySchema = z
   .object({
-    year: z
-      .string()
-      .length(4, { message: "Parameter 'year' must have length 4" })
-      .refine((x) => !Number.isNaN(Number.parseInt(x, 10)), {
-        message: "Parameter 'year' must be an integer",
+    year: z.coerce
+      .number()
+      .refine((x) => x.toString().length === 4, { message: "Parameter 'year' must have length 4" })
+      .openapi({ example: 2024 })
+      .optional(),
+    month: z.coerce
+      .number()
+      .refine((x) => 1 <= x && x <= 12, {
+        message: "Parameter 'month' must be an integer between 1 and 12",
       })
-      .transform((x) => Number.parseInt(x, 10))
-      .openapi({ example: "2024" })
+      .openapi({ example: 9 })
       .optional(),
-    month: z
-      .string()
-      .refine(
-        (x) => {
-          const n = Number.parseInt(x, 10);
-          return !Number.isNaN(n) && 1 <= n && n <= 12;
-        },
-        { message: "Parameter 'month' must be an integer between 1 and 12" },
-      )
-      .transform((x) => Number.parseInt(x, 10))
-      .openapi({ example: "9" })
-      .optional(),
-    day: z
-      .string()
-      .refine(
-        (x) => {
-          const n = Number.parseInt(x, 10);
-          return !Number.isNaN(n) && 1 <= n && n <= 31;
-        },
-        { message: "Parameter 'day' must be an integer between 1 and 31" },
-      )
-      .transform((x) => Number.parseInt(x, 10))
-      .openapi({ example: "30" })
+    day: z.coerce
+      .number()
+      .refine((x) => 1 <= x && x <= 31, {
+        message: "Parameter 'day' must be an integer between 1 and 31",
+      })
+      .openapi({ example: 30 })
       .optional(),
   })
   .refine(({ year, month, day }) => (year && month && day) || (!year && !month && !day), {
