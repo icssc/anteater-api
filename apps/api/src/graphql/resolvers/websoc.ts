@@ -10,7 +10,7 @@ export const websocResolvers = {
     },
     terms: async (_: unknown, __: unknown, { db }: GraphQLContext) => {
       const service = new WebsocService(db);
-      await service.getAllTerms();
+      return await service.getAllTerms();
     },
   },
 };
