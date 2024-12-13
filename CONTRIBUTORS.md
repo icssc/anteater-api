@@ -41,6 +41,7 @@ Previous Project Leads are not included in this list.
 - Kirby Ammari ([@kirbster6](https://github.com/kirbster6))
 - Yizhen Liu ([@imliuyzh](https://github.com/imliuyzh))
 - Jordan Yee ([@jordany33](https://github.com/jordany33))
+- Dante Dam ([@laggycomputer](https://github.com/laggycomputer))
 - Minh Nguyen ([@MinhxNguyen7](https://github.com/MinhxNguyen7))
 - Nathan Nguyen ([@nathantoannguyen](https://github.com/nathantoannguyen))
 - Pranav Reddy ([@pranavmreddy](https://github.com/pranavmreddy))
