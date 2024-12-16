@@ -7,7 +7,7 @@ type SearchResult @cacheControl(maxAge: 86400) {
 }
 
 type SearchResponse {
-    count: Float!
+    count: Int!
     results: [SearchResult!]!
 }
 

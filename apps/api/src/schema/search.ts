@@ -26,6 +26,6 @@ export const searchResultSchema = z.discriminatedUnion("type", [
 ]);
 
 export const searchResponseSchema = z.object({
-  count: z.number(),
+  count: z.number().int().nonnegative(),
   results: searchResultSchema.array(),
 });
