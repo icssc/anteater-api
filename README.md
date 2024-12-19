@@ -14,7 +14,7 @@ Anteater API (formerly known as PeterPortal API) is a student-developed and main
 
 ## 🤝 Contributing
 
-We welcome all open-source contributions! Please start by reading the contributing guide.
+We welcome all open-source contributions! Please start by reading the [contributor docs](https://docs.icssc.club/docs/contributor/anteaterapi/setup).
 
 ## 🧑‍💻 Usage
 
