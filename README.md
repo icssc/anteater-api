@@ -18,7 +18,7 @@ We welcome all open-source contributions! Please start by reading the [contribut
 
 ## 🧑‍💻 Usage
 
-Take a look at the [developer docs](https://docs.icssc.club/docs/developer/anteaterapi) and [about page](https://docs.icssc.club/docs/about/anteaterapi) to get started! **Note that if you use Anteater API, you must give proper attribution in accordance with the [attribution policy](https://docs.icssc.club/docs/about/anteaterapi/attribution-policy)**.
+Take a look at the [developer docs](https://docs.icssc.club/docs/developer/anteaterapi) and [about page](https://docs.icssc.club/docs/about/anteaterapi) to get started! **Note that if you use Anteater API, you must give proper attribution in accordance with the [attribution policy](https://docs.icssc.club/docs/developer/anteaterapi/attribution-policy)**.
 
 ## ⚠️ Caveats
 
