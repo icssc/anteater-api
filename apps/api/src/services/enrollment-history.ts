@@ -159,7 +159,20 @@ export class EnrollmentHistoryService {
         section.statusHistory.push(row.status ?? "");
       }
     }
-    return transformedSectionRows
+    const filteredSections = Array.from(transformedSectionRows.values()).filter((section) => {
+      return (
+        section.finalExam.length > 0 ||
+        section.maxCapacityHistory.length > 0 ||
+        section.totalEnrolledHistory.length > 0 ||
+        section.waitlistHistory.length > 0 ||
+        section.waitlistCapHistory.length > 0 ||
+        section.requestedHistory.length > 0 ||
+        section.newOnlyReservedHistory.length > 0 ||
+        section.statusHistory.length > 0
+      );
+    });
+
+    return filteredSections
       .values()
       .map(({ instructors, meetings, ...rest }) => ({
         instructors: Array.from(instructors),
