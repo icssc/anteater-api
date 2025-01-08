@@ -82,17 +82,17 @@ function buildQuery(input: GradesServiceInput) {
         conditions.push(isTrue(websocCourse.isGE8));
         break;
     }
-    if (input.excludePNP) {
-      conditions.push(
-        or(
-          gt(websocSectionGrade.gradeACount, 0),
-          gt(websocSectionGrade.gradeBCount, 0),
-          gt(websocSectionGrade.gradeCCount, 0),
-          gt(websocSectionGrade.gradeDCount, 0),
-          gt(websocSectionGrade.gradeFCount, 0),
-        ),
-      );
-    }
+  }
+  if (input.excludePNP) {
+    conditions.push(
+      or(
+        gt(websocSectionGrade.gradeACount, 0),
+        gt(websocSectionGrade.gradeBCount, 0),
+        gt(websocSectionGrade.gradeCCount, 0),
+        gt(websocSectionGrade.gradeDCount, 0),
+        gt(websocSectionGrade.gradeFCount, 0),
+      ),
+    );
   }
   return and(...conditions);
 }
@@ -330,7 +330,10 @@ export class GradesService {
       .select({
         department: websocCourse.deptCode,
         courseNumber: websocCourse.courseNumber,
-        instructor: sql<string>`COALESCE(${websocSectionToInstructor.instructorName}, 'STAFF')`,
+        instructor: sql<string>`COALESCE(
+                ${websocSectionToInstructor.instructorName},
+                'STAFF'
+                )`,
         gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
         gradeBCount: sum(websocSectionGrade.gradeBCount).mapWith(Number),
         gradeCCount: sum(websocSectionGrade.gradeCCount).mapWith(Number),
