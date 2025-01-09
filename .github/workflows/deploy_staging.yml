@@ -43,4 +43,4 @@ jobs:
 
       - name: Deploy API to staging
         working-directory: ./apps/api
-        run: pnpm run deploy --env=staging-${{ github.event.pull_request.number }}
+        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}

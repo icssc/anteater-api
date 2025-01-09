@@ -39,7 +39,7 @@ jobs:
 
       - name: Delete inactive API staging instance
         working-directory: ./apps/api
-        run: pnpm wrangler delete --env=staging-${{ github.event.pull_request.number }}
+        run: pnpm wrangler delete --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
       - name: Set API staging environment to inactive
         uses: strumwolf/delete-deployment-environment@a4825dd9648c57da8437a4885c3fcad58beac69c # v3.0.0
