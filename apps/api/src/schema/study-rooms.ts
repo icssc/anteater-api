@@ -2,8 +2,8 @@ import { z } from "@hono/zod-openapi";
 
 export const slotSchema = z.object({
   studyRoomId: z.string(),
-  start: z.string().openapi({ format: "date-time" }),
-  end: z.string().openapi({ format: "date-time" }),
+  start: z.string().datetime({ local: true }),
+  end: z.string().datetime({ local: true }),
   isAvailable: z.boolean(),
 });
 
