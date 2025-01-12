@@ -15,7 +15,7 @@ export const studyRoomSchema = z.object({
   description: z.string().optional(),
   directions: z.string().optional(),
   techEnhanced: z.boolean(),
-  slots: z.array(slotSchema).optional(),
+  slots: z.array(slotSchema),
 });
 
 export const studyRoomsPathSchema = z.object({
