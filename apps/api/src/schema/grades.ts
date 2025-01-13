@@ -37,7 +37,7 @@ export const gradesQuerySchema = z.object({
     .optional()
     .or(z.literal("ANY"))
     .transform((x) => (x === "ANY" ? undefined : x)),
-  excludePNP: z
+  excludePNP: z.coerce
     .string()
     .optional()
     .transform((x) => x === "true"),

@@ -6,8 +6,6 @@ kv_namespaces = [
   { binding = "API_KEYS", id = "4c8dd3090bea4d469cd3c66b3002a5a2" },
   { binding = "GQL_CACHE", id = "4523675af51d41a4bd9b0b626ab958f9" },
 ]
-workers_dev = false
-route = { pattern = "anteaterapi.com", zone_name = "anteaterapi.com", custom_domain = true }
 assets = { directory = "public" }
 main = "src/index.ts"
 minify = true
