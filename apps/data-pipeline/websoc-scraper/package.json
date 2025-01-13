@@ -11,7 +11,7 @@
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
-    "@icssc/libwebsoc-next": "1.0.0",
+    "@icssc/libwebsoc-next": "1.1.1",
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "cheerio": "1.0.0",

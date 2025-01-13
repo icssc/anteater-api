@@ -267,8 +267,8 @@ importers:
   apps/data-pipeline/websoc-scraper:
     dependencies:
       '@icssc/libwebsoc-next':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: 1.1.1
+        version: 1.1.1
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
@@ -1524,8 +1524,8 @@ packages:
     peerDependencies:
       react-hook-form: ^7.0.0
 
-  '@icssc/libwebsoc-next@1.0.0':
-    resolution: {integrity: sha512-fk7ZAH7tTJVLRpLcBl/EkHfK7Ci/hd1GYYg1wcko+Y3aHLoNJgehtNYiQem8u8gz4p8sYT21aP6W9LcXWwynNg==}
+  '@icssc/libwebsoc-next@1.1.1':
+    resolution: {integrity: sha512-mQyfYBwqznKJ6GWIO8BUflD/0VMQZM1kH9WIRfaB++HhvVTCjqdjTwvnWSWcrC8eygZwPZgZdBeHVci4l48YIg==}
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -5038,8 +5038,9 @@ snapshots:
     dependencies:
       react-hook-form: 7.53.2(react@18.3.1)
 
-  '@icssc/libwebsoc-next@1.0.0':
+  '@icssc/libwebsoc-next@1.1.1':
     dependencies:
+      cheerio: 1.0.0
       cross-fetch: 4.0.0
       fast-xml-parser: 4.5.0
     transitivePeerDependencies:

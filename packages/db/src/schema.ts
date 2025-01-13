@@ -316,6 +316,7 @@ export const websocSection = pgTable(
       .generatedAlwaysAs(
         (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
       ),
+    webURL: text("web_url").notNull().default(""),
   },
   (table) => [
     index().on(table.courseId),

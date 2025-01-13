@@ -734,7 +734,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
         updates.set(course, { [geCategoryToFlag[ge]]: true });
       }
     }
-    await sleep(500);
+    await sleep(1000);
   }
   await db.transaction(async (tx) => {
     for (const [course, update] of updates) {
@@ -769,7 +769,7 @@ export async function scrapeTerm(
       normalizeResponse,
     );
     if (resp.schools.length) await doDepartmentUpsert(db, term, resp, department);
-    await sleep(500);
+    await sleep(1000);
   }
   await scrapeGEsForTerm(db, term);
   const lastScraped = new Date();
