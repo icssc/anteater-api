@@ -9,7 +9,7 @@
     "dist/"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --clean --dts --format esm",
+    "build": "tsup src/index.ts --clean --dts --format esm --minify",
     "check:types": "tsc -p ./tsconfig.json -noEmit"
   },
   "dependencies": {
