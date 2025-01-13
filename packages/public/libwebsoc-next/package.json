@@ -1,6 +1,6 @@
 {
   "name": "@icssc/libwebsoc-next",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A library for safely querying WebSoc and parsing the data into a JS object",
   "type": "module",
   "main": "dist/index.js",
@@ -13,6 +13,7 @@
     "check:types": "tsc -p ./tsconfig.json -noEmit"
   },
   "dependencies": {
+    "cheerio": "1.0.0",
     "cross-fetch": "4.0.0",
     "fast-xml-parser": "4.5.0"
   },

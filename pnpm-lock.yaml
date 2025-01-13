@@ -409,6 +409,9 @@ importers:
 
   packages/public/libwebsoc-next:
     dependencies:
+      cheerio:
+        specifier: 1.0.0
+        version: 1.0.0
       cross-fetch:
         specifier: 4.0.0
         version: 4.0.0
