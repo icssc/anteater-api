@@ -585,9 +585,3 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
 
   return json;
 }
-
-async function main() {
-  await request({ year: "2025", quarter: "Winter" }, { sectionCodes: "00000-99999" });
-}
-
-main().then();
