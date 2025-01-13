@@ -321,6 +321,10 @@ export class GradesService {
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
       .innerJoin(websocSectionGrade, eq(websocSectionGrade.sectionId, websocSection.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSection.id, websocSectionToInstructor.sectionId),
+      )
       .groupBy(websocCourse.deptCode, websocCourse.courseNumber)
       .where(buildQuery(input));
   }
