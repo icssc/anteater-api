@@ -364,6 +364,8 @@ export type WebsocResponse = {
  */
 export type WebsocOptions = RequiredOptions & BuildingRoomOptions & OptionalOptions;
 
+type Maybe<T> = T | undefined;
+
 function getCodedTerm(term: Term): string {
   switch (term.quarter) {
     case "Fall":
@@ -468,7 +470,13 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
     );
   }
 
-  const $ = load(await webResponse.text());
+  const webText = await webResponse.text();
+
+  if (webText.match(/more than 900/)) {
+    throw new Error("Your query matched more than 900 sections. Please refine your search.");
+  }
+
+  const $ = load(webText);
 
   const parser = new XMLParser({
     attributeNamePrefix: "__",
@@ -482,8 +490,6 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
   const res = parser.parse(await xmlResponse.text());
 
   const json: WebsocResponse = { schools: [] };
-
-  type Maybe<T> = T | undefined;
 
   const webURLs = new Map(
     $("a")
@@ -579,3 +585,9 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
 
   return json;
 }
+
+async function main() {
+  await request({ year: "2025", quarter: "Winter" }, { sectionCodes: "00000-99999" });
+}
+
+main().then();
