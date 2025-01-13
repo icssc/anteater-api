@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import SignOut from "@/components/auth/SignOut";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CircleUserRoundIcon } from "lucide-react";
 import Link from "next/link";
 
 const Header = async () => {
@@ -25,6 +26,9 @@ const Header = async () => {
             <DropdownMenuTrigger asChild>
               <Avatar>
                 <AvatarImage src={session.user.image ?? ""} alt={"avatar"} />
+                <AvatarFallback>
+                  <CircleUserRoundIcon className="size-4/5" />
+                </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
           </div>

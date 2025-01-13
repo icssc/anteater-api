@@ -4,11 +4,11 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { LogOutIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 
-export default function SingOut() {
+export default function SignOut() {
   function handleSignOut() {
     signOut({
       redirect: true,
-      redirectTo: "/",
+      redirectTo: "/login",
     });
   }
 
