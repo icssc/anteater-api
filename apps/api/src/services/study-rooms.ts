@@ -1,14 +1,13 @@
 import type { studyRoomSchema, studyRoomsQuerySchema } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, eq, gte, lte } from "@packages/db/drizzle";
+import { and, eq, gte, lte, sql } from "@packages/db/drizzle";
 import { studyRoom, studyRoomSlot } from "@packages/db/schema";
-import moment from "moment-timezone";
 
 type StudyRoomsServiceInput = z.infer<typeof studyRoomsQuerySchema>;
 
 export class StudyRoomsService {
-  constructor(private readonly db: ReturnType<typeof database>) {}
+  constructor(private readonly db: ReturnType<typeof database>) { }
 
   async getStudyRoomById(id: string) {
     const [room] = await this.db.select().from(studyRoom).where(eq(studyRoom.id, id));
@@ -24,37 +23,24 @@ export class StudyRoomsService {
       conditions.push(eq(studyRoom.techEnhanced, input.isTechEnhanced));
 
     return this.db
-      .select()
+      .select({
+        id: studyRoom.id,
+        name: studyRoom.name,
+        capacity: studyRoom.capacity,
+        location: studyRoom.location,
+        description: studyRoom.description,
+        directions: studyRoom.directions,
+        techEnhanced: studyRoom.techEnhanced,
+        slots: sql`ARRAY_AGG(JSONB_BUILD_OBJECT(
+          'studyRoomId', ${studyRoomSlot.studyRoomId},
+          'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
+          'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
+          'isAvailable', ${studyRoomSlot.isAvailable}
+        ))`.as("slots"),
+      })
       .from(studyRoom)
       .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
-      .where(conditions.length ? and(...conditions) : undefined)
-      .then((data) => {
-        // map is faster than object
-        const map = data.reduce(
-          (acc, row) => {
-            if (!acc.has(row.study_room.id)) {
-              acc.set(row.study_room.id, {
-                ...row.study_room,
-                slots: [],
-              });
-            }
-
-            if (row.study_room_slot !== null) {
-              const slot = {
-                ...row.study_room_slot,
-                start: moment(row.study_room_slot.start)
-                  .tz("America/Los_Angeles")
-                  .toISOString(true),
-                end: moment(row.study_room_slot.end).tz("America/Los_Angeles").toISOString(true),
-              };
-              acc.get(row.study_room.id)?.slots?.push(slot);
-            }
-
-            return acc;
-          },
-          new Map() as Map<string, z.infer<typeof studyRoomSchema>>,
-        );
-        return Array.from(map.values());
-      });
+      .groupBy(studyRoom.id)
+      .where(conditions.length ? and(...conditions) : undefined);
   }
 }
