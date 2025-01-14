@@ -853,3 +853,25 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
     .where(ne(instructor.ucinetid, "student"))
     .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
 });
+
+export const studyRoomView = pgMaterializedView("study_room_view").as((qb) => {
+  return qb
+    .select({
+      id: studyRoom.id,
+      name: studyRoom.name,
+      capacity: studyRoom.capacity,
+      location: studyRoom.location,
+      description: studyRoom.description,
+      directions: studyRoom.directions,
+      techEnhanced: studyRoom.techEnhanced,
+      slots: sql`ARRAY_AGG(JSONB_BUILD_OBJECT(
+      'studyRoomId', ${studyRoomSlot.studyRoomId},
+      'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
+      'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
+      'isAvailable', ${studyRoomSlot.isAvailable}
+    ))`.as("slots"),
+    })
+    .from(studyRoom)
+    .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
+    .groupBy(studyRoom.id);
+});

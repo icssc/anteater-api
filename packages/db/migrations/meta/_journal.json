@@ -57,6 +57,13 @@
       "when": 1736792587315,
       "tag": "0007_websoc_web",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1736881307650,
+      "tag": "0008_study-room-slots-materialized-view",
+      "breakpoints": true
     }
   ]
 }
