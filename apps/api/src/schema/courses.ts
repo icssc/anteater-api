@@ -73,6 +73,7 @@ export const coursesQuerySchema = z.object({
     .default(100)
     .refine((x) => x <= 100, "Page size must be smaller than 100"),
   skip: z.coerce.number().default(0),
+  cursor: z.coerce.string().optional(),
 });
 
 export const prerequisiteSchema = z.union([

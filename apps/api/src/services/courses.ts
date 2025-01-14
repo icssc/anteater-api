@@ -8,7 +8,7 @@ import type {
 import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
+import { and, eq, gt, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
 import type { CourseLevel, course } from "@packages/db/schema";
 import { courseView } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
@@ -146,15 +146,16 @@ export class CoursesService {
   async getCoursesRaw(input: {
     where?: SQL;
     offset?: number;
+    cursor?: string;
     limit?: number;
   }): Promise<CoursesServiceOutput[]> {
-    const { where, offset, limit } = input;
+    const { where, offset, cursor, limit } = input;
     return this.db
       .select()
       .from(courseView)
-      .where(where)
-      .offset(offset ?? 0)
+      .where(cursor ? and(where, gt(courseView.id, String(cursor))) : where)
       .limit(limit ?? 1)
+      .offset(offset ?? 0)
       .then((courses) => courses.map(transformCourse));
   }
 
@@ -167,6 +168,11 @@ export class CoursesService {
   }
 
   async getCourses(input: CoursesServiceInput): Promise<CoursesServiceOutput[]> {
-    return this.getCoursesRaw({ where: buildQuery(input), offset: input.skip, limit: input.take });
+    return this.getCoursesRaw({
+      where: buildQuery(input),
+      offset: input.skip,
+      cursor: input.cursor,
+      limit: input.take,
+    });
   }
 }
