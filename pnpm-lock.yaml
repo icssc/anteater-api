@@ -242,6 +242,16 @@ importers:
         specifier: 3.100.0
         version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
 
+  apps/data-pipeline/mview-refresher:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+    devDependencies:
+      wrangler:
+        specifier: 3.100.0
+        version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
+
   apps/data-pipeline/study-location-scraper:
     dependencies:
       '@packages/db':
