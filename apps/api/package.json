@@ -27,6 +27,6 @@
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
-    "wrangler": "3.85.0"
+    "wrangler": "3.100.0"
   }
 }
