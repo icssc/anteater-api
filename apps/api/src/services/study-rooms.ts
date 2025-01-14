@@ -3,6 +3,7 @@ import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
 import { and, eq, gte, lte } from "@packages/db/drizzle";
 import { studyRoom, studyRoomSlot } from "@packages/db/schema";
+import moment from "moment-timezone";
 
 type StudyRoomsServiceInput = z.infer<typeof studyRoomsQuerySchema>;
 
@@ -41,8 +42,10 @@ export class StudyRoomsService {
             if (row.study_room_slot !== null) {
               const slot = {
                 ...row.study_room_slot,
-                start: row.study_room_slot.start.toISOString(),
-                end: row.study_room_slot.end.toISOString(),
+                start: moment(row.study_room_slot.start)
+                  .tz("America/Los_Angeles")
+                  .toISOString(true),
+                end: moment(row.study_room_slot.end).tz("America/Los_Angeles").toISOString(true),
               };
               acc.get(row.study_room.id)?.slots?.push(slot);
             }
