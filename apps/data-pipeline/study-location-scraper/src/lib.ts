@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { lt } from "@packages/db/drizzle";
+import { lt, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot, studyRoomView } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import type { Cheerio, CheerioAPI } from "cheerio";
@@ -245,6 +245,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
   );
   const slotRows = roomRows.flatMap((room) => room.slots);
   await db.transaction(async (tx) => {
+    await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
     await tx
       .insert(studyLocation)
       .values(locationRows)
