@@ -61,8 +61,8 @@
     {
       "idx": 8,
       "version": "7",
-      "when": 1736881307650,
-      "tag": "0008_study-room-slots-materialized-view",
+      "when": 1736913755763,
+      "tag": "0008_study_rooms_materialized_view",
       "breakpoints": true
     }
   ]
