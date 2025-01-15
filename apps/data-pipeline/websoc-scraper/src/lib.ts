@@ -10,8 +10,8 @@ import type {
 } from "@icssc/libwebsoc-next";
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
-import { and, asc, eq, gte, inArray, lte } from "@packages/db/drizzle";
-import { type WebsocSectionFinalExam, courseView, instructorView } from "@packages/db/schema";
+import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
+import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
   course,
@@ -31,6 +31,18 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { baseTenIntOrNull, intersectAll, notNull, sleep } from "@packages/stdlib";
 import { parseMeetingDays, parseStartAndEndTimes } from "@packages/stdlib";
 import { load } from "cheerio";
+
+/**
+ * WebSoc allows us to scrape up to 900 sections per chunk.
+ * This provides a 1% margin of error in case sections magically appear within ranges.
+ */
+const SECTIONS_PER_CHUNK = 891;
+
+/**
+ * Section codes 98000-99999 are reserved for Study Abroad and Registrar testing.
+ * These are not associated with any department that is searchable directly through WebSoc.
+ */
+const LAST_SECTION_CODE = "97999";
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -350,11 +362,11 @@ function meetingMapper(
   };
 }
 
-const doDepartmentUpsert = async (
+const doChunkUpsert = async (
   db: ReturnType<typeof database>,
   term: Term,
   resp: WebsocResponse,
-  department: string,
+  department: string | null,
 ) =>
   await db.transaction(async (tx) => {
     const updatedAt = new Date();
@@ -658,6 +670,15 @@ function normalizeCourse(courses: WebsocCourse[]): WebsocCourse[] {
 
 function normalizeResponse(json: WebsocResponse): WebsocResponse {
   for (const school of json.schools) {
+    const deptMapping = new Map<string, WebsocDepartment>();
+    for (const dept of school.departments) {
+      if (!deptMapping.has(dept.deptCode)) {
+        deptMapping.set(dept.deptCode, dept);
+      } else {
+        deptMapping.get(dept.deptCode)?.courses.push(...dept.courses);
+      }
+    }
+    school.departments = deptMapping.values().toArray();
     for (const dept of school.departments) {
       dept.deptName = dept.deptName.replace(/&amp;/g, "&");
       const courseMapping = new Map<string, WebsocCourse>();
@@ -763,20 +784,57 @@ export async function scrapeTerm(
 ) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
-  for (const department of departments) {
-    console.log(`Scraping department ${department}`);
-    const resp = await request(term, { department, cancelledCourses: "Include" }).then(
-      normalizeResponse,
-    );
-    if (resp.schools.length) await doDepartmentUpsert(db, term, resp, department);
-    await sleep(1000);
+  const sectionCodeBounds = await db
+    .execute(sql<Array<{ section_code: string }>>`
+    SELECT section_code FROM (
+        SELECT LPAD(section_code::TEXT, 5, '0') AS section_code,
+        (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
+        FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
+    )
+    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0 OR MOD(rownum, ${SECTIONS_PER_CHUNK}) = 1;
+  `)
+    .then((xs) => xs.map((x) => x.section_code));
+  if (departments.length) {
+    console.log(`Resuming scraping run at department ${departments[0]}.`);
+    for (const department of departments) {
+      console.log(`Scraping department ${department}`);
+      const resp = await request(term, {
+        department,
+        cancelledCourses: "Include",
+      }).then(normalizeResponse);
+      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      await sleep(1000);
+    }
+  } else if (!sectionCodeBounds.length) {
+    console.log("This term has never been scraped before. Falling back to department-wise scrape.");
+    for (const department of await getDepts(db)) {
+      console.log(`Scraping department ${department}`);
+      const resp = await request(term, {
+        department,
+        cancelledCourses: "Include",
+      }).then(normalizeResponse);
+      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      await sleep(1000);
+    }
+  } else {
+    console.log("Performing chunk-wise scrape.");
+    for (let i = 0; i < sectionCodeBounds.length; i += 2) {
+      const lower = sectionCodeBounds[i];
+      const upper = sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE;
+      const sectionCodes = `${lower}-${upper}`;
+      console.log(`Scraping chunk ${sectionCodes}`);
+      const resp = await request(term, {
+        sectionCodes,
+        cancelledCourses: "Include",
+      }).then(normalizeResponse);
+      if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+      await sleep(1000);
+    }
   }
   await scrapeGEsForTerm(db, term);
   const lastScraped = new Date();
   const values = { name, lastScraped, lastDeptScraped: null };
   await db.transaction(async (tx) => {
-    await tx.refreshMaterializedView(courseView);
-    await tx.refreshMaterializedView(instructorView);
     await tx
       .insert(websocMeta)
       .values(values)
@@ -804,9 +862,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
       await scrapeTerm(
         db,
         nameToTerm(term.name),
-        term?.lastDeptScraped
-          ? departments.slice(departments.indexOf(term.lastDeptScraped))
-          : departments,
+        term?.lastDeptScraped ? departments.slice(departments.indexOf(term.lastDeptScraped)) : [],
       );
     } catch (e) {
       console.error(e);
