@@ -59,21 +59,21 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys 
   return (
     <TableRow>
       <TableCell className={"max-w-0 overflow-x-hidden"}>
-        <div className={"flex items-center space-x-2"}>
+        <span className={"flex items-center space-x-2"}>
           {keyTypeToIcon(apiKeyData._type)}
-          <p> {apiKeyData.name}</p>
-        </div>
+          <span>{apiKeyData.name}</span>
+        </span>
       </TableCell>
       <TableCell>{createdAtFormat.format(new Date(apiKeyData.createdAt))}</TableCell>
       <TableCell>
         <DisplayKey keyText={abbreviatedKey} copyText={apiKey} />
       </TableCell>
       <TableCell>
-        <div className={"flex justify-end space-x-4"}>
+        <span className={"flex justify-end space-x-4"}>
           <Button variant={"secondary"} asChild>
             <Link href={`/edit/${apiKey}`}>
               <PencilIcon />
-              <div>Edit</div>
+              <span>Edit</span>
             </Link>
           </Button>
           <DeleteKey
@@ -82,7 +82,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys 
             apiKeys={apiKeys}
             setApiKeys={setApiKeys}
           />
-        </div>
+        </span>
       </TableCell>
     </TableRow>
   );

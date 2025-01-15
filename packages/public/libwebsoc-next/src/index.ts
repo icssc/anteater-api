@@ -1,3 +1,4 @@
+import { load } from "cheerio";
 import fetch from "cross-fetch";
 import { XMLParser } from "fast-xml-parser";
 
@@ -227,6 +228,11 @@ export type WebsocSection = {
    * Any comments for the section.
    */
   sectionComment: string;
+
+  /**
+   * The URL that points to the section's Web page.
+   */
+  webURL: string;
 };
 
 /**
@@ -358,6 +364,8 @@ export type WebsocResponse = {
  */
 export type WebsocOptions = RequiredOptions & BuildingRoomOptions & OptionalOptions;
 
+type Maybe<T> = T | undefined;
+
 function getCodedTerm(term: Term): string {
   switch (term.quarter) {
     case "Fall":
@@ -423,8 +431,7 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
     room = "",
   } = options;
 
-  const query = new URLSearchParams({
-    Submit: "Display XML Results",
+  const params = {
     YearTerm: getCodedTerm(term),
     ShowComments: "on",
     ShowFinals: "on",
@@ -446,15 +453,30 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
     CancelledCourses: cancelledCourses,
     Bldg: building,
     Room: room,
-  });
+  };
 
-  const response = await fetch(`https://www.reg.uci.edu/perl/WebSoc?${query.toString()}`);
+  const webQuery = new URLSearchParams({ ...params, Submit: "Display Web Results" });
 
-  if (response.redirected) {
+  const xmlQuery = new URLSearchParams({ ...params, Submit: "Display XML Results" });
+
+  const [webResponse, xmlResponse] = await Promise.all([
+    fetch(`https://www.reg.uci.edu/perl/WebSoc?${webQuery.toString()}`),
+    fetch(`https://www.reg.uci.edu/perl/WebSoc?${xmlQuery.toString()}`),
+  ]);
+
+  if (webResponse.redirected || xmlResponse.redirected) {
     throw new Error(
       "Encountered a redirect when attempting to fetch WebSoc response. This likely means you are being rate limited - please try again later.",
     );
   }
+
+  const webText = await webResponse.text();
+
+  if (webText.match(/more than 900/)) {
+    throw new Error("Your query matched more than 900 sections. Please refine your search.");
+  }
+
+  const $ = load(webText);
 
   const parser = new XMLParser({
     attributeNamePrefix: "__",
@@ -465,9 +487,19 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
     trimValues: false,
   });
 
-  const res = parser.parse(await response.text());
+  const res = parser.parse(await xmlResponse.text());
 
   const json: WebsocResponse = { schools: [] };
+
+  const webURLs = new Map(
+    $("a")
+      .get()
+      .filter((x) => x.children.some((y) => (y as unknown as Text).data === "Web"))
+      .map((x) => [
+        ((x.parent?.parent?.children[0] as Maybe<ParentNode>)?.children?.[0] as Maybe<Text>)?.data,
+        x.attribs?.href,
+      ]),
+  );
 
   json.schools = res.websoc_results?.course_list
     ? (Array.isArray(res.websoc_results.course_list.school)
@@ -543,6 +575,7 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
                 restrictions: w.sec_restrictions ? w.sec_restrictions : "",
                 status: w.sec_status,
                 sectionComment: w.sec_comment ? w.sec_comment : "",
+                webURL: webURLs.get(w.course_code) ?? "",
               })),
             }),
           ),
