@@ -77,29 +77,28 @@ export const websocQuerySchema = z.object({
     .string({ message: "Parameter 'year' is required " })
     .length(4, { message: "Parameter 'year' must have length 4" })
     .openapi({ description: "The academic year for course search", example: "2025" }),
-  quarter: z
-    .enum(terms)
-    .openapi({
-      description:
-        "The academic quarter 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
-      example: "Fall",
-    }),
+  quarter: z.enum(terms).openapi({
+    description:
+      "The academic quarter 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
+    example: "Fall",
+  }),
   ge: z
     .enum(geCategories)
     .optional()
     .openapi({ description: "The general education category of the course", example: "GE-1A" })
     .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z
-    .string()
-    .optional()
-    .openapi({ description: "The department code of the course", example: "I&C SCI" }),
-  courseTitle: z
-    .string()
-    .optional()
-    .openapi({ description: "The course title of the course", example: "DATA STRC IMPL&ANLS" }),
-  courseNumber: courseNumberSchema
-    .optional()
-    .openapi({ description: "The course number(s) of the course", example: "46" }),
+  department: z.string().optional().openapi({
+    description: "The department code of the course",
+    example: "I&C SCI",
+  }),
+  courseTitle: z.string().optional().openapi({
+    description: "The course title of the course",
+    example: "DATA STRC IMPL&ANLS",
+  }),
+  courseNumber: courseNumberSchema.optional().openapi({
+    description: "The course number(s) of the course",
+    example: "46",
+  }),
   sectionCodes: z
     .string()
     .optional()
