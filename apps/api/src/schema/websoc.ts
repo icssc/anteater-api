@@ -75,18 +75,37 @@ const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)
 export const websocQuerySchema = z.object({
   year: z
     .string({ message: "Parameter 'year' is required " })
-    .length(4, { message: "Parameter 'year' must have length 4" }),
-  quarter: z.enum(terms),
+    .length(4, { message: "Parameter 'year' must have length 4" })
+    .openapi({ description: "The academic year for course search", example: "2025" }),
+  quarter: z
+    .enum(terms)
+    .openapi({
+      description: "The academic quarter (Fall, Winter, Spring, Summer1, Summer10wk, or Summer2)",
+      example: "Fall",
+    }),
   ge: z
     .enum(geCategories)
     .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z.string().optional(),
-  courseTitle: z.string().optional(),
-  courseNumber: courseNumberSchema.optional(),
+    .transform((x) => (x === "ANY" ? undefined : x))
+    .openapi({ description: "Filter by General Education category", example: "GE-1A" }),
+  department: z
+    .string()
+    .optional()
+    .openapi({ description: "Filter by department code", example: "I&C SCI" }),
+  courseTitle: z
+    .string()
+    .optional()
+    .openapi({ description: "Filter by course title.", example: "DATA STRC IMPL&ANLS" }),
+  courseNumber: courseNumberSchema
+    .optional()
+    .openapi({ description: "Filter by course number(s).", example: "46" }),
   sectionCodes: z
     .string()
     .optional()
+    .openapi({
+      description: "Filter by specific section codes.",
+      example: "35530",
+    })
     .transform((codes, ctx) => {
       if (!codes) return undefined;
       const parsedNums: Exclude<ParsedNumber, ParsedString>[] = [];
@@ -118,30 +137,70 @@ export const websocQuerySchema = z.object({
       }
       return parsedNums;
     }),
-  instructorName: z.string().optional(),
-  days: daysSchema.optional(),
-  building: z.string().optional(),
-  room: z.string().optional(),
+  instructorName: z.string().optional().openapi({
+    description: "Filter by instructor name.",
+    example: "Peter Anteater",
+  }),
+  days: daysSchema.optional().openapi({
+    description: "Filter by days of the week when the course meets.",
+    example: "MWF",
+  }),
+  building: z.string().optional().openapi({
+    description: "Filter by building where the course is held.",
+    example: "ALP",
+  }),
+  room: z.string().optional().openapi({
+    description: "Filter by room where the course is held.",
+    example: "1100",
+  }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
     .optional()
+    .openapi({
+      description: "Filter by course level (Lower Division, Upper Division, or Graduate).",
+      example: "Lower Division",
+    })
     .transform((x) => (x === "ANY" ? undefined : x)),
   sectionType: z
     .union([z.enum(anyArray), z.enum(websocSectionTypes)])
     .optional()
+    .openapi({
+      description: "Filter by type of section (e.g., Lecture, Discussion, Lab).",
+      example: "Lec",
+    })
     .transform((x) => (x === "ANY" ? undefined : x)),
   fullCourses: z
     .enum(fullCoursesOptions)
     .optional()
+    .openapi({
+      description: "Filter by enrollment status.",
+      example: "SkipFull",
+    })
     .transform((x) => (x === "ANY" ? undefined : x)),
-  cancelledCourses: z.enum(cancelledCoursesOptions).optional(),
-  units: z.optional(z.literal("VAR").or(z.string())),
-  startTime: timeSchema.optional(),
-  endTime: timeSchema.optional(),
+  cancelledCourses: z.enum(cancelledCoursesOptions).optional().openapi({
+    description: "Include or exclude cancelled courses.",
+    example: "Exclude",
+  }),
+  units: z.optional(z.literal("VAR").or(z.string())).openapi({
+    description: "Filter by number of units or variable units.",
+    example: "4",
+  }),
+  startTime: timeSchema.optional().openapi({
+    description: "Filter by course start time.",
+    example: "08:00",
+  }),
+  endTime: timeSchema.optional().openapi({
+    description: "Filter by course end time.",
+    example: "17:00",
+  }),
   excludeRestrictionCodes: z
     .string()
     .optional()
+    .openapi({
+      description: "Exclude courses with specific restriction codes.",
+      example: "A,B,C",
+    })
     .transform((codes, ctx) => {
       if (!codes) return undefined;
       const parsedCodes: Array<(typeof restrictionCodes)[number]> = [];
@@ -250,6 +309,12 @@ export const websocResponseSchema = z.object({
 });
 
 export const websocTermResponseSchema = z.object({
-  shortName: z.string(),
-  longName: z.string(),
+  shortName: z.string().openapi({
+    description: "Short term name",
+    example: "2025 Winter",
+  }),
+  longName: z.string().openapi({
+    description: "Long term name",
+    example: "2025 Winter Quarter",
+  }),
 });
