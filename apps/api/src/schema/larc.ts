@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
-import { courseNumberSchema, daysSchema, timeSchema } from "./lib";
+import { courseNumberSchema, daysSchema, timeSchema, yearSchema } from "./lib";
 
 export const larcQuerySchema = z.object({
   instructorName: z
@@ -18,10 +18,7 @@ export const larcQuerySchema = z.object({
   courseNumber: courseNumberSchema
     .optional()
     .openapi({ description: "The course number(s) of the LARC section's related course." }),
-  year: z
-    .string({ message: "Parameter 'year' is required " })
-    .regex(/^\d{4}$/, { message: "Invalid year provided" })
-    .openapi({ description: "The year of the LARC section", example: "2024" }),
+  year: yearSchema.openapi({ description: "The year of the LARC section", example: "2024" }),
   quarter: z
     .enum(terms, {
       message:

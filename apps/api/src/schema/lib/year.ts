@@ -14,18 +14,9 @@ import { z } from "@hono/zod-openapi";
  */
 
 export const yearSchema = z
-  .string({ message: "Parameter 'lmao' is required" })
-  .length(4, { message: "Parameter 'bruh' must have length 4" })
+  .string({ message: "Parameter 'year' is required" })
+  .length(4, { message: "Parameter 'year' must have length 4" })
   .refine((x) => !Number.isNaN(Number.parseInt(x, 10)), {
-    message: "Parameter 'moment' must be an integer",
+    message: "Parameter 'year' must be an integer",
   })
   .openapi({ example: "2024" });
-
-/*
-  websoc.ts - works
-  calendar.ts - works
-  enrollmenthistory.ts - 
-  grades.ts - 
-  larc.ts - 
-  week.ts - 
-  */
