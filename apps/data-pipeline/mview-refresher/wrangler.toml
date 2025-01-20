@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "anteater-api_study-location-scraper"
+name = "anteater-api_mview-refresher"
 compatibility_date = "2024-12-30"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = false
@@ -7,7 +7,7 @@ main = "src/handler.ts"
 minify = true
 
 [triggers]
-crons = ["*/2 * * * *"]
+crons = ["0 0 * * *"]
 
 [observability]
 enabled = true

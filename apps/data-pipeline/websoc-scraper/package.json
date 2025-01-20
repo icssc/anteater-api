@@ -11,13 +11,13 @@
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
-    "@icssc/libwebsoc-next": "1.0.0",
+    "@icssc/libwebsoc-next": "1.1.1",
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "cheerio": "1.0.0",
     "cross-fetch": "4.0.0"
   },
   "devDependencies": {
-    "wrangler": "3.85.0"
+    "wrangler": "3.100.0"
   }
 }

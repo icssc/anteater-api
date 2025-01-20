@@ -1,0 +1,1 @@
+ALTER TABLE "websoc_section" ADD COLUMN "web_url" text DEFAULT '' NOT NULL;

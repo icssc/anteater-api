@@ -50,6 +50,20 @@
       "when": 1732665828730,
       "tag": "0006_refactor_larc",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1736792587315,
+      "tag": "0007_websoc_web",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1736913755763,
+      "tag": "0008_study_rooms_materialized_view",
+      "breakpoints": true
     }
   ]
 }

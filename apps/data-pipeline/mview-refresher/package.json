@@ -1,0 +1,18 @@
+{
+  "name": "@apps/mview-refresher",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Script for automatically refreshing materialized views used by the API",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "deploy": "wrangler deploy",
+    "postinstall": "wrangler types --x-include-runtime"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "3.100.0"
+  }
+}

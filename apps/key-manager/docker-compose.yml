@@ -1,0 +1,13 @@
+name: anteater-api-key-manager
+
+services:
+  db:
+    build:
+      context: src/db
+      dockerfile: Dockerfile
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: anteater_api_users

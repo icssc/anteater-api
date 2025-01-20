@@ -2,7 +2,7 @@ import { z } from "@hono/zod-openapi";
 import type { FinalExamStatus } from "@packages/db/schema";
 import { courseLevels, terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
 import { isBaseTenInt } from "@packages/stdlib";
-import { courseNumberSchema, daysSchema, timeSchema, yearSchema } from "./lib";
+import { courseNumberSchema, daysSchema, timeSchema } from "./lib";
 
 const anyArray = ["ANY"] as const;
 
@@ -73,7 +73,9 @@ const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)
   (restrictionCodes as readonly string[]).includes(code);
 
 export const websocQuerySchema = z.object({
-  year: yearSchema,
+  year: z
+    .string({ message: "Parameter 'year' is required " })
+    .length(4, { message: "Parameter 'year' must have length 4" }),
   quarter: z.enum(terms),
   ge: z
     .enum(geCategories)
@@ -214,6 +216,7 @@ export const websocSectionSchema = z.object({
     sectionEnrolled: z.string(),
   }),
   updatedAt: z.coerce.date(),
+  webURL: z.string(),
 });
 
 export const websocCourseSchema = z.object({
