@@ -80,5 +80,6 @@ const daysTransform = (days: string | undefined, ctx: z.RefinementCtx) => {
 };
 
 export const daysSchema = z.string().transform(daysTransform).openapi({
+  description: "The days of the week for when the course meets",
   example: "M,Tu,W,Th,F",
 });

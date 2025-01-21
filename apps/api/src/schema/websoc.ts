@@ -76,10 +76,9 @@ export const websocQuerySchema = z.object({
   year: z
     .string({ message: "Parameter 'year' is required " })
     .length(4, { message: "Parameter 'year' must have length 4" })
-    .openapi({ description: "The academic year for course search", example: "2025" }),
+    .openapi({ description: "The academic year of the course ", example: "2025" }),
   quarter: z.enum(terms).openapi({
-    description:
-      "The academic quarter 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
+    description: "The academic quarter of the course",
     example: "Fall",
   }),
   ge: z
@@ -138,19 +137,16 @@ export const websocQuerySchema = z.object({
       return parsedNums;
     }),
   instructorName: z.string().optional().openapi({
-    description: "The instructor name of the course",
+    description: "The instructor's name for the course",
     example: "Anteater, P.",
   }),
-  days: daysSchema.optional().openapi({
-    description: "The days of the week for when the course meets",
-    example: "M,Tu,W,Th",
-  }),
+  days: daysSchema.optional().openapi({}),
   building: z.string().optional().openapi({
     description: "The building where the course is held",
     example: "ALP",
   }),
   room: z.string().optional().openapi({
-    description: "The room where the course is held",
+    description: "The room number where the course is held",
     example: "1100",
   }),
   division: z
@@ -158,8 +154,7 @@ export const websocQuerySchema = z.object({
     .or(z.literal("ANY"))
     .optional()
     .openapi({
-      description:
-        "The type of course level of the course (e.g. Lower Division, Upper Division, or Graduate)",
+      description: "Filter courses by course level",
       example: "LowerDiv",
     })
     .transform((x) => (x === "ANY" ? undefined : x)),
@@ -167,7 +162,7 @@ export const websocQuerySchema = z.object({
     .union([z.enum(anyArray), z.enum(websocSectionTypes)])
     .optional()
     .openapi({
-      description: "The type of section of the course (e.g. Lecture, Discussion, Lab)",
+      description: "Filter courses by section type",
       example: "Lec",
     })
     .transform((x) => (x === "ANY" ? undefined : x)),
@@ -175,31 +170,33 @@ export const websocQuerySchema = z.object({
     .enum(fullCoursesOptions)
     .optional()
     .openapi({
-      description: "The enrollment status of the course",
+      description: "Filter courses by filled status",
       example: "SkipFull",
     })
     .transform((x) => (x === "ANY" ? undefined : x)),
   cancelledCourses: z.enum(cancelledCoursesOptions).optional().openapi({
-    description: "Include or exclude cancelled courses",
+    description: "Include, exclude, or only include cancelled sessions",
     example: "Exclude",
   }),
   units: z.optional(z.literal("VAR").or(z.string())).openapi({
-    description: "The number of units for the courses",
+    description:
+      "Filter courses by unit count. 'VAR' filters for courses with variable unit ranges (e.g., '1-4')",
     example: "4",
   }),
   startTime: timeSchema.optional().openapi({
-    description: "The course start time",
+    description: "Filter for courses starting at or after this time in 24-hour format",
     example: "08:00",
   }),
   endTime: timeSchema.optional().openapi({
-    description: "The course end time",
+    description: "Filter for courses ending at or before this time in 24-hour format",
     example: "17:00",
   }),
   excludeRestrictionCodes: z
     .string()
     .optional()
     .openapi({
-      description: "Exclude courses with specific restriction codes",
+      description:
+        "Exclude courses by comma-separated restriction codes, see [Registrar's list](https://www.reg.uci.edu/enrollment/restrict_codes.html)",
       example: "A,B,C",
     })
     .transform((codes, ctx) => {
