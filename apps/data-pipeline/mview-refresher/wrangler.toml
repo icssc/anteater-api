@@ -1,0 +1,17 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "anteater-api_mview-refresher"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+main = "src/handler.ts"
+minify = true
+
+[triggers]
+crons = ["0 0 * * *"]
+
+[observability]
+enabled = true
+
+[[hyperdrive]]
+binding = "DB"
+id = "c498e76d4f68446ea55d0d92865257b5"

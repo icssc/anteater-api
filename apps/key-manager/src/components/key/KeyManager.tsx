@@ -36,32 +36,30 @@ const KeyManager = () => {
         </>
       ) : (
         <>
-          <Table>
-            {Object.keys(apiKeys).length > 0 ? (
-              <>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-1/4">Name</TableHead>
-                    <TableHead className="w-1/4">Created</TableHead>
-                    <TableHead className="w-1/4">Key</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Object.entries(apiKeys).map(([apiKey, apiKeyData]) => (
-                    <KeyTableRow
-                      key={apiKey}
-                      apiKey={apiKey}
-                      apiKeyData={apiKeyData}
-                      apiKeys={apiKeys}
-                      setApiKeys={setApiKeys}
-                    />
-                  ))}
-                </TableBody>
-              </>
-            ) : (
-              <div className={"text-muted-foreground text-center w-full"}>No keys found</div>
-            )}
-          </Table>
+          {Object.keys(apiKeys).length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-1/4">Name</TableHead>
+                  <TableHead className="w-1/4">Created</TableHead>
+                  <TableHead className="w-1/4">Key</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(apiKeys).map(([apiKey, apiKeyData]) => (
+                  <KeyTableRow
+                    key={apiKey}
+                    apiKey={apiKey}
+                    apiKeyData={apiKeyData}
+                    apiKeys={apiKeys}
+                    setApiKeys={setApiKeys}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className={"text-muted-foreground text-center w-full"}>No keys found</div>
+          )}
           <Button className={"w-full"} asChild>
             <Link href="/create">
               <PlusIcon />

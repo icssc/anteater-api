@@ -159,8 +159,11 @@ export class EnrollmentHistoryService {
         section.statusHistory.push(row.status ?? "");
       }
     }
-    return transformedSectionRows
-      .values()
+    const filteredSections = transformedSectionRows.values().filter((section) => {
+      return section.dates.length > 0;
+    });
+
+    return filteredSections
       .map(({ instructors, meetings, ...rest }) => ({
         instructors: Array.from(instructors),
         meetings: meetings.map(({ bldg, ...rest }) => ({ bldg: Array.from(bldg), ...rest })),
