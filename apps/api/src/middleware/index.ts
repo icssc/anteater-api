@@ -5,4 +5,5 @@ export * from "./ip-based-rate-limiter";
 export * from "./key-verifier";
 export * from "./openapi-meta";
 export * from "./production-cache";
+export * from "./redirect-browser-to-docs";
 export * from "./reference-og-tag-injector";

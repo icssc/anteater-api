@@ -273,6 +273,7 @@ export const websocSectionSchema = z.object({
     sectionEnrolled: z.string(),
   }),
   updatedAt: z.coerce.date(),
+  webURL: z.string(),
 });
 
 export const websocCourseSchema = z.object({
