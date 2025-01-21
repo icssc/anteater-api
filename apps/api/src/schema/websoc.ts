@@ -77,7 +77,7 @@ export const websocQuerySchema = z.object({
     .string({ message: "Parameter 'year' is required " })
     .length(4, { message: "Parameter 'year' must have length 4" })
     .openapi({ description: "The academic year of the course ", example: "2025" }),
-  quarter: z.enum(terms).openapi({
+  quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }).openapi({
     description: "The academic quarter of the course",
     example: "Fall",
   }),
