@@ -1,6 +1,7 @@
 import type {
   coursePreviewSchema,
   courseSchema,
+  coursesByCursorQuerySchema,
   coursesQuerySchema,
   instructorPreviewSchema,
   outputCourseLevels,
@@ -18,6 +19,8 @@ import type { z } from "zod";
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 type CoursesServiceOutput = z.infer<typeof courseSchema>;
+
+type CoursesServiceInputByCursor = z.infer<typeof coursesByCursorQuerySchema>;
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
   courseLevel === "LowerDiv"
@@ -67,7 +70,7 @@ const transformCourse = ({
   geList: courseToGEList(course),
 });
 
-function buildQuery(input: CoursesServiceInput) {
+function buildQuery(input: CoursesServiceInput | CoursesServiceInputByCursor) {
   const conditions: Array<SQL | undefined> = [];
   if (input.department) {
     conditions.push(eq(courseView.department, input.department));
@@ -150,6 +153,7 @@ export class CoursesService {
     limit?: number;
   }): Promise<CoursesServiceOutput[]> {
     const { where, offset, cursor, limit } = input;
+    console.log("Cursor passed to getCoursesRaw:", input.cursor);
     return this.db
       .select()
       .from(courseView)
@@ -171,8 +175,30 @@ export class CoursesService {
     return this.getCoursesRaw({
       where: buildQuery(input),
       offset: input.skip,
-      cursor: input.cursor,
       limit: input.take,
     });
+  }
+
+  async getCoursesByCursor(
+    input: CoursesServiceInputByCursor,
+  ): Promise<{ items: CoursesServiceOutput[]; nextCursor: string | null }> {
+    const courses = await this.getCoursesRaw({
+      where: buildQuery(input),
+      cursor: input.cursor,
+      limit: input.take,
+      offset: 0,
+    });
+
+    console.log(
+      "Courses IDs:",
+      courses.map((course) => course.id),
+    );
+
+    const nextCursor = courses.length > 0 ? courses[courses.length - 1].id : null;
+
+    return {
+      items: courses,
+      nextCursor,
+    };
   }
 }
