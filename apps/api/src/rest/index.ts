@@ -1,7 +1,7 @@
 import { defaultHook } from "$hooks";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { calendarRouter } from "./routes/calendar";
-import { coursesRouter } from "./routes/courses";
+import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
 import { gradesRouter } from "./routes/grades";
 import { instructorsRouter } from "./routes/instructors";
@@ -16,6 +16,7 @@ const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 restRouter.route("/calendar", calendarRouter);
 restRouter.route("/courses", coursesRouter);
+restRouter.route("/coursesCursor", coursesCursorRouter);
 restRouter.route("/enrollmentHistory", enrollmentHistoryRouter);
 restRouter.route("/grades", gradesRouter);
 restRouter.route("/instructors", instructorsRouter);
