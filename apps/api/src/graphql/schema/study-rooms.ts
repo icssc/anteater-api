@@ -14,7 +14,7 @@ export const studyRoomsGraphQLSchema = `#graphql
     description: String
     directions: String
     techEnhanced: Boolean!
-    slots: [Slot]
+    slots: [Slot]!
   }
 
   input StudyRoomsQuery {

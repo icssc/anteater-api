@@ -76,7 +76,7 @@ export const websocQuerySchema = z.object({
   year: z
     .string({ message: "Parameter 'year' is required " })
     .length(4, { message: "Parameter 'year' must have length 4" }),
-  quarter: z.enum(terms),
+  quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }),
   ge: z
     .enum(geCategories)
     .optional()
@@ -216,6 +216,7 @@ export const websocSectionSchema = z.object({
     sectionEnrolled: z.string(),
   }),
   updatedAt: z.coerce.date(),
+  webURL: z.string(),
 });
 
 export const websocCourseSchema = z.object({
