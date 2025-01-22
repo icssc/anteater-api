@@ -3,6 +3,7 @@ import { productionCache } from "$middleware";
 import {
   batchCoursesQuerySchema,
   courseSchema,
+  coursesByCursorQuerySchema,
   coursesPathSchema,
   coursesQuerySchema,
   errorSchema,
@@ -11,13 +12,18 @@ import {
   responseSchema,
 } from "$schema";
 import { CoursesService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+const coursesCursorRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
 coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
+
+// TODO: Need to add for coursesCursorRouter?
+// coursesCursorRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
+// coursesCursorRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
 
 const batchCoursesRoute = createRoute({
   summary: "Retrieve courses with IDs",
@@ -99,6 +105,39 @@ const coursesByFiltersRoute = createRoute({
   },
 });
 
+const coursesByCursorRoute = createRoute({
+  summary: "Filter courses by cursor",
+  operationId: "coursesByCursor",
+  tags: ["Courses"],
+  method: "get",
+  path: "/",
+  request: { query: coursesByCursorQuerySchema },
+  description: "Retrieves courses matching the given filters and cursor.",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: responseSchema(
+            z.object({
+              items: courseSchema.array(),
+              nextCursor: z.string().nullable(),
+            }),
+          ),
+        },
+      },
+      description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
 coursesRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
@@ -137,4 +176,23 @@ coursesRouter.openapi(coursesByFiltersRoute, async (c) => {
   );
 });
 
-export { coursesRouter };
+coursesCursorRouter.openapi(coursesByCursorRoute, async (c) => {
+  console.log("Route matched, validating query...");
+  const query = c.req.valid("query");
+  console.log("Validated query:", query);
+  const service = new CoursesService(database(c.env.DB.connectionString));
+
+  const { items, nextCursor } = await service.getCoursesByCursor(query);
+  return c.json(
+    {
+      ok: true,
+      data: {
+        items: courseSchema.array().parse(items),
+        nextCursor: nextCursor,
+      },
+    },
+    200,
+  );
+});
+
+export { coursesRouter, coursesCursorRouter };
