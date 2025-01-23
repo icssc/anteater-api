@@ -6,10 +6,7 @@ const isLeap = (x: number) => x % 4 === 0 && (x % 100 === 0 ? x % 400 === 0 : tr
 
 export const weekQuerySchema = z
   .object({
-    year: yearSchema
-      .transform((x) => Number.parseInt(x, 10))
-      .openapi({ example: "2024" })
-      .optional(),
+    year: yearSchema.transform((x) => Number.parseInt(x, 10)).optional(),
     month: z.coerce
       .number()
       .refine((x) => 1 <= x && x <= 12, {
