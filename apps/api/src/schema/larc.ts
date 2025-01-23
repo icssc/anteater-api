@@ -18,7 +18,7 @@ export const larcQuerySchema = z.object({
   courseNumber: courseNumberSchema
     .optional()
     .openapi({ description: "The course number(s) of the LARC section's related course." }),
-  year: yearSchema.openapi({ description: "The year of the LARC section", example: "2024" }),
+  year: yearSchema,
   quarter: z
     .enum(terms, {
       message:
