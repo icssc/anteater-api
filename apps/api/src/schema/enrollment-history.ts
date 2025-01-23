@@ -1,12 +1,10 @@
 import { z } from "@hono/zod-openapi";
 import { terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
+import { yearSchema } from "./lib";
 
 export const enrollmentHistoryQuerySchema = z
   .object({
-    year: z
-      .string()
-      .regex(/^\d{4}$/, { message: "Invalid year provided" })
-      .optional(),
+    year: yearSchema.optional(),
     quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
     instructorName: z.string().optional(),
     department: z.string().optional(),

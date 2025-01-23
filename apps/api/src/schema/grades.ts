@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { courseLevels, terms } from "@packages/db/schema";
+import { yearSchema } from "./lib";
 
 const geCategories = [
   "GE-1A",
@@ -15,10 +16,7 @@ const geCategories = [
 ] as const;
 
 export const gradesQuerySchema = z.object({
-  year: z
-    .string()
-    .regex(/^\d{4}$/, { message: "Invalid year provided" })
-    .optional(),
+  year: yearSchema.optional(),
   quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
   instructor: z.string().optional(),
   department: z.string().optional(),
