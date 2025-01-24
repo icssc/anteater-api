@@ -95,7 +95,7 @@ export class AuditParser {
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {
-    const ret: Record<string, DegreeWorksRequirement> = {};
+    const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
         case "Block":
@@ -128,46 +128,51 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
-            ret[rule.label] = {
+            ret.push({
+              label: rule.label,
               requirementType: "Course",
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
-            };
+            });
           } else if (rule.requirement.creditsBegin) {
-            ret[rule.label] = {
+            ret.push({
+              label: rule.label,
               requirementType: "Unit",
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
-            };
+            });
           }
           break;
         }
         case "Group": {
-          ret[rule.label] = {
+          ret.push({
+            label: rule.label,
             requirementType: "Group",
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
             requirements: await this.ruleArrayToRequirements(rule.ruleArray),
-          };
+          });
           break;
         }
         case "IfStmt": {
           const rules = this.flattenIfStmt([rule]);
           if (rules.length > 1 && !rules.some((x) => x.ruleType === "Block")) {
-            ret["Select 1 of the following"] = {
+            ret.push({
+              label: "Select 1 of the following",
               requirementType: "Group",
               requirementCount: 1,
               requirements: await this.ruleArrayToRequirements(rules),
-            };
+            });
           }
           break;
         }
         case "Subset": {
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          ret[rule.label] = {
+          ret.push({
+            label: rule.label,
             requirementType: "Group",
             requirementCount: Object.keys(requirements).length,
             requirements,
-          };
+          });
         }
       }
     }

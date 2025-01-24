@@ -57,10 +57,11 @@ export class Scraper {
       if (!Object.keys(program.requirements).length) {
         if (program.specs.length === 1) {
           program.requirements =
-            this.parsedSpecializations?.get(program.specs[0])?.requirements ?? {};
+            this.parsedSpecializations?.get(program.specs[0])?.requirements ?? [];
         } else {
-          program.requirements = {
-            "Select 1 of the following": {
+          program.requirements = [
+            {
+              label: "Select 1 of the following",
               requirementType: "Group",
               requirementCount: 1,
               requirements: Object.fromEntries(
@@ -70,7 +71,7 @@ export class Scraper {
                 ]),
               ),
             },
-          };
+          ];
         }
         program.specs = [];
       }
@@ -157,7 +158,7 @@ export class Scraper {
     const z = this.parsedSpecializations.get("AHPER");
     if (x && y && z) {
       x.specs = [];
-      x.requirements = { ...x.requirements, ...y.requirements, ...z.requirements };
+      x.requirements = [...x.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
       this.parsedUgradPrograms.set("Major in Art History", x);
@@ -192,6 +193,7 @@ export class Scraper {
       Cookie: `X-AUTH-TOKEN=${authCookie}`,
       Origin: "https://reg.uci.edu",
     };
+    console.log(headers);
     const scraper = new Scraper();
     scraper.ap = new AuditParser(db);
     scraper.dw = await DegreeworksClient.new(studentId, headers);
