@@ -1,4 +1,8 @@
-import type { programRequirementsQuerySchema } from "$schema";
+import type {
+  majorRequirementsQuerySchema,
+  minorRequirementsQuerySchema,
+  specializationRequirementsQuerySchema,
+} from "$schema";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import { major, minor, specialization } from "@packages/db/schema";
@@ -9,7 +13,10 @@ export class ProgramsService {
 
   async getProgramRequirements(
     program_type: "major" | "minor" | "specialization",
-    query: z.infer<typeof programRequirementsQuerySchema>,
+    query:
+      | z.infer<typeof majorRequirementsQuerySchema>
+      | z.infer<typeof minorRequirementsQuerySchema>
+      | z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
     switch (program_type) {
       case "major":
@@ -23,7 +30,10 @@ export class ProgramsService {
 
   private async getProgramRequirementsInner(
     table: typeof major | typeof minor | typeof specialization,
-    query: z.infer<typeof programRequirementsQuerySchema>,
+    query:
+      | z.infer<typeof majorRequirementsQuerySchema>
+      | z.infer<typeof minorRequirementsQuerySchema>
+      | z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
     const [got] = await this.db
       .select({ id: table.id, requirements: table.requirements })
