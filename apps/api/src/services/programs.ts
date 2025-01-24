@@ -36,7 +36,7 @@ export class ProgramsService {
       | z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
     const [got] = await this.db
-      .select({ id: table.id, requirements: table.requirements })
+      .select({ id: table.id, name: table.name, requirements: table.requirements })
       .from(table)
       .where(eq(table.id, query.program_id))
       .limit(1);
@@ -45,6 +45,6 @@ export class ProgramsService {
       return null;
     }
 
-    return { id: got.id, requirements: got.requirements };
+    return { id: got.id, name: got.name, requirements: got.requirements };
   }
 }
