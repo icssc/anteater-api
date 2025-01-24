@@ -109,16 +109,10 @@ programsRouter.get(
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
-const handler = async (c) => {
-  // safety: we enumerated these options above
-  const programType = (c.req.routePath.split("/").at(-1) ?? "major") as
-    | "major"
-    | "minor"
-    | "specialization";
-
+programsRouter.openapi(majorRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getProgramRequirements(programType, query);
+  const res = await service.getProgramRequirements("major", query);
   return res
     ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
@@ -128,10 +122,34 @@ const handler = async (c) => {
         },
         404,
       );
-};
-
-programsRouter.openapi(majorRequirements, handler);
-programsRouter.openapi(minorRequirements, handler);
-programsRouter.openapi(specializationRequirements, handler);
+});
+programsRouter.openapi(minorRequirements, async (c) => {
+  const query = c.req.valid("query");
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getProgramRequirements("minor", query);
+  return res
+    ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
+    : c.json(
+        {
+          ok: false,
+          message: `Couldn't find this program; check your ID?`,
+        },
+        404,
+      );
+});
+programsRouter.openapi(specializationRequirements, async (c) => {
+  const query = c.req.valid("query");
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getProgramRequirements("specialization", query);
+  return res
+    ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
+    : c.json(
+        {
+          ok: false,
+          message: `Couldn't find this program; check your ID?`,
+        },
+        404,
+      );
+});
 
 export { programsRouter };
