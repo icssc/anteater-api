@@ -21,7 +21,8 @@ const majorRequirements = createRoute({
   method: "get",
   path: "/major",
   description:
-    "Retrieve course requirements for a major in UCI's current catalog. Excludes requirement(s) from a specialization, if one is required.",
+    "Retrieve course requirements for a major in UCI's current catalog. Note that these are the requirements for the major itself; " +
+    "if this major has specializations, then one is mandatory and its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: {
