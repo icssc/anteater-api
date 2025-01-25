@@ -3,11 +3,13 @@ import { productionCache } from "$middleware";
 import {
   errorSchema,
   majorRequirementsQuerySchema,
+  majorRequirementsResponseSchema,
   minorRequirementsQuerySchema,
+  minorRequirementsResponseSchema,
   programRequirementSchema,
-  programRequirementsResponseSchema,
   responseSchema,
   specializationRequirementsQuerySchema,
+  specializationRequirementsResponseSchema,
 } from "$schema";
 import { ProgramsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -30,7 +32,7 @@ const majorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(programRequirementsResponseSchema) },
+        "application/json": { schema: responseSchema(majorRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -60,7 +62,7 @@ const minorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(programRequirementsResponseSchema) },
+        "application/json": { schema: responseSchema(minorRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -90,7 +92,7 @@ const specializationRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(programRequirementsResponseSchema) },
+        "application/json": { schema: responseSchema(specializationRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -119,7 +121,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getProgramRequirements("major", query);
   return res
-    ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
+    ? c.json({ ok: true, data: majorRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
         {
           ok: false,
@@ -133,7 +135,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getProgramRequirements("minor", query);
   return res
-    ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
+    ? c.json({ ok: true, data: minorRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
         {
           ok: false,
@@ -147,7 +149,7 @@ programsRouter.openapi(specializationRequirements, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getProgramRequirements("specialization", query);
   return res
-    ? c.json({ ok: true, data: programRequirementsResponseSchema.parse(res) }, 200)
+    ? c.json({ ok: true, data: specializationRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
         {
           ok: false,

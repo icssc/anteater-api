@@ -130,18 +130,33 @@ export const programRequirementSchema = z.union([
 export const programRequirementsResponseSchema = z.object({
   id: z.string().openapi({
     description: "Identifier for this program",
-    examples: ["BS-201", "459", "BS-201E"],
   }),
   name: z.string().openapi({
     description: "Human name for this program",
-    examples: [
-      "Major in Computer Science",
-      "Minor in Information and Computer Science",
-      "CS:Specialization in Bioinformatics",
-    ],
   }),
   requirements: z.array(programRequirementSchema).openapi({
     description:
       "The set of of requirements for this program; a course, unit, or group requirement as follows:",
+  }),
+});
+
+export const majorRequirementsResponseSchema = programRequirementsResponseSchema.extend({
+  id: programRequirementsResponseSchema.shape.id.openapi({ example: "BS-201" }),
+  name: programRequirementsResponseSchema.shape.name.openapi({
+    example: "Major in Computer Science",
+  }),
+});
+
+export const minorRequirementsResponseSchema = programRequirementsResponseSchema.extend({
+  id: programRequirementsResponseSchema.shape.id.openapi({ example: "459" }),
+  name: programRequirementsResponseSchema.shape.name.openapi({
+    example: "Minor in Information and Computer Science",
+  }),
+});
+
+export const specializationRequirementsResponseSchema = programRequirementsResponseSchema.extend({
+  id: programRequirementsResponseSchema.shape.id.openapi({ example: "BS-201E" }),
+  name: programRequirementsResponseSchema.shape.name.openapi({
+    example: "CS:Specialization in Bioinformatics",
   }),
 });
