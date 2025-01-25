@@ -153,9 +153,9 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedUgradPrograms.get("Major in Art History");
-    const y = this.parsedSpecializations.get("AHGEO");
-    const z = this.parsedSpecializations.get("AHPER");
+    const x = this.parsedUgradPrograms.get("Major in Art History") as DegreeWorksProgram;
+    const y = this.parsedSpecializations.get("AHGEO") as DegreeWorksProgram;
+    const z = this.parsedSpecializations.get("AHPER") as DegreeWorksProgram;
     if (x && y && z) {
       x.specs = [];
       x.requirements = [...x.requirements, ...y.requirements, ...z.requirements];
