@@ -1,8 +1,8 @@
 import { AuditParser, DegreeworksClient } from "$components";
 import type { database } from "@packages/db";
 import type { DegreeWorksProgram } from "@packages/db/schema";
-import { jwtDecode } from "jwt-decode";
 import type { JwtPayload } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
@@ -51,34 +51,7 @@ export class Scraper {
     }
     return ret;
   }
-  private cleanUpPrograms(programs: Map<string, DegreeWorksProgram>) {
-    const ret = new Map<string, DegreeWorksProgram>();
-    for (const [name, program] of programs) {
-      if (!Object.keys(program.requirements).length) {
-        if (program.specs.length === 1) {
-          program.requirements =
-            this.parsedSpecializations?.get(program.specs[0])?.requirements ?? [];
-        } else {
-          program.requirements = [
-            {
-              label: "Select 1 of the following",
-              requirementType: "Group",
-              requirementCount: 1,
-              requirements: Object.fromEntries(
-                program.specs.map((x) => [
-                  this.parsedSpecializations?.get(x)?.name,
-                  this.parsedSpecializations?.get(x)?.requirements,
-                ]),
-              ),
-            },
-          ];
-        }
-        program.specs = [];
-      }
-      ret.set(name, program);
-    }
-    return ret;
-  }
+
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
     console.log("[Scraper] degreeworks-scraper starting");
@@ -163,11 +136,6 @@ export class Scraper {
       this.parsedSpecializations.delete("AHPER");
       this.parsedUgradPrograms.set("Major in Art History", x);
     }
-
-    // Some programs have an empty requirements block and more than one specialization.
-    // They can be simplified into a "Select 1 of the following" group requirement.
-    this.parsedUgradPrograms = this.cleanUpPrograms(this.parsedUgradPrograms);
-    this.parsedGradPrograms = this.cleanUpPrograms(this.parsedGradPrograms);
 
     this.done = true;
   }
