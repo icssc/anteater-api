@@ -89,18 +89,13 @@ export const programGroupRequirementSchema: z.ZodType<
       .nonnegative()
       .openapi({ description: "The number of sub-requirements which must be met." }),
     requirements: z
-      .array(
-        z
-          .lazy(() => programRequirementSchema)
-          .openapi({
-            type: "object",
-            description:
-              "Child requirement, one of the aforementioned three types of requirements.",
-          }),
-      )
+      .lazy(() => programRequirementSchema)
+      .array()
       .openapi({
         description:
           "The collection of sub-requirements permissible for fulfilling this requirement.",
+        type: "array",
+        items: { $ref: "#/components/schemas/programRequirement" },
       }),
   })
   .openapi({

@@ -4,6 +4,7 @@ import {
   errorSchema,
   majorRequirementsQuerySchema,
   minorRequirementsQuerySchema,
+  programRequirementSchema,
   programRequirementsResponseSchema,
   responseSchema,
   specializationRequirementsQuerySchema,
@@ -13,6 +14,8 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const programsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+
+programsRouter.openAPIRegistry.register("programRequirement", programRequirementSchema);
 
 const majorRequirements = createRoute({
   summary: "Retrieve major requirements",
