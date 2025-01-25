@@ -26,7 +26,6 @@ export const specializationRequirementsQuerySchema = z.object({
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
-    example: "3 courses from Lower-Div English",
   }),
 });
 
