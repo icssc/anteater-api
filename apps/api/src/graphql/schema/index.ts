@@ -1,3 +1,4 @@
+import { programsSchema } from "$graphql/schema/programs.ts";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { calendarSchema } from "./calendar";
 import { coursesSchema } from "./courses";
@@ -7,7 +8,7 @@ import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
 import { larcSchema } from "./larc";
 import { searchSchema } from "./search";
-import { studyRoomsGraphQLSchema } from "./study-rooms";
+import { studyRoomsSchema } from "./study-rooms";
 import { websocSchema } from "./websoc";
 import { weekSchema } from "./week";
 
@@ -37,9 +38,10 @@ export const typeDefs = mergeTypeDefs([
   enrollmentHistorySchema,
   gradesSchema,
   instructorsSchema,
+  larcSchema,
+  programsSchema,
   searchSchema,
   websocSchema,
   weekSchema,
-  studyRoomsGraphQLSchema,
-  larcSchema,
+  studyRoomsSchema,
 ]);
