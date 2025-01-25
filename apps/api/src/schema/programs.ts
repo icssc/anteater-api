@@ -1,21 +1,21 @@
 import { z } from "@hono/zod-openapi";
 
 export const majorRequirementsQuerySchema = z.object({
-  program_id: z.string().openapi({
+  programId: z.string().openapi({
     description: "A major ID to query requirements for",
     example: "BS-201",
   }),
 });
 
 export const minorRequirementsQuerySchema = z.object({
-  program_id: z.string().openapi({
+  programId: z.string().openapi({
     description: "A minor ID to query requirements for",
     example: "459",
   }),
 });
 
 export const specializationRequirementsQuerySchema = z.object({
-  program_id: z.string().openapi({
+  programId: z.string().openapi({
     description: "A specialization ID to query requirements for",
     example: "BS-201E",
   }),

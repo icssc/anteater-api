@@ -38,7 +38,7 @@ export class ProgramsService {
     const [got] = await this.db
       .select({ id: table.id, name: table.name, requirements: table.requirements })
       .from(table)
-      .where(eq(table.id, query.program_id))
+      .where(eq(table.id, query.programId))
       .limit(1);
 
     if (!got) {
