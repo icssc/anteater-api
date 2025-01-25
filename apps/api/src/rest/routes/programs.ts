@@ -20,7 +20,8 @@ const majorRequirements = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/major",
-  description: "Retrieve course requirements for a major in UCI's current catalog.",
+  description:
+    "Retrieve course requirements for a major in UCI's current catalog. Excludes requirement(s) from a specialization, if one is required.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: {
