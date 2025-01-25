@@ -20,6 +20,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
     requirementType: String!
+    requirementCount: Int!
     # circular
     requirements: [JSON!]!
 }
