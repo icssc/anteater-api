@@ -119,7 +119,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this program; check your ID?",
+          message: "Couldn't find this major; check your ID?",
         },
         404,
       );
@@ -133,7 +133,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this program; check your ID?",
+          message: "Couldn't find this minor; check your ID?",
         },
         404,
       );
@@ -147,7 +147,7 @@ programsRouter.openapi(specializationRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this program; check your ID?",
+          message: "Couldn't find this specialization; check your ID?",
         },
         404,
       );
