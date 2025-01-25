@@ -22,7 +22,7 @@ type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(max
     requirementType: String!
     requirementCount: Int!
     # circular
-    requirements: [JSON!]!
+    requirements: JSON!
 }
 
 union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | ProgramGroupRequirement
