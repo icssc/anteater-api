@@ -30,7 +30,7 @@ union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | P
 type Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    requirements: [ProgramRequirement]
+    requirements: [ProgramRequirement]!
 }
 
 input ProgramRequirementsQuery {
