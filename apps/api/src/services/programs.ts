@@ -97,6 +97,6 @@ export class ProgramsService {
       return null;
     }
 
-    return { id: got.id, name: got.name, requirements: got.requirements };
+    return got;
   }
 }
