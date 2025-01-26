@@ -12,7 +12,7 @@ export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getMajors() {
-    const major_specialization = this.db.$with("major_specialization").as(
+    const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
           id: major.id,
@@ -25,16 +25,16 @@ export class ProgramsService {
     );
 
     return this.db
-      .with(major_specialization)
+      .with(majorSpecialization)
       .select({
-        id: major_specialization.id,
-        name: major_specialization.name,
-        specializations: major_specialization.specializations,
+        id: majorSpecialization.id,
+        name: majorSpecialization.name,
+        specializations: majorSpecialization.specializations,
         type: degree.name,
         division: degree.division,
       })
-      .from(major_specialization)
-      .innerJoin(major, eq(major_specialization.id, major.id))
+      .from(majorSpecialization)
+      .innerJoin(major, eq(majorSpecialization.id, major.id))
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
 
