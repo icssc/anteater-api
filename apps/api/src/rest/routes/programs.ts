@@ -24,7 +24,7 @@ programsRouter.openAPIRegistry.register("programRequirement", programRequirement
 
 const majorsRoute = createRoute({
   summary: "Retrieve majors",
-  operationId: "majorsRoute",
+  operationId: "getMajors",
   tags: ["Programs"],
   method: "get",
   path: "/majors",
@@ -45,7 +45,7 @@ const majorsRoute = createRoute({
 
 const minorsRoute = createRoute({
   summary: "Retrieve minors",
-  operationId: "minorsRoute",
+  operationId: "getMinors",
   tags: ["Programs"],
   method: "get",
   path: "/minors",
@@ -66,7 +66,7 @@ const minorsRoute = createRoute({
 
 const specializationsRoute = createRoute({
   summary: "Retrieve specializations",
-  operationId: "specializationsRoute",
+  operationId: "getSpecializations",
   tags: ["Programs"],
   method: "get",
   path: "/specializations",
