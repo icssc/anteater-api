@@ -4,8 +4,8 @@ import type {
   specializationRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { eq } from "@packages/db/drizzle";
-import { major, minor, specialization } from "@packages/db/schema";
+import { eq, sql } from "@packages/db/drizzle";
+import { degree, major, minor, specialization } from "@packages/db/schema";
 import type { z } from "zod";
 
 type SelectFields =
@@ -24,6 +24,33 @@ type SelectFields =
 
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
+
+  async getMajors() {
+    const major_specialization = this.db.$with("major_specialization").as(
+      this.db
+        .select({
+          id: major.id,
+          name: major.name,
+          specializations: sql`array_agg(${specialization.id})`.as("specializations"),
+        })
+        .from(major)
+        .innerJoin(specialization, eq(major.id, specialization.majorId))
+        .groupBy(major.id),
+    );
+
+    return this.db
+      .with(major_specialization)
+      .select({
+        id: major_specialization.id,
+        name: major_specialization.name,
+        specializations: major_specialization.specializations,
+        type: degree.name,
+        division: degree.division,
+      })
+      .from(major_specialization)
+      .innerJoin(major, eq(major_specialization.id, major.id))
+      .innerJoin(degree, eq(major.degreeId, degree.id));
+  }
 
   // TODO: add query lines
   async getPrograms(programType: "major" | "minor" | "specialization" | "all") {

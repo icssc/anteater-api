@@ -162,27 +162,28 @@ export const programRequirementSchema = z.union([
   programGroupRequirementSchema,
 ]);
 
-// TODO: code clean up
-// TODO: add query requriements
-export const majorsResponseSchema = z.object({
-  id: z.string().openapi({
-    description: "Major ID",
-    example: "BA-014",
+// TODO: docs and examples
+export const majorsResponseSchema = z.array(
+  z.object({
+    id: z.string().openapi({
+      description: "Major ID",
+      example: "BA-014",
+    }),
+    name: z.string().openapi({
+      description: "The full name of the major",
+      example: "Computer Science",
+    }),
+    type: z.string().openapi({
+      description: "TODO",
+    }),
+    division: z.literal("Undergraduate").or(z.literal("Graduate")).openapi({
+      description: "TODO",
+    }),
+    specializations: z.array(z.string()).openapi({
+      description: "TODO",
+    }),
   }),
-  degreeId: z.string().openapi({
-    description: "Type of degree",
-    example: "BA",
-  }),
-  code: z.string().openapi({
-    description: "Major code",
-    example: "014",
-  }),
-  name: z.string().openapi({
-    description: "The full name of the major",
-    example: "Computer Science",
-  }),
-  // TODO: add specializations per major
-});
+);
 
 export const minorsResponseSchema = z.object({
   id: z.string().openapi({

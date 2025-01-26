@@ -186,8 +186,8 @@ programsRouter.get(
 // TODO: use terniary operator for handling queries
 programsRouter.openapi(majorsRoute, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getPrograms("major");
-  return c.json({ ok: true, data: res }, 200);
+  const res = await service.getMajors();
+  return c.json({ ok: true, data: majorsResponseSchema.parse(res) }, 200);
 });
 
 programsRouter.openapi(minorsRoute, async (c) => {
