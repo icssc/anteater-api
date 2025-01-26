@@ -185,16 +185,18 @@ export const majorsResponseSchema = z.array(
   }),
 );
 
-export const minorsResponseSchema = z.object({
-  id: z.string().openapi({
-    description: "Minor ID",
-    example: "013",
+export const minorsResponseSchema = z.array(
+  z.object({
+    id: z.string().openapi({
+      description: "Minor ID",
+      example: "25F",
+    }),
+    name: z.string().openapi({
+      description: "Name of the minor",
+      example: "Minor in Bioinformatics",
+    }),
   }),
-  name: z.string().openapi({
-    description: "Name of the minor",
-    example: "Computer Science",
-  }),
-});
+);
 
 export const specializationsResponseSchema = z.object({
   id: z.string().openapi({

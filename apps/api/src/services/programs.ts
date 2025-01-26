@@ -52,6 +52,15 @@ export class ProgramsService {
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
 
+  async getMinors() {
+    return this.db
+      .select({
+        id: minor.id,
+        name: minor.name,
+      })
+      .from(minor);
+  }
+
   // TODO: add query lines
   async getPrograms(programType: "major" | "minor" | "specialization" | "all") {
     let table: typeof major | typeof minor | typeof specialization;
