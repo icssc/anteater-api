@@ -162,25 +162,37 @@ export const programRequirementSchema = z.union([
   programGroupRequirementSchema,
 ]);
 
-// TODO: docs and examples
 export const majorsResponseSchema = z.array(
   z.object({
     id: z.string().openapi({
-      description: "Major ID",
+      description: "ID of this major",
       example: "BA-014",
     }),
     name: z.string().openapi({
-      description: "The full name of the major",
+      description: "The human name of this major",
       example: "Computer Science",
     }),
     type: z.string().openapi({
-      description: "TODO",
+      description: "The type of degree granted by this major",
+      examples: ["B.S.", "M.Engr.", "Pharm.D."],
     }),
     division: z.literal("Undergraduate").or(z.literal("Graduate")).openapi({
-      description: "TODO",
+      description: "The division in which this major is offered",
     }),
     specializations: z.array(z.string()).openapi({
-      description: "TODO",
+      description:
+        "The ID(s) of specialization(s) associated with this major; if any are present, one is mandatory for this major.",
+      example: [
+        "BS-201A",
+        "BS-201B",
+        "BS-201C",
+        "BS-201D",
+        "BS-201E",
+        "BS-201F",
+        "BS-201G",
+        "BS-201H",
+        "BS-201I",
+      ],
     }),
   }),
 );
@@ -188,11 +200,11 @@ export const majorsResponseSchema = z.array(
 export const minorsResponseSchema = z.array(
   z.object({
     id: z.string().openapi({
-      description: "Minor ID",
+      description: "ID of this minor",
       example: "25F",
     }),
     name: z.string().openapi({
-      description: "Name of the minor",
+      description: "The human name of this minor",
       example: "Minor in Bioinformatics",
     }),
   }),
@@ -205,12 +217,12 @@ export const specializationsResponseSchema = z.array(
       example: "BS-201B",
     }),
     majorId: z.string().openapi({
-      description: "Major ID this specialization is associated with",
+      description: "Major ID which this specialization is associated with",
       example: "BS-201",
     }),
     name: z.string().openapi({
-      description: "Name of this specialization",
-      example: "Algorithms",
+      description: "The human name of this specialization",
+      example: "CS:Specialization in Algorithms",
     }),
   }),
 );
