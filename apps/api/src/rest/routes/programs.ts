@@ -4,12 +4,15 @@ import {
   errorSchema,
   majorRequirementsQuerySchema,
   majorRequirementsResponseSchema,
+  majorsResponseSchema,
   minorRequirementsQuerySchema,
   minorRequirementsResponseSchema,
+  minorsResponseSchema,
   programRequirementSchema,
   responseSchema,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
+  specializationsResponseSchema,
 } from "$schema";
 import { ProgramsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -18,6 +21,69 @@ import { database } from "@packages/db";
 const programsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 programsRouter.openAPIRegistry.register("programRequirement", programRequirementSchema);
+
+const majorsRoute = createRoute({
+  summary: "Retrieve majors",
+  operationId: "majorsRoute",
+  tags: ["Programs"],
+  method: "get",
+  path: "/majors",
+  description: "List all available majors in UCI's current catalog.",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(majorsResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+const minorsRoute = createRoute({
+  summary: "Retrieve minors",
+  operationId: "minorsRoute",
+  tags: ["Programs"],
+  method: "get",
+  path: "/minors",
+  description: "List all available majors in UCI's current catalog.",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(minorsResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+const specializationsRoute = createRoute({
+  summary: "Retrieve specializations",
+  operationId: "specializationsRoute",
+  tags: ["Programs"],
+  method: "get",
+  path: "/specializations",
+  description: "List all available majors in UCI's current catalog.",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(specializationsResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
 
 const majorRequirements = createRoute({
   summary: "Retrieve major requirements",
@@ -115,6 +181,26 @@ programsRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
+
+// TODO: add queries for each route
+// TODO: use terniary operator for handling queries
+programsRouter.openapi(majorsRoute, async (c) => {
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getPrograms("major");
+  return c.json({ ok: true, data: res }, 200);
+});
+
+programsRouter.openapi(minorsRoute, async (c) => {
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getPrograms("minor");
+  return c.json({ ok: true, data: res }, 200);
+});
+
+programsRouter.openapi(specializationsRoute, async (c) => {
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getPrograms("specialization");
+  return c.json({ ok: true, data: res }, 200);
+});
 
 programsRouter.openapi(majorRequirements, async (c) => {
   const query = c.req.valid("query");
