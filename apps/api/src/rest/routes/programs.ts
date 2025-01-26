@@ -205,7 +205,7 @@ programsRouter.openapi(specializationsRoute, async (c) => {
 programsRouter.openapi(majorRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getProgramRequirements("major", query);
+  const res = await service.getMajorRequirements(query);
   return res
     ? c.json({ ok: true, data: majorRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
@@ -220,7 +220,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
 programsRouter.openapi(minorRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getProgramRequirements("minor", query);
+  const res = await service.getMinorRequirements(query);
   return res
     ? c.json({ ok: true, data: minorRequirementsResponseSchema.parse(res) }, 200)
     : c.json(
@@ -235,7 +235,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
 programsRouter.openapi(specializationRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getProgramRequirements("specialization", query);
+  const res = await service.getSpecializationRequirements(query);
   return res
     ? c.json({ ok: true, data: specializationRequirementsResponseSchema.parse(res) }, 200)
     : c.json(

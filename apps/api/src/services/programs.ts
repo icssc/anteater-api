@@ -57,7 +57,21 @@ export class ProgramsService {
       .from(specialization);
   }
 
-  async getProgramRequirements(
+  async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
+    return await this.getProgramRequirements("major", query);
+  }
+
+  async getMinorRequirements(query: z.infer<typeof minorRequirementsQuerySchema>) {
+    return await this.getProgramRequirements("minor", query);
+  }
+
+  async getSpecializationRequirements(
+    query: z.infer<typeof specializationRequirementsQuerySchema>,
+  ) {
+    return await this.getProgramRequirements("specialization", query);
+  }
+
+  private async getProgramRequirements(
     programType: "major" | "minor" | "specialization",
     query:
       | z.infer<typeof majorRequirementsQuerySchema>

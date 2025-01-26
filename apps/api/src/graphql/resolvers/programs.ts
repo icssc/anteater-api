@@ -12,7 +12,7 @@ export const programResolvers = {
     major: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const parsedArgs = majorRequirementsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getProgramRequirements("major", parsedArgs);
+      const res = await service.getMajorRequirements(parsedArgs);
       if (!res)
         throw new GraphQLError(`Major ${parsedArgs.programId} not found`, {
           extensions: { code: "NOT_FOUND" },
@@ -22,7 +22,7 @@ export const programResolvers = {
     minor: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const parsedArgs = minorRequirementsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getProgramRequirements("minor", parsedArgs);
+      const res = await service.getMinorRequirements(parsedArgs);
       if (!res)
         throw new GraphQLError(`Minor ${parsedArgs.programId} not found`, {
           extensions: { code: "NOT_FOUND" },
@@ -32,7 +32,7 @@ export const programResolvers = {
     specialization: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const parsedArgs = specializationRequirementsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getProgramRequirements("specialization", parsedArgs);
+      const res = await service.getSpecializationRequirements(parsedArgs);
       if (!res)
         throw new GraphQLError(`Specialization ${parsedArgs.programId} not found`, {
           extensions: { code: "NOT_FOUND" },
