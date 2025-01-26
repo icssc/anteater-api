@@ -216,6 +216,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
         404,
       );
 });
+
 programsRouter.openapi(minorRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
@@ -230,6 +231,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
         404,
       );
 });
+
 programsRouter.openapi(specializationRequirements, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
