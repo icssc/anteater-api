@@ -198,8 +198,8 @@ programsRouter.openapi(minorsRoute, async (c) => {
 
 programsRouter.openapi(specializationsRoute, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getPrograms("specialization");
-  return c.json({ ok: true, data: res }, 200);
+  const res = await service.getSpecializations();
+  return c.json({ ok: true, data: specializationsResponseSchema.parse(res) }, 200);
 });
 
 programsRouter.openapi(majorRequirements, async (c) => {

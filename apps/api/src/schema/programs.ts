@@ -198,20 +198,22 @@ export const minorsResponseSchema = z.array(
   }),
 );
 
-export const specializationsResponseSchema = z.object({
-  id: z.string().openapi({
-    description: "Specialization ID",
-    example: "BA-163",
+export const specializationsResponseSchema = z.array(
+  z.object({
+    id: z.string().openapi({
+      description: "ID of this specialization",
+      example: "BS-201B",
+    }),
+    majorId: z.string().openapi({
+      description: "Major ID this specialization is associated with",
+      example: "BS-201",
+    }),
+    name: z.string().openapi({
+      description: "Name of this specialization",
+      example: "Algorithms",
+    }),
   }),
-  majorId: z.string().openapi({
-    description: "Major ID the specialization is associated with",
-    example: "BA-163",
-  }),
-  name: z.string().openapi({
-    description: "Name of the specialization",
-    example: "Algorithms",
-  }),
-});
+);
 
 export const programRequirementsResponseSchema = z.object({
   id: z.string().openapi({
