@@ -1,4 +1,4 @@
-export const studyRoomsSchema = `#graphql
+export const studyRoomsGraphQLSchema = `#graphql
   type Slot {
     studyRoomId: String!
     start: String!

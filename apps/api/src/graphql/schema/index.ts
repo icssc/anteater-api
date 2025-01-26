@@ -8,7 +8,7 @@ import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
 import { larcSchema } from "./larc";
 import { searchSchema } from "./search";
-import { studyRoomsSchema } from "./study-rooms";
+import { studyRoomsGraphQLSchema } from "./study-rooms";
 import { websocSchema } from "./websoc";
 import { weekSchema } from "./week";
 
@@ -43,5 +43,5 @@ export const typeDefs = mergeTypeDefs([
   searchSchema,
   websocSchema,
   weekSchema,
-  studyRoomsSchema,
+  studyRoomsGraphQLSchema,
 ]);
