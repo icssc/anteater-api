@@ -41,7 +41,8 @@ export const programResolvers = {
     },
   },
   ProgramRequirement: {
-    __resolveType: (x: Record<string, unknown>) => {
+    // x outside this typehint is malformed data; meh
+    __resolveType: (x: { requirementType: "Course" | "Unit" | "Group" }) => {
       switch (x?.requirementType) {
         case "Course":
           return "ProgramCourseRequirement";
@@ -49,9 +50,6 @@ export const programResolvers = {
           return "ProgramUnitRequirement";
         case "Group":
           return "ProgramGroupRequirement";
-        default:
-          // you deserve what's coming for you
-          return "<unknown requirement type>";
       }
     },
   },
