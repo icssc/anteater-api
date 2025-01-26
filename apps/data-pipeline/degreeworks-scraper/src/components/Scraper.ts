@@ -161,7 +161,6 @@ export class Scraper {
       Cookie: `X-AUTH-TOKEN=${authCookie}`,
       Origin: "https://reg.uci.edu",
     };
-    console.log(headers);
     const scraper = new Scraper();
     scraper.ap = new AuditParser(db);
     scraper.dw = await DegreeworksClient.new(studentId, headers);
