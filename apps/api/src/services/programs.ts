@@ -58,13 +58,13 @@ export class ProgramsService {
   }
 
   async getProgramRequirements(
-    program_type: "major" | "minor" | "specialization",
+    programType: "major" | "minor" | "specialization",
     query:
       | z.infer<typeof majorRequirementsQuerySchema>
       | z.infer<typeof minorRequirementsQuerySchema>
       | z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
-    switch (program_type) {
+    switch (programType) {
       case "major":
         return await this.getProgramRequirementsInner(major, query);
       case "minor":
