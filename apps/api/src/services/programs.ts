@@ -58,43 +58,35 @@ export class ProgramsService {
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
-    return await this.getProgramRequirements("major", query);
+    return await this.getProgramRequirements({ programType: "major", query });
   }
 
   async getMinorRequirements(query: z.infer<typeof minorRequirementsQuerySchema>) {
-    return await this.getProgramRequirements("minor", query);
+    return await this.getProgramRequirements({ programType: "minor", query });
   }
 
   async getSpecializationRequirements(
     query: z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
-    return await this.getProgramRequirements("specialization", query);
+    return await this.getProgramRequirements({ programType: "specialization", query });
   }
 
-  private async getProgramRequirements(
-    programType: "major" | "minor" | "specialization",
-    query:
-      | z.infer<typeof majorRequirementsQuerySchema>
-      | z.infer<typeof minorRequirementsQuerySchema>
-      | z.infer<typeof specializationRequirementsQuerySchema>,
-  ) {
-    switch (programType) {
-      case "major":
-        return await this.getProgramRequirementsInner(major, query);
-      case "minor":
-        return await this.getProgramRequirementsInner(minor, query);
-      case "specialization":
-        return await this.getProgramRequirementsInner(specialization, query);
-    }
-  }
+  private async getProgramRequirements({
+    programType,
+    query,
+  }:
+    | { programType: "major"; query: z.infer<typeof majorRequirementsQuerySchema> }
+    | { programType: "minor"; query: z.infer<typeof minorRequirementsQuerySchema> }
+    | {
+        programType: "specialization";
+        query: z.infer<typeof specializationRequirementsQuerySchema>;
+      }) {
+    const table = {
+      major,
+      minor,
+      specialization,
+    }[programType];
 
-  private async getProgramRequirementsInner(
-    table: typeof major | typeof minor | typeof specialization,
-    query:
-      | z.infer<typeof majorRequirementsQuerySchema>
-      | z.infer<typeof minorRequirementsQuerySchema>
-      | z.infer<typeof specializationRequirementsQuerySchema>,
-  ) {
     const [got] = await this.db
       .select({ id: table.id, name: table.name, requirements: table.requirements })
       .from(table)
