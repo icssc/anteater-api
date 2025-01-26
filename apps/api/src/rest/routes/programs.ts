@@ -28,7 +28,7 @@ const majorsRoute = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/majors",
-  description: "List all available majors in UCI's current catalog.",
+  description: "List all available majors in UCI's current catalogue.",
   responses: {
     200: {
       content: {
@@ -49,7 +49,7 @@ const minorsRoute = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/minors",
-  description: "List all available majors in UCI's current catalog.",
+  description: "List all available majors in UCI's current catalogue.",
   responses: {
     200: {
       content: {
@@ -70,7 +70,7 @@ const specializationsRoute = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/specializations",
-  description: "List all available majors in UCI's current catalog.",
+  description: "List all available majors in UCI's current catalogue.",
   responses: {
     200: {
       content: {
@@ -92,7 +92,7 @@ const majorRequirements = createRoute({
   method: "get",
   path: "/major",
   description:
-    "Retrieve course requirements for a major in UCI's current catalog. Note that these are the requirements for the major itself; " +
+    "Retrieve course requirements for a major in UCI's current catalogue. Note that these are the requirements for the major itself; " +
     "if this major has specializations, then one is mandatory and its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
@@ -123,7 +123,7 @@ const minorRequirements = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/minor",
-  description: "Retrieve course requirements for a minor in UCI's current catalog.",
+  description: "Retrieve course requirements for a minor in UCI's current catalogue.",
   request: { query: minorRequirementsQuerySchema },
   responses: {
     200: {
@@ -153,7 +153,7 @@ const specializationRequirements = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/specialization",
-  description: "Retrieve course requirements for a specialization in UCI's current catalog.",
+  description: "Retrieve course requirements for a specialization in UCI's current catalogue.",
   request: { query: specializationRequirementsQuerySchema },
   responses: {
     200: {
