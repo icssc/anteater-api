@@ -1,4 +1,33 @@
 export const programsSchema = `#graphql
+enum ProgramDivision {
+    Undergraduate
+    Graduate
+}
+
+interface ProgramPreview {
+    id: String!
+    name: String!
+}
+
+type MajorPreview implements ProgramPreview @cacheControl(maxAge: 86400) {
+    id: String!
+    name: String!
+    type: String!
+    division: ProgramDivision!
+    specializations: [String!]!
+}
+
+type MinorPreview implements ProgramPreview @cacheControl(maxAge: 86400) {
+    id: String!
+    name: String!
+}
+
+type SpecializationPreview implements ProgramPreview @cacheControl(maxAge: 86400) {
+    id: String!
+    majorId: String!
+    name: String!
+}
+
 interface ProgramRequirementBase {
     label: String!
 }
@@ -38,11 +67,11 @@ input ProgramRequirementsQuery {
 }
 
 extend type Query {
+    listMajors: [MajorPreview!]!
+    listMinors: [MinorPreview!]!
+    listSpecializations: [SpecializationPreview!]!
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
-    listMajors: [Program!]!
-    listMinors: [Program!]!
-    listSpecializations: [Program!]!
 }
 `;
