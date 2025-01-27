@@ -2,41 +2,6 @@ import { z } from "@hono/zod-openapi";
 
 const programIdBase = z.string({ required_error: "programId is required" });
 
-// TODO: clean up
-export const majorsQuerySchema = z.object({
-  degreeID: z.string().optional().openapi({
-    description: "A major ID for program type",
-    example: "BA",
-  }),
-  name: z.string().optional().openapi({
-    description: "Name of the minor",
-  }),
-});
-
-export const minorsQuerySchema = z.object({
-  Id: z.string().optional().openapi({
-    description: "A minor ID for program type",
-    example: "042",
-  }),
-  name: z.string().optional().openapi({
-    description: "Name of the minor",
-  }),
-});
-
-export const specializationsQuerySchema = z.object({
-  Id: z.string().optional().openapi({
-    description: "A specialization ID for program type",
-    example: "042",
-  }),
-  majorID: z.string().optional().openapi({
-    description: "A major ID for the specialziation",
-    example: "BS-201",
-  }),
-  name: z.string().optional().openapi({
-    description: "Name of the specialization",
-  }),
-});
-
 export const majorRequirementsQuerySchema = z.object({
   programId: programIdBase.openapi({
     description: "A major ID to query requirements for",
