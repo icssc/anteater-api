@@ -182,8 +182,6 @@ programsRouter.get(
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
-// TODO: add queries for each route
-// TODO: use terniary operator for handling queries
 programsRouter.openapi(majorsRoute, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getMajors();
