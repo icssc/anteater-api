@@ -41,5 +41,8 @@ extend type Query {
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
+    listMajors: [Program!]!
+    listMinors: [Program!]!
+    listSpecializations: [Program!]!
 }
 `;

@@ -39,6 +39,33 @@ export const programResolvers = {
         });
       return res;
     },
+    listMajors: async (_: unknown, { db }: GraphQLContext) => {
+      const service = new ProgramsService(db);
+      const res = await service.getMajors();
+      if (!res)
+        throw new GraphQLError("Major data not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
+    listMinors: async (_: unknown, { db }: GraphQLContext) => {
+      const service = new ProgramsService(db);
+      const res = await service.getMinors();
+      if (!res)
+        throw new GraphQLError("Minor data not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
+    listSpecializations: async (_: unknown, { db }: GraphQLContext) => {
+      const service = new ProgramsService(db);
+      const res = await service.getSpecializations();
+      if (!res)
+        throw new GraphQLError("Specializations data not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
   },
   ProgramRequirement: {
     // x outside this typehint is malformed data; meh
