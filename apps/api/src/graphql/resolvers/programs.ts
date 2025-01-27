@@ -39,7 +39,7 @@ export const programResolvers = {
         });
       return res;
     },
-    listMajors: async (_: unknown, { db }: GraphQLContext) => {
+    listMajors: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
       const service = new ProgramsService(db);
       const res = await service.getMajors();
       if (!res)
@@ -48,7 +48,7 @@ export const programResolvers = {
         });
       return res;
     },
-    listMinors: async (_: unknown, { db }: GraphQLContext) => {
+    listMinors: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
       const service = new ProgramsService(db);
       const res = await service.getMinors();
       if (!res)
@@ -57,7 +57,7 @@ export const programResolvers = {
         });
       return res;
     },
-    listSpecializations: async (_: unknown, { db }: GraphQLContext) => {
+    listSpecializations: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
       const service = new ProgramsService(db);
       const res = await service.getSpecializations();
       if (!res)
