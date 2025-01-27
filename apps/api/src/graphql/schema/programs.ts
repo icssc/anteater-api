@@ -67,9 +67,9 @@ input ProgramRequirementsQuery {
 }
 
 extend type Query {
-    listMajors: [MajorPreview!]!
-    listMinors: [MinorPreview!]!
-    listSpecializations: [SpecializationPreview!]!
+    majors: [MajorPreview!]!
+    minors: [MinorPreview!]!
+    specializations: [SpecializationPreview!]!
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
