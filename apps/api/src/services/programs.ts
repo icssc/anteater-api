@@ -1,6 +1,9 @@
 import type {
+  majorQuerySchema,
   majorRequirementsQuerySchema,
+  minorQuerySchema,
   minorRequirementsQuerySchema,
+  specializationQuerySchema,
   specializationRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
@@ -11,7 +14,23 @@ import type { z } from "zod";
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getMajors() {
+  async getMajors(query: z.infer<typeof majorQuerySchema>) {
+    if (query.majorId) {
+      return this.db
+        .select({
+          id: major.id,
+          name: major.name,
+          specializations: sql`array_agg(${specialization.id})`.as("specializations"),
+          type: degree.name,
+          division: degree.division,
+        })
+        .from(major)
+        .innerJoin(specialization, eq(major.id, specialization.majorId))
+        .innerJoin(degree, eq(major.degreeId, degree.id))
+        .where(eq(major.id, query.majorId))
+        .groupBy(major.id, degree.name, degree.division);
+    }
+
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
@@ -38,7 +57,16 @@ export class ProgramsService {
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
 
-  async getMinors() {
+  async getMinors(query: z.infer<typeof minorQuerySchema>) {
+    if (query.id) {
+      return this.db
+        .select({
+          id: minor.id,
+          name: minor.name,
+        })
+        .from(minor)
+        .where(eq(minor.id, query.id));
+    }
     return this.db
       .select({
         id: minor.id,
@@ -47,7 +75,17 @@ export class ProgramsService {
       .from(minor);
   }
 
-  async getSpecializations() {
+  async getSpecializations(query: z.infer<typeof specializationQuerySchema>) {
+    if (query.majorId) {
+      return this.db
+        .select({
+          id: specialization.id,
+          majorId: specialization.majorId,
+          name: specialization.name,
+        })
+        .from(specialization)
+        .where(eq(specialization.majorId, query.majorId));
+    }
     return this.db
       .select({
         id: specialization.id,
