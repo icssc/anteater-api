@@ -24,6 +24,17 @@ export const instructorsQuerySchema = z.object({
   skip: z.coerce.number().default(0),
 });
 
+export const instructorsByCursorQuerySchema = z.object({
+  nameContains: z.string().optional(),
+  titleContains: z.string().optional(),
+  departmentContains: z.string().optional(),
+  cursor: z.string().optional(),
+  take: z.coerce
+    .number()
+    .default(100)
+    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+});
+
 export const instructorPreviewSchema = z.object({
   ucinetid: z.string().openapi({ example: "mikes" }),
   name: z.string().openapi({ example: "Michael Shindler" }),
