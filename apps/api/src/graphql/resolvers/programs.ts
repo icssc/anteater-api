@@ -1,11 +1,11 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
-  majorQuerySchema,
   majorRequirementsQuerySchema,
-  minorQuerySchema,
+  majorsQuerySchema,
   minorRequirementsQuerySchema,
-  specializationQuerySchema,
+  minorsQuerySchema,
   specializationRequirementsQuerySchema,
+  specializationsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
 import { GraphQLError } from "graphql/error";
@@ -43,7 +43,7 @@ export const programResolvers = {
       return res;
     },
     majors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = majorQuerySchema.parse(args?.query);
+      const parsedArgs = majorsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
       const res = await service.getMajors(parsedArgs);
       if (!res)
@@ -53,7 +53,7 @@ export const programResolvers = {
       return res;
     },
     minors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = minorQuerySchema.parse(args?.query);
+      const parsedArgs = minorsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
       const res = await service.getMinors(parsedArgs);
       if (!res)
@@ -63,7 +63,7 @@ export const programResolvers = {
       return res;
     },
     specializations: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = specializationQuerySchema.parse(args?.query);
+      const parsedArgs = specializationsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
       const res = await service.getSpecializations(parsedArgs);
       if (!res)

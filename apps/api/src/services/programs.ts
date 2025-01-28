@@ -1,10 +1,10 @@
 import type {
-  majorQuerySchema,
   majorRequirementsQuerySchema,
-  minorQuerySchema,
+  majorsQuerySchema,
   minorRequirementsQuerySchema,
-  specializationQuerySchema,
+  minorsQuerySchema,
   specializationRequirementsQuerySchema,
+  specializationsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
@@ -14,7 +14,7 @@ import type { z } from "zod";
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getMajors(query: z.infer<typeof majorQuerySchema>) {
+  async getMajors(query: z.infer<typeof majorsQuerySchema>) {
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
@@ -42,7 +42,7 @@ export class ProgramsService {
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
 
-  async getMinors(query: z.infer<typeof minorQuerySchema>) {
+  async getMinors(query: z.infer<typeof minorsQuerySchema>) {
     return this.db
       .select({
         id: minor.id,
@@ -52,7 +52,7 @@ export class ProgramsService {
       .where(query.id ? eq(minor.id, query.id) : sql`true`);
   }
 
-  async getSpecializations(query: z.infer<typeof specializationQuerySchema>) {
+  async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
       .select({
         id: specialization.id,

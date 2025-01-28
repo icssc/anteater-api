@@ -2,19 +2,19 @@ import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
   errorSchema,
-  majorQuerySchema,
   majorRequirementsQuerySchema,
   majorRequirementsResponseSchema,
+  majorsQuerySchema,
   majorsResponseSchema,
-  minorQuerySchema,
   minorRequirementsQuerySchema,
   minorRequirementsResponseSchema,
+  minorsQuerySchema,
   minorsResponseSchema,
   programRequirementSchema,
   responseSchema,
-  specializationQuerySchema,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
+  specializationsQuerySchema,
   specializationsResponseSchema,
 } from "$schema";
 import { ProgramsService } from "$services";
@@ -32,7 +32,7 @@ const majorsRoute = createRoute({
   method: "get",
   path: "/majors",
   description: "List all available majors in UCI's current catalogue.",
-  request: { query: majorQuerySchema },
+  request: { query: majorsQuerySchema },
   responses: {
     200: {
       content: {
@@ -54,7 +54,7 @@ const minorsRoute = createRoute({
   method: "get",
   path: "/minors",
   description: "List all available majors in UCI's current catalogue.",
-  request: { query: minorQuerySchema },
+  request: { query: minorsQuerySchema },
   responses: {
     200: {
       content: {
@@ -76,7 +76,7 @@ const specializationsRoute = createRoute({
   method: "get",
   path: "/specializations",
   description: "List all available majors in UCI's current catalogue.",
-  request: { query: specializationQuerySchema },
+  request: { query: specializationsQuerySchema },
   responses: {
     200: {
       content: {
