@@ -4,15 +4,19 @@ import {
   batchInstructorsQuerySchema,
   errorSchema,
   instructorSchema,
+  instructorsByCursorQuerySchema,
   instructorsPathSchema,
   instructorsQuerySchema,
   responseSchema,
 } from "$schema";
 import { InstructorsService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const instructorsRouter = new OpenAPIHono<{ Bindings: Env }>({
+  defaultHook,
+});
+const instructorsCursorRouter = new OpenAPIHono<{ Bindings: Env }>({
   defaultHook,
 });
 
@@ -102,6 +106,39 @@ const instructorsByFiltersRoute = createRoute({
   },
 });
 
+const instructorsByCursorRoute = createRoute({
+  summary: "Filter instructors by cursor",
+  operationId: "instructorsByCursor",
+  tags: ["Instructors"],
+  method: "get",
+  path: "/",
+  request: { query: instructorsByCursorQuerySchema },
+  description: "Retrieves instructors matching the given filters and cursor.",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: responseSchema(
+            z.object({
+              items: instructorSchema.array(),
+              nextCursor: z.string().nullable(),
+            }),
+          ),
+        },
+      },
+      description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
 instructorsRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
@@ -140,4 +177,21 @@ instructorsRouter.openapi(instructorsByFiltersRoute, async (c) => {
   );
 });
 
-export { instructorsRouter };
+instructorsCursorRouter.openapi(instructorsByCursorRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new InstructorsService(database(c.env.DB.connectionString));
+
+  const { items, nextCursor } = await service.getInstructorsByCursor(query);
+  return c.json(
+    {
+      ok: true,
+      data: {
+        items: instructorSchema.array().parse(items),
+        nextCursor: nextCursor,
+      },
+    },
+    200,
+  );
+});
+
+export { instructorsRouter, instructorsCursorRouter };
