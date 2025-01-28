@@ -1,7 +1,10 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
+  majorQuerySchema,
   majorRequirementsQuerySchema,
+  minorQuerySchema,
   minorRequirementsQuerySchema,
+  specializationQuerySchema,
   specializationRequirementsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
@@ -39,27 +42,30 @@ export const programResolvers = {
         });
       return res;
     },
-    majors: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
+    majors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = majorQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getMajors();
+      const res = await service.getMajors(parsedArgs);
       if (!res)
         throw new GraphQLError("Major data not found", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
     },
-    minors: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
+    minors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = minorQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getMinors();
+      const res = await service.getMinors(parsedArgs);
       if (!res)
         throw new GraphQLError("Minor data not found", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
     },
-    specializations: async (_: unknown, args: unknown, { db }: GraphQLContext) => {
+    specializations: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = specializationQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
-      const res = await service.getSpecializations();
+      const res = await service.getSpecializations(parsedArgs);
       if (!res)
         throw new GraphQLError("Specializations data not found", {
           extensions: { code: "NOT_FOUND" },
