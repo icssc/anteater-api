@@ -173,9 +173,7 @@ coursesRouter.openapi(coursesByFiltersRoute, async (c) => {
 });
 
 coursesCursorRouter.openapi(coursesByCursorRoute, async (c) => {
-  console.log("Route matched, validating query...");
   const query = c.req.valid("query");
-  console.log("Validated query:", query);
   const service = new CoursesService(database(c.env.DB.connectionString));
 
   const { items, nextCursor } = await service.getCoursesByCursor(query);
