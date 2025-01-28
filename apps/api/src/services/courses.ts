@@ -9,7 +9,7 @@ import type {
 import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, gt, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
+import { and, eq, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
 import type { CourseLevel, course } from "@packages/db/schema";
 import { courseView } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
@@ -153,11 +153,10 @@ export class CoursesService {
     limit?: number;
   }): Promise<CoursesServiceOutput[]> {
     const { where, offset, cursor, limit } = input;
-    console.log("Cursor passed to getCoursesRaw:", input.cursor);
     return this.db
       .select()
       .from(courseView)
-      .where(cursor ? and(where, gt(courseView.id, String(cursor))) : where)
+      .where(cursor ? and(where, gte(courseView.id, cursor)) : where)
       .limit(limit ?? 1)
       .offset(offset ?? 0)
       .then((courses) => courses.map(transformCourse));
@@ -185,19 +184,15 @@ export class CoursesService {
     const courses = await this.getCoursesRaw({
       where: buildQuery(input),
       cursor: input.cursor,
-      limit: input.take,
+      limit: input.take + 1,
       offset: 0,
     });
 
-    console.log(
-      "Courses IDs:",
-      courses.map((course) => course.id),
-    );
-
-    const nextCursor = courses.length > 0 ? courses[courses.length - 1].id : null;
+    const items = courses.slice(0, input.take);
+    const nextCursor = courses.length > input.take ? courses[input.take].id : null;
 
     return {
-      items: courses,
+      items,
       nextCursor,
     };
   }
