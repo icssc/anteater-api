@@ -1,7 +1,11 @@
-import type { instructorSchema, instructorsQuerySchema } from "$schema";
+import type {
+  instructorSchema,
+  instructorsByCursorQuerySchema,
+  instructorsQuerySchema,
+} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, ilike, inArray } from "@packages/db/drizzle";
+import { and, eq, gte, ilike, inArray } from "@packages/db/drizzle";
 import { instructorView } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
@@ -10,7 +14,9 @@ type InstructorsServiceInput = z.infer<typeof instructorsQuerySchema>;
 
 type InstructorsServiceOutput = z.infer<typeof instructorSchema>;
 
-function buildQuery(input: InstructorsServiceInput) {
+type InstructorsByCursorServiceInput = z.infer<typeof instructorsByCursorQuerySchema>;
+
+function buildQuery(input: InstructorsServiceInput | InstructorsByCursorServiceInput) {
   const conditions = [];
   if (input.nameContains) {
     conditions.push(ilike(instructorView.name, `%${input.nameContains}%`));
@@ -31,12 +37,13 @@ export class InstructorsService {
     where?: SQL;
     offset?: number;
     limit?: number;
+    cursor?: string;
   }) {
-    const { where, offset, limit } = input;
+    const { where, offset, limit, cursor } = input;
     return (await this.db
       .select()
       .from(instructorView)
-      .where(where)
+      .where(cursor ? and(where, gte(instructorView.ucinetid, cursor)) : where)
       .offset(offset ?? 0)
       .limit(limit ?? 1)) as InstructorsServiceOutput[];
   }
@@ -60,5 +67,24 @@ export class InstructorsService {
       offset: input.skip,
       limit: input.take,
     });
+  }
+
+  async getInstructorsByCursor(
+    input: InstructorsByCursorServiceInput,
+  ): Promise<{ items: InstructorsServiceOutput[]; nextCursor: string | null }> {
+    const instructors = await this.getInstructorsRaw({
+      where: buildQuery(input),
+      cursor: input.cursor,
+      limit: input.take + 1,
+      offset: 0,
+    });
+
+    const items = instructors.slice(0, input.take);
+    const nextCursor = instructors.length > input.take ? instructors[input.take].ucinetid : null;
+
+    return {
+      items,
+      nextCursor,
+    };
   }
 }
