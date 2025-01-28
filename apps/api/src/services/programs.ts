@@ -1,7 +1,10 @@
 import type {
   majorRequirementsQuerySchema,
+  majorsQuerySchema,
   minorRequirementsQuerySchema,
+  minorsQuerySchema,
   specializationRequirementsQuerySchema,
+  specializationsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
@@ -11,16 +14,18 @@ import type { z } from "zod";
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getMajors() {
+  async getMajors(query: z.infer<typeof majorsQuerySchema>) {
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
           id: major.id,
           name: major.name,
-          specializations: sql`array_agg(${specialization.id})`.as("specializations"),
+          specializations: sql`array_remove(array_agg(${specialization.id}), NULL)`.as(
+            "specializations",
+          ),
         })
         .from(major)
-        .innerJoin(specialization, eq(major.id, specialization.majorId))
+        .leftJoin(specialization, eq(major.id, specialization.majorId))
         .groupBy(major.id),
     );
 
@@ -34,27 +39,30 @@ export class ProgramsService {
         division: degree.division,
       })
       .from(majorSpecialization)
+      .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
       .innerJoin(major, eq(majorSpecialization.id, major.id))
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
 
-  async getMinors() {
+  async getMinors(query: z.infer<typeof minorsQuerySchema>) {
     return this.db
       .select({
         id: minor.id,
         name: minor.name,
       })
-      .from(minor);
+      .from(minor)
+      .where(query.id ? eq(minor.id, query.id) : undefined);
   }
 
-  async getSpecializations() {
+  async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
       .select({
         id: specialization.id,
         majorId: specialization.majorId,
         name: specialization.name,
       })
-      .from(specialization);
+      .from(specialization)
+      .where(query.majorId ? eq(specialization.majorId, query.majorId) : undefined);
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {

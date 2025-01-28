@@ -66,10 +66,22 @@ input ProgramRequirementsQuery {
     programId: String!
 }
 
+input MajorsQuery {
+    id: String!
+}
+
+input MinorsQuery {
+    id: String!
+}
+
+input SpecializationsQuery {
+    majorId: String!
+}
+
 extend type Query {
-    majors: [MajorPreview!]!
-    minors: [MinorPreview!]!
-    specializations: [SpecializationPreview!]!
+    majors(query: MajorsQuery): [MajorPreview!]!
+    minors(query: MinorsQuery): [MinorPreview!]!
+    specializations(query: SpecializationsQuery): [SpecializationPreview!]!
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!

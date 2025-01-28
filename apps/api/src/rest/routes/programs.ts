@@ -4,14 +4,17 @@ import {
   errorSchema,
   majorRequirementsQuerySchema,
   majorRequirementsResponseSchema,
+  majorsQuerySchema,
   majorsResponseSchema,
   minorRequirementsQuerySchema,
   minorRequirementsResponseSchema,
+  minorsQuerySchema,
   minorsResponseSchema,
   programRequirementSchema,
   responseSchema,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
+  specializationsQuerySchema,
   specializationsResponseSchema,
 } from "$schema";
 import { ProgramsService } from "$services";
@@ -29,6 +32,7 @@ const majorsRoute = createRoute({
   method: "get",
   path: "/majors",
   description: "List all available majors in UCI's current catalogue.",
+  request: { query: majorsQuerySchema },
   responses: {
     200: {
       content: {
@@ -50,6 +54,7 @@ const minorsRoute = createRoute({
   method: "get",
   path: "/minors",
   description: "List all available majors in UCI's current catalogue.",
+  request: { query: minorsQuerySchema },
   responses: {
     200: {
       content: {
@@ -71,6 +76,7 @@ const specializationsRoute = createRoute({
   method: "get",
   path: "/specializations",
   description: "List all available majors in UCI's current catalogue.",
+  request: { query: specializationsQuerySchema },
   responses: {
     200: {
       content: {
@@ -183,20 +189,23 @@ programsRouter.get(
 );
 
 programsRouter.openapi(majorsRoute, async (c) => {
+  const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getMajors();
+  const res = await service.getMajors(query);
   return c.json({ ok: true, data: majorsResponseSchema.parse(res) }, 200);
 });
 
 programsRouter.openapi(minorsRoute, async (c) => {
+  const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getMinors();
+  const res = await service.getMinors(query);
   return c.json({ ok: true, data: minorsResponseSchema.parse(res) }, 200);
 });
 
 programsRouter.openapi(specializationsRoute, async (c) => {
+  const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
-  const res = await service.getSpecializations();
+  const res = await service.getSpecializations(query);
   return c.json({ ok: true, data: specializationsResponseSchema.parse(res) }, 200);
 });
 

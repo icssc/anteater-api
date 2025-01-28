@@ -2,6 +2,27 @@ import { z } from "@hono/zod-openapi";
 
 const programIdBase = z.string({ required_error: "programId is required" });
 
+export const majorsQuerySchema = z.object({
+  id: z.string().optional().openapi({
+    description: "The ID of a single major to request, if provided",
+    example: "BA-163",
+  }),
+});
+
+export const minorsQuerySchema = z.object({
+  id: z.string().optional().openapi({
+    description: "The ID of a single minor to request, if provided",
+    example: "49A",
+  }),
+});
+
+export const specializationsQuerySchema = z.object({
+  majorId: z.string().optional().openapi({
+    description: "Only fetch specializations associated with the major with this ID, if provided",
+    example: "BS-201",
+  }),
+});
+
 export const majorRequirementsQuerySchema = z.object({
   programId: programIdBase.openapi({
     description: "A major ID to query requirements for",
