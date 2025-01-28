@@ -89,7 +89,7 @@ export type DegreeWorksProgramId = {
 
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
-  requirements: Record<string, DegreeWorksRequirement>;
+  requirements: DegreeWorksRequirement[];
   /**
    * The set of specializations (if any) that this program has.
    * If this array is not empty, then exactly one specialization must be selected
@@ -113,13 +113,13 @@ export type DegreeWorksUnitRequirement = {
 export type DegreeWorksGroupRequirement = {
   requirementType: "Group";
   requirementCount: number;
-  requirements: Record<string, DegreeWorksRequirement>;
+  requirements: DegreeWorksRequirement[];
 };
 
-export type DegreeWorksRequirement =
-  | DegreeWorksCourseRequirement
-  | DegreeWorksUnitRequirement
-  | DegreeWorksGroupRequirement;
+export type DegreeWorksRequirementBase = { label: string };
+
+export type DegreeWorksRequirement = DegreeWorksRequirementBase &
+  (DegreeWorksCourseRequirement | DegreeWorksUnitRequirement | DegreeWorksGroupRequirement);
 
 // Misc. enums
 
@@ -598,7 +598,7 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
-    requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
+    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.degreeId)],
 );
@@ -606,7 +606,7 @@ export const major = pgTable(
 export const minor = pgTable("minor", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
-  requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
+  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
 export const specialization = pgTable(
@@ -617,7 +617,7 @@ export const specialization = pgTable(
       .references(() => major.id)
       .notNull(),
     name: varchar("name").notNull(),
-    requirements: json("requirements").$type<Record<string, DegreeWorksRequirement>>().notNull(),
+    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.majorId)],
 );

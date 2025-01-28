@@ -1,15 +1,12 @@
 import { z } from "@hono/zod-openapi";
+import { yearSchema } from "./lib";
 const shortMonths = [4, 6, 9, 11];
 
 const isLeap = (x: number) => x % 4 === 0 && (x % 100 === 0 ? x % 400 === 0 : true);
 
 export const weekQuerySchema = z
   .object({
-    year: z.coerce
-      .number()
-      .refine((x) => x.toString().length === 4, { message: "Parameter 'year' must have length 4" })
-      .openapi({ example: 2024 })
-      .optional(),
+    year: yearSchema.transform((x) => Number.parseInt(x, 10)).optional(),
     month: z.coerce
       .number()
       .refine((x) => 1 <= x && x <= 12, {

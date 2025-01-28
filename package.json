@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "description": "The official Anteater API monorepo",
-  "homepage": "https://docs.icssc.club/anteaterapi",
+  "homepage": "https://docs.icssc.club/docs/about/anteaterapi",
   "license": "MIT",
   "type": "module",
   "scripts": {
