@@ -20,10 +20,12 @@ export class ProgramsService {
         .select({
           id: major.id,
           name: major.name,
-          specializations: sql`array_agg(${specialization.id})`.as("specializations"),
+          specializations: sql`array_remove(array_agg(${specialization.id}), NULL)`.as(
+            "specializations",
+          ),
         })
         .from(major)
-        .innerJoin(specialization, eq(major.id, specialization.majorId))
+        .leftJoin(specialization, eq(major.id, specialization.majorId))
         .groupBy(major.id),
     );
 
