@@ -21,10 +21,6 @@ const coursesCursorRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
 coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
 
-// TODO: Need to add for coursesCursorRouter?
-// coursesCursorRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
-// coursesCursorRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
-
 const batchCoursesRoute = createRoute({
   summary: "Retrieve courses with IDs",
   operationId: "batchCourses",

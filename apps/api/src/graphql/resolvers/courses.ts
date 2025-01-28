@@ -1,5 +1,5 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
-import { coursesQuerySchema } from "$schema";
+import { coursesByCursorQuerySchema, coursesQuerySchema } from "$schema";
 import { CoursesService } from "$services";
 import { GraphQLError } from "graphql/error";
 
@@ -22,7 +22,13 @@ export const coursesResolvers = {
     },
     coursesByCursor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new CoursesService(db);
-      return await service.getCourses(coursesQuerySchema.parse(args.query));
+      const { items, nextCursor } = await service.getCoursesByCursor(
+        coursesByCursorQuerySchema.parse(args.query),
+      );
+      return {
+        items,
+        nextCursor,
+      };
     },
   },
 };
