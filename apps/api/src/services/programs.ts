@@ -15,22 +15,6 @@ export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getMajors(query: z.infer<typeof majorQuerySchema>) {
-    if (query.majorId) {
-      return this.db
-        .select({
-          id: major.id,
-          name: major.name,
-          specializations: sql`array_agg(${specialization.id})`.as("specializations"),
-          type: degree.name,
-          division: degree.division,
-        })
-        .from(major)
-        .innerJoin(specialization, eq(major.id, specialization.majorId))
-        .innerJoin(degree, eq(major.degreeId, degree.id))
-        .where(eq(major.id, query.majorId))
-        .groupBy(major.id, degree.name, degree.division);
-    }
-
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
@@ -43,7 +27,7 @@ export class ProgramsService {
         .groupBy(major.id),
     );
 
-    return this.db
+    const majorBuilder = this.db
       .with(majorSpecialization)
       .select({
         id: majorSpecialization.id,
@@ -55,44 +39,43 @@ export class ProgramsService {
       .from(majorSpecialization)
       .innerJoin(major, eq(majorSpecialization.id, major.id))
       .innerJoin(degree, eq(major.degreeId, degree.id));
+
+    if (query.majorId) {
+      majorBuilder.where(eq(major.id, query.majorId));
+    }
+
+    return majorBuilder;
   }
 
   async getMinors(query: z.infer<typeof minorQuerySchema>) {
-    if (query.id) {
-      return this.db
-        .select({
-          id: minor.id,
-          name: minor.name,
-        })
-        .from(minor)
-        .where(eq(minor.id, query.id));
-    }
-    return this.db
+    const minorBuilder = this.db
       .select({
         id: minor.id,
         name: minor.name,
       })
       .from(minor);
+
+    if (query.id) {
+      minorBuilder.where(eq(minor.id, query.id));
+    }
+
+    return minorBuilder;
   }
 
   async getSpecializations(query: z.infer<typeof specializationQuerySchema>) {
-    if (query.majorId) {
-      return this.db
-        .select({
-          id: specialization.id,
-          majorId: specialization.majorId,
-          name: specialization.name,
-        })
-        .from(specialization)
-        .where(eq(specialization.majorId, query.majorId));
-    }
-    return this.db
+    const specializationBuilder = this.db
       .select({
         id: specialization.id,
         majorId: specialization.majorId,
         name: specialization.name,
       })
       .from(specialization);
+
+    if (query.majorId) {
+      specializationBuilder.where(eq(specialization.majorId, query.majorId));
+    }
+
+    return specializationBuilder;
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
