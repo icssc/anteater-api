@@ -1,5 +1,5 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
-import { instructorsQuerySchema } from "$schema";
+import { instructorsByCursorQuerySchema, instructorsQuerySchema } from "$schema";
 import { InstructorsService } from "$services";
 import { GraphQLError } from "graphql/error";
 
@@ -25,6 +25,16 @@ export const instructorsResolvers = {
     ) => {
       const service = new InstructorsService(db);
       return await service.batchGetInstructors(ucinetids);
+    },
+    instructorsByCursor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const service = new InstructorsService(db);
+      const { items, nextCursor } = await service.getInstructorsByCursor(
+        instructorsByCursorQuerySchema.parse(args.query),
+      );
+      return {
+        items,
+        nextCursor,
+      };
     },
   },
 };

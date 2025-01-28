@@ -34,9 +34,23 @@ input InstructorsQuery {
     skip: Int
 }
 
+input InstructorsQuery {
+    nameContains: String
+    titleContains: String
+    departmentContains: String
+    cursor: String
+    take: Int
+}
+
+type InstructorsByCursor {
+    items: [Instructor!]!
+    nextCursor: String
+}
+
 extend type Query {
     instructor(ucinetid: String!): Instructor!
     instructors(query: InstructorsQuery!): [Instructor!]!
     batchInstructors(ucinetids: [String!]!): [Instructor!]!
+    instructorsByCursor(query: InstructorsByCursorQuery!): InstructorsByCursor!
 }
 `;
