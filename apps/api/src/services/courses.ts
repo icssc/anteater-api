@@ -189,7 +189,8 @@ export class CoursesService {
     });
 
     const items = courses.slice(0, input.take);
-    const nextCursor = courses.length > input.take ? courses[input.take].id : null;
+    const nextCursor =
+      input.take === 0 ? null : courses.length > input.take ? courses[input.take].id : null;
 
     return {
       items,

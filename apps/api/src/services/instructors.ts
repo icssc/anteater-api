@@ -80,7 +80,12 @@ export class InstructorsService {
     });
 
     const items = instructors.slice(0, input.take);
-    const nextCursor = instructors.length > input.take ? instructors[input.take].ucinetid : null;
+    const nextCursor =
+      input.take === 0
+        ? null
+        : instructors.length > input.take
+          ? instructors[input.take].ucinetid
+          : null;
 
     return {
       items,
