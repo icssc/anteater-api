@@ -20,7 +20,7 @@ type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 type CoursesServiceOutput = z.infer<typeof courseSchema>;
 
-type CoursesServiceInputByCursor = z.infer<typeof coursesByCursorQuerySchema>;
+type CoursesByCursorServiceInput = z.infer<typeof coursesByCursorQuerySchema>;
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
   courseLevel === "LowerDiv"
@@ -70,7 +70,7 @@ const transformCourse = ({
   geList: courseToGEList(course),
 });
 
-function buildQuery(input: CoursesServiceInput | CoursesServiceInputByCursor) {
+function buildQuery(input: CoursesServiceInput | CoursesByCursorServiceInput) {
   const conditions: Array<SQL | undefined> = [];
   if (input.department) {
     conditions.push(eq(courseView.department, input.department));
@@ -149,10 +149,10 @@ export class CoursesService {
   async getCoursesRaw(input: {
     where?: SQL;
     offset?: number;
-    cursor?: string;
     limit?: number;
+    cursor?: string;
   }): Promise<CoursesServiceOutput[]> {
-    const { where, offset, cursor, limit } = input;
+    const { where, offset, limit, cursor } = input;
     return this.db
       .select()
       .from(courseView)
@@ -179,7 +179,7 @@ export class CoursesService {
   }
 
   async getCoursesByCursor(
-    input: CoursesServiceInputByCursor,
+    input: CoursesByCursorServiceInput,
   ): Promise<{ items: CoursesServiceOutput[]; nextCursor: string | null }> {
     const courses = await this.getCoursesRaw({
       where: buildQuery(input),
