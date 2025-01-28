@@ -5,21 +5,21 @@ const majorIdBase = z.string();
 
 export const majorQuerySchema = z.object({
   majorId: majorIdBase.optional().openapi({
-    description: "A major ID to query majors for",
+    description: "The ID of the specific major being requested for",
     example: "BA-163",
   }),
 });
 
 export const minorQuerySchema = z.object({
   id: z.string().optional().openapi({
-    description: "A minor ID to query minors for",
+    description: "The ID of the specific minor being requested for",
     example: "49A",
   }),
 });
 
 export const specializationQuerySchema = z.object({
   majorId: majorIdBase.optional().openapi({
-    description: "A major ID to query specializations for",
+    description: "The ID of a major to query its associated specializations",
     example: "BS-201",
   }),
 });
