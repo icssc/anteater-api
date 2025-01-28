@@ -37,7 +37,7 @@ export class ProgramsService {
         division: degree.division,
       })
       .from(majorSpecialization)
-      .where(query.id ? eq(majorSpecialization.id, query.id) : sql`true`)
+      .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
       .innerJoin(major, eq(majorSpecialization.id, major.id))
       .innerJoin(degree, eq(major.degreeId, degree.id));
   }
@@ -49,7 +49,7 @@ export class ProgramsService {
         name: minor.name,
       })
       .from(minor)
-      .where(query.id ? eq(minor.id, query.id) : sql`true`);
+      .where(query.id ? eq(minor.id, query.id) : undefined);
   }
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
@@ -60,7 +60,7 @@ export class ProgramsService {
         name: specialization.name,
       })
       .from(specialization)
-      .where(query.majorId ? eq(specialization.majorId, query.majorId) : sql`true`);
+      .where(query.majorId ? eq(specialization.majorId, query.majorId) : undefined);
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
