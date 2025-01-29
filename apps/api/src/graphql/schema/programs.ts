@@ -54,12 +54,21 @@ type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(max
     requirements: JSON!
 }
 
-union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | ProgramGroupRequirement
+type ProgramMarkerRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
+    label: String!
+}
+
+union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | ProgramGroupRequirement | ProgramMarkerRequirement
 
 type Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
     requirements: [ProgramRequirement]!
+}
+
+type UgradRequirements @cacheControl(maxAge: 86400) {
+    id: String!,
+    requirements: [ProgramRequirement!]!,
 }
 
 input ProgramRequirementsQuery {
@@ -78,6 +87,10 @@ input SpecializationsQuery {
     majorId: String!
 }
 
+input ugradRequrementsQuery {
+    id: String!
+}
+
 extend type Query {
     majors(query: MajorsQuery): [MajorPreview!]!
     minors(query: MinorsQuery): [MinorPreview!]!
@@ -85,5 +98,6 @@ extend type Query {
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
+    ugradRequirements(query: ugradRequrementsQuery!): UgradRequirements!
 }
 `;

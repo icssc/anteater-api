@@ -6,6 +6,7 @@ import {
   minorsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
+  ugradRequirementsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
 import { GraphQLError } from "graphql/error";
@@ -72,10 +73,20 @@ export const programResolvers = {
         });
       return res;
     },
+    ugradRequirements: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = ugradRequirementsQuerySchema.parse(args?.query);
+      const service = new ProgramsService(db);
+      const res = await service.getUgradRequirements(parsedArgs);
+      if (!res)
+        throw new GraphQLError("Undergraduate requirements block not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
   },
   ProgramRequirement: {
     // x outside this typehint is malformed data; meh
-    __resolveType: (x: { requirementType: "Course" | "Unit" | "Group" }) => {
+    __resolveType: (x: { requirementType: "Course" | "Unit" | "Group" | "Marker" }) => {
       switch (x?.requirementType) {
         case "Course":
           return "ProgramCourseRequirement";
@@ -83,6 +94,8 @@ export const programResolvers = {
           return "ProgramUnitRequirement";
         case "Group":
           return "ProgramGroupRequirement";
+        case "Marker":
+          return "ProgramMarkerRequirement";
       }
     },
   },
