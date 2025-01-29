@@ -4,11 +4,13 @@ import {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  type programRequirementSchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
+import type { z } from "@hono/zod-openapi";
 import { GraphQLError } from "graphql/error";
 
 export const programResolvers = {
@@ -86,7 +88,9 @@ export const programResolvers = {
   },
   ProgramRequirement: {
     // x outside this typehint is malformed data; meh
-    __resolveType: (x: { requirementType: "Course" | "Unit" | "Group" | "Marker" }) => {
+    __resolveType: (x: {
+      requirementType: z.infer<typeof programRequirementSchema>["requirementType"];
+    }) => {
       switch (x?.requirementType) {
         case "Course":
           return "ProgramCourseRequirement";
