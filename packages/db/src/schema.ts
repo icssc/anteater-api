@@ -2,6 +2,7 @@ import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
+  char,
   date,
   decimal,
   index,
@@ -116,10 +117,19 @@ export type DegreeWorksGroupRequirement = {
   requirements: DegreeWorksRequirement[];
 };
 
+export type DegreeWorksMarkerRequirement = {
+  requirementType: "Marker";
+};
+
 export type DegreeWorksRequirementBase = { label: string };
 
 export type DegreeWorksRequirement = DegreeWorksRequirementBase &
-  (DegreeWorksCourseRequirement | DegreeWorksUnitRequirement | DegreeWorksGroupRequirement);
+  (
+    | DegreeWorksCourseRequirement
+    | DegreeWorksUnitRequirement
+    | DegreeWorksGroupRequirement
+    | DegreeWorksMarkerRequirement
+  );
 
 // Misc. enums
 
@@ -587,6 +597,11 @@ export const degree = pgTable("degree", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
   division: division("division").notNull(),
+});
+
+export const schoolRequirement = pgTable("school_requirement", {
+  id: char("id", { length: 2 }).primaryKey(),
+  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
 export const major = pgTable(

@@ -53,12 +53,22 @@ export type RuleNoncourse = {
   ruleType: "Noncourse";
   requirement: { numNoncourses: string; code: string };
 };
+
+/**
+ * A rule which can be marked as complete by an advisor, e.g. the Entry Level Writing Requirement
+ * or the fulfillment of GE VIII (foreign language) via high school credit
+ */
+export type RuleMarker = {
+  // TODO: what does this look like if the student scraping hasn't completed this requirement?
+  ruleType: "Complete" | "Incomplete" /* THIS IS A GUESS! */;
+};
+
 export type RuleSubset = {
   ruleType: "Subset";
   ruleArray: Rule[];
 };
 export type Rule = RuleBase &
-  (RuleGroup | RuleCourse | RuleIfStmt | RuleBlock | RuleNoncourse | RuleSubset);
+  (RuleGroup | RuleCourse | RuleIfStmt | RuleBlock | RuleNoncourse | RuleMarker | RuleSubset);
 export type Block = {
   requirementType: string;
   requirementValue: string;
