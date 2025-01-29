@@ -87,7 +87,7 @@ input SpecializationsQuery {
     majorId: String!
 }
 
-input ugradRequrementsQuery {
+input UgradRequrementsQuery {
     id: String!
 }
 
@@ -98,6 +98,6 @@ extend type Query {
     major(query: ProgramRequirementsQuery!): Program!
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
-    ugradRequirements(query: ugradRequrementsQuery!): UgradRequirements!
+    ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!
 }
 `;
