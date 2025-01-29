@@ -101,7 +101,7 @@ export class AuditParser {
    * @private
    */
   private static suppressLabelPolymorphism(label: string) {
-    return label.replaceAll(/ satisfied/gi, "").replaceAll(/ required/gi, "");
+    return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {
