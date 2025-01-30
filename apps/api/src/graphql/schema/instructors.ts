@@ -34,7 +34,7 @@ input InstructorsQuery {
     skip: Int
 }
 
-input InstructorsQuery {
+input InstructorsByCursorQuery {
     nameContains: String
     titleContains: String
     departmentContains: String
