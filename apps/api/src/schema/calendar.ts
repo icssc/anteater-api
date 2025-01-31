@@ -1,14 +1,9 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
+import { yearSchema } from "./lib";
 
 export const calendarQuerySchema = z.object({
-  year: z
-    .string({ message: "Parameter 'year' is required" })
-    .length(4, { message: "Parameter 'year' must have length 4" })
-    .refine((x) => !Number.isNaN(Number.parseInt(x, 10)), {
-      message: "Parameter 'year' must be an integer",
-    })
-    .openapi({ param: { name: "year", in: "query" }, example: "2024" }),
+  year: yearSchema.openapi({ param: { name: "year", in: "query" } }),
   quarter: z
     .enum(terms, {
       message:
