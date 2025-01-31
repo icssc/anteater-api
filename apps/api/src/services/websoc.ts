@@ -91,6 +91,22 @@ function buildQuery(input: WebsocServiceInput) {
     }
     conditions.push(or(...courseNumberConditions));
   }
+  if (input.includeRelatedCourses && input.sectionCodes) {
+    const relatedCoursesConditions: Array<SQL | undefined> = [];
+    for (const code of input.sectionCodes) {
+      switch (code._type) {
+        case "ParsedInteger":
+          relatedCoursesConditions.push(eq(websocSection.sectionCode, code.value));
+          break;
+        case "ParsedRange":
+          relatedCoursesConditions.push(
+            and(gte(websocSection.sectionCode, code.min), lte(websocSection.sectionCode, code.max)),
+          );
+          break;
+      }
+    }
+    conditions.push(or(...relatedCoursesConditions));
+  }
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];
     for (const code of input.sectionCodes) {
