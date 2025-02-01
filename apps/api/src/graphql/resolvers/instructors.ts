@@ -14,10 +14,6 @@ export const instructorsResolvers = {
         });
       return res;
     },
-    instructors: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
-      const service = new InstructorsService(db);
-      return await service.getInstructors(instructorsQuerySchema.parse(args.query));
-    },
     batchInstructors: async (
       _: unknown,
       { ucinetids }: { ucinetids: string[] },
@@ -25,6 +21,10 @@ export const instructorsResolvers = {
     ) => {
       const service = new InstructorsService(db);
       return await service.batchGetInstructors(ucinetids);
+    },
+    instructors: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const service = new InstructorsService(db);
+      return await service.getInstructors(instructorsQuerySchema.parse(args.query));
     },
     instructorsByCursor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new InstructorsService(db);

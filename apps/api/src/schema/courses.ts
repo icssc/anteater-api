@@ -80,25 +80,22 @@ export const coursesByCursorQuerySchema = z.object({
   courseNumber: z.string().optional(),
   courseNumeric: z.coerce.number().optional(),
   titleContains: z.string().optional(),
-  courseLevel: z
-    .enum(inputCourseLevels, {
-      message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
-    })
-    .optional(),
+  courseLevel: z.enum(inputCourseLevels).optional(),
   minUnits: z.coerce.number().optional(),
   maxUnits: z.coerce.number().optional(),
   descriptionContains: z.string().optional(),
-  geCategory: z
-    .enum(inputGECategories, {
-      message:
-        "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
-    })
-    .optional(),
-  cursor: z.string().optional(),
+  geCategory: z.enum(inputGECategories).optional(),
+  cursor: z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
+    }),
   take: z.coerce
     .number()
     .default(100)
-    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
 });
 
 export const prerequisiteSchema = z.union([

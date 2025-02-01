@@ -26,6 +26,11 @@ type Instructor @cacheControl(maxAge: 86400) {
     courses: [CoursePreviewWithTerms!]!
 }
 
+type InstructorsByCursor {
+    items: [Instructor!]!
+    nextCursor: String
+}
+
 input InstructorsQuery {
     nameContains: String
     titleContains: String
@@ -40,11 +45,6 @@ input InstructorsByCursorQuery {
     departmentContains: String
     cursor: String
     take: Int
-}
-
-type InstructorsByCursor {
-    items: [Instructor!]!
-    nextCursor: String
 }
 
 extend type Query {

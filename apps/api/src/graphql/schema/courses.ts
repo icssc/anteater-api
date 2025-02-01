@@ -35,6 +35,11 @@ type Course @cacheControl(maxAge: 86400) {
     terms: [String!]!
 }
 
+type CoursesByCursor {
+    items: [Course!]!
+    nextCursor: String
+}
+
 input CoursesQuery {
     department: String
     courseNumber: String
@@ -61,11 +66,6 @@ input CoursesByCursorQuery {
     geCategory: String
     cursor: String
     take: Int
-}
-
-type CoursesByCursor {
-    items: [Course!]!
-    nextCursor: String
 }
 
 extend type Query {

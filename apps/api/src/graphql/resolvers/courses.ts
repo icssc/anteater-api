@@ -12,13 +12,13 @@ export const coursesResolvers = {
         throw new GraphQLError(`Course '${id}' not found`, { extensions: { code: "NOT_FOUND" } });
       return res;
     },
-    courses: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
-      const service = new CoursesService(db);
-      return await service.getCourses(coursesQuerySchema.parse(args.query));
-    },
     batchCourses: async (_: unknown, { ids }: { ids: string[] }, { db }: GraphQLContext) => {
       const service = new CoursesService(db);
       return await service.batchGetCourses(ids);
+    },
+    courses: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const service = new CoursesService(db);
+      return await service.getCourses(coursesQuerySchema.parse(args.query));
     },
     coursesByCursor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new CoursesService(db);
