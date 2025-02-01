@@ -6,13 +6,14 @@ import {
   coursesByCursorQuerySchema,
   coursesPathSchema,
   coursesQuerySchema,
+  cursorResponseSchema,
   errorSchema,
   prerequisiteSchema,
   prerequisiteTreeSchema,
   responseSchema,
 } from "$schema";
 import { CoursesService } from "$services";
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
@@ -20,32 +21,6 @@ const coursesCursorRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
 coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
-
-const batchCoursesRoute = createRoute({
-  summary: "Retrieve courses with IDs",
-  operationId: "batchCourses",
-  tags: ["Courses"],
-  method: "get",
-  path: "/batch",
-  request: { query: batchCoursesQuerySchema },
-  description: "Retrieves courses with the IDs provided",
-  responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(courseSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
 
 const courseByIdRoute = createRoute({
   summary: "Retrieve a course",
@@ -63,6 +38,32 @@ const courseByIdRoute = createRoute({
     404: {
       content: { "application/json": { schema: errorSchema } },
       description: "Course not found",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+const batchCoursesRoute = createRoute({
+  summary: "Retrieve courses with IDs",
+  operationId: "batchCourses",
+  tags: ["Courses"],
+  method: "get",
+  path: "/batch",
+  request: { query: batchCoursesQuerySchema },
+  description: "Retrieves courses with the IDs provided",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(courseSchema.array()) },
+      },
+      description: "Successful operation",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
@@ -112,14 +113,7 @@ const coursesByCursorRoute = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(
-            z.object({
-              items: courseSchema.array(),
-              nextCursor: z.string().nullable(),
-            }),
-          ),
-        },
+        "application/json": { schema: cursorResponseSchema(courseSchema.array()) },
       },
       description: "Successful operation",
     },
@@ -139,6 +133,15 @@ coursesRouter.get(
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
+coursesRouter.openapi(courseByIdRoute, async (c) => {
+  const { id } = c.req.valid("param");
+  const service = new CoursesService(database(c.env.DB.connectionString));
+  const res = await service.getCourseById(id);
+  return res
+    ? c.json({ ok: true, data: courseSchema.parse(res) }, 200)
+    : c.json({ ok: false, message: `Course ${id} not found` }, 404);
+});
+
 coursesRouter.openapi(batchCoursesRoute, async (c) => {
   const { ids } = c.req.valid("query");
   const service = new CoursesService(database(c.env.DB.connectionString));
@@ -149,15 +152,6 @@ coursesRouter.openapi(batchCoursesRoute, async (c) => {
     },
     200,
   );
-});
-
-coursesRouter.openapi(courseByIdRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const service = new CoursesService(database(c.env.DB.connectionString));
-  const res = await service.getCourseById(id);
-  return res
-    ? c.json({ ok: true, data: courseSchema.parse(res) }, 200)
-    : c.json({ ok: false, message: `Course ${id} not found` }, 404);
 });
 
 coursesRouter.openapi(coursesByFiltersRoute, async (c) => {
