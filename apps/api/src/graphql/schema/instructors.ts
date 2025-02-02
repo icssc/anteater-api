@@ -26,6 +26,11 @@ type Instructor @cacheControl(maxAge: 86400) {
     courses: [CoursePreviewWithTerms!]!
 }
 
+type InstructorsByCursor {
+    items: [Instructor!]!
+    nextCursor: String
+}
+
 input InstructorsQuery {
     nameContains: String
     titleContains: String
@@ -34,9 +39,18 @@ input InstructorsQuery {
     skip: Int
 }
 
+input InstructorsByCursorQuery {
+    nameContains: String
+    titleContains: String
+    departmentContains: String
+    cursor: String
+    take: Int
+}
+
 extend type Query {
     instructor(ucinetid: String!): Instructor!
     instructors(query: InstructorsQuery!): [Instructor!]!
     batchInstructors(ucinetids: [String!]!): [Instructor!]!
+    instructorsByCursor(query: InstructorsByCursorQuery!): InstructorsByCursor!
 }
 `;

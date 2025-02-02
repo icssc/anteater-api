@@ -4,10 +4,7 @@ import { instructorSchema } from "./instructors.ts";
 
 export const searchQuerySchema = z.object({
   query: z.string({ message: "Parameter 'query' is required" }),
-  take: z.coerce
-    .number()
-    .default(100)
-    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
   skip: z.coerce.number().default(0),
   resultType: z.union([z.literal("course"), z.literal("instructor")]).optional(),
 });

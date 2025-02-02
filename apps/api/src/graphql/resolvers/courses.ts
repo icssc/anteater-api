@@ -1,5 +1,5 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
-import { coursesQuerySchema } from "$schema";
+import { coursesByCursorQuerySchema, coursesQuerySchema } from "$schema";
 import { CoursesService } from "$services";
 import { GraphQLError } from "graphql/error";
 
@@ -12,13 +12,23 @@ export const coursesResolvers = {
         throw new GraphQLError(`Course '${id}' not found`, { extensions: { code: "NOT_FOUND" } });
       return res;
     },
+    batchCourses: async (_: unknown, { ids }: { ids: string[] }, { db }: GraphQLContext) => {
+      const service = new CoursesService(db);
+      return await service.batchGetCourses(ids);
+    },
     courses: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new CoursesService(db);
       return await service.getCourses(coursesQuerySchema.parse(args.query));
     },
-    batchCourses: async (_: unknown, { ids }: { ids: string[] }, { db }: GraphQLContext) => {
+    coursesByCursor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new CoursesService(db);
-      return await service.batchGetCourses(ids);
+      const { items, nextCursor } = await service.getCoursesByCursor(
+        coursesByCursorQuerySchema.parse(args.query),
+      );
+      return {
+        items,
+        nextCursor,
+      };
     },
   },
 };

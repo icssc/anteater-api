@@ -1,6 +1,7 @@
 import type {
   coursePreviewSchema,
   courseSchema,
+  coursesByCursorQuerySchema,
   coursesQuerySchema,
   instructorPreviewSchema,
   outputCourseLevels,
@@ -18,6 +19,8 @@ import type { z } from "zod";
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 type CoursesServiceOutput = z.infer<typeof courseSchema>;
+
+type CoursesByCursorServiceInput = z.infer<typeof coursesByCursorQuerySchema>;
 
 const mapCourseLevel = (courseLevel: CourseLevel): (typeof outputCourseLevels)[number] =>
   courseLevel === "LowerDiv"
@@ -67,7 +70,7 @@ const transformCourse = ({
   geList: courseToGEList(course),
 });
 
-function buildQuery(input: CoursesServiceInput) {
+function buildQuery(input: CoursesServiceInput | CoursesByCursorServiceInput) {
   const conditions: Array<SQL | undefined> = [];
   if (input.department) {
     conditions.push(eq(courseView.department, input.department));
@@ -147,14 +150,15 @@ export class CoursesService {
     where?: SQL;
     offset?: number;
     limit?: number;
+    cursor?: string;
   }): Promise<CoursesServiceOutput[]> {
-    const { where, offset, limit } = input;
+    const { where, offset, limit, cursor } = input;
     return this.db
       .select()
       .from(courseView)
-      .where(where)
-      .offset(offset ?? 0)
+      .where(cursor ? and(where, gte(courseView.id, cursor)) : where)
       .limit(limit ?? 1)
+      .offset(offset ?? 0)
       .then((courses) => courses.map(transformCourse));
   }
 
@@ -167,6 +171,30 @@ export class CoursesService {
   }
 
   async getCourses(input: CoursesServiceInput): Promise<CoursesServiceOutput[]> {
-    return this.getCoursesRaw({ where: buildQuery(input), offset: input.skip, limit: input.take });
+    return this.getCoursesRaw({
+      where: buildQuery(input),
+      offset: input.skip,
+      limit: input.take,
+    });
+  }
+
+  async getCoursesByCursor(
+    input: CoursesByCursorServiceInput,
+  ): Promise<{ items: CoursesServiceOutput[]; nextCursor: string | null }> {
+    const courses = await this.getCoursesRaw({
+      where: buildQuery(input),
+      cursor: input.cursor,
+      limit: input.take + 1,
+      offset: 0,
+    });
+
+    const items = courses.slice(0, input.take);
+    const nextCursor =
+      input.take === 0 ? null : courses.length > input.take ? courses[input.take].id : null;
+
+    return {
+      items,
+      nextCursor,
+    };
   }
 }

@@ -35,6 +35,11 @@ type Course @cacheControl(maxAge: 86400) {
     terms: [String!]!
 }
 
+type CoursesByCursor {
+    items: [Course!]!
+    nextCursor: String
+}
+
 input CoursesQuery {
     department: String
     courseNumber: String
@@ -49,9 +54,24 @@ input CoursesQuery {
     skip: Int
 }
 
+input CoursesByCursorQuery {
+    department: String
+    courseNumber: String
+    courseNumeric: Int
+    titleContains: String
+    courseLevel: CourseLevel
+    minUnits: Float
+    maxUnits: Float
+    descriptionContains: String
+    geCategory: String
+    cursor: String
+    take: Int
+}
+
 extend type Query {
     course(id: String!): Course!
     courses(query: CoursesQuery!): [Course!]!
     batchCourses(ids: [String!]!): [Course!]!
+    coursesByCursor(query: CoursesByCursorQuery!): CoursesByCursor!
 }
 `;
