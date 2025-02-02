@@ -108,13 +108,13 @@ const instructorsByFiltersRoute = createRoute({
 });
 
 const instructorsByCursorRoute = createRoute({
-  summary: "Filter instructors by cursor",
+  summary: "Filter instructors with cursor pagination",
   operationId: "instructorsByCursor",
   tags: ["Instructors"],
   method: "get",
   path: "/",
   request: { query: instructorsByCursorQuerySchema },
-  description: "Retrieves instructors matching the given filters and cursor.",
+  description: "Retrieves instructors matching the given filters with cursor-based pagination.",
   responses: {
     200: {
       content: {

@@ -71,7 +71,7 @@ export const coursesQuerySchema = z.object({
   take: z.coerce
     .number()
     .default(100)
-    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
   skip: z.coerce.number().default(0),
 });
 
@@ -85,13 +85,10 @@ export const coursesByCursorQuerySchema = z.object({
   maxUnits: z.coerce.number().optional(),
   descriptionContains: z.string().optional(),
   geCategory: z.enum(inputGECategories).optional(),
-  cursor: z
-    .string()
-    .optional()
-    .openapi({
-      description:
-        "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
-    }),
+  cursor: z.string().optional().openapi({
+    description:
+      "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
+  }),
   take: z.coerce
     .number()
     .default(100)

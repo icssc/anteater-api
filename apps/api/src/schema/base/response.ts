@@ -14,6 +14,8 @@ export const cursorResponseSchema = <T extends z.ZodType>(data: T) =>
       nextCursor: z
         .string()
         .nullable()
-        .openapi({ description: "Cursor for the next page, or null if there are no more results" }),
+        .openapi({
+          description: "Cursor pointing to the next page. Null if there are no more results",
+        }),
     }),
   });

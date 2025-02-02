@@ -7,7 +7,7 @@ export const searchQuerySchema = z.object({
   take: z.coerce
     .number()
     .default(100)
-    .refine((x) => x <= 100, "Page size must be smaller than 100"),
+    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
   skip: z.coerce.number().default(0),
   resultType: z.union([z.literal("course"), z.literal("instructor")]).optional(),
 });
