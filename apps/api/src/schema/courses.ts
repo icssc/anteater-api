@@ -68,10 +68,7 @@ export const coursesQuerySchema = z.object({
         "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
     })
     .optional(),
-  take: z.coerce
-    .number()
-    .default(100)
-    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
+  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
   skip: z.coerce.number().default(0),
 });
 
@@ -89,10 +86,7 @@ export const coursesByCursorQuerySchema = z.object({
     description:
       "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
   }),
-  take: z.coerce
-    .number()
-    .default(100)
-    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
+  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
 });
 
 export const prerequisiteSchema = z.union([

@@ -17,10 +17,7 @@ export const instructorsQuerySchema = z.object({
   nameContains: z.string().optional(),
   titleContains: z.string().optional(),
   departmentContains: z.string().optional(),
-  take: z.coerce
-    .number()
-    .default(100)
-    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
+  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
   skip: z.coerce.number().default(0),
 });
 
@@ -32,10 +29,7 @@ export const instructorsByCursorQuerySchema = z.object({
     description:
       "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
   }),
-  take: z.coerce
-    .number()
-    .default(100)
-    .refine((x) => x <= 100, "Page size must be less than or equal to 100"),
+  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
 });
 
 export const instructorPreviewSchema = z.object({
