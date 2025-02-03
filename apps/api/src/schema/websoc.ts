@@ -155,6 +155,24 @@ export const websocQuerySchema = z.object({
       }
       return parsedCodes;
     }),
+  includeRelatedCourses: z
+    .string()
+    .optional()
+    .transform((value, ctx) => {
+      if (!value) return false;
+      const normalizedValue = value.toLowerCase();
+      if (normalizedValue === "true" || normalizedValue === "1" || normalizedValue === "yes") {
+        return true;
+      }
+      if (normalizedValue === "false" || normalizedValue === "0" || normalizedValue === "no") {
+        return false;
+      }
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid value for includeRelatedCourses. Must be true/false, 0/1, or yes/no.",
+      });
+      return z.NEVER;
+    }),
 });
 
 export const hourMinuteSchema = z.object({
