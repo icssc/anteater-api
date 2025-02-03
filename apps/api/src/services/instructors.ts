@@ -48,17 +48,17 @@ export class InstructorsService {
       .limit(limit ?? 1)) as InstructorsServiceOutput[];
   }
 
-  async getInstructorByUCInetID(ucinetid: string): Promise<InstructorsServiceOutput | null> {
-    return this.getInstructorsRaw({
-      where: and(eq(instructorView.ucinetid, ucinetid)),
-    }).then((xs) => orNull(xs[0]));
-  }
-
   async batchGetInstructors(ucinetids: string[]): Promise<InstructorsServiceOutput[]> {
     return this.getInstructorsRaw({
       where: inArray(instructorView.ucinetid, ucinetids),
       limit: ucinetids.length,
     });
+  }
+
+  async getInstructorByUCInetID(ucinetid: string): Promise<InstructorsServiceOutput | null> {
+    return this.getInstructorsRaw({
+      where: and(eq(instructorView.ucinetid, ucinetid)),
+    }).then((xs) => orNull(xs[0]));
   }
 
   async getInstructors(input: InstructorsServiceInput): Promise<InstructorsServiceOutput[]> {

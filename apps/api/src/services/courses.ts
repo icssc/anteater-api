@@ -162,12 +162,12 @@ export class CoursesService {
       .then((courses) => courses.map(transformCourse));
   }
 
-  async getCourseById(id: string): Promise<CoursesServiceOutput | null> {
-    return this.getCoursesRaw({ where: eq(courseView.id, id) }).then((x) => orNull(x[0]));
-  }
-
   async batchGetCourses(ids: string[]): Promise<CoursesServiceOutput[]> {
     return this.getCoursesRaw({ where: inArray(courseView.id, ids), limit: ids.length });
+  }
+
+  async getCourseById(id: string): Promise<CoursesServiceOutput | null> {
+    return this.getCoursesRaw({ where: eq(courseView.id, id) }).then((x) => orNull(x[0]));
   }
 
   async getCourses(input: CoursesServiceInput): Promise<CoursesServiceOutput[]> {
