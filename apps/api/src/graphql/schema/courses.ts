@@ -69,9 +69,9 @@ input CoursesByCursorQuery {
 }
 
 extend type Query {
+    batchCourses(ids: [String!]!): [Course!]!
     course(id: String!): Course!
     courses(query: CoursesQuery!): [Course!]!
-    batchCourses(ids: [String!]!): [Course!]!
     coursesByCursor(query: CoursesByCursorQuery!): CoursesByCursor!
 }
 `;

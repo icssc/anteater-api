@@ -5,6 +5,14 @@ import { GraphQLError } from "graphql/error";
 
 export const instructorsResolvers = {
   Query: {
+    batchInstructors: async (
+      _: unknown,
+      { ucinetids }: { ucinetids: string[] },
+      { db }: GraphQLContext,
+    ) => {
+      const service = new InstructorsService(db);
+      return await service.batchGetInstructors(ucinetids);
+    },
     instructor: async (_: unknown, { ucinetid }: { ucinetid: string }, { db }: GraphQLContext) => {
       const service = new InstructorsService(db);
       const res = await service.getInstructorByUCInetID(ucinetid);
@@ -13,14 +21,6 @@ export const instructorsResolvers = {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
-    },
-    batchInstructors: async (
-      _: unknown,
-      { ucinetids }: { ucinetids: string[] },
-      { db }: GraphQLContext,
-    ) => {
-      const service = new InstructorsService(db);
-      return await service.batchGetInstructors(ucinetids);
     },
     instructors: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new InstructorsService(db);

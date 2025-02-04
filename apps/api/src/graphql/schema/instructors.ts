@@ -48,9 +48,9 @@ input InstructorsByCursorQuery {
 }
 
 extend type Query {
+    batchInstructors(ucinetids: [String!]!): [Instructor!]!
     instructor(ucinetid: String!): Instructor!
     instructors(query: InstructorsQuery!): [Instructor!]!
-    batchInstructors(ucinetids: [String!]!): [Instructor!]!
     instructorsByCursor(query: InstructorsByCursorQuery!): InstructorsByCursor!
 }
 `;

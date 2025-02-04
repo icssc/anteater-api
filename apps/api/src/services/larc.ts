@@ -114,18 +114,6 @@ function transformRows(rows: Row[]): z.infer<typeof larcResponseSchema> {
     courses.get(section.courseId)?.sections.push(section);
   }
 
-  const res = {
-    courses: courses
-      .values()
-      .toArray()
-      .map((course) => ({
-        deptCode: course.deptCode,
-        courseTitle: course.courseTitle,
-        courseNumber: course.courseNumber,
-        sections: course.sections.map(transformSection),
-      })),
-  };
-
   return {
     courses: courses
       .values()
