@@ -4,10 +4,13 @@ import {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  type programRequirementSchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
+  ugradRequirementsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
+import type { z } from "@hono/zod-openapi";
 import { GraphQLError } from "graphql/error";
 
 export const programResolvers = {
@@ -72,10 +75,22 @@ export const programResolvers = {
         });
       return res;
     },
+    ugradRequirements: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = ugradRequirementsQuerySchema.parse(args?.query);
+      const service = new ProgramsService(db);
+      const res = await service.getUgradRequirements(parsedArgs);
+      if (!res)
+        throw new GraphQLError("Undergraduate requirements block not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
   },
   ProgramRequirement: {
     // x outside this typehint is malformed data; meh
-    __resolveType: (x: { requirementType: "Course" | "Unit" | "Group" }) => {
+    __resolveType: (x: {
+      requirementType: z.infer<typeof programRequirementSchema>["requirementType"];
+    }) => {
       switch (x?.requirementType) {
         case "Course":
           return "ProgramCourseRequirement";
@@ -83,6 +98,8 @@ export const programResolvers = {
           return "ProgramUnitRequirement";
         case "Group":
           return "ProgramGroupRequirement";
+        case "Marker":
+          return "ProgramMarkerRequirement";
       }
     },
   },

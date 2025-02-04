@@ -44,6 +44,13 @@ export const specializationRequirementsQuerySchema = z.object({
   }),
 });
 
+export const ugradRequirementsQuerySchema = z.object({
+  id: z
+    .literal("UC")
+    .or(z.literal("GE"))
+    .openapi({ description: "The requirements block to fetch" }),
+});
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -141,11 +148,25 @@ export const programGroupRequirementSchema: z.ZodType<
     },
   });
 
+export const programMarkerRequirementSchema = programRequirementBaseSchema
+  .extend({
+    requirementType: z.literal("Marker"),
+  })
+  .openapi({
+    description:
+      "A rule which must be marked as complete, e.g the fulfillment of GE VIII (foreign language) via high school credit",
+    example: {
+      label: "Entry Level Writing",
+      requirementType: "Marker",
+    },
+  });
+
 // one day someone will figure out z.discriminatedUnion
 export const programRequirementSchema = z.union([
   programCourseRequirementSchema,
   programUnitRequirementSchema,
   programGroupRequirementSchema,
+  programMarkerRequirementSchema,
 ]);
 
 export const majorsResponseSchema = z.array(
@@ -245,4 +266,11 @@ export const specializationRequirementsResponseSchema = programRequirementsRespo
   name: programRequirementsResponseSchema.shape.name.openapi({
     example: "CS:Specialization in Bioinformatics",
   }),
+});
+
+export const ugradRequirementsResponseSchema = z.object({
+  id: z.string().openapi({ description: "ID of the requirements block fetched" }),
+  requirements: z
+    .array(programRequirementSchema)
+    .openapi({ description: "The requirements in this requirements block" }),
 });

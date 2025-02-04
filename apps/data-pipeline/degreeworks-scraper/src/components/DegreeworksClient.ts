@@ -37,6 +37,44 @@ export class DegreeworksClient {
 
   sleep = (ms: number = this.delay) => new Promise((r) => setTimeout(r, ms));
 
+  static formatQueryParams(params: Record<string, string>) {
+    return Object.entries(params)
+      .map((kv) => kv.map(encodeURIComponent).join("="))
+      .join("&");
+  }
+
+  async getUgradRequirements(): Promise<[Block, Block] | undefined> {
+    const params = DegreeworksClient.formatQueryParams({
+      studentId: this.studentId,
+      // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
+      school: "U",
+      // there is no difference regardless of which of the four bachelor's degrees we ask for: BA, BFA, BMUS, BS
+      degree: "BS",
+    });
+    const res = await fetch(`${DegreeworksClient.AUDIT_URL}?${params}`, {
+      method: "GET",
+      headers: this.headers,
+    });
+    await this.sleep();
+
+    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
+    if ("error" in json) {
+      return;
+    }
+
+    // "DEGREE" block doesn't contain any material requirements, "SCHOOL" block has what we need
+    const ucRequirements = json.blockArray.find((b) => b.requirementType === "SCHOOL");
+    if (!ucRequirements) {
+      return;
+    }
+    const geRequirements = json.blockArray.find((b) => b.requirementType === "PROGRAM");
+    if (!geRequirements) {
+      return;
+    }
+
+    return [ucRequirements, geRequirements];
+  }
+
   async getMajorAudit(
     degree: string,
     school: string,
