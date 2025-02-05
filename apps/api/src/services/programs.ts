@@ -10,6 +10,7 @@ import type {
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
 import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 export class ProgramsService {
@@ -119,6 +120,6 @@ export class ProgramsService {
       .where(eq(schoolRequirement.id, query.id))
       .limit(1);
 
-    return got ? got : null;
+    return orNull(got);
   }
 }
