@@ -66,8 +66,13 @@ type Program @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement]!
 }
 
+enum UgradRequirementsBlockId {
+    UC
+    GE
+}
+
 type UgradRequirements @cacheControl(maxAge: 86400) {
-    id: String!,
+    id: UgradRequirementsBlockId!,
     requirements: [ProgramRequirement!]!,
 }
 
@@ -88,7 +93,7 @@ input SpecializationsQuery {
 }
 
 input UgradRequrementsQuery {
-    id: String!
+    id: UgradRequirementsBlockId!
 }
 
 extend type Query {

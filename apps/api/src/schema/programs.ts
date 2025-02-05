@@ -44,11 +44,10 @@ export const specializationRequirementsQuerySchema = z.object({
   }),
 });
 
+export const UgradRequirementsBlockIds = ["UC", "GE"] as const;
+
 export const ugradRequirementsQuerySchema = z.object({
-  id: z
-    .literal("UC")
-    .or(z.literal("GE"))
-    .openapi({ description: "The requirements block to fetch" }),
+  id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
 export const programRequirementBaseSchema = z.object({
