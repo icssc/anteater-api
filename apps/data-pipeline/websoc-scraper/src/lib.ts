@@ -40,7 +40,7 @@ import { load } from "cheerio";
 
 /**
  * WebSoc allows us to scrape up to 900 sections per chunk.
- * This provides a 1% margin of error in case sections magically appear within ranges.
+ * This provides a 1% margin of error in case new sections appear within ranges (which has happened before).
  */
 const SECTIONS_PER_CHUNK = 891;
 
@@ -830,16 +830,9 @@ export async function scrapeTerm(
   } else {
     console.log("Performing chunk-wise scrape.");
     for (let i = 0; i < sectionCodeBounds.length; i += 2) {
-      const lower = sectionCodeBounds[i];
-      const upper = sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE;
-      const sectionCodes = `${lower}-${upper}`;
-      console.log(`Scraping chunk ${sectionCodes}`);
-      const resp = await request(term, {
-        sectionCodes,
-        cancelledCourses: "Include",
-      }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
-      await sleep(1000);
+      const lower = sectionCodeBounds[i] as `${number}`;
+      const upper = (sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE) as `${number}`;
+      await ingestChunk(db, term, lower, upper);
     }
   }
   await scrapeGEsForTerm(db, term);
@@ -851,6 +844,48 @@ export async function scrapeTerm(
       .values(values)
       .onConflictDoUpdate({ target: websocMeta.name, set: values });
   });
+}
+
+export async function ingestChunk(
+  db: ReturnType<typeof database>,
+  term: Term,
+  lower: `${number}`,
+  upper: `${number}`,
+) {
+  const sectionCodes = `${lower}-${upper}`;
+  console.log(`Scraping chunk ${sectionCodes}`);
+  try {
+    const resp = await request(term, {
+      sectionCodes,
+      cancelledCourses: "Include",
+    }).then(normalizeResponse);
+    if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+    await sleep(1000);
+  } catch (e) {
+    /*
+     assuming network, etc. conditions are fine, we have more than 900 sections here
+     this means we somehow overran our 1% tolerance
+     that's okay; we can be suboptimal this time so we get all the sections that exist.
+     we're going to recompute the chunks at the start of the next scrape,
+     so that one will run optimally, given no such failure occurs again
+
+     we're going to bisect this chunk and try the two halves separately; eventually,
+     we'll have <= 900 valid sections in a chunk and we'll be in the clear
+    */
+    const lowerInt = baseTenIntOrNull(lower) as number;
+    const upperInt = baseTenIntOrNull(upper) as number;
+    const rangeLength = upperInt - lowerInt + 1;
+    if (rangeLength < 900) {
+      // okay, no way this was a chunk overrun
+      throw e;
+    }
+
+    console.log(`Chunk ${sectionCodes} too large; bisecting and trying again...`);
+
+    const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
+    await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
+    await ingestChunk(db, term, (middleInt + 1).toString().padStart(5, "0") as `${number}`, upper);
+  }
 }
 
 export async function doScrape(db: ReturnType<typeof database>) {
