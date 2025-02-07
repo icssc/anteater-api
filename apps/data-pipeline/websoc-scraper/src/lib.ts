@@ -28,8 +28,14 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { baseTenIntOrNull, intersectAll, notNull, sleep } from "@packages/stdlib";
-import { parseMeetingDays, parseStartAndEndTimes } from "@packages/stdlib";
+import {
+  baseTenIntOrNull,
+  intersectAll,
+  notNull,
+  parseMeetingDays,
+  parseStartAndEndTimes,
+  sleep,
+} from "@packages/stdlib";
 import { load } from "cheerio";
 
 /**
@@ -308,24 +314,29 @@ function sectionMapper(
   }: WebsocSection,
   updatedAt: Date,
 ): typeof websocSection.$inferInsert {
+  // conflictUpdateSetAllCols cannot distinguish willfully updating a column to NULL and deferring to the existing value
+  // so we cannot store new NULLs
+  // instead we will store a sentinel and interpret it as null in the service layer
+  const numOnWaitlistResolved = numOnWaitlist?.startsWith("off")
+    ? baseTenIntOrNull(numOnWaitlist.split("(")[1].slice(0, -1))
+    : baseTenIntOrNull(numOnWaitlist);
   return {
     ...term,
     ...rest,
     ...generateRestrictions(rest),
     courseId,
+    status: rest.status ?? "",
     finalExamString: rest.finalExam,
     finalExam: parseFinalExamString(term, rest),
     meetings: rest.meetings.map(rawMeetingMapper),
     maxCapacity: Number.parseInt(maxCapacity, 10),
     sectionCode: Number.parseInt(sectionCode, 10),
     numRequested: Number.parseInt(numRequested, 10),
-    numOnWaitlist: numOnWaitlist?.startsWith("off")
-      ? baseTenIntOrNull(numOnWaitlist.split("(")[1].slice(0, -1))
-      : baseTenIntOrNull(numOnWaitlist),
-    numWaitlistCap: baseTenIntOrNull(numWaitlistCap),
-    numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved),
-    numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled),
-    numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled),
+    numOnWaitlist: numOnWaitlistResolved ?? -1,
+    numWaitlistCap: baseTenIntOrNull(numWaitlistCap) ?? -1,
+    numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved) ?? -1,
+    numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled) ?? -1,
+    numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled) ?? -1,
     updatedAt,
   };
 }
