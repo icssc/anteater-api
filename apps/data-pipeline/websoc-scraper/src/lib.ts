@@ -880,7 +880,7 @@ export async function ingestChunk(
       throw e;
     }
 
-    console.log(`Chunk ${sectionCodes} too large; bisecting and trying again...`);
+    console.log(`Chunk ${sectionCodes} failed (probably too large); bisecting and trying again...`);
 
     const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
     await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
