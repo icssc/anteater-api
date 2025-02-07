@@ -872,8 +872,8 @@ export async function ingestChunk(
      we're going to bisect this chunk and try the two halves separately; eventually,
      we'll have <= 900 valid sections in a chunk and we'll be in the clear
     */
-    const lowerInt = baseTenIntOrNull(lower) as number;
-    const upperInt = baseTenIntOrNull(upper) as number;
+    const lowerInt = Number.parseInt(lower, 10);
+    const upperInt = Number.parseInt(upper, 10);
     const rangeLength = upperInt - lowerInt + 1;
     if (rangeLength < 900) {
       // okay, no way this was a chunk overrun
