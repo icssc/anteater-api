@@ -12,6 +12,7 @@ import { searchRouter } from "./routes/search";
 import { studyRoomsRouter } from "./routes/study-rooms";
 import { websocRouter } from "./routes/websoc";
 import { weekRouter } from "./routes/week";
+import { enrollmentChangesRouter } from "./routes/enrollment-changes"; 
 
 const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -29,5 +30,6 @@ restRouter.route("/websoc", websocRouter);
 restRouter.route("/week", weekRouter);
 restRouter.route("/studyRooms", studyRoomsRouter);
 restRouter.route("/larc", larcRouter);
+restRouter.route("/enrollmentChanges", enrollmentChangesRouter);
 
 export { restRouter };
