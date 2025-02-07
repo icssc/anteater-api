@@ -846,7 +846,7 @@ export async function scrapeTerm(
   });
 }
 
-export async function ingestChunk(
+async function ingestChunk(
   db: ReturnType<typeof database>,
   term: Term,
   lower: `${number}`,
