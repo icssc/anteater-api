@@ -1,4 +1,6 @@
 import { z } from "@hono/zod-openapi";
+import { terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
+import { yearSchema } from "./lib";
 
 export const enrollmentChangesQuerySchema = z.object({
   sections: z
