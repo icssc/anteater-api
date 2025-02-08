@@ -12,7 +12,7 @@ import { searchRouter } from "./routes/search";
 import { studyRoomsRouter } from "./routes/study-rooms";
 import { websocRouter } from "./routes/websoc";
 import { weekRouter } from "./routes/week";
-import { enrollmentChangesRouter } from "./routes/enrollment-changes"; 
+import { enrollmentChangesRouter } from "./routes/enrollment-changes.ts"; 
 
 const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
