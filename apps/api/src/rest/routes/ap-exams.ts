@@ -21,6 +21,10 @@ const apExamsRoute = createRoute({
       content: { "application/json": { schema: responseSchema(apExamsResponseSchema) } },
       description: "Successful operation",
     },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "AP Exam mapping not found",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Server error occurred",
@@ -37,14 +41,14 @@ apExamsRouter.openapi(apExamsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new apExamsService(database(c.env.DB.connectionString));
   const res = await service.getAPExams(query);
-  return res
+  return res.length
     ? c.json({ ok: true, data: apExamsResponseSchema.parse(res) }, 200)
     : c.json(
         {
           ok: false,
-          message: "Something unexpected happened. Please try again later",
+          message: "Can't find any AP Exams; is your id correct?",
         },
-        500,
+        404,
       );
 });
 
