@@ -5,10 +5,12 @@ import type {
   minorsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
+  ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
-import { degree, major, minor, specialization } from "@packages/db/schema";
+import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 export class ProgramsService {
@@ -106,5 +108,18 @@ export class ProgramsService {
     }
 
     return got;
+  }
+
+  async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
+    const [got] = await this.db
+      .select({
+        id: schoolRequirement.id,
+        requirements: schoolRequirement.requirements,
+      })
+      .from(schoolRequirement)
+      .where(eq(schoolRequirement.id, query.id))
+      .limit(1);
+
+    return orNull(got);
   }
 }

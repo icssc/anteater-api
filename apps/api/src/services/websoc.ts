@@ -15,6 +15,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { isFalse, isTrue } from "@packages/db/utils";
+import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 const termOrder = {
@@ -297,20 +298,23 @@ type Row = {
   section: typeof websocSection.$inferSelect;
 };
 
-const transformSection = (section: Row["section"]): z.infer<typeof websocSectionSchema> => ({
-  ...section,
-  sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
-  status: section.status ?? "",
-  maxCapacity: section.maxCapacity.toString(10),
-  numCurrentlyEnrolled: {
-    totalEnrolled: section.numCurrentlyTotalEnrolled?.toString(10) ?? "",
-    sectionEnrolled: section.numCurrentlySectionEnrolled?.toString(10) ?? "",
-  },
-  numNewOnlyReserved: section.numNewOnlyReserved?.toString(10) ?? "",
-  numOnWaitlist: section.numOnWaitlist?.toString(10) ?? "",
-  numRequested: section.numRequested?.toString(10) ?? "",
-  numWaitlistCap: section.numWaitlistCap?.toString(10) ?? "",
-});
+const transformSection = (section: Row["section"]): z.infer<typeof websocSectionSchema> => {
+  // as described in websoc-scraper, there are non-null values which should also be interpreted as null
+  return {
+    ...section,
+    sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
+    status: section.status ?? "",
+    maxCapacity: section.maxCapacity.toString(10),
+    numCurrentlyEnrolled: {
+      totalEnrolled: negativeAsNull(section.numCurrentlyTotalEnrolled)?.toString(10) ?? "",
+      sectionEnrolled: negativeAsNull(section.numCurrentlySectionEnrolled)?.toString(10) ?? "",
+    },
+    numNewOnlyReserved: negativeAsNull(section.numNewOnlyReserved)?.toString(10) ?? "",
+    numOnWaitlist: negativeAsNull(section.numOnWaitlist)?.toString(10) ?? "",
+    numRequested: section.numRequested?.toString(10) ?? "",
+    numWaitlistCap: negativeAsNull(section.numWaitlistCap)?.toString(10) ?? "",
+  };
+};
 
 function transformRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
   const schools = rows

@@ -1,6 +1,6 @@
 import { AuditParser, DegreeworksClient } from "$components";
 import type { database } from "@packages/db";
-import type { DegreeWorksProgram } from "@packages/db/schema";
+import type { DegreeWorksProgram, DegreeWorksRequirement } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 
@@ -15,6 +15,7 @@ export class Scraper {
   private minorPrograms = new Set<string>();
 
   private done = false;
+  private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
   private parsedUgradPrograms = new Map<string, DegreeWorksProgram>();
   private parsedGradPrograms = new Map<string, DegreeWorksProgram>();
@@ -55,6 +56,24 @@ export class Scraper {
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
     console.log("[Scraper] degreeworks-scraper starting");
+
+    const ugradReqs = await this.dw.getUgradRequirements();
+    if (!ugradReqs) {
+      console.log("Can't get undergrad reqs...");
+      return;
+    }
+
+    const [ucRequirements, geRequirements] = ugradReqs;
+    this.parsedUgradRequirements.set(
+      "UC",
+      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
+    );
+    this.parsedUgradRequirements.set(
+      "GE",
+      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray),
+    );
+    console.log("Fetched university and GE requirements");
+
     this.degrees = await this.dw.getMapping("degrees");
     console.log(`Fetched ${this.degrees.size} degrees`);
     this.majorPrograms = new Set((await this.dw.getMapping("majors")).keys());
@@ -142,6 +161,7 @@ export class Scraper {
   get() {
     if (!this.done) throw new Error("This scraper instance has not yet finished its run.");
     return {
+      parsedUgradRequirements: this.parsedUgradRequirements,
       parsedMinorPrograms: this.parsedMinorPrograms,
       parsedUgradPrograms: this.parsedUgradPrograms,
       parsedGradPrograms: this.parsedGradPrograms,
