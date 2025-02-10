@@ -4,7 +4,11 @@ type APExam @cacheControl(maxAge: 86400) {
     officialName: String!
 }
 
+input APExamsQuery {
+    id: String!,
+}
+
 extend type Query {
-    apExams: [APExam!]!
+    apExams(query: APExamsQuery): [APExam!]!
 }
 `;

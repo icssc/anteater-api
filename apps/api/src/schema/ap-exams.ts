@@ -1,5 +1,12 @@
 import { z } from "@hono/zod-openapi";
 
+export const apExamsQuerySchema = z.object({
+  id: z.string().optional().openapi({
+    description: "If provided, the name of an AP Exam as it appears in the UCI Catalogue",
+    example: "AP ECONOMICS:MICRO",
+  }),
+});
+
 export const apExamsResponseSchema = z.array(
   z.object({
     catalogueName: z.string().openapi({

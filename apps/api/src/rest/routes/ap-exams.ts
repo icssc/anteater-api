@@ -1,6 +1,6 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { apExamsResponseSchema, errorSchema, responseSchema } from "$schema";
+import { apExamsQuerySchema, apExamsResponseSchema, errorSchema, responseSchema } from "$schema";
 import { apExamsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
@@ -15,6 +15,7 @@ const apExamsRoute = createRoute({
   path: "/",
   description:
     "Get a mapping from AP exam names as they appear in the UCI Catalogue to their official names as given by College Board",
+  request: { query: apExamsQuerySchema },
   responses: {
     200: {
       content: { "application/json": { schema: responseSchema(apExamsResponseSchema) } },
@@ -33,8 +34,9 @@ apExamsRouter.get(
 );
 
 apExamsRouter.openapi(apExamsRoute, async (c) => {
+  const query = c.req.valid("query");
   const service = new apExamsService(database(c.env.DB.connectionString));
-  const res = await service.getAPExams();
+  const res = await service.getAPExams(query);
   return res
     ? c.json({ ok: true, data: apExamsResponseSchema.parse(res) }, 200)
     : c.json(
