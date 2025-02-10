@@ -694,6 +694,11 @@ export const studyRoomSlot = pgTable(
   ],
 );
 
+export const apExams = pgTable("ap_exams", {
+  id: varchar("id").primaryKey(),
+  officialName: varchar("official_name").notNull(),
+});
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {

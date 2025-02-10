@@ -1,0 +1,14 @@
+{
+  "name": "@apps/ap-exams-importer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Script for importing AP Exam names from a statuc mapping",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*"
+  }
+}
