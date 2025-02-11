@@ -4,7 +4,7 @@ import { and, eq, getTableColumns, inArray } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocSection,
-  websocSectionEnrollment,
+  websocSectionEnrollmentHistory, 
 } from "@packages/db/schema";
 import type { z } from "zod";
 
@@ -37,7 +37,7 @@ function transformEnrollmentChangeRows(
   rows: {
     course: typeof websocCourse.$inferSelect;
     section: typeof websocSection.$inferSelect;
-    enrollment: typeof websocSectionEnrollment.$inferSelect;
+    enrollment: typeof websocSectionEnrollmentHistory.$inferSelect; 
   }[],
 ) {
   const groupedBySection = new Map<
@@ -45,7 +45,7 @@ function transformEnrollmentChangeRows(
     {
       course: typeof websocCourse.$inferSelect;
       section: typeof websocSection.$inferSelect;
-      enrollments: typeof websocSectionEnrollment.$inferSelect[];
+      enrollments: typeof websocSectionEnrollmentHistory.$inferSelect[];
     }
   >();
 
@@ -76,7 +76,7 @@ function transformEnrollmentChangeRows(
   >();
 
   for (const { course, section, enrollments } of groupedBySection.values()) {
-    enrollments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    enrollments.sort((a, b) => a.scrapedAt.getTime() - b.scrapedAt.getTime());
     const latest = enrollments[enrollments.length - 1];
     const previous =
       enrollments.length > 1 ? enrollments[enrollments.length - 2] : undefined;
@@ -116,7 +116,7 @@ function transformEnrollmentChangeRows(
 
   const courses = Array.from(courseMap.values());
 
-  const allDates = rows.map((row) => row.enrollment.createdAt.getTime());
+  const allDates = rows.map((row) => row.enrollment.scrapedAt.getTime());
   const updatedAt = new Date(Math.max(...allDates)).toISOString();
 
   return { courses, updatedAt };
@@ -130,16 +130,16 @@ export class EnrollmentChangesService {
       .select({
         course: getTableColumns(websocCourse),
         section: getTableColumns(websocSection),
-        enrollment: getTableColumns(websocSectionEnrollment),
+        enrollment: getTableColumns(websocSectionEnrollmentHistory), 
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
       .innerJoin(
-        websocSectionEnrollment,
-        eq(websocSection.id, websocSectionEnrollment.sectionId),
+        websocSectionEnrollmentHistory, 
+        eq(websocSection.id, websocSectionEnrollmentHistory.sectionId),
       )
       .where(buildQuery(input))
-      .orderBy(websocSectionEnrollment.createdAt);
+      .orderBy(websocSectionEnrollmentHistory.scrapedAt); 
 
     const transformed = transformEnrollmentChangeRows(rows);
     return transformed;
