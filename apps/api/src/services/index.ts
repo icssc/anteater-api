@@ -8,3 +8,4 @@ export * from "./search";
 export * from "./websoc";
 export * from "./week";
 export * from "./study-rooms";
+export * from "./enrollment-changes";
