@@ -22,6 +22,8 @@ async function main() {
     )
     .onConflictDoUpdate({ target: apExams.id, set: conflictUpdateSetAllCols(apExams) });
 
+  await db.$client.end();
+
   exit(0);
 }
 
