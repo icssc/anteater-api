@@ -42,6 +42,10 @@ const majorsRoute = createRoute({
       },
       description: "Successful operation",
     },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Major data not found",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Server error occurred",
@@ -64,6 +68,10 @@ const minorsRoute = createRoute({
       },
       description: "Successful operation",
     },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Minor data not found",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Server error occurred",
@@ -85,6 +93,10 @@ const specializationsRoute = createRoute({
         "application/json": { schema: responseSchema(specializationsResponseSchema) },
       },
       description: "Successful operation",
+    },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Specialization data not found",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -224,6 +236,9 @@ programsRouter.openapi(majorsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getMajors(query);
+  if (query?.id && !res.length) {
+    return c.json({ ok: false, message: "No data for a major by that ID" }, 404);
+  }
   return c.json({ ok: true, data: majorsResponseSchema.parse(res) }, 200);
 });
 
@@ -231,6 +246,9 @@ programsRouter.openapi(minorsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getMinors(query);
+  if (query?.id && !res.length) {
+    return c.json({ ok: false, message: "No data for a minor by that ID" }, 404);
+  }
   return c.json({ ok: true, data: minorsResponseSchema.parse(res) }, 200);
 });
 
@@ -238,6 +256,9 @@ programsRouter.openapi(specializationsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getSpecializations(query);
+  if (query?.id && !res.length) {
+    return c.json({ ok: false, message: "No data for a specialization by that ID" }, 404);
+  }
   return c.json({ ok: true, data: specializationsResponseSchema.parse(res) }, 200);
 });
 
