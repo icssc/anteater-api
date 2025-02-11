@@ -50,7 +50,7 @@ export const programResolvers = {
       const service = new ProgramsService(db);
       const res = await service.getMajors(parsedArgs);
       if (args?.query && !res.length)
-        throw new GraphQLError("Major data not found", {
+        throw new GraphQLError("No data for a major by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
@@ -60,7 +60,7 @@ export const programResolvers = {
       const service = new ProgramsService(db);
       const res = await service.getMinors(parsedArgs);
       if (args?.query && !res.length)
-        throw new GraphQLError("Minor data not found", {
+        throw new GraphQLError("No data for a minor by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
@@ -70,7 +70,7 @@ export const programResolvers = {
       const service = new ProgramsService(db);
       const res = await service.getSpecializations(parsedArgs);
       if (args?.query && !res.length)
-        throw new GraphQLError("Specializations data not found", {
+        throw new GraphQLError("No data for a specialization by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
