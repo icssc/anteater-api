@@ -11,8 +11,11 @@ export const cursorResponseSchema = <T extends z.ZodType>(data: T) =>
     ok: z.literal<boolean>(true).openapi({}),
     data: z.object({
       items: data.openapi({ description: "The list of requested items" }),
-      nextCursor: z.string().nullable().openapi({
-        description: "Cursor pointing to the next page. Null if there are no more results",
-      }),
+      nextCursor: z
+        .string()
+        .nullable()
+        .openapi({
+          description: "Cursor pointing to the next page. Null if there are no more results",
+        }),
     }),
   });
