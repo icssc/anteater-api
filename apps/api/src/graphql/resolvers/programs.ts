@@ -46,7 +46,7 @@ export const programResolvers = {
       return res;
     },
     majors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = majorsQuerySchema.parse(args?.query);
+      const parsedArgs = majorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMajors(parsedArgs);
       if (!res)
@@ -56,7 +56,7 @@ export const programResolvers = {
       return res;
     },
     minors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = minorsQuerySchema.parse(args?.query);
+      const parsedArgs = minorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMinors(parsedArgs);
       if (!res)
@@ -66,7 +66,7 @@ export const programResolvers = {
       return res;
     },
     specializations: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = specializationsQuerySchema.parse(args?.query);
+      const parsedArgs = specializationsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getSpecializations(parsedArgs);
       if (!res)
