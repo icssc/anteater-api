@@ -49,7 +49,7 @@ export const programResolvers = {
       const parsedArgs = majorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMajors(parsedArgs);
-      if (!res)
+      if (args?.query && !res.length)
         throw new GraphQLError("Major data not found", {
           extensions: { code: "NOT_FOUND" },
         });
@@ -59,7 +59,7 @@ export const programResolvers = {
       const parsedArgs = minorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMinors(parsedArgs);
-      if (!res)
+      if (args?.query && !res.length)
         throw new GraphQLError("Minor data not found", {
           extensions: { code: "NOT_FOUND" },
         });
@@ -69,7 +69,7 @@ export const programResolvers = {
       const parsedArgs = specializationsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getSpecializations(parsedArgs);
-      if (!res)
+      if (args?.query && !res.length)
         throw new GraphQLError("Specializations data not found", {
           extensions: { code: "NOT_FOUND" },
         });
