@@ -1,11 +1,9 @@
 import { z } from "@hono/zod-openapi";
-import { terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
-import { yearSchema } from "./lib";
 
 export const enrollmentChangesQuerySchema = z.object({
   sections: z
     .string({ required_error: "The 'sections' query parameter is required." })
-    .nonempty("The 'sections' query parameter cannot be empty."),
+    .min(1, { message: "The 'sections' query parameter cannot be empty." }),
 });
 
 /**
@@ -59,6 +57,7 @@ const enrollmentChangeSectionSchema = z.object({
   numRequested: z.string(),  
   numOnWaitlist: z.string(),  
   numWaitlistCap: z.string(),
+  restrictionCodes: z.array(z.string()).optional(),
 });
 
 const enrollmentChangeCourseSchema = z.object({

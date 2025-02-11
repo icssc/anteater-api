@@ -1,4 +1,4 @@
-import type { enrollmentChangesQuerySchema, enrollmentChangesSchema } from "$schema/enrollment-changes";
+import type { enrollmentChangesQuerySchema } from "$schema/enrollment-changes";
 import type { database } from "@packages/db";
 import { and, eq, getTableColumns, inArray } from "@packages/db/drizzle";
 import {
@@ -10,8 +10,26 @@ import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
 
+type SectionChange = {
+  sectionCode: string;
+  maxCapacity: string;
+  status: {
+    from: string;
+    to: string;
+  };
+  numCurrentlyEnrolled: {
+    totalEnrolled: string;
+    sectionEnrolled: string;
+  };
+  numRequested: string;
+  numOnWaitlist: string;
+  numWaitlistCap: string;
+};
+
 function buildQuery(input: EnrollmentChangesServiceInput) {
-  const sectionCodes = input.sections.split(",").map((code) => Number.parseInt(code.trim(), 10));
+  const sectionCodes = input.sections
+    .split(",")
+    .map((code) => Number.parseInt(code.trim(), 10));
   return inArray(websocSection.sectionCode, sectionCodes);
 }
 
@@ -40,7 +58,10 @@ function transformEnrollmentChangeRows(
         enrollments: [row.enrollment],
       });
     } else {
-      groupedBySection.get(key)!.enrollments.push(row.enrollment);
+      const group = groupedBySection.get(key);
+      if (group) {
+        group.enrollments.push(row.enrollment);
+      }
     }
   }
 
@@ -50,16 +71,17 @@ function transformEnrollmentChangeRows(
       deptCode: string;
       courseTitle: string;
       courseNumber: string;
-      sections: any[];
+      sections: SectionChange[];
     }
   >();
 
   for (const { course, section, enrollments } of groupedBySection.values()) {
     enrollments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     const latest = enrollments[enrollments.length - 1];
-    const previous = enrollments.length > 1 ? enrollments[enrollments.length - 2] : undefined;
+    const previous =
+      enrollments.length > 1 ? enrollments[enrollments.length - 2] : undefined;
 
-    const sectionChange = {
+    const sectionChange: SectionChange = {
       sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
       maxCapacity: latest.maxCapacity.toString(),
       status: {
@@ -68,7 +90,8 @@ function transformEnrollmentChangeRows(
       },
       numCurrentlyEnrolled: {
         totalEnrolled: latest.numCurrentlyTotalEnrolled?.toString() ?? "",
-        sectionEnrolled: previous ? previous.numCurrentlyTotalEnrolled?.toString() ?? "" : "",
+        sectionEnrolled:
+          previous ? previous.numCurrentlyTotalEnrolled?.toString() ?? "" : "",
       },
       numRequested: latest.numRequested?.toString() ?? "",
       numOnWaitlist: latest.numOnWaitlist?.toString() ?? "",
@@ -84,7 +107,10 @@ function transformEnrollmentChangeRows(
         sections: [sectionChange],
       });
     } else {
-      courseMap.get(courseKey)!.sections.push(sectionChange);
+      const courseEntry = courseMap.get(courseKey);
+      if (courseEntry) {
+        courseEntry.sections.push(sectionChange);
+      }
     }
   }
 
@@ -108,7 +134,10 @@ export class EnrollmentChangesService {
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(websocSectionEnrollment, eq(websocSection.id, websocSectionEnrollment.sectionId))
+      .innerJoin(
+        websocSectionEnrollment,
+        eq(websocSection.id, websocSectionEnrollment.sectionId),
+      )
       .where(buildQuery(input))
       .orderBy(websocSectionEnrollment.createdAt);
 

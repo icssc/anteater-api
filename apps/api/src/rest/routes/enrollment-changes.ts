@@ -21,8 +21,6 @@ const enrollmentChangesRoute = createRoute({
   method: "get",
   path: "/",
   request: { query: enrollmentChangesQuerySchema },
-  description:
-    "Retrieves enrollment changes data for the provided section codes. Expects a query parameter like `sections=3000,3001,3002`.",
   responses: {
     200: {
       content: {
