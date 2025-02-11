@@ -14,12 +14,7 @@ async function main() {
 
   await db
     .insert(apExams)
-    .values(
-      Object.entries(apExamNames).map(([k, v]) => ({
-        id: k,
-        officialName: v,
-      })),
-    )
+    .values(Object.entries(apExamNames).map(([id, officialName]) => ({ id, officialName })))
     .onConflictDoUpdate({ target: apExams.id, set: conflictUpdateSetAllCols(apExams) });
 
   await db.$client.end();
