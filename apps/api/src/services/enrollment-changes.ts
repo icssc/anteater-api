@@ -77,8 +77,8 @@ function transformEnrollmentChangeRows(
       sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
       maxCapacity: latest.maxCapacity.toString(),
       status: {
-        from: previous ? previous.status : "",
-        to: latest.status,
+        from: previous?.status ?? "",
+        to: latest?.status ?? "",
       },
       numCurrentlyEnrolled: {
         totalEnrolled: latest.numCurrentlyTotalEnrolled?.toString() ?? "",
