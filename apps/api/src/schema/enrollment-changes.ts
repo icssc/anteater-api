@@ -40,34 +40,34 @@ export const enrollmentChangesQuerySchema = z.object({
  */
 
 const enrollmentChangeStatusSchema = z.object({
-  from: z.string(), 
+  from: z.string(),
   to: z.string(),
 });
 
 const numCurrentlyEnrolledSchema = z.object({
-  totalEnrolled: z.string(),  
-  sectionEnrolled: z.string(), 
+  totalEnrolled: z.string(),
+  sectionEnrolled: z.string(),
 });
 
 const enrollmentChangeSectionSchema = z.object({
-  sectionCode: z.string(), 
-  maxCapacity: z.string(),  
+  sectionCode: z.string(),
+  maxCapacity: z.string(),
   status: enrollmentChangeStatusSchema,
   numCurrentlyEnrolled: numCurrentlyEnrolledSchema,
-  numRequested: z.string(),  
-  numOnWaitlist: z.string(),  
+  numRequested: z.string(),
+  numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
   restrictionCodes: z.array(z.string()).optional(),
 });
 
 const enrollmentChangeCourseSchema = z.object({
-  deptCode: z.string(),       
-  courseTitle: z.string(),    
-  courseNumber: z.string(), 
+  deptCode: z.string(),
+  courseTitle: z.string(),
+  courseNumber: z.string(),
   sections: z.array(enrollmentChangeSectionSchema),
 });
 
 export const enrollmentChangesSchema = z.object({
   courses: z.array(enrollmentChangeCourseSchema),
-  updatedAt: z.string(), 
+  updatedAt: z.string(),
 });

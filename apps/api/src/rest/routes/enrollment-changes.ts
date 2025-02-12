@@ -43,7 +43,7 @@ const enrollmentChangesRoute = createRoute({
 
 enrollmentChangesRouter.get(
   "*",
-  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" })
+  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }),
 );
 
 enrollmentChangesRouter.openapi(enrollmentChangesRoute, async (c) => {
@@ -54,7 +54,7 @@ enrollmentChangesRouter.openapi(enrollmentChangesRoute, async (c) => {
       ok: true,
       data: enrollmentChangesSchema.array().parse(await service.getEnrollmentChanges(query)),
     },
-    200
+    200,
   );
 });
 

@@ -2,8 +2,8 @@ import { programsSchema } from "$graphql/schema/programs.ts";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { calendarSchema } from "./calendar";
 import { coursesSchema } from "./courses";
-import { enrollmentHistorySchema } from "./enrollment-history";
 import { enrollmentChangesSchema } from "./enrollment-changes";
+import { enrollmentHistorySchema } from "./enrollment-history";
 import { enums } from "./enums";
 import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
@@ -37,7 +37,7 @@ export const typeDefs = mergeTypeDefs([
   calendarSchema,
   coursesSchema,
   enrollmentHistorySchema,
-  enrollmentChangesSchema, 
+  enrollmentChangesSchema,
   gradesSchema,
   instructorsSchema,
   larcSchema,

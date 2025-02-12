@@ -2,6 +2,7 @@ import { defaultHook } from "$hooks";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { calendarRouter } from "./routes/calendar";
 import { coursesCursorRouter, coursesRouter } from "./routes/courses";
+import { enrollmentChangesRouter } from "./routes/enrollment-changes.ts";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
 import { gradesRouter } from "./routes/grades";
 import { instructorsCursorRouter, instructorsRouter } from "./routes/instructors";
@@ -12,7 +13,6 @@ import { searchRouter } from "./routes/search";
 import { studyRoomsRouter } from "./routes/study-rooms";
 import { websocRouter } from "./routes/websoc";
 import { weekRouter } from "./routes/week";
-import { enrollmentChangesRouter } from "./routes/enrollment-changes.ts"; 
 
 const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

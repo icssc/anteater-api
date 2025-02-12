@@ -1,11 +1,7 @@
 import type { enrollmentChangesQuerySchema } from "$schema/enrollment-changes";
 import type { database } from "@packages/db";
-import { and, eq, getTableColumns, inArray } from "@packages/db/drizzle";
-import {
-  websocCourse,
-  websocSection,
-  websocSectionEnrollmentHistory, 
-} from "@packages/db/schema";
+import { eq, getTableColumns, inArray } from "@packages/db/drizzle";
+import { websocCourse, websocSection, websocSectionEnrollmentHistory } from "@packages/db/schema";
 import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
@@ -27,9 +23,7 @@ type SectionChange = {
 };
 
 function buildQuery(input: EnrollmentChangesServiceInput) {
-  const sectionCodes = input.sections
-    .split(",")
-    .map((code) => Number.parseInt(code.trim(), 10));
+  const sectionCodes = input.sections.split(",").map((code) => Number.parseInt(code.trim(), 10));
   return inArray(websocSection.sectionCode, sectionCodes);
 }
 
@@ -37,7 +31,7 @@ function transformEnrollmentChangeRows(
   rows: {
     course: typeof websocCourse.$inferSelect;
     section: typeof websocSection.$inferSelect;
-    enrollment: typeof websocSectionEnrollmentHistory.$inferSelect; 
+    enrollment: typeof websocSectionEnrollmentHistory.$inferSelect;
   }[],
 ) {
   const groupedBySection = new Map<
@@ -45,7 +39,7 @@ function transformEnrollmentChangeRows(
     {
       course: typeof websocCourse.$inferSelect;
       section: typeof websocSection.$inferSelect;
-      enrollments: typeof websocSectionEnrollmentHistory.$inferSelect[];
+      enrollments: (typeof websocSectionEnrollmentHistory.$inferSelect)[];
     }
   >();
 
@@ -78,8 +72,7 @@ function transformEnrollmentChangeRows(
   for (const { course, section, enrollments } of groupedBySection.values()) {
     enrollments.sort((a, b) => a.scrapedAt.getTime() - b.scrapedAt.getTime());
     const latest = enrollments[enrollments.length - 1];
-    const previous =
-      enrollments.length > 1 ? enrollments[enrollments.length - 2] : undefined;
+    const previous = enrollments.length > 1 ? enrollments[enrollments.length - 2] : undefined;
 
     const sectionChange: SectionChange = {
       sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
@@ -90,8 +83,7 @@ function transformEnrollmentChangeRows(
       },
       numCurrentlyEnrolled: {
         totalEnrolled: latest.numCurrentlyTotalEnrolled?.toString() ?? "",
-        sectionEnrolled:
-          previous ? previous.numCurrentlyTotalEnrolled?.toString() ?? "" : "",
+        sectionEnrolled: previous ? (previous.numCurrentlyTotalEnrolled?.toString() ?? "") : "",
       },
       numRequested: latest.numRequested?.toString() ?? "",
       numOnWaitlist: latest.numOnWaitlist?.toString() ?? "",
@@ -130,16 +122,16 @@ export class EnrollmentChangesService {
       .select({
         course: getTableColumns(websocCourse),
         section: getTableColumns(websocSection),
-        enrollment: getTableColumns(websocSectionEnrollmentHistory), 
+        enrollment: getTableColumns(websocSectionEnrollmentHistory),
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
       .innerJoin(
-        websocSectionEnrollmentHistory, 
+        websocSectionEnrollmentHistory,
         eq(websocSection.id, websocSectionEnrollmentHistory.sectionId),
       )
       .where(buildQuery(input))
-      .orderBy(websocSectionEnrollmentHistory.scrapedAt); 
+      .orderBy(websocSectionEnrollmentHistory.scrapedAt);
 
     const transformed = transformEnrollmentChangeRows(rows);
     return transformed;

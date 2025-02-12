@@ -1,7 +1,7 @@
 import { calendarResolvers } from "$graphql/resolvers/calendar";
 import { coursesResolvers } from "$graphql/resolvers/courses";
-import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
 import { enrollmentChangesResolvers } from "$graphql/resolvers/enrollment-changes";
+import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
 import { gradesResolvers } from "$graphql/resolvers/grades";
 import { instructorsResolvers } from "$graphql/resolvers/instructors";
 import { larcResolvers } from "$graphql/resolvers/larc.ts";
@@ -16,7 +16,7 @@ export const resolvers = mergeResolvers([
   calendarResolvers,
   coursesResolvers,
   enrollmentHistoryResolvers,
-  enrollmentChangesResolvers, 
+  enrollmentChangesResolvers,
   gradesResolvers,
   instructorsResolvers,
   larcResolvers,
