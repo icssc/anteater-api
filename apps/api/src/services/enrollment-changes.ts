@@ -23,8 +23,7 @@ type SectionChange = {
 };
 
 function buildQuery(input: EnrollmentChangesServiceInput) {
-  const sectionCodes = input.sections.split(",").map((code) => Number.parseInt(code.trim(), 10));
-  return inArray(websocSection.sectionCode, sectionCodes);
+  return inArray(websocSection.sectionCode, input.sections);
 }
 
 function transformEnrollmentChangeRows(

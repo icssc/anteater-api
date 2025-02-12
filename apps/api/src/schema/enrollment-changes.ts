@@ -1,10 +1,18 @@
 import { z } from "@hono/zod-openapi";
+import { baseTenIntOrNull, negativeAsNull } from "@packages/stdlib";
 import { numCurrentlyEnrolledSchema, sectionStatusSchema } from "./websoc.ts";
 
 export const enrollmentChangesQuerySchema = z.object({
   sections: z
     .string({ required_error: "The 'sections' query parameter is required." })
-    .min(1, { message: "The 'sections' query parameter cannot be empty." }),
+    .min(1, { message: "The 'sections' query parameter cannot be empty." })
+    .transform((sections) =>
+      sections.split(",").map((code) => negativeAsNull(baseTenIntOrNull(code.trim()))),
+    )
+    .refine(
+      (sections) => sections.every((s) => s !== null),
+      "All comma-separated section codes must be non-negative integers",
+    ),
 });
 
 /**
