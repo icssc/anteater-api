@@ -10,3 +10,8 @@ export const isBaseTenInt = (s: string): boolean =>
  */
 export const baseTenIntOrNull = (s: string): number | null =>
   isBaseTenInt(s) ? Number.parseInt(s, 10) : null;
+
+/**
+ * Convert a nullable `number` to `null` if negative.
+ */
+export const negativeAsNull = (s: number | null): number | null => ((s ?? -1) < 0 ? null : s);

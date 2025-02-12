@@ -28,13 +28,19 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { baseTenIntOrNull, intersectAll, notNull, sleep } from "@packages/stdlib";
-import { parseMeetingDays, parseStartAndEndTimes } from "@packages/stdlib";
+import {
+  baseTenIntOrNull,
+  intersectAll,
+  notNull,
+  parseMeetingDays,
+  parseStartAndEndTimes,
+  sleep,
+} from "@packages/stdlib";
 import { load } from "cheerio";
 
 /**
  * WebSoc allows us to scrape up to 900 sections per chunk.
- * This provides a 1% margin of error in case sections magically appear within ranges.
+ * This provides a 1% margin of error in case new sections appear within ranges (which has happened before).
  */
 const SECTIONS_PER_CHUNK = 891;
 
@@ -308,24 +314,29 @@ function sectionMapper(
   }: WebsocSection,
   updatedAt: Date,
 ): typeof websocSection.$inferInsert {
+  // conflictUpdateSetAllCols cannot distinguish willfully updating a column to NULL and deferring to the existing value
+  // so we cannot store new NULLs
+  // instead we will store a sentinel and interpret it as null in the service layer
+  const numOnWaitlistResolved = numOnWaitlist?.startsWith("off")
+    ? baseTenIntOrNull(numOnWaitlist.split("(")[1].slice(0, -1))
+    : baseTenIntOrNull(numOnWaitlist);
   return {
     ...term,
     ...rest,
     ...generateRestrictions(rest),
     courseId,
+    status: rest.status ?? "",
     finalExamString: rest.finalExam,
     finalExam: parseFinalExamString(term, rest),
     meetings: rest.meetings.map(rawMeetingMapper),
     maxCapacity: Number.parseInt(maxCapacity, 10),
     sectionCode: Number.parseInt(sectionCode, 10),
     numRequested: Number.parseInt(numRequested, 10),
-    numOnWaitlist: numOnWaitlist?.startsWith("off")
-      ? baseTenIntOrNull(numOnWaitlist.split("(")[1].slice(0, -1))
-      : baseTenIntOrNull(numOnWaitlist),
-    numWaitlistCap: baseTenIntOrNull(numWaitlistCap),
-    numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved),
-    numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled),
-    numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled),
+    numOnWaitlist: numOnWaitlistResolved ?? -1,
+    numWaitlistCap: baseTenIntOrNull(numWaitlistCap) ?? -1,
+    numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved) ?? -1,
+    numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled) ?? -1,
+    numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled) ?? -1,
     updatedAt,
   };
 }
@@ -819,16 +830,9 @@ export async function scrapeTerm(
   } else {
     console.log("Performing chunk-wise scrape.");
     for (let i = 0; i < sectionCodeBounds.length; i += 2) {
-      const lower = sectionCodeBounds[i];
-      const upper = sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE;
-      const sectionCodes = `${lower}-${upper}`;
-      console.log(`Scraping chunk ${sectionCodes}`);
-      const resp = await request(term, {
-        sectionCodes,
-        cancelledCourses: "Include",
-      }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
-      await sleep(1000);
+      const lower = sectionCodeBounds[i] as `${number}`;
+      const upper = (sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE) as `${number}`;
+      await ingestChunk(db, term, lower, upper);
     }
   }
   await scrapeGEsForTerm(db, term);
@@ -840,6 +844,48 @@ export async function scrapeTerm(
       .values(values)
       .onConflictDoUpdate({ target: websocMeta.name, set: values });
   });
+}
+
+async function ingestChunk(
+  db: ReturnType<typeof database>,
+  term: Term,
+  lower: `${number}`,
+  upper: `${number}`,
+) {
+  const sectionCodes = `${lower}-${upper}`;
+  console.log(`Scraping chunk ${sectionCodes}`);
+  try {
+    const resp = await request(term, {
+      sectionCodes,
+      cancelledCourses: "Include",
+    }).then(normalizeResponse);
+    if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+    await sleep(1000);
+  } catch (e) {
+    /*
+     assuming network, etc. conditions are fine, we have more than 900 sections here
+     this means we somehow overran our 1% tolerance
+     that's okay; we can be suboptimal this time so we get all the sections that exist.
+     we're going to recompute the chunks at the start of the next scrape,
+     so that one will run optimally, given no such failure occurs again
+
+     we're going to bisect this chunk and try the two halves separately; eventually,
+     we'll have <= 900 valid sections in a chunk and we'll be in the clear
+    */
+    const lowerInt = Number.parseInt(lower, 10);
+    const upperInt = Number.parseInt(upper, 10);
+    const rangeLength = upperInt - lowerInt + 1;
+    if (rangeLength < 900) {
+      // okay, no way this was a chunk overrun
+      throw e;
+    }
+
+    console.log(`Chunk ${sectionCodes} failed (probably too large); bisecting and trying again...`);
+
+    const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
+    await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
+    await ingestChunk(db, term, (middleInt + 1).toString().padStart(5, "0") as `${number}`, upper);
+  }
 }
 
 export async function doScrape(db: ReturnType<typeof database>) {
