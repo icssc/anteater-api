@@ -1,4 +1,4 @@
-import type { enrollmentChangesQuerySchema } from "$schema/enrollment-changes";
+import type { enrollmentChangesQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { eq, getTableColumns, inArray } from "@packages/db/drizzle";
 import { websocCourse, websocSection, websocSectionEnrollmentHistory } from "@packages/db/schema";
