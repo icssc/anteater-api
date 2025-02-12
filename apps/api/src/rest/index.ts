@@ -19,6 +19,7 @@ const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 restRouter.route("/calendar", calendarRouter);
 restRouter.route("/courses", coursesRouter);
 restRouter.route("/coursesCursor", coursesCursorRouter);
+restRouter.route("/enrollmentChanges", enrollmentChangesRouter);
 restRouter.route("/enrollmentHistory", enrollmentHistoryRouter);
 restRouter.route("/grades", gradesRouter);
 restRouter.route("/instructors", instructorsRouter);
@@ -30,6 +31,5 @@ restRouter.route("/websoc", websocRouter);
 restRouter.route("/week", weekRouter);
 restRouter.route("/studyRooms", studyRoomsRouter);
 restRouter.route("/larc", larcRouter);
-restRouter.route("/enrollmentChanges", enrollmentChangesRouter);
 
 export { restRouter };

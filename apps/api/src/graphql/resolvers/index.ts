@@ -15,8 +15,8 @@ import { mergeResolvers } from "@graphql-tools/merge";
 export const resolvers = mergeResolvers([
   calendarResolvers,
   coursesResolvers,
-  enrollmentHistoryResolvers,
   enrollmentChangesResolvers,
+  enrollmentHistoryResolvers,
   gradesResolvers,
   instructorsResolvers,
   larcResolvers,
