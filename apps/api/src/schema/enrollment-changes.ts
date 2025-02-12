@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { numCurrentlyEnrolledSchema, sectionStatusSchema } from "./websoc.ts";
 
 export const enrollmentChangesQuerySchema = z.object({
   sections: z
@@ -40,13 +41,8 @@ export const enrollmentChangesQuerySchema = z.object({
  */
 
 const enrollmentChangeStatusSchema = z.object({
-  from: z.string(),
-  to: z.string(),
-});
-
-const numCurrentlyEnrolledSchema = z.object({
-  totalEnrolled: z.string(),
-  sectionEnrolled: z.string(),
+  from: sectionStatusSchema,
+  to: sectionStatusSchema,
 });
 
 const enrollmentChangeSectionSchema = z.object({
