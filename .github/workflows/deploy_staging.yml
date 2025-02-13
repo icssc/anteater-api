@@ -41,16 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check for no deploy label
-        id: check-label
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const labels = github.context.payload.pull_request.labels.map(label => label.name);
-            core.info(`PR labels: ${labels}`);
-            return { skip_deploy: labels.includes("no deploy") }; 
-
       - name: Deploy API to staging
-        if: steps.check-label.outputs.skip_deploy != 'true'
+        if: ${{ !contains(github.event.*.labels.*.name, 'no deploy') }}
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
