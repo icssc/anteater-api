@@ -25,6 +25,8 @@ jobs:
   deploy_staging:
     name: Deploy API to staging
 
+    if: ${{ ! contains(github.event.*.labels.*.name, 'no deploy') }}
+
     runs-on: ubuntu-latest
 
     environment:
@@ -42,6 +44,5 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy API to staging
-        if: ${{ ! contains(github.event.*.labels.*.name, 'no deploy') }}
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
