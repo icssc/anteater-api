@@ -48,8 +48,7 @@ jobs:
           script: |
             const labels = github.context.payload.pull_request.labels.map(label => label.name);
             core.info(`PR labels: ${labels}`);
-            const skipDeploy = labels.includes("no deploy");
-            core.setOutput("skip_deploy", skipDeploy.toString());
+            return { skip_deploy: labels.includes("no deploy") }; 
 
       - name: Deploy API to staging
         if: steps.check-label.outputs.skip_deploy != 'true'
