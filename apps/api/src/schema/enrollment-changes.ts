@@ -23,6 +23,7 @@ export const sectionEnrollmentChangeEntry = z.object({
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
   restrictionCodes: z.array(z.string()).optional(),
+  updatedAt: z.string().datetime({ local: true, offset: false }),
 });
 
 export const enrollmentChangeSectionSchema = z.object({
@@ -40,5 +41,4 @@ export const enrollmentChangeCourseSchema = z.object({
 
 export const enrollmentChangesSchema = z.object({
   courses: z.array(enrollmentChangeCourseSchema),
-  updatedAt: z.string(),
 });

@@ -34,6 +34,7 @@ function transformEntry(
     restrictionCodes: restrictionCodes.filter(
       (c: string) => entry[`restriction_${c.toLowerCase()}` as keyof typeof entry],
     ),
+    updatedAt: entry.scrapedAt.toISOString(),
   };
 }
 
@@ -97,13 +98,7 @@ function transformEnrollmentChangeRows(
     }
   }
 
-  const courses = Array.from(courseMap.values());
-
-  const allDates = rows.map((row) => row.enrollment.scrapedAt.getTime());
-  // revisit this
-  const updatedAt = new Date(Math.max(...allDates)).toISOString();
-
-  return { courses, updatedAt };
+  return { courses: Array.from(courseMap.values()) };
 }
 
 export class EnrollmentChangesService {
