@@ -25,7 +25,7 @@ const enrollmentChangesRoute = createRoute({
     200: {
       content: {
         "application/json": {
-          schema: responseSchema(enrollmentChangesSchema.array()),
+          schema: responseSchema(enrollmentChangesSchema),
         },
       },
       description: "Successful operation",
@@ -52,7 +52,7 @@ enrollmentChangesRouter.openapi(enrollmentChangesRoute, async (c) => {
   return c.json(
     {
       ok: true,
-      data: enrollmentChangesSchema.array().parse(await service.getEnrollmentChanges(query)),
+      data: enrollmentChangesSchema.parse(await service.getEnrollmentChanges(query)),
     },
     200,
   );
