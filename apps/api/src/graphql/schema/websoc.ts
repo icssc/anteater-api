@@ -110,7 +110,8 @@ input WebsocQuery {
     startTime: String
     endTime: String
     excludeRestrictionCodes: String
-    includeRelatedCourses: String
+    includeRelatedCourses: Boolean
+    courseID: String
 }
 
 extend type Query {
