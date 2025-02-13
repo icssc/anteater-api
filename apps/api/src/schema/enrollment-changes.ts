@@ -15,39 +15,6 @@ export const enrollmentChangesQuerySchema = z.object({
     ),
 });
 
-/**
- * Schema definitions for the enrollmentChanges response.
- *
- * The expected response shape is:
- * {
- *   "courses": [
- *     {
- *       "deptCode": "BIO SCI",
- *       "courseTitle": "DNA TO ORGANISMS",
- *       "courseNumber": "93",
- *       "sections": [
- *         {
- *           "sectionCode": "12345",
- *           "maxCapacity": "75",
- *           "status": {
- *             "from": "Waitl",
- *             "to": "OPEN"
- *           },
- *           "numCurrentlyEnrolled": {
- *             "totalEnrolled": "72",
- *             "sectionEnrolled": ""
- *           },
- *           "numRequested": "85",
- *           "numOnWaitlist": "0",
- *           "numWaitlistCap": "10"
- *         }
- *       ]
- *     }
- *   ],
- *   "updatedAt": "2024-12-07T12:00:00Z"
- * }
- */
-
 export const sectionEnrollmentChangeEntry = z.object({
   maxCapacity: z.string(),
   status: sectionStatusSchema,
