@@ -1,18 +1,21 @@
 import { z } from "@hono/zod-openapi";
-import { baseTenIntOrNull, negativeAsNull } from "@packages/stdlib";
+import { terms } from "@packages/db/schema";
+import { yearSchema } from "./lib";
 import { numCurrentlyEnrolledSchema, sectionStatusSchema } from "./websoc.ts";
 
 export const enrollmentChangesQuerySchema = z.object({
+  year: yearSchema,
+  quarter: z.enum(terms),
+  since: z
+    .string()
+    .datetime({ offset: false })
+    .transform((d) => new Date(d)),
+});
+
+export const enrollmentChangesBodySchema = z.object({
   sections: z
-    .string({ required_error: "The 'sections' query parameter is required." })
-    .min(1, { message: "The 'sections' query parameter cannot be empty." })
-    .transform((sections) =>
-      sections.split(",").map((code) => negativeAsNull(baseTenIntOrNull(code.trim()))),
-    )
-    .refine(
-      (sections) => sections.every((s) => s !== null),
-      "All comma-separated section codes must be non-negative integers",
-    ),
+    .array(z.number({ required_error: "The 'sections' body field is required." }))
+    .min(1, { message: "The 'sections' array cannot be empty." }),
 });
 
 export const sectionEnrollmentChangeEntry = z.object({

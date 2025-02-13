@@ -1,5 +1,6 @@
 import {
   type enrollmentChangeCourseSchema,
+  type enrollmentChangesBodySchema,
   type enrollmentChangesQuerySchema,
   restrictionCodes,
   type sectionEnrollmentChangeEntry,
@@ -12,8 +13,14 @@ import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
 
-function buildQuery(input: EnrollmentChangesServiceInput) {
-  return inArray(websocSection.sectionCode, input.sections);
+function buildQuery(
+  input: EnrollmentChangesServiceInput,
+  body: z.infer<typeof enrollmentChangesBodySchema>,
+) {
+  return and(
+    inArray(websocSection.sectionCode, body.sections),
+    and(eq(websocSection.year, input.year), eq(websocSection.quarter, input.quarter)),
+  );
 }
 
 function transformEntry(

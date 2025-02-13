@@ -1,6 +1,7 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
+  enrollmentChangesBodySchema,
   enrollmentChangesQuerySchema,
   enrollmentChangesSchema,
   errorSchema,
@@ -18,9 +19,15 @@ const enrollmentChangesRoute = createRoute({
   summary: "Filter enrollment changes",
   operationId: "enrollmentChanges",
   tags: ["Enrollment Changes"],
-  method: "get",
+  method: "post",
   path: "/",
-  request: { query: enrollmentChangesQuerySchema },
+  request: {
+    query: enrollmentChangesQuerySchema,
+    body: {
+      content: { "application/json": { schema: enrollmentChangesBodySchema } },
+      required: true,
+    },
+  },
   responses: {
     200: {
       content: {
@@ -47,12 +54,13 @@ enrollmentChangesRouter.get(
 );
 
 enrollmentChangesRouter.openapi(enrollmentChangesRoute, async (c) => {
-  const query = c.req.valid("query");
+  const params = c.req.valid("query");
+  const body = c.req.valid("json");
   const service = new EnrollmentChangesService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,
-      data: enrollmentChangesSchema.parse(await service.getEnrollmentChanges(query)),
+      data: enrollmentChangesSchema.parse(await service.getEnrollmentChanges(params, body)),
     },
     200,
   );
