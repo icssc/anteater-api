@@ -48,9 +48,10 @@ jobs:
           script: |
             const labels = github.context.payload.pull_request.labels.map(label => label.name);
             core.info(`PR labels: ${labels}`);
-            return { skip_deploy: labels.includes("no deploy") }; # TODO: edit the labels needed.
+            const skipDeploy = labels.includes("no deploy");
+            core.setOutput("skip_deploy", skipDeploy.toString());
 
       - name: Deploy API to staging
-        if: steps.check-label.outputs.skip_deploy == 'false'
+        if: steps.check-label.outputs.skip_deploy != 'true'
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
