@@ -48,20 +48,20 @@ export const enrollmentChangesQuerySchema = z.object({
  * }
  */
 
-export const enrollmentChangeStatusSchema = z.object({
-  from: sectionStatusSchema,
-  to: sectionStatusSchema,
-});
-
-export const enrollmentChangeSectionSchema = z.object({
-  sectionCode: z.string(),
+export const sectionEnrollmentChangeEntry = z.object({
   maxCapacity: z.string(),
-  status: enrollmentChangeStatusSchema,
+  status: sectionStatusSchema,
   numCurrentlyEnrolled: numCurrentlyEnrolledSchema,
   numRequested: z.string(),
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
   restrictionCodes: z.array(z.string()).optional(),
+});
+
+export const enrollmentChangeSectionSchema = z.object({
+  sectionCode: z.string(),
+  from: sectionEnrollmentChangeEntry.optional(),
+  to: sectionEnrollmentChangeEntry,
 });
 
 export const enrollmentChangeCourseSchema = z.object({
