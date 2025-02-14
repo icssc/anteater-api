@@ -2,6 +2,7 @@ import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } fro
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
 import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
+import { inArray } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
   websocCourse,
@@ -92,22 +93,6 @@ function buildQuery(input: WebsocServiceInput) {
     }
     conditions.push(or(...courseNumberConditions));
   }
-  if (input.includeRelatedCourses && input.sectionCodes) {
-    const relatedCoursesConditions: Array<SQL | undefined> = [];
-    for (const code of input.sectionCodes) {
-      switch (code._type) {
-        case "ParsedInteger":
-          relatedCoursesConditions.push(eq(websocSection.sectionCode, code.value));
-          break;
-        case "ParsedRange":
-          relatedCoursesConditions.push(
-            and(gte(websocSection.sectionCode, code.min), lte(websocSection.sectionCode, code.max)),
-          );
-          break;
-      }
-    }
-    conditions.push(or(...relatedCoursesConditions));
-  }
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];
     for (const code of input.sectionCodes) {
@@ -122,7 +107,19 @@ function buildQuery(input: WebsocServiceInput) {
           break;
       }
     }
-    conditions.push(or(...sectionCodesConditions));
+    if (input.includeRelatedCourses && input.courseIds) {
+      conditions.push(
+        or(
+          or(...sectionCodesConditions.filter(Boolean)),
+          inArray(websocCourse.id, input.courseIds),
+        ),
+      );
+    } else {
+      conditions.push(or(...sectionCodesConditions));
+    }
+  }
+  if (!input.sectionCodes && input.courseIds) {
+    conditions.push(inArray(websocCourse.courseId, input.courseIds));
   }
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
@@ -404,6 +401,45 @@ export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getWebsocResponse(input: WebsocServiceInput) {
+    if (input.includeRelatedCourses && input.sectionCodes && input.courseIds) {
+      throw new Error(
+        "Invalid query: The includeRelatedCourses flag only works when sectionCodes are provided. Do not provide courseIds along with includeRelatedCourses.",
+      );
+    }
+    if (input.includeRelatedCourses && input.sectionCodes) {
+      const sectionCodesConditions: Array<SQL | undefined> = [];
+      for (const code of input.sectionCodes) {
+        switch (code._type) {
+          case "ParsedInteger":
+            sectionCodesConditions.push(eq(websocSection.sectionCode, code.value));
+            break;
+          case "ParsedRange":
+            sectionCodesConditions.push(
+              and(
+                gte(websocSection.sectionCode, code.min),
+                lte(websocSection.sectionCode, code.max),
+              ),
+            );
+            break;
+        }
+      }
+
+      const relatedCourseIdsResult = await this.db
+        .select({ courseId: websocSection.courseId })
+        .from(websocSchool)
+        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
+        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
+        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+        .where(
+          and(
+            eq(websocSchool.year, input.year),
+            eq(websocSchool.quarter, input.quarter),
+            or(...sectionCodesConditions),
+          ),
+        );
+      const relatedCourseIds = Array.from(new Set(relatedCourseIdsResult.map((r) => r.courseId)));
+      input.courseIds = relatedCourseIds;
+    }
     return this.db
       .select({
         school: getTableColumns(websocSchool),
