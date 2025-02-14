@@ -1,5 +1,4 @@
 import {
-  type enrollmentChangeCourseSchema,
   type enrollmentChangesBodySchema,
   type enrollmentChangesQuerySchema,
   restrictionCodes,
@@ -7,8 +6,20 @@ import {
   type sectionStatusSchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { and, desc, eq, getTableColumns, inArray, lte, or, sql } from "@packages/db/drizzle";
-import { websocCourse, websocSection, websocSectionEnrollmentHistory } from "@packages/db/schema";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNotNull,
+  lte,
+  max,
+  ne,
+  or,
+  sql,
+} from "@packages/db/drizzle";
+import { websocSection, websocSectionEnrollmentHistory } from "@packages/db/schema";
 import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
@@ -47,26 +58,23 @@ function transformEntry(
 
 function acculumateRows(
   rows: {
-    course: typeof websocCourse.$inferSelect;
-    section: typeof websocSection.$inferSelect;
+    sectionCode: typeof websocSection.$inferSelect.sectionCode;
     enrollment: typeof websocSectionEnrollmentHistory.$inferSelect;
   }[],
 ) {
   const groupedBySection = new Map<
-    string,
+    number,
     {
-      course: typeof websocCourse.$inferSelect;
-      section: typeof websocSection.$inferSelect;
+      sectionCode: typeof websocSection.$inferSelect.sectionCode;
       enrollments: (typeof websocSectionEnrollmentHistory.$inferSelect)[];
     }
   >();
 
   for (const row of rows) {
-    const key = row.section.id.toString();
+    const key = row.sectionCode;
     if (!groupedBySection.has(key)) {
       groupedBySection.set(key, {
-        course: row.course,
-        section: row.section,
+        sectionCode: key,
         enrollments: [row.enrollment],
       });
     } else {
@@ -77,35 +85,19 @@ function acculumateRows(
     }
   }
 
-  const courseMap = new Map<string, z.infer<typeof enrollmentChangeCourseSchema>>();
-  for (const { course, section, enrollments } of groupedBySection.values()) {
+  const sections = [];
+
+  for (const { sectionCode, enrollments } of groupedBySection.values()) {
     const latest = enrollments[0];
     const previous = enrollments?.[1];
 
-    const sectionChange = {
-      sectionCode: section.sectionCode.toString(10).padStart(5, "0"),
-      maxCapacity: latest.maxCapacity.toString(),
+    sections.push({
+      sectionCode: sectionCode.toString(10).padStart(5, "0"),
       from: previous ? transformEntry(previous) : undefined,
       to: transformEntry(latest),
-    };
-
-    const courseKey = course.id.toString();
-    if (!courseMap.has(courseKey)) {
-      courseMap.set(courseKey, {
-        deptCode: course.deptCode,
-        courseTitle: course.courseTitle,
-        courseNumber: course.courseNumber,
-        sections: [sectionChange],
-      });
-    } else {
-      const courseEntry = courseMap.get(courseKey);
-      if (courseEntry) {
-        courseEntry.sections.push(sectionChange);
-      }
-    }
+    });
   }
-
-  return { courses: Array.from(courseMap.values()) };
+  return { sections };
 }
 
 export class EnrollmentChangesService {
@@ -117,30 +109,48 @@ export class EnrollmentChangesService {
   ) {
     const queryConds = buildQuery(params, body);
 
-    const ranked = this.db
+    const mapLatest = this.db
+      .select({
+        sectionId: websocSectionEnrollmentHistory.sectionId,
+        latestScrape: max(websocSectionEnrollmentHistory.scrapedAt).as("latest_scrape"),
+      })
+      .from(websocSectionEnrollmentHistory)
+      .groupBy(websocSectionEnrollmentHistory.sectionId)
+      .as("map_latest");
+
+    const sub = this.db
       .select({
         enrollment: getTableColumns(websocSectionEnrollmentHistory),
-        rnk: sql`RANK() OVER (PARTITION BY ${websocSectionEnrollmentHistory.sectionId} ORDER BY ${websocSectionEnrollmentHistory.scrapedAt} DESC)`.as(
-          "rnk",
+        sectionCode: websocSection.sectionCode,
+        rn: sql`row_number() OVER (PARTITION BY ${websocSectionEnrollmentHistory.sectionId})`.as(
+          "rn",
         ),
       })
       .from(websocSectionEnrollmentHistory)
+      .leftJoin(
+        mapLatest,
+        and(
+          eq(websocSectionEnrollmentHistory.sectionId, mapLatest.sectionId),
+          or(
+            eq(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
+            and(
+              ne(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
+              lte(websocSectionEnrollmentHistory.scrapedAt, params.since),
+            ),
+          ),
+        ),
+      )
       .innerJoin(websocSection, eq(websocSectionEnrollmentHistory.sectionId, websocSection.id))
-      .where(queryConds)
-      .as("ranked");
+      .where(and(isNotNull(mapLatest.sectionId), queryConds))
+      .orderBy(desc(websocSectionEnrollmentHistory.sectionId))
+      .as("sub");
 
     const rows = await this.db
       .select({
-        enrollment: ranked.enrollment,
-        section: getTableColumns(websocSection),
-        course: getTableColumns(websocCourse),
-        isLatest: eq(ranked.rnk, 1),
+        enrollment: sub.enrollment,
+        sectionCode: sub.sectionCode,
       })
-      .from(ranked)
-      .innerJoin(websocSection, eq(ranked.enrollment.sectionId, websocSection.id))
-      .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
-      .where(or(sql`rnk = 1`, and(sql`rnk > 1`, lte(ranked.enrollment.scrapedAt, params.since))))
-      .orderBy(desc(ranked.rnk));
+      .from(sub);
 
     return acculumateRows(rows);
   }

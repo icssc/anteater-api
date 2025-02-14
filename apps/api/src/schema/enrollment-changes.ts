@@ -36,13 +36,6 @@ export const enrollmentChangeSectionSchema = z.object({
   to: sectionEnrollmentChangeEntry,
 });
 
-export const enrollmentChangeCourseSchema = z.object({
-  deptCode: z.string(),
-  courseTitle: z.string(),
-  courseNumber: z.string(),
-  sections: z.array(enrollmentChangeSectionSchema),
-});
-
 export const enrollmentChangesSchema = z.object({
-  courses: z.array(enrollmentChangeCourseSchema),
+  sections: z.array(enrollmentChangeSectionSchema),
 });
