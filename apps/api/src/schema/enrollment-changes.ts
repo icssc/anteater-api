@@ -16,7 +16,7 @@ export const enrollmentChangesQuerySchema = z.object({
 });
 
 export const enrollmentChangesBodySchema = z.object({
-  sections: z
+  sectionCodes: z
     .array(z.string({ required_error: "The 'sections' body field is required." }))
     .min(1, { message: "The 'sections' array cannot be empty." })
     .max(5000)

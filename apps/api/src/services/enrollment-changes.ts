@@ -30,7 +30,7 @@ function buildQuery(
   body: z.infer<typeof enrollmentChangesBodySchema>,
 ) {
   return and(
-    inArray(websocSection.sectionCode, body.sections),
+    inArray(websocSection.sectionCode, body.sectionCodes),
     and(eq(websocSection.year, input.year), eq(websocSection.quarter, input.quarter)),
   );
 }
