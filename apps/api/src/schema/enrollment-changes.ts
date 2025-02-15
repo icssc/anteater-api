@@ -27,6 +27,10 @@ export const enrollmentChangesBodySchema = z.object({
     }),
 });
 
+export const enrollmentChangesGraphQLQuerySchema = enrollmentChangesQuerySchema.merge(
+  enrollmentChangesBodySchema,
+);
+
 export const sectionEnrollmentSnapshot = z.object({
   maxCapacity: z.string(),
   status: sectionStatusSchema,

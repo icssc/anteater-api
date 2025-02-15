@@ -1,41 +1,38 @@
 export const enrollmentChangesSchema = `#graphql
-  type EnrollmentChangesStatus @cacheControl(maxAge: 300) {
-    from: String!
-    to: String!
-  }
-
-  type NumCurrentlyEnrolled @cacheControl(maxAge: 300) {
+type NumCurrentlyEnrolled @cacheControl(maxAge: 300) {
     totalEnrolled: String!
     sectionEnrolled: String!
-  }
+}
 
-  type EnrollmentChangesSection @cacheControl(maxAge: 300) {
-    sectionCode: String!
+type SectionEnrollmentSnapshot @cacheControl(maxAge: 300) {
     maxCapacity: String!
-    status: EnrollmentChangesStatus!
+    status: String!
     numCurrentlyEnrolled: NumCurrentlyEnrolled!
     numRequested: String!
     numOnWaitlist: String!
     numWaitlistCap: String!
-  }
-
-  type EnrollmentChangeCourse @cacheControl(maxAge: 300) {
-    deptCode: String!
-    courseTitle: String!
-    courseNumber: String!
-    sections: [EnrollmentChangesSection!]!
-  }
-
-  type EnrollmentChanges @cacheControl(maxAge: 300) {
-    courses: [EnrollmentChangeCourse!]!
+    restrictionCodes: [String!]!
     updatedAt: String!
-  }
+}
 
-  input EnrollmentChangesQuery {
-    sections: String!
-  }
+type EnrollmentChangesSection @cacheControl(maxAge: 300) {
+    sectionCode: String!
+    from: SectionEnrollmentSnapshot
+    to: SectionEnrollmentSnapshot!
+}
 
-  extend type Query {
-    enrollmentChanges(query: EnrollmentChangesQuery): EnrollmentChanges!
-  }
+type EnrollmentChanges @cacheControl(maxAge: 300) {
+    sections: [EnrollmentChangesSection!]!
+}
+
+input EnrollmentChangesQuery {
+    year: String!
+    quarter: String!
+    since: String!
+    sections: [Int!]!
+}
+
+extend type Query {
+    enrollmentChanges(query: EnrollmentChangesQuery!): EnrollmentChanges!
+}
 `;
