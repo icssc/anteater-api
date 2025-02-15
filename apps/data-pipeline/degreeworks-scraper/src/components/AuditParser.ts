@@ -64,6 +64,7 @@ export class AuditParser {
         .then((rows) =>
           rows.filter((x) =>
             x.courseNumber.match(
+              // we assume @@@ and longer never happen (#122)
               new RegExp(`^${courseNumber.replace("@@", "\\w{2,}").replace("@", "\\w+")}`),
             ),
           ),
