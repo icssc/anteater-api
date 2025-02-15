@@ -16,9 +16,9 @@ const enrollmentChangesRouter = new OpenAPIHono<{ Bindings: Env }>({
 });
 
 const enrollmentChangesRoute = createRoute({
-  summary: "Filter enrollment changes",
+  summary: "Retrieve section enrollment changes",
   operationId: "enrollmentChanges",
-  tags: ["Enrollment Changes"],
+  tags: ["Enrollment changes"],
   method: "post",
   path: "/",
   request: {
@@ -28,6 +28,7 @@ const enrollmentChangesRoute = createRoute({
       required: true,
     },
   },
+  description: 'Retrieve paired "from" and "to" snapshots of section enrollment.',
   responses: {
     200: {
       content: {

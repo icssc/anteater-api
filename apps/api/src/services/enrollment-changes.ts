@@ -2,7 +2,7 @@ import {
   type enrollmentChangesBodySchema,
   type enrollmentChangesQuerySchema,
   restrictionCodes,
-  type sectionEnrollmentChangeEntry,
+  type sectionEnrollmentSnapshot,
   type sectionStatusSchema,
 } from "$schema";
 import type { database } from "@packages/db";
@@ -36,7 +36,7 @@ function buildQuery(
 
 function transformEntry(
   entry: typeof websocSectionEnrollmentHistory.$inferSelect,
-): z.infer<typeof sectionEnrollmentChangeEntry> {
+): z.infer<typeof sectionEnrollmentSnapshot> {
   return {
     status: (entry?.status ?? "") as z.infer<typeof sectionStatusSchema>,
     maxCapacity: entry.maxCapacity.toString(),
