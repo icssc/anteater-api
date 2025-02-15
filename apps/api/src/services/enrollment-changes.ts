@@ -11,6 +11,7 @@ import {
   desc,
   eq,
   getTableColumns,
+  gt,
   inArray,
   isNotNull,
   lte,
@@ -134,6 +135,8 @@ export class EnrollmentChangesService {
           or(
             eq(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
             and(
+              // for some reason, this doesn't typecheck otherwise
+              gt(mapLatest.latestScrape, sql`${params.since.toISOString()}`),
               ne(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
               lte(websocSectionEnrollmentHistory.scrapedAt, params.since),
             ),
@@ -142,7 +145,7 @@ export class EnrollmentChangesService {
       )
       .innerJoin(websocSection, eq(websocSectionEnrollmentHistory.sectionId, websocSection.id))
       .where(and(isNotNull(mapLatest.sectionId), queryConds))
-      .orderBy(desc(websocSectionEnrollmentHistory.sectionId))
+      .orderBy(desc(websocSectionEnrollmentHistory.scrapedAt))
       .as("sub");
 
     const rows = await this.db
