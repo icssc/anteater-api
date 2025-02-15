@@ -28,7 +28,13 @@ const enrollmentChangesRoute = createRoute({
       required: true,
     },
   },
-  description: 'Retrieve paired "from" and "to" snapshots of section enrollment.',
+  description:
+    'Retrieve paired "from" and "to" enrollment snapshots of course section(s). ' +
+    "The primary parameter of interest is `since`, a datetime sometime in the past. " +
+    "The `from` snapshot describes the state at `since` (i.e. the latest snapshot not later than `since`). " +
+    "If `since` is too far in the past (we make no guarantees about how far), such a snapshot may not have been retained and the `from` snapshot will be absent. " +
+    "The `to` snapshot will always be the latest known state of a section. " +
+    "If these snapshots are not distinct, only `to` will be returned.",
   responses: {
     200: {
       content: {

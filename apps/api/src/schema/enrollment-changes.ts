@@ -11,7 +11,7 @@ export const enrollmentChangesQuerySchema = z.object({
     .datetime({ offset: false })
     .transform((d) => new Date(d))
     .openapi({
-      description: 'The later bound on the time at which the "from" snapshot was taken.',
+      description: "The time which the `from` snapshot must describe; see route description.",
     }),
 });
 
@@ -48,7 +48,7 @@ export const sectionEnrollmentSnapshot = z.object({
       local: true,
       offset: false,
     })
-    .openapi({ description: "The time at which this snapshot was taken." }),
+    .openapi({ description: "The time at which this enrollment snapshot was taken." }),
 });
 
 export const enrollmentChangeSectionSchema = z
@@ -57,10 +57,11 @@ export const enrollmentChangeSectionSchema = z
       .string()
       .openapi({ description: "The section code depicted in the snapshots", example: "04546" }),
     from: sectionEnrollmentSnapshot.optional().openapi({
-      description: 'The latest snapshot which was taken before the provided "since", if it exists.',
+      description:
+        "The latest enrollent snapshot not after `since` (see route description for caveats).",
     }),
     to: sectionEnrollmentSnapshot.openapi({
-      description: "The latest snapshot for this section.",
+      description: "The latest enrollment snapshot for this section.",
     }),
   })
   .openapi({
