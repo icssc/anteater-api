@@ -150,7 +150,8 @@ export class EnrollmentChangesService {
         enrollment: sub.enrollment,
         sectionCode: sub.sectionCode,
       })
-      .from(sub);
+      .from(sub)
+      .where(lte(sub.rn, 2));
 
     return acculumateRows(rows);
   }
