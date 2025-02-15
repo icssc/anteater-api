@@ -135,9 +135,9 @@ export class EnrollmentChangesService {
           or(
             eq(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
             and(
+              ne(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
               // for some reason, this doesn't typecheck otherwise
               gt(mapLatest.latestScrape, sql`${params.since.toISOString()}`),
-              ne(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
               lte(websocSectionEnrollmentHistory.scrapedAt, params.since),
             ),
           ),
