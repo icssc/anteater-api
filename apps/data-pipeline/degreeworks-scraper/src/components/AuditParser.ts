@@ -64,9 +64,7 @@ export class AuditParser {
         .then((rows) =>
           rows.filter((x) =>
             x.courseNumber.match(
-              new RegExp(
-                `^${courseNumber.replace(/@+/g, `.{${[...courseNumber].filter((y) => y === "@").length},}`)}`,
-              ),
+              new RegExp(`^${courseNumber.replace("@@", "\\w{2,}").replace("@", "\\w+")}`),
             ),
           ),
         );
