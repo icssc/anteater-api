@@ -17,12 +17,13 @@ export const enrollmentChangesQuerySchema = z.object({
 
 export const enrollmentChangesBodySchema = z.object({
   sections: z
-    .array(z.number({ required_error: "The 'sections' body field is required." }))
+    .array(z.string({ required_error: "The 'sections' body field is required." }))
     .min(1, { message: "The 'sections' array cannot be empty." })
     .max(5000)
+    .transform((codes) => codes.map((c) => Number.parseInt(c, 10)))
     .openapi({
       description:
-        "An array of section codes to request enrollment changes for. " +
+        "An array of (potentially zero-padded) section codes to request enrollment changes for. " +
         "Section codes not valid in the specified year and quarter are ignored.",
     }),
 });

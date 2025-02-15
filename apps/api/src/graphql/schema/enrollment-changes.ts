@@ -29,7 +29,7 @@ input EnrollmentChangesQuery {
     year: String!
     quarter: String!
     since: String!
-    sections: [Int!]!
+    sections: [String!]!
 }
 
 extend type Query {
