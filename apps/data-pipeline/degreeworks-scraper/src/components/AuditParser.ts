@@ -55,12 +55,16 @@ export class AuditParser {
     // "ELECTIVE @" is typically used as a pseudo-course and can be safely ignored.
     if (courseIdLike.match(AuditParser.electiveMatcher)) return [];
     const [department, courseNumber] = courseIdLike.split(" ");
+    if (courseNumber === "@") {
+      // Department-wide wildcards.
+      return this.db.select().from(course).where(eq(course.shortenedDept, department));
+    }
     if (courseNumber.match(AuditParser.wildcardMatcher)) {
       // Wildcard course numbers.
       return await this.db
         .select()
         .from(course)
-        .where(eq(course.department, department))
+        .where(eq(course.shortenedDept, department))
         .then((rows) =>
           rows.filter((x) =>
             x.courseNumber.match(
@@ -76,7 +80,7 @@ export class AuditParser {
       return await this.db
         .select()
         .from(course)
-        .where(eq(course.department, department))
+        .where(eq(course.shortenedDept, department))
         .then((rows) =>
           rows.filter(
             (x) =>
