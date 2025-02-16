@@ -18,7 +18,7 @@ const enrollmentChangesRouter = new OpenAPIHono<{ Bindings: Env }>({
 const enrollmentChangesRoute = createRoute({
   summary: "Retrieve section enrollment changes",
   operationId: "enrollmentChanges",
-  tags: ["Enrollment changes"],
+  tags: ["Enrollment Changes"],
   method: "post",
   path: "/",
   request: {
