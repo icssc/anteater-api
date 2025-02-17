@@ -1,5 +1,5 @@
 {
-  "id": "09710c6b-934b-468d-b9a8-5eac618cf0ba",
+  "id": "30847696-50c0-486c-b914-90cf4dad8826",
   "prevId": "a60d57cd-09db-46d6-adbc-5f9a78bae0b8",
   "version": "7",
   "dialect": "postgresql",
@@ -2599,8 +2599,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "max_capacity": {
+          "name": "max_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "num_on_waitlist": {
           "name": "num_on_waitlist",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_waitlist_cap": {
+          "name": "num_waitlist_cap",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
