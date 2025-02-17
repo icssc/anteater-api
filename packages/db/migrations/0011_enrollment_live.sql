@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "websoc_section_enrollment_live" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"section_id" uuid NOT NULL,
-	"scraped_at" timestamp DEFAULT now() NOT NULL,
+	"scraped_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"num_currently_total_enrolled" integer,
 	"num_currently_section_enrolled" integer,
 	"max_capacity" integer NOT NULL,
