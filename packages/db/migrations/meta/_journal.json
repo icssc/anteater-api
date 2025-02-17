@@ -69,7 +69,13 @@
       "idx": 9,
       "version": "7",
       "when": 1738124981227,
-      "tag": "0009_uc_ge_requirements",
+      "tag": "0009_uc_ge_requirements"
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1738879014276,
+      "tag": "0010_enrollment_history",
       "breakpoints": true
     },
     {

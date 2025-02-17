@@ -1,6 +1,6 @@
 {
-  "id": "a60d57cd-09db-46d6-adbc-5f9a78bae0b8",
-  "prevId": "06f18d63-0ea4-4cba-a194-c3ff0514b077",
+  "id": "e1a1f94d-ed2a-4037-a6ed-11ef4dba6025",
+  "prevId": "647f7a08-df53-4306-a301-9811533e978d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -91,16 +91,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "shortened_dept": {
-          "name": "shortened_dept",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true,
-          "generated": {
-            "as": "REPLACE(\"course\".\"department\", ' ', '')",
-            "type": "stored"
-          }
         },
         "department_alias": {
           "name": "department_alias",
@@ -302,21 +292,6 @@
           "isUnique": false,
           "concurrently": false,
           "method": "gin",
-          "with": {}
-        },
-        "shortened_dept": {
-          "name": "shortened_dept",
-          "columns": [
-            {
-              "expression": "shortened_dept",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
           "with": {}
         }
       },
@@ -2563,6 +2538,289 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.websoc_section_enrollment_history": {
+      "name": "websoc_section_enrollment_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "section_id": {
+          "name": "section_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scraped_at": {
+          "name": "scraped_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "year": {
+          "name": "year",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quarter": {
+          "name": "quarter",
+          "type": "term",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_capacity": {
+          "name": "max_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_currently_total_enrolled": {
+          "name": "num_currently_total_enrolled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_on_waitlist": {
+          "name": "num_on_waitlist",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_waitlist_cap": {
+          "name": "num_waitlist_cap",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_requested": {
+          "name": "num_requested",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "num_new_only_reserved": {
+          "name": "num_new_only_reserved",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "websoc_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "restriction_string": {
+          "name": "restriction_string",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "restriction_a": {
+          "name": "restriction_a",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_b": {
+          "name": "restriction_b",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_c": {
+          "name": "restriction_c",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_d": {
+          "name": "restriction_d",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_e": {
+          "name": "restriction_e",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_f": {
+          "name": "restriction_f",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_g": {
+          "name": "restriction_g",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_h": {
+          "name": "restriction_h",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_i": {
+          "name": "restriction_i",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_j": {
+          "name": "restriction_j",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_k": {
+          "name": "restriction_k",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_l": {
+          "name": "restriction_l",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_m": {
+          "name": "restriction_m",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_n": {
+          "name": "restriction_n",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_o": {
+          "name": "restriction_o",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_r": {
+          "name": "restriction_r",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_s": {
+          "name": "restriction_s",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "restriction_x": {
+          "name": "restriction_x",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "websoc_section_enrollment_history_section_id_index": {
+          "name": "websoc_section_enrollment_history_section_id_index",
+          "columns": [
+            {
+              "expression": "section_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "websoc_section_enrollment_history_scraped_at_index": {
+          "name": "websoc_section_enrollment_history_scraped_at_index",
+          "columns": [
+            {
+              "expression": "scraped_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "websoc_section_enrollment_history_section_id_scraped_at_index": {
+          "name": "websoc_section_enrollment_history_section_id_scraped_at_index",
+          "columns": [
+            {
+              "expression": "section_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "scraped_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "websoc_section_enrollment_history_section_id_websoc_section_id_fk": {
+          "name": "websoc_section_enrollment_history_section_id_websoc_section_id_fk",
+          "tableFrom": "websoc_section_enrollment_history",
+          "tableTo": "websoc_section",
+          "columnsFrom": ["section_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.websoc_section_grade": {
       "name": "websoc_section_grade",
       "schema": "",
@@ -3079,16 +3337,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "shortened_dept": {
-          "name": "shortened_dept",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true,
-          "generated": {
-            "as": "REPLACE(\"course\".\"department\", ' ', '')",
-            "type": "stored"
-          }
-        },
         "department_alias": {
           "name": "department_alias",
           "type": "varchar",
@@ -3275,7 +3523,7 @@
           "notNull": true
         }
       },
-      "definition": "select \"course\".\"id\", \"course\".\"updated_at\", \"course\".\"department\", \"course\".\"shortened_dept\", \"course\".\"department_alias\", \"course\".\"course_number\", \"course\".\"course_numeric\", \"course\".\"school\", \"course\".\"title\", \"course\".\"course_level\", \"course\".\"min_units\", \"course\".\"max_units\", \"course\".\"description\", \"course\".\"department_name\", \"course\".\"prerequisite_tree\", \"course\".\"prerequisite_text\", \"course\".\"repeatability\", \"course\".\"grading_option\", \"course\".\"concurrent\", \"course\".\"same_as\", \"course\".\"restriction\", \"course\".\"overlap\", \"course\".\"corequisites\", \"course\".\"is_ge_1a\", \"course\".\"is_ge_1b\", \"course\".\"is_ge_2\", \"course\".\"is_ge_3\", \"course\".\"is_ge_4\", \"course\".\"is_ge_5a\", \"course\".\"is_ge_5b\", \"course\".\"is_ge_6\", \"course\".\"is_ge_7\", \"course\".\"is_ge_8\", \"course\".\"ge_text\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"prerequisite_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n              'id', \"prerequisite_course\".\"id\",\n              'title', \"prerequisite_course\".\"title\",\n              'department', \"prerequisite_course\".\"department\",\n              'courseNumber', \"prerequisite_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\"\n            LEFT JOIN \"course\" \"prerequisite_course\" ON \"prerequisite_course\".\"id\" = \"prerequisite\".\"prerequisite_id\"\n            WHERE \"prerequisite\".\"dependency_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"prerequisites\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"dependency_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n                'id', \"dependency_course\".\"id\",\n                'title', \"dependency_course\".\"title\",\n                'department', \"dependency_course\".\"department\",\n                'courseNumber', \"dependency_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\" \"dependency\"\n            LEFT JOIN \"course\" \"dependency_course\" ON \"dependency_course\".\"id\" = \"dependency\".\"dependency_id\"\n            WHERE \"dependency\".\"prerequisite_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"dependencies\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL)\n           as \"terms\", \n        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT\n          CASE WHEN \"instructor\".\"ucinetid\" IS NULL THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n            'ucinetid', \"instructor\".\"ucinetid\",\n            'name', \"instructor\".\"name\",\n            'title', \"instructor\".\"title\",\n            'email', \"instructor\".\"email\",\n            'department', \"instructor\".\"department\",\n            'shortenedNames', ARRAY(\n              SELECT \"instructor_to_websoc_instructor\".\"websoc_instructor_name\"\n              FROM \"instructor_to_websoc_instructor\"\n              WHERE \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\"\n            )\n          )\n          END\n        ), ARRAY[]::JSONB[]), NULL)\n         as \"instructors\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" left join \"instructor\" on (\"instructor\".\"ucinetid\" = \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" and \"instructor\".\"ucinetid\" is not null and \"instructor\".\"ucinetid\" <> 'student') group by \"course\".\"id\"",
+      "definition": "select \"course\".\"id\", \"course\".\"updated_at\", \"course\".\"department\", \"course\".\"department_alias\", \"course\".\"course_number\", \"course\".\"course_numeric\", \"course\".\"school\", \"course\".\"title\", \"course\".\"course_level\", \"course\".\"min_units\", \"course\".\"max_units\", \"course\".\"description\", \"course\".\"department_name\", \"course\".\"prerequisite_tree\", \"course\".\"prerequisite_text\", \"course\".\"repeatability\", \"course\".\"grading_option\", \"course\".\"concurrent\", \"course\".\"same_as\", \"course\".\"restriction\", \"course\".\"overlap\", \"course\".\"corequisites\", \"course\".\"is_ge_1a\", \"course\".\"is_ge_1b\", \"course\".\"is_ge_2\", \"course\".\"is_ge_3\", \"course\".\"is_ge_4\", \"course\".\"is_ge_5a\", \"course\".\"is_ge_5b\", \"course\".\"is_ge_6\", \"course\".\"is_ge_7\", \"course\".\"is_ge_8\", \"course\".\"ge_text\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"prerequisite_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n              'id', \"prerequisite_course\".\"id\",\n              'title', \"prerequisite_course\".\"title\",\n              'department', \"prerequisite_course\".\"department\",\n              'courseNumber', \"prerequisite_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\"\n            LEFT JOIN \"course\" \"prerequisite_course\" ON \"prerequisite_course\".\"id\" = \"prerequisite\".\"prerequisite_id\"\n            WHERE \"prerequisite\".\"dependency_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"prerequisites\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"dependency_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n                'id', \"dependency_course\".\"id\",\n                'title', \"dependency_course\".\"title\",\n                'department', \"dependency_course\".\"department\",\n                'courseNumber', \"dependency_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\" \"dependency\"\n            LEFT JOIN \"course\" \"dependency_course\" ON \"dependency_course\".\"id\" = \"dependency\".\"dependency_id\"\n            WHERE \"dependency\".\"prerequisite_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"dependencies\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL)\n           as \"terms\", \n        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT\n          CASE WHEN \"instructor\".\"ucinetid\" IS NULL THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n            'ucinetid', \"instructor\".\"ucinetid\",\n            'name', \"instructor\".\"name\",\n            'title', \"instructor\".\"title\",\n            'email', \"instructor\".\"email\",\n            'department', \"instructor\".\"department\",\n            'shortenedNames', ARRAY(\n              SELECT \"instructor_to_websoc_instructor\".\"websoc_instructor_name\"\n              FROM \"instructor_to_websoc_instructor\"\n              WHERE \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\"\n            )\n          )\n          END\n        ), ARRAY[]::JSONB[]), NULL)\n         as \"instructors\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" left join \"instructor\" on (\"instructor\".\"ucinetid\" = \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" and \"instructor\".\"ucinetid\" is not null and \"instructor\".\"ucinetid\" <> 'student') group by \"course\".\"id\"",
       "name": "course_view",
       "schema": "public",
       "isExisting": false,
