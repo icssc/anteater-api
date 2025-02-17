@@ -1,5 +1,5 @@
 {
-  "id": "30847696-50c0-486c-b914-90cf4dad8826",
+  "id": "f33c0893-c236-4ea2-80df-360e81ecd36a",
   "prevId": "a60d57cd-09db-46d6-adbc-5f9a78bae0b8",
   "version": "7",
   "dialect": "postgresql",
@@ -2582,7 +2582,7 @@
         },
         "scraped_at": {
           "name": "scraped_at",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"

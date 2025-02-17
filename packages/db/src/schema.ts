@@ -485,7 +485,7 @@ export const websocSectionEnrollmentLive = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    scrapedAt: timestamp("scraped_at", { mode: "date" }).defaultNow().notNull(),
+    scrapedAt: timestamp("scraped_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     numCurrentlyTotalEnrolled: integer("num_currently_total_enrolled"),
     numCurrentlySectionEnrolled: integer("num_currently_section_enrolled"),
     maxCapacity: integer("max_capacity").notNull(),
