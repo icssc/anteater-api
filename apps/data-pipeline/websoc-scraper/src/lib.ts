@@ -11,7 +11,7 @@ import type {
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
 import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
-import type { WebsocSectionFinalExam } from "@packages/db/schema";
+import { type WebsocSectionFinalExam, websocSectionEnrollmentLive } from "@packages/db/schema";
 import {
   calendarTerm,
   course,
@@ -493,6 +493,82 @@ const doChunkUpsert = async (
       })
       .returning({ id: websocSectionEnrollment.id });
     console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+
+    const enrollmentLive = await tx
+      .insert(websocSectionEnrollmentLive)
+      .values(
+        mappedSections
+          .map(
+            ({
+              sectionCode,
+              numCurrentlyTotalEnrolled,
+              numCurrentlySectionEnrolled,
+              numOnWaitlist,
+              numRequested,
+              numNewOnlyReserved,
+              status,
+              restrictions,
+              restrictionA,
+              restrictionB,
+              restrictionC,
+              restrictionD,
+              restrictionE,
+              restrictionF,
+              restrictionG,
+              restrictionH,
+              restrictionI,
+              restrictionJ,
+              restrictionK,
+              restrictionL,
+              restrictionM,
+              restrictionN,
+              restrictionO,
+              restrictionR,
+              restrictionS,
+              restrictionX,
+            }) => {
+              const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+              return sectionId
+                ? {
+                    sectionId,
+                    numCurrentlyTotalEnrolled,
+                    numCurrentlySectionEnrolled,
+                    numOnWaitlist,
+                    numRequested,
+                    numNewOnlyReserved,
+                    status,
+                    restrictions,
+                    restrictionA,
+                    restrictionB,
+                    restrictionC,
+                    restrictionD,
+                    restrictionE,
+                    restrictionF,
+                    restrictionG,
+                    restrictionH,
+                    restrictionI,
+                    restrictionJ,
+                    restrictionK,
+                    restrictionL,
+                    restrictionM,
+                    restrictionN,
+                    restrictionO,
+                    restrictionR,
+                    restrictionS,
+                    restrictionX,
+                  }
+                : undefined;
+            },
+          )
+          .filter(notNull),
+      )
+      .returning({ id: websocSectionEnrollment.id });
+    console.log(`Inserted ${enrollmentLive.length} enrollment live entries`);
+
+    await tx
+      .delete(websocSectionEnrollmentLive)
+      .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '1 hour'`));
+
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
