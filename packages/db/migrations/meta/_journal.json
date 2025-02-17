@@ -77,6 +77,20 @@
       "when": 1738879014276,
       "tag": "0010_enrollment_history",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1739651540396,
+      "tag": "0010_shortened_dept",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1739770627384,
+      "tag": "0011_enrollment_live",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,7 @@ import {
   or,
   sql,
 } from "@packages/db/drizzle";
-import { websocSection, websocSectionEnrollmentHistory } from "@packages/db/schema";
+import { websocSection, websocSectionEnrollmentLive } from "@packages/db/schema";
 import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
@@ -36,7 +36,7 @@ function buildQuery(
 }
 
 function transformEntry(
-  entry: typeof websocSectionEnrollmentHistory.$inferSelect,
+  entry: typeof websocSectionEnrollmentLive.$inferSelect,
 ): z.infer<typeof sectionEnrollmentSnapshot> {
   return {
     status: (entry?.status ?? "") as z.infer<typeof sectionStatusSchema>,
@@ -45,8 +45,7 @@ function transformEntry(
     numOnWaitlist: entry.numOnWaitlist?.toString() ?? "",
     numCurrentlyEnrolled: {
       totalEnrolled: entry.numCurrentlyTotalEnrolled?.toString() ?? "",
-      // sectionEnrolled: entry.sectionEnrolled?.toString() ?? "",
-      sectionEnrolled: "",
+      sectionEnrolled: entry.numCurrentlySectionEnrolled?.toString() ?? "",
     },
     numRequested: entry.numRequested?.toString() ?? "",
     // safety: these codes are known to be valid columns
@@ -60,14 +59,14 @@ function transformEntry(
 function acculumateRows(
   rows: {
     sectionCode: typeof websocSection.$inferSelect.sectionCode;
-    enrollment: typeof websocSectionEnrollmentHistory.$inferSelect;
+    enrollment: typeof websocSectionEnrollmentLive.$inferSelect;
   }[],
 ) {
   const groupedBySection = new Map<
     number,
     {
       sectionCode: typeof websocSection.$inferSelect.sectionCode;
-      enrollments: (typeof websocSectionEnrollmentHistory.$inferSelect)[];
+      enrollments: (typeof websocSectionEnrollmentLive.$inferSelect)[];
     }
   >();
 
@@ -112,40 +111,38 @@ export class EnrollmentChangesService {
 
     const mapLatest = this.db
       .select({
-        sectionId: websocSectionEnrollmentHistory.sectionId,
-        latestScrape: max(websocSectionEnrollmentHistory.scrapedAt).as("latest_scrape"),
+        sectionId: websocSectionEnrollmentLive.sectionId,
+        latestScrape: max(websocSectionEnrollmentLive.scrapedAt).as("latest_scrape"),
       })
-      .from(websocSectionEnrollmentHistory)
-      .groupBy(websocSectionEnrollmentHistory.sectionId)
+      .from(websocSectionEnrollmentLive)
+      .groupBy(websocSectionEnrollmentLive.sectionId)
       .as("map_latest");
 
     const sub = this.db
       .select({
-        enrollment: getTableColumns(websocSectionEnrollmentHistory),
+        enrollment: getTableColumns(websocSectionEnrollmentLive),
         sectionCode: websocSection.sectionCode,
-        rn: sql`row_number() OVER (PARTITION BY ${websocSectionEnrollmentHistory.sectionId})`.as(
-          "rn",
-        ),
+        rn: sql`row_number() OVER (PARTITION BY ${websocSectionEnrollmentLive.sectionId})`.as("rn"),
       })
-      .from(websocSectionEnrollmentHistory)
+      .from(websocSectionEnrollmentLive)
       .leftJoin(
         mapLatest,
         and(
-          eq(websocSectionEnrollmentHistory.sectionId, mapLatest.sectionId),
+          eq(websocSectionEnrollmentLive.sectionId, mapLatest.sectionId),
           or(
-            eq(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
+            eq(websocSectionEnrollmentLive.scrapedAt, mapLatest.latestScrape),
             and(
-              ne(websocSectionEnrollmentHistory.scrapedAt, mapLatest.latestScrape),
+              ne(websocSectionEnrollmentLive.scrapedAt, mapLatest.latestScrape),
               // for some reason, this doesn't typecheck otherwise
               gt(mapLatest.latestScrape, sql`${params.since.toISOString()}`),
-              lte(websocSectionEnrollmentHistory.scrapedAt, params.since),
+              lte(websocSectionEnrollmentLive.scrapedAt, params.since),
             ),
           ),
         ),
       )
-      .innerJoin(websocSection, eq(websocSectionEnrollmentHistory.sectionId, websocSection.id))
+      .innerJoin(websocSection, eq(websocSectionEnrollmentLive.sectionId, websocSection.id))
       .where(and(isNotNull(mapLatest.sectionId), queryConds))
-      .orderBy(desc(websocSectionEnrollmentHistory.scrapedAt))
+      .orderBy(desc(websocSectionEnrollmentLive.scrapedAt))
       .as("sub");
 
     const rows = await this.db

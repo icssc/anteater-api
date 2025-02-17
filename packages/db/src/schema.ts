@@ -478,24 +478,21 @@ export const larcSection = pgTable(
   (table) => [index().on(table.courseId)],
 );
 
-export const websocSectionEnrollmentHistory = pgTable(
-  "websoc_section_enrollment_history",
+export const websocSectionEnrollmentLive = pgTable(
+  "websoc_section_enrollment_live",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    scrapedAt: timestamp("scraped_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
-    year: varchar("year").notNull(),
-    quarter: term("quarter").notNull(),
-    maxCapacity: integer("max_capacity").notNull(),
+    scrapedAt: timestamp("scraped_at", { mode: "date" }).defaultNow().notNull(),
     numCurrentlyTotalEnrolled: integer("num_currently_total_enrolled"),
+    numCurrentlySectionEnrolled: integer("num_currently_section_enrolled"),
     numOnWaitlist: integer("num_on_waitlist"),
-    numWaitlistCap: integer("num_waitlist_cap"),
     numRequested: integer("num_requested"),
     numNewOnlyReserved: integer("num_new_only_reserved"),
     status: websocStatus("status"),
-    restrictionString: varchar("restriction_string").notNull(), // Track restrictions
+    restrictions: varchar("restriction_string").notNull(), // Track restrictions
     restrictionA: boolean("restriction_a").notNull().default(false),
     restrictionB: boolean("restriction_b").notNull().default(false),
     restrictionC: boolean("restriction_c").notNull().default(false),
@@ -530,6 +527,9 @@ export const course = pgTable(
     id: varchar("id").primaryKey(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     department: varchar("department").notNull(),
+    shortenedDept: varchar("shortened_dept")
+      .notNull()
+      .generatedAlwaysAs((): SQL => sql`REPLACE(${course.department}, ' ', '')`),
     departmentAlias: varchar("department_alias"),
     courseNumber: varchar("course_number").notNull(),
     courseNumeric: integer("course_numeric")
@@ -579,6 +579,7 @@ export const course = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
 )`,
     ),
+    index("shortened_dept").on(table.shortenedDept),
   ],
 );
 
