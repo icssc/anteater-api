@@ -109,6 +109,7 @@ export class EnrollmentChangesService {
   ) {
     const queryConds = buildQuery(params, body);
 
+    // what is the time on the latest snapshot of each section?
     const mapLatest = this.db
       .select({
         sectionId: websocSectionEnrollmentLive.sectionId,
@@ -125,24 +126,45 @@ export class EnrollmentChangesService {
         rn: sql`row_number() OVER (PARTITION BY ${websocSectionEnrollmentLive.sectionId})`.as("rn"),
       })
       .from(websocSectionEnrollmentLive)
+      // for all snapshots, the right side of the join will be present if:
       .leftJoin(
         mapLatest,
         and(
+          // the right side must describe the same section (of course)...
           eq(websocSectionEnrollmentLive.sectionId, mapLatest.sectionId),
           or(
+            // the left side must either be the latest snapshot...
             eq(websocSectionEnrollmentLive.scrapedAt, mapLatest.latestScrape),
             and(
+              // or NOT the latest snapshot...
               ne(websocSectionEnrollmentLive.scrapedAt, mapLatest.latestScrape),
+              // and the snapshot describing `since` is NOT the latest snapshot...
               // for some reason, this doesn't typecheck otherwise
               gt(mapLatest.latestScrape, sql`${params.since.toISOString()}`),
+              // and is not after `since` (so it might describe `since`)
               lte(websocSectionEnrollmentLive.scrapedAt, params.since),
             ),
           ),
         ),
       )
+      // after the first join, the snapshot rows with RHS present are either the latest snapshot for their section
+      // or not after `since`, and these two sets are disjoint
       .innerJoin(websocSection, eq(websocSectionEnrollmentLive.sectionId, websocSection.id))
-      .where(and(isNotNull(mapLatest.sectionId), queryConds))
-      .orderBy(desc(websocSectionEnrollmentLive.scrapedAt))
+      .where(
+        and(
+          // we don't care about any snapshots not meeting the join condition (the join was a filter the whole time)
+          isNotNull(mapLatest.sectionId),
+          // also, we still have the conditions from the query itself
+          queryConds,
+        ),
+      )
+      .orderBy(
+        // we're only interested in a "from" and "to" snapshot or, more precisely, a "to" snapshot and
+        // a potential "from" snapshot...
+        // let's make sure the "to" snapshot appears first, followed by the "from" snapshot, followed by others
+        // this is cheap and effective
+        desc(websocSectionEnrollmentLive.scrapedAt),
+      )
       .as("sub");
 
     const rows = await this.db
@@ -151,7 +173,10 @@ export class EnrollmentChangesService {
         sectionCode: sub.sectionCode,
       })
       .from(sub)
-      .where(lte(sub.rn, 2));
+      .where(
+        // we don't need snapshots older than "from"
+        lte(sub.rn, 2),
+      );
 
     return acculumateRows(rows);
   }
