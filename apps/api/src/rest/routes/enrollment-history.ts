@@ -20,7 +20,9 @@ const enrollmentHistoryRoute = createRoute({
   tags: ["Enrollment History"],
   method: "get",
   path: "/",
-  request: { query: enrollmentHistoryQuerySchema },
+  request: {
+    query: enrollmentHistoryQuerySchema,
+  },
   description:
     "Retrieves historical enrollment data for the given parameters. Granular history arrays only available for recent terms.",
   responses: {

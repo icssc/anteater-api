@@ -12,4 +12,8 @@ export const yearSchema = z.coerce
   .refine((val) => /^\d{4}$/.test(val), {
     message: "Year must be a 4-digit positive integer",
   })
-  .openapi({ example: "2024" });
+  .openapi({
+    description: "The academic year",
+    examples: ["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"],
+    example: "2024",
+  });

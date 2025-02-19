@@ -114,21 +114,49 @@ const instructorsByCursorRoute = createRoute({
   method: "get",
   path: "/",
   request: { query: instructorsByCursorQuerySchema },
-  description: "Retrieves instructors matching the given filters with cursor-based pagination.",
+  description:
+    "Retrieves instructors matching the given filters with cursor-based pagination. Provides efficient navigation through large result sets.",
   responses: {
     200: {
       content: {
-        "application/json": { schema: cursorResponseSchema(instructorSchema.array()) },
+        "application/json": {
+          schema: cursorResponseSchema(instructorSchema.array()),
+          example: {
+            ok: true,
+            data: {
+              items: [
+                {
+                  ucinetid: "mikes",
+                  name: "Michael Shindler",
+                  title: "Associate Professor of Teaching",
+                  email: "mikes@uci.edu",
+                  department: "Computer Science",
+                  shortenedNames: ["SHINDLER, M."],
+                  courses: [
+                    {
+                      id: "COMPSCI161",
+                      title: "Design and Analysis of Algorithms",
+                      department: "COMPSCI",
+                      courseNumber: "161",
+                      terms: ["2024 Spring"],
+                    },
+                  ],
+                },
+              ],
+              nextCursor: "eyJ1Y2luZXRpZCI6Im1pa2VzIn0=", // Base64 encoded: {"ucinetid":"mikes"}
+            },
+          },
+        },
       },
-      description: "Successful operation",
+      description: "Successfully retrieved the paginated instructor results",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "Invalid filter parameters or cursor provided",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
+      description: "Server error occurred while retrieving instructors",
     },
   },
 });

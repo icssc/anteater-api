@@ -9,7 +9,12 @@ export const calendarQuerySchema = z.object({
       message:
         "Parameter 'quarter' is required and must be one of 'Fall', 'Winter', 'Spring', 'Summer1', 'Summer10wk', or 'Summer2'",
     })
-    .openapi({ param: { name: "quarter", in: "query" }, example: "Fall" }),
+    .openapi({
+      description: "The academic quarter",
+      example: "Fall",
+      param: { name: "quarter", in: "query" },
+      enum: ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"],
+    }),
 });
 
 export const calendarTermSchema = z.object({

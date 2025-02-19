@@ -23,27 +23,28 @@ coursesRouter.openAPIRegistry.register("prereq", prerequisiteSchema);
 coursesRouter.openAPIRegistry.register("prereqTree", prerequisiteTreeSchema);
 
 const batchCoursesRoute = createRoute({
-  summary: "Retrieve courses with IDs",
+  summary: "Retrieve multiple courses",
   operationId: "batchCourses",
   tags: ["Courses"],
   method: "get",
   path: "/batch",
   request: { query: batchCoursesQuerySchema },
-  description: "Retrieves courses with the IDs provided",
+  description:
+    "Retrieves information for multiple courses at once using a comma-separated list of course IDs",
   responses: {
     200: {
       content: {
         "application/json": { schema: responseSchema(courseSchema.array()) },
       },
-      description: "Successful operation",
+      description: "Successfully retrieved the requested courses",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "Invalid course IDs format provided",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
+      description: "Server error occurred while retrieving the courses",
     },
   },
 });
@@ -55,23 +56,24 @@ const courseByIdRoute = createRoute({
   method: "get",
   path: "/{id}",
   request: { params: coursesPathSchema },
-  description: "Retrieves a course by its ID.",
+  description:
+    "Retrieves detailed information about a specific course, including its prerequisites, units, description, and other course details.",
   responses: {
     200: {
       content: { "application/json": { schema: responseSchema(courseSchema) } },
-      description: "Successful operation",
+      description: "Successfully retrieved the course information",
     },
     404: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Course not found",
+      description: "Course not found with the specified ID",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "Invalid course ID format provided",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
+      description: "Server error occurred while retrieving the course",
     },
   },
 });
@@ -83,21 +85,22 @@ const coursesByFiltersRoute = createRoute({
   method: "get",
   path: "/",
   request: { query: coursesQuerySchema },
-  description: "Retrieves courses matching the given filters.",
+  description:
+    "Retrieves courses matching the given filters. Supports filtering by department, course number, title, description, GE category, and more.",
   responses: {
     200: {
       content: {
         "application/json": { schema: responseSchema(courseSchema.array()) },
       },
-      description: "Successful operation",
+      description: "Successfully retrieved the filtered courses",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "Invalid filter parameters provided",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
+      description: "Server error occurred while filtering courses",
     },
   },
 });
@@ -109,21 +112,109 @@ const coursesByCursorRoute = createRoute({
   method: "get",
   path: "/",
   request: { query: coursesByCursorQuerySchema },
-  description: "Retrieves courses matching the given filters with cursor-based pagination.",
+  description:
+    "Retrieves courses matching the given filters with cursor-based pagination. Provides efficient navigation through large result sets.",
   responses: {
     200: {
       content: {
-        "application/json": { schema: cursorResponseSchema(courseSchema.array()) },
+        "application/json": {
+          schema: cursorResponseSchema(courseSchema.array()),
+          example: {
+            ok: true,
+            data: {
+              items: [
+                {
+                  id: "COMPSCI161",
+                  department: "COMPSCI",
+                  courseNumber: "161",
+                  courseNumeric: 161,
+                  school: "Donald Bren School of Information and Computer Sciences",
+                  title: "Design and Analysis of Algorithms",
+                  courseLevel: "Upper Division (100-199)",
+                  minUnits: 4,
+                  maxUnits: 4,
+                  description:
+                    "Design and analysis of algorithms. Complexity analysis, divide and conquer, dynamic programming, greedy algorithms, graph algorithms, randomized algorithms.",
+                  departmentName: "Computer Science",
+                  instructors: [
+                    {
+                      ucinetid: "mikes",
+                      name: "Michael Shindler",
+                      title: "Associate Professor of Teaching",
+                      email: "mikes@uci.edu",
+                      department: "Computer Science",
+                      shortenedNames: ["SHINDLER, M."],
+                    },
+                  ],
+                  prerequisiteTree: {
+                    AND: [
+                      {
+                        prereqType: "course",
+                        coreq: false,
+                        courseId: "I&CSCI46",
+                        minGrade: "C",
+                      },
+                    ],
+                    OR: [
+                      {
+                        prereqType: "course",
+                        coreq: false,
+                        courseId: "COMPSCI46",
+                        minGrade: "C",
+                      },
+                    ],
+                    NOT: [
+                      {
+                        prereqType: "course",
+                        coreq: false,
+                        courseId: "COMPSCI162",
+                        minGrade: "D",
+                      },
+                    ],
+                  },
+                  prerequisiteText: "Prerequisites: I&C SCI 46 with a grade of C or better",
+                  prerequisites: [
+                    {
+                      id: "I&CSCI46",
+                      title: "Data Structure Implementation and Analysis",
+                      department: "I&C SCI",
+                      courseNumber: "46",
+                    },
+                  ],
+                  dependencies: [
+                    {
+                      id: "COMPSCI162",
+                      title: "Formal Languages and Automata",
+                      department: "COMPSCI",
+                      courseNumber: "162",
+                    },
+                  ],
+                  repeatability: "May be taken for credit 1 time.",
+                  gradingOption: "Letter Grade or Pass/Not Pass",
+                  concurrent: "Concurrent with COMPSCI H161",
+                  sameAs: "Same as COMPSCI H161",
+                  restriction: "School of ICS majors have first consideration for enrollment.",
+                  overlap: "Course may not be taken after COMPSCI H161.",
+                  corequisites: "Corequisite: MATH 2B",
+                  geList: ["GE II: Science and Technology"],
+                  geText: "Fulfills General Education II: Science and Technology",
+                  terms: ["2024 Spring", "2024 Winter", "2024 Fall"],
+                },
+              ],
+              nextCursor: "eyJpZCI6IkNPTVBTQ0kxNjEifQ==", // Base64 encoded: {"id":"COMPSCI161"}
+            },
+          },
+        },
       },
-      description: "Successful operation",
+      description: "Successfully retrieved the paginated course results",
     },
     422: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "Invalid filter parameters or cursor provided",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
+      description: "Server error occurred while retrieving courses",
     },
   },
 });
