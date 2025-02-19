@@ -13,6 +13,7 @@ export const enrollmentChangesQuerySchema = z.object({
     .transform((d) => new Date(d))
     .openapi({
       description: "The time which the `from` snapshot must describe; see route description.",
+      example: "2024-02-24T08:15:37Z",
     }),
 });
 
