@@ -9,7 +9,6 @@ export const enrollmentChangesResolvers = {
       const parsedArgs = enrollmentChangesGraphQLQuerySchema.parse(args?.query);
 
       const service = new EnrollmentChangesService(db);
-      // ...but that's fine
       return await service.getEnrollmentChanges(parsedArgs, parsedArgs);
     },
   },
