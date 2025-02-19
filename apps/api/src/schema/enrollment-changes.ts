@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
+import { coursePreviewSchema } from "./courses.ts";
 import { yearSchema } from "./lib";
 import { numCurrentlyEnrolledSchema, restrictionCodes, sectionStatusSchema } from "./websoc.ts";
 
@@ -53,53 +54,61 @@ export const sectionEnrollmentSnapshot = z.object({
     .openapi({ description: "The time at which this enrollment snapshot was taken." }),
 });
 
-export const enrollmentChangeSectionSchema = z
-  .object({
-    sectionCode: z
-      .string()
-      .openapi({ description: "The section code depicted in the snapshots", example: "04546" }),
-    from: sectionEnrollmentSnapshot.optional().openapi({
-      description:
-        "The latest enrollent snapshot not after `since` (see route description for caveats).",
-    }),
-    to: sectionEnrollmentSnapshot.openapi({
-      description: "The latest enrollment snapshot for this section.",
-    }),
-  })
-  .openapi({
-    example: {
-      sectionCode: "04546",
-      from: {
-        maxCapacity: "200",
-        status: "OPEN",
-        numCurrentlyEnrolled: {
-          totalEnrolled: "198",
-          sectionEnrolled: "198",
-        },
-        numRequested: "0",
-        numOnWaitlist: "0",
-        numWaitlistCap: "30",
-        numNewOnlyReserved: "25",
-        restrictionCodes: [],
-        updatedAt: "2025-01-13T04:20:41.161Z",
-      },
-      to: {
-        maxCapacity: "200",
-        status: "Waitl",
-        numCurrentlyEnrolled: {
-          totalEnrolled: "200",
-          sectionEnrolled: "200",
-        },
-        numRequested: "0",
-        numOnWaitlist: "4",
-        numWaitlistCap: "30",
-        numNewOnlyReserved: "",
-        restrictionCodes: [],
-        updatedAt: "2025-01-13T04:22:15.372Z",
-      },
-    },
-  });
+export const enrollmentChangeSectionSchema = z.object({
+  sectionCode: z
+    .string()
+    .openapi({ description: "The section code depicted in the snapshots", example: "04546" }),
+  from: sectionEnrollmentSnapshot.optional().openapi({
+    description:
+      "The latest enrollent snapshot not after `since` (see route description for caveats).",
+  }),
+  to: sectionEnrollmentSnapshot.openapi({
+    description: "The latest enrollment snapshot for this section.",
+  }),
+});
 
 export const enrollmentChangesSchema = z.object({
-  sections: z.array(enrollmentChangeSectionSchema),
+  courses: z.array(
+    coursePreviewSchema.extend({ sections: z.array(enrollmentChangeSectionSchema) }).openapi({
+      example: {
+        id: "PEDGEN200G",
+        title: "HERED CANCER COUNS",
+        department: "PED GEN",
+        courseNumber: "200G",
+        sections: [
+          {
+            sectionCode: "04546",
+            from: {
+              maxCapacity: "200",
+              status: "OPEN",
+              numCurrentlyEnrolled: {
+                totalEnrolled: "198",
+                sectionEnrolled: "198",
+              },
+              numRequested: "0",
+              numOnWaitlist: "0",
+              numWaitlistCap: "30",
+              numNewOnlyReserved: "25",
+              restrictionCodes: [],
+              updatedAt: "2025-01-13T04:20:41.161Z",
+            },
+            to: {
+              maxCapacity: "200",
+              status: "Waitl",
+              numCurrentlyEnrolled: {
+                totalEnrolled: "200",
+                sectionEnrolled: "200",
+              },
+              numRequested: "0",
+              numOnWaitlist: "4",
+              numWaitlistCap: "30",
+              numNewOnlyReserved: "",
+              restrictionCodes: [],
+              updatedAt: "2025-01-13T04:22:15.372Z",
+            },
+          },
+        ],
+      },
+    }),
+  ),
 });

@@ -22,8 +22,16 @@ type EnrollmentChangesSection @cacheControl(maxAge: 300) {
     to: SectionEnrollmentSnapshot!
 }
 
-type EnrollmentChanges @cacheControl(maxAge: 300) {
+type EnrollmentChangesCourse @cacheControl(maxAge: 300) {
+    id: String!
+    title: String!
+    department: String!
+    courseNumber: String!
     sections: [EnrollmentChangesSection!]!
+}
+
+type EnrollmentChanges @cacheControl(maxAge: 300) {
+    courses: [EnrollmentChangesCourse!]!
 }
 
 input EnrollmentChangesQuery {

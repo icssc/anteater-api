@@ -1,4 +1,6 @@
 import {
+  type coursePreviewSchema,
+  type enrollmentChangeSectionSchema,
   type enrollmentChangesBodySchema,
   type enrollmentChangesQuerySchema,
   restrictionCodes,
@@ -19,7 +21,7 @@ import {
   or,
   sql,
 } from "@packages/db/drizzle";
-import { websocSection, websocSectionEnrollmentLive } from "@packages/db/schema";
+import { websocCourse, websocSection, websocSectionEnrollmentLive } from "@packages/db/schema";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 
@@ -60,46 +62,48 @@ function transformEntry(
 
 function accumulateRows(
   rows: {
-    sectionCode: typeof websocSection.$inferSelect.sectionCode;
     enrollment: typeof websocSectionEnrollmentLive.$inferSelect;
+    sectionCode: typeof websocSection.$inferSelect.sectionCode;
+    course: z.infer<typeof coursePreviewSchema>;
   }[],
 ) {
-  const groupedBySection = new Map<
-    number,
-    {
-      sectionCode: typeof websocSection.$inferSelect.sectionCode;
-      enrollments: (typeof websocSectionEnrollmentLive.$inferSelect)[];
-    }
-  >();
+  type CourseSectionsMap = z.infer<typeof coursePreviewSchema> & {
+    sections: Map<string, z.infer<typeof enrollmentChangeSectionSchema>>;
+  };
+
+  const groupedByCourse = new Map<string, CourseSectionsMap>();
 
   for (const row of rows) {
-    const key = row.sectionCode;
-    if (!groupedBySection.has(key)) {
-      groupedBySection.set(key, {
-        sectionCode: key,
-        enrollments: [row.enrollment],
+    const courseKey = row.course.id;
+    if (!groupedByCourse.has(courseKey)) {
+      groupedByCourse.set(courseKey, {
+        ...row.course,
+        sections: new Map(),
+      });
+    }
+    const courseObj = groupedByCourse.get(courseKey);
+
+    const sectionKey = row.sectionCode.toString(10).padStart(5, "0");
+    if (!courseObj?.sections.has(sectionKey)) {
+      courseObj?.sections.set(sectionKey, {
+        sectionCode: sectionKey,
+        to: transformEntry(row.enrollment),
       });
     } else {
-      const group = groupedBySection.get(key);
-      if (group) {
-        group.enrollments.push(row.enrollment);
-      }
+      // safety: we know we have the key
+      (courseObj.sections.get(sectionKey) as z.infer<typeof enrollmentChangeSectionSchema>).from =
+        transformEntry(row.enrollment);
     }
   }
 
-  const sections = [];
-
-  for (const { sectionCode, enrollments } of groupedBySection.values()) {
-    const latest = enrollments[0];
-    const previous = enrollments?.[1];
-
-    sections.push({
-      sectionCode: sectionCode.toString(10).padStart(5, "0"),
-      from: previous ? transformEntry(previous) : undefined,
-      to: transformEntry(latest),
-    });
-  }
-  return { sections };
+  return {
+    courses: Array.from(
+      groupedByCourse.values().map((v) => ({
+        ...v,
+        sections: Array.from(v.sections.values()),
+      })),
+    ),
+  };
 }
 
 export class EnrollmentChangesService {
@@ -125,6 +129,12 @@ export class EnrollmentChangesService {
       .select({
         enrollment: getTableColumns(websocSectionEnrollmentLive),
         sectionCode: websocSection.sectionCode,
+        course: {
+          id: websocCourse.courseId,
+          title: websocCourse.courseTitle,
+          department: websocCourse.deptCode,
+          courseNumber: websocCourse.courseNumber,
+        },
         rn: sql`row_number() OVER (PARTITION BY ${websocSectionEnrollmentLive.sectionId})`.as("rn"),
       })
       .from(websocSectionEnrollmentLive)
@@ -152,6 +162,7 @@ export class EnrollmentChangesService {
       // after the first join, the snapshot rows with RHS present are either the latest snapshot for their section
       // or not after `since`, and these two sets are disjoint
       .innerJoin(websocSection, eq(websocSectionEnrollmentLive.sectionId, websocSection.id))
+      .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
       .where(
         and(
           // we don't care about any snapshots not meeting the join condition (the join was a filter the whole time)
@@ -173,6 +184,7 @@ export class EnrollmentChangesService {
       .select({
         enrollment: sub.enrollment,
         sectionCode: sub.sectionCode,
+        course: sub.course,
       })
       .from(sub)
       .where(
