@@ -9,7 +9,10 @@ export const enrollmentChangesQuerySchema = z.object({
   quarter: z.enum(terms),
   since: z
     .string()
-    .datetime({ offset: false })
+    .datetime({
+      offset: false,
+      message: "The 'since' query parameter must be a valid ISO 8401 UTC datetime.",
+    })
     .transform((d) => new Date(d))
     .openapi({
       description: "The time which the `from` snapshot must describe; see route description.",
