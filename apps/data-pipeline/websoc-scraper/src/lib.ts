@@ -11,7 +11,7 @@ import type {
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
 import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
-import { type WebsocSectionFinalExam} from "@packages/db/schema";
+import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
   course,
@@ -23,10 +23,10 @@ import {
   websocSchool,
   websocSection,
   websocSectionEnrollment,
+  websocSectionEnrollmentLive,
   websocSectionMeeting,
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
-  websocSectionEnrollmentLive,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
