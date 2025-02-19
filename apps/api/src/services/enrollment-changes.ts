@@ -58,7 +58,7 @@ function transformEntry(
   };
 }
 
-function acculumateRows(
+function accumulateRows(
   rows: {
     sectionCode: typeof websocSection.$inferSelect.sectionCode;
     enrollment: typeof websocSectionEnrollmentLive.$inferSelect;
@@ -180,6 +180,6 @@ export class EnrollmentChangesService {
         lte(sub.rn, 2),
       );
 
-    return acculumateRows(rows);
+    return accumulateRows(rows);
   }
 }
