@@ -257,7 +257,7 @@ programsRouter.openapi(specializationsRoute, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getSpecializations(query);
   if (query?.majorId && !res.length) {
-    return c.json({ ok: false, message: "No data for a specialization by that ID" }, 404);
+    return c.json({ ok: false, message: "No data on specializations for a major by that ID" }, 404);
   }
   return c.json({ ok: true, data: specializationsResponseSchema.parse(res) }, 200);
 });
