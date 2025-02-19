@@ -113,7 +113,7 @@ export class EnrollmentChangesService {
     params: EnrollmentChangesServiceInput,
     body: z.infer<typeof enrollmentChangesBodySchema>,
   ) {
-    const queryConds = buildQuery(params, body);
+    const queryConditions = buildQuery(params, body);
 
     // what is the time on the latest snapshot of each section?
     const mapLatest = this.db
@@ -168,7 +168,7 @@ export class EnrollmentChangesService {
           // we don't care about any snapshots not meeting the join condition (the join was a filter the whole time)
           isNotNull(mapLatest.sectionId),
           // also, we still have the conditions from the query itself
-          queryConds,
+          queryConditions,
         ),
       )
       .orderBy(
