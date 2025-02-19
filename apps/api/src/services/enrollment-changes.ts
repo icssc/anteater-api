@@ -3,7 +3,6 @@ import {
   type enrollmentChangesQuerySchema,
   restrictionCodes,
   type sectionEnrollmentSnapshot,
-  type sectionStatusSchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import {
@@ -21,6 +20,7 @@ import {
   sql,
 } from "@packages/db/drizzle";
 import { websocSection, websocSectionEnrollmentLive } from "@packages/db/schema";
+import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 
 type EnrollmentChangesServiceInput = z.infer<typeof enrollmentChangesQuerySchema>;
@@ -38,16 +38,18 @@ function buildQuery(
 function transformEntry(
   entry: typeof websocSectionEnrollmentLive.$inferSelect,
 ): z.infer<typeof sectionEnrollmentSnapshot> {
+  // websoc transformSection
   return {
-    status: (entry?.status ?? "") as z.infer<typeof sectionStatusSchema>,
-    maxCapacity: entry.maxCapacity.toString(),
-    numWaitlistCap: entry.numWaitlistCap?.toString() ?? "",
-    numOnWaitlist: entry.numOnWaitlist?.toString() ?? "",
+    status: entry.status ?? "",
+    maxCapacity: entry.maxCapacity.toString(10),
     numCurrentlyEnrolled: {
-      totalEnrolled: entry.numCurrentlyTotalEnrolled?.toString() ?? "",
-      sectionEnrolled: entry.numCurrentlySectionEnrolled?.toString() ?? "",
+      totalEnrolled: negativeAsNull(entry.numCurrentlyTotalEnrolled)?.toString(10) ?? "",
+      sectionEnrolled: negativeAsNull(entry.numCurrentlySectionEnrolled)?.toString(10) ?? "",
     },
-    numRequested: entry.numRequested?.toString() ?? "",
+    numOnWaitlist: negativeAsNull(entry.numOnWaitlist)?.toString(10) ?? "",
+    numRequested: entry.numRequested?.toString(10) ?? "",
+    numWaitlistCap: negativeAsNull(entry.numWaitlistCap)?.toString(10) ?? "",
+    numNewOnlyReserved: negativeAsNull(entry.numNewOnlyReserved)?.toString(10) ?? "",
     // safety: these codes are known to be valid columns
     restrictionCodes: restrictionCodes.filter(
       (c: string) => entry[`restriction_${c.toLowerCase()}` as keyof typeof entry],

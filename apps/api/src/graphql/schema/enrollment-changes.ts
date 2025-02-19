@@ -11,6 +11,7 @@ type SectionEnrollmentSnapshot @cacheControl(maxAge: 300) {
     numRequested: String!
     numOnWaitlist: String!
     numWaitlistCap: String!
+    numNewOnlyReserved: String!
     restrictionCodes: [String!]!
     updatedAt: String!
 }

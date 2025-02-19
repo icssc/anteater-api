@@ -39,6 +39,7 @@ export const sectionEnrollmentSnapshot = z.object({
   numRequested: z.string(),
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
+  numNewOnlyReserved: z.string(),
   restrictionCodes: z.array(z.enum(restrictionCodes)).openapi({
     description:
       "The restriction codes placed on this course (https://www.reg.uci.edu/enrollment/restrict_codes.html).",
@@ -78,6 +79,7 @@ export const enrollmentChangeSectionSchema = z
         numRequested: "0",
         numOnWaitlist: "0",
         numWaitlistCap: "30",
+        numNewOnlyReserved: "25",
         restrictionCodes: [],
         updatedAt: "2025-01-13T04:20:41.161Z",
       },
@@ -91,6 +93,7 @@ export const enrollmentChangeSectionSchema = z
         numRequested: "0",
         numOnWaitlist: "4",
         numWaitlistCap: "30",
+        numNewOnlyReserved: "",
         restrictionCodes: [],
         updatedAt: "2025-01-13T04:22:15.372Z",
       },
