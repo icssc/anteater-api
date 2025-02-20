@@ -85,6 +85,12 @@ importers:
         specifier: 3.100.0
         version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
 
+  apps/data-pipeline/ap-exams-importer:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+
   apps/data-pipeline/calendar-scraper:
     dependencies:
       '@packages/db':
