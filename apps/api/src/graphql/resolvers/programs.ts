@@ -46,31 +46,31 @@ export const programResolvers = {
       return res;
     },
     majors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = majorsQuerySchema.parse(args?.query);
+      const parsedArgs = majorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMajors(parsedArgs);
-      if (!res)
-        throw new GraphQLError("Major data not found", {
+      if (args?.query && !res.length)
+        throw new GraphQLError("No data for a major by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
     },
     minors: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = minorsQuerySchema.parse(args?.query);
+      const parsedArgs = minorsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getMinors(parsedArgs);
-      if (!res)
-        throw new GraphQLError("Minor data not found", {
+      if (args?.query && !res.length)
+        throw new GraphQLError("No data for a minor by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;
     },
     specializations: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = specializationsQuerySchema.parse(args?.query);
+      const parsedArgs = specializationsQuerySchema.parse(args?.query ?? {});
       const service = new ProgramsService(db);
       const res = await service.getSpecializations(parsedArgs);
-      if (!res)
-        throw new GraphQLError("Specializations data not found", {
+      if (args?.query && !res.length)
+        throw new GraphQLError("No data for a specialization by that ID", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;

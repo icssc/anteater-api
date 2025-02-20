@@ -39,6 +39,10 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
         "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog and WebSoc.",
     },
     {
+      name: "Enrollment Changes",
+      description: "Live and recent enrollment data for UCI. Sourced from WebSoc.",
+    },
+    {
       name: "Enrollment History",
       description: "Historical enrollment data for UCI. Sourced from WebSoc.",
     },
