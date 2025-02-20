@@ -23,7 +23,7 @@ import {
   websocSchool,
   websocSection,
   websocSectionEnrollment,
-  websocSectionEnrollmentLive,
+  // websocSectionEnrollmentLive,
   websocSectionMeeting,
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
@@ -495,84 +495,85 @@ const doChunkUpsert = async (
       .returning({ id: websocSectionEnrollment.id });
     console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
 
-    const enrollmentLive = await tx
-      .insert(websocSectionEnrollmentLive)
-      .values(
-        mappedSections
-          .map(
-            ({
-              sectionCode,
-              numCurrentlyTotalEnrolled,
-              numCurrentlySectionEnrolled,
-              numOnWaitlist,
-              numRequested,
-              numNewOnlyReserved,
-              status,
-              maxCapacity,
-              numWaitlistCap,
-              restrictions,
-              restrictionA,
-              restrictionB,
-              restrictionC,
-              restrictionD,
-              restrictionE,
-              restrictionF,
-              restrictionG,
-              restrictionH,
-              restrictionI,
-              restrictionJ,
-              restrictionK,
-              restrictionL,
-              restrictionM,
-              restrictionN,
-              restrictionO,
-              restrictionR,
-              restrictionS,
-              restrictionX,
-            }) => {
-              const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-              return sectionId
-                ? {
-                    sectionId,
-                    numCurrentlyTotalEnrolled,
-                    numCurrentlySectionEnrolled,
-                    numOnWaitlist,
-                    numRequested,
-                    numNewOnlyReserved,
-                    status,
-                    maxCapacity,
-                    numWaitlistCap,
-                    restrictions,
-                    restrictionA,
-                    restrictionB,
-                    restrictionC,
-                    restrictionD,
-                    restrictionE,
-                    restrictionF,
-                    restrictionG,
-                    restrictionH,
-                    restrictionI,
-                    restrictionJ,
-                    restrictionK,
-                    restrictionL,
-                    restrictionM,
-                    restrictionN,
-                    restrictionO,
-                    restrictionR,
-                    restrictionS,
-                    restrictionX,
-                  }
-                : undefined;
-            },
-          )
-          .filter(notNull),
-      )
-      .returning({ id: websocSectionEnrollment.id });
-    console.log(`Inserted ${enrollmentLive.length} enrollment live entries`);
-
-    await tx
-      .delete(websocSectionEnrollmentLive)
-      .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '30 minutes'`));
+    // Rolled back due to performance issues
+    // const enrollmentLive = await tx
+    //   .insert(websocSectionEnrollmentLive)
+    //   .values(
+    //     mappedSections
+    //       .map(
+    //         ({
+    //           sectionCode,
+    //           numCurrentlyTotalEnrolled,
+    //           numCurrentlySectionEnrolled,
+    //           numOnWaitlist,
+    //           numRequested,
+    //           numNewOnlyReserved,
+    //           status,
+    //           maxCapacity,
+    //           numWaitlistCap,
+    //           restrictions,
+    //           restrictionA,
+    //           restrictionB,
+    //           restrictionC,
+    //           restrictionD,
+    //           restrictionE,
+    //           restrictionF,
+    //           restrictionG,
+    //           restrictionH,
+    //           restrictionI,
+    //           restrictionJ,
+    //           restrictionK,
+    //           restrictionL,
+    //           restrictionM,
+    //           restrictionN,
+    //           restrictionO,
+    //           restrictionR,
+    //           restrictionS,
+    //           restrictionX,
+    //         }) => {
+    //           const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+    //           return sectionId
+    //             ? {
+    //                 sectionId,
+    //                 numCurrentlyTotalEnrolled,
+    //                 numCurrentlySectionEnrolled,
+    //                 numOnWaitlist,
+    //                 numRequested,
+    //                 numNewOnlyReserved,
+    //                 status,
+    //                 maxCapacity,
+    //                 numWaitlistCap,
+    //                 restrictions,
+    //                 restrictionA,
+    //                 restrictionB,
+    //                 restrictionC,
+    //                 restrictionD,
+    //                 restrictionE,
+    //                 restrictionF,
+    //                 restrictionG,
+    //                 restrictionH,
+    //                 restrictionI,
+    //                 restrictionJ,
+    //                 restrictionK,
+    //                 restrictionL,
+    //                 restrictionM,
+    //                 restrictionN,
+    //                 restrictionO,
+    //                 restrictionR,
+    //                 restrictionS,
+    //                 restrictionX,
+    //               }
+    //             : undefined;
+    //         },
+    //       )
+    //       .filter(notNull),
+    //   )
+    //   .returning({ id: websocSectionEnrollment.id });
+    // console.log(`Inserted ${enrollmentLive.length} enrollment live entries`);
+    //
+    // await tx
+    //   .delete(websocSectionEnrollmentLive)
+    //   .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '30 minutes'`));
 
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
@@ -951,7 +952,7 @@ async function ingestChunk(
      so that one will run optimally, given no such failure occurs again
 
      we're going to bisect this chunk and try the two halves separately; eventually,
-     we'll have <= 900 valid sections in a chunk and we'll be in the clear
+     we'll have <= 900 valid sections in a chunk, and we'll be in the clear
     */
     const lowerInt = Number.parseInt(lower, 10);
     const upperInt = Number.parseInt(upper, 10);
