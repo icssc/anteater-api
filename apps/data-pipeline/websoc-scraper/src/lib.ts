@@ -572,7 +572,7 @@ const doChunkUpsert = async (
 
     await tx
       .delete(websocSectionEnrollmentLive)
-      .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '1 hour'`));
+      .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '30 minutes'`));
 
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
