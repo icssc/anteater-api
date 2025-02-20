@@ -155,6 +155,20 @@ export const websocQuerySchema = z.object({
       }
       return parsedCodes;
     }),
+  includeRelatedCourses: z
+    .enum(["true", "false"])
+    .transform((x) => x === "true")
+    .pipe(z.boolean())
+    .optional(),
+
+  courseIds: z
+    .preprocess((arg) => {
+      if (typeof arg === "string") {
+        return arg.split(",").map((s) => s.trim());
+      }
+      return arg;
+    }, z.array(z.string()))
+    .optional(),
 });
 
 export const hourMinuteSchema = z.object({
