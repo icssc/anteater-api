@@ -30,7 +30,7 @@ const fullCoursesOptions = [
 
 const cancelledCoursesOptions = ["Exclude", "Include", "Only"] as const;
 
-const restrictionCodes = [
+export const restrictionCodes = [
   "A",
   "B",
   "C",
@@ -193,9 +193,16 @@ export const websocSectionFinalExamSchema = z.discriminatedUnion("examStatus", [
   }),
 ]);
 
+export const sectionStatusSchema = z.enum(websocStatuses).or(z.literal(""));
+
+export const numCurrentlyEnrolledSchema = z.object({
+  totalEnrolled: z.string(),
+  sectionEnrolled: z.string(),
+});
+
 export const websocSectionSchema = z.object({
   units: z.string(),
-  status: z.enum(websocStatuses).or(z.literal("")),
+  status: sectionStatusSchema,
   meetings: websocSectionMeetingSchema.array(),
   finalExam: websocSectionFinalExamSchema,
   sectionNum: z.string(),
@@ -209,10 +216,7 @@ export const websocSectionSchema = z.object({
   numWaitlistCap: z.string(),
   sectionComment: z.string(),
   numNewOnlyReserved: z.string(),
-  numCurrentlyEnrolled: z.object({
-    totalEnrolled: z.string(),
-    sectionEnrolled: z.string(),
-  }),
+  numCurrentlyEnrolled: numCurrentlyEnrolledSchema,
   updatedAt: z.coerce.date(),
   webURL: z.string(),
 });
