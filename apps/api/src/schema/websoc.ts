@@ -30,7 +30,7 @@ const fullCoursesOptions = [
 
 const cancelledCoursesOptions = ["Exclude", "Include", "Only"] as const;
 
-export const restrictionCodes = [
+const restrictionCodes = [
   "A",
   "B",
   "C",
