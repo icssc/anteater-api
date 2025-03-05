@@ -1,0 +1,17 @@
+{
+  "name": "@apps/library-busyness-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scraper for libarry floor busyness",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "cheerio": "1.0.0",
+    "cross-fetch": "4.0.0"
+  },
+  "devDependencies": {}
+}
