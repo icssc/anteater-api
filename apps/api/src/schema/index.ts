@@ -6,6 +6,7 @@ export * from "./enrollment-history";
 export * from "./grades";
 export * from "./instructors";
 export * from "./larc";
+export * from "./map";
 export * from "./programs";
 export * from "./search";
 export * from "./study-rooms";
