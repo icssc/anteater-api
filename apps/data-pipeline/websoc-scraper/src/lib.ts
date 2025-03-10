@@ -320,12 +320,19 @@ function sectionMapper(
   const numOnWaitlistResolved = numOnWaitlist?.startsWith("off")
     ? baseTenIntOrNull(numOnWaitlist.split("(")[1].slice(0, -1))
     : baseTenIntOrNull(numOnWaitlist);
+
+  const numCurrentlySectionEnrolled = baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled) ?? -1;
+
+  const status =
+    rest.status ??
+    (numCurrentlySectionEnrolled >= Number.parseInt(maxCapacity, 10) ? "FULL" : "OPEN");
+
   return {
     ...term,
     ...rest,
     ...generateRestrictions(rest),
     courseId,
-    status: rest.status ?? "",
+    status,
     finalExamString: rest.finalExam,
     finalExam: parseFinalExamString(term, rest),
     meetings: rest.meetings.map(rawMeetingMapper),
@@ -335,7 +342,7 @@ function sectionMapper(
     numOnWaitlist: numOnWaitlistResolved ?? -1,
     numWaitlistCap: baseTenIntOrNull(numWaitlistCap) ?? -1,
     numNewOnlyReserved: baseTenIntOrNull(numNewOnlyReserved) ?? -1,
-    numCurrentlySectionEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.sectionEnrolled) ?? -1,
+    numCurrentlySectionEnrolled,
     numCurrentlyTotalEnrolled: baseTenIntOrNull(numCurrentlyEnrolled.totalEnrolled) ?? -1,
     updatedAt,
   };
@@ -411,7 +418,10 @@ const doChunkUpsert = async (
         ],
         set: conflictUpdateSetAllCols(websocDepartment),
       })
-      .returning({ id: websocDepartment.id, deptCode: websocDepartment.deptCode })
+      .returning({
+        id: websocDepartment.id,
+        deptCode: websocDepartment.deptCode,
+      })
       .then((rows) => new Map(rows.map((row) => [row.deptCode, row.id])));
     const courses = await tx
       .insert(websocCourse)
@@ -473,7 +483,10 @@ const doChunkUpsert = async (
         target: [websocSection.year, websocSection.quarter, websocSection.sectionCode],
         set: conflictUpdateSetAllCols(websocSection),
       })
-      .returning({ id: websocSection.id, sectionCode: websocSection.sectionCode })
+      .returning({
+        id: websocSection.id,
+        sectionCode: websocSection.sectionCode,
+      })
       .then(
         (rows) =>
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
@@ -796,14 +809,16 @@ export async function scrapeTerm(
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
   const sectionCodeBounds = await db
-    .execute(sql<Array<{ section_code: string }>>`
+    .execute(
+      sql<Array<{ section_code: string }>>`
     SELECT section_code FROM (
         SELECT LPAD(section_code::TEXT, 5, '0') AS section_code,
         (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
         FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
     )
     WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0 OR MOD(rownum, ${SECTIONS_PER_CHUNK}) = 1;
-  `)
+  `,
+    )
     .then((xs) => xs.map((x) => x.section_code));
   if (departments.length) {
     console.log(`Resuming scraping run at department ${departments[0]}.`);
