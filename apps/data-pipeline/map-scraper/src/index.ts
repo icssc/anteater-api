@@ -1,7 +1,4 @@
 import { exit } from "node:process";
-import { doScrape } from "$lib";
-import { database } from "@packages/db";
-import winston from "winston";
 
 interface LocationListData {
   catId: number;
@@ -22,24 +19,6 @@ interface BuildingLocation {
   lng: number;
   imageURLs: string[];
 }
-
-const defaultFormat = [
-  winston.format.timestamp(),
-  winston.format.printf((info) => `[${info.timestamp} ${info.level}] ${info.message}`),
-];
-
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(...defaultFormat),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), ...defaultFormat),
-    }),
-    new winston.transports.File({
-      filename: `${__dirname}/../logs/${Date.now()}.log`,
-    }),
-  ],
-});
 
 const CATEGORIES: Set<number> = new Set([
   8424, 8309, 8311, 8392, 8405, 44392, 44393, 44394, 44395, 44396, 44397, 44398, 44400, 44401,
@@ -109,9 +88,8 @@ async function fetchLocations() {
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
-  const db = database(url);
 
-  logger.info("map-scrapper starting...");
+  console.log("map-scrapper starting...");
   await fetchLocations();
   const buildingInterfaceStr = `
 export interface Building {
@@ -131,8 +109,7 @@ const buildingCatalogue: Record<string, Building> = ${JSON.stringify(
   const locationStr = `
 const locations: Record<string, number> = ${JSON.stringify(locationIds, null, 4)};
 \nexport default locations;`;
-  logger.info(buildingInterfaceStr + buildingCatalogueStr + locationStr);
-  await doScrape(db);
+  console.log(buildingInterfaceStr + buildingCatalogueStr + locationStr);
   exit(0);
 }
 
