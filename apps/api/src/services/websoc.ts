@@ -30,7 +30,41 @@ const termOrder = {
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
-function buildQuery(input: WebsocServiceInput) {
+function buildRelatedCoursesSubquery(
+  input: WebsocServiceInput,
+  db: ReturnType<typeof database>,
+): SQL {
+  const sectionCodesPredicates: Array<SQL> = [];
+  if (input.sectionCodes) {
+    for (const code of input.sectionCodes) {
+      switch (code._type) {
+        case "ParsedInteger":
+          sectionCodesPredicates.push(eq(websocSection.sectionCode, code.value));
+          break;
+        case "ParsedRange":
+          sectionCodesPredicates.push(
+            and(gte(websocSection.sectionCode, code.min), lte(websocSection.sectionCode, code.max)),
+          );
+          break;
+      }
+    }
+  }
+  return db
+    .select({ courseId: websocSection.courseId })
+    .from(websocSchool)
+    .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
+    .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
+    .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+    .where(
+      and(
+        eq(websocSchool.year, input.year),
+        eq(websocSchool.quarter, input.quarter),
+        or(...sectionCodesPredicates),
+      ),
+    );
+}
+
+function buildQuery(input: WebsocServiceInput, relatedCoursesSubquery?: SQL) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
   ];
@@ -107,18 +141,15 @@ function buildQuery(input: WebsocServiceInput) {
           break;
       }
     }
-    if (input.includeRelatedCourses && input.courseIds) {
+    if (input.includeRelatedCourses && relatedCoursesSubquery) {
       conditions.push(
-        or(
-          or(...sectionCodesConditions.filter(Boolean)),
-          inArray(websocCourse.id, input.courseIds),
-        ),
+        or(or(...sectionCodesConditions), inArray(websocCourse.id, relatedCoursesSubquery)),
       );
     } else {
       conditions.push(or(...sectionCodesConditions));
     }
   }
-  if (!input.sectionCodes && input.courseIds) {
+  if (input.courseIds) {
     conditions.push(inArray(websocCourse.courseId, input.courseIds));
   }
   if (input.instructorName) {
@@ -401,45 +432,11 @@ export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getWebsocResponse(input: WebsocServiceInput) {
-    if (input.includeRelatedCourses && input.sectionCodes && input.courseIds) {
-      throw new Error(
-        "Invalid query: The includeRelatedCourses flag only works when sectionCodes are provided. Do not provide courseIds along with includeRelatedCourses.",
-      );
-    }
-    if (input.includeRelatedCourses && input.sectionCodes) {
-      const sectionCodesConditions: Array<SQL | undefined> = [];
-      for (const code of input.sectionCodes) {
-        switch (code._type) {
-          case "ParsedInteger":
-            sectionCodesConditions.push(eq(websocSection.sectionCode, code.value));
-            break;
-          case "ParsedRange":
-            sectionCodesConditions.push(
-              and(
-                gte(websocSection.sectionCode, code.min),
-                lte(websocSection.sectionCode, code.max),
-              ),
-            );
-            break;
-        }
-      }
+    // If related courses are enabled, generate the subquery using the available db.
+    const relatedCoursesSubquery = input.includeRelatedCourses
+      ? buildRelatedCoursesSubquery(input, this.db)
+      : undefined;
 
-      const relatedCourseIdsResult = await this.db
-        .select({ courseId: websocSection.courseId })
-        .from(websocSchool)
-        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
-        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-        .where(
-          and(
-            eq(websocSchool.year, input.year),
-            eq(websocSchool.quarter, input.quarter),
-            or(...sectionCodesConditions),
-          ),
-        );
-      const relatedCourseIds = Array.from(new Set(relatedCourseIdsResult.map((r) => r.courseId)));
-      input.courseIds = relatedCourseIds;
-    }
     return this.db
       .select({
         school: getTableColumns(websocSchool),
@@ -465,7 +462,7 @@ export class WebsocService {
         eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
       )
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
-      .where(buildQuery(input))
+      .where(buildQuery(input, relatedCoursesSubquery))
       .then(transformRows);
   }
 
