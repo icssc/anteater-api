@@ -253,11 +253,6 @@ importers:
       winston:
         specifier: 3.15.0
         version: 3.15.0
-    devDependencies:
-      wrangler:
-        specifier: 3.100.0
-        version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
-
 
   apps/data-pipeline/mview-refresher:
     dependencies:
