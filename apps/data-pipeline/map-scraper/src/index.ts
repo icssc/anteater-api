@@ -1,4 +1,6 @@
 import { exit } from "node:process";
+import { database } from "@packages/db";
+import { mapLocation } from "@packages/db/schema";
 
 interface LocationListData {
   catId: number;
@@ -33,23 +35,24 @@ const locationsCatalogue: Record<number, BuildingLocation> = {};
 const locationIds: Record<string, number> = {};
 
 function sleep(ms: number): Promise<number> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(() => resolve(ms), ms));
 }
 
 async function fetchLocations() {
   const locationsListResponse: Response = await fetch(LOCATIONS_LIST_API);
   const locations: LocationListData[] = (await locationsListResponse.json()) as LocationListData[];
-  console.log(locations);
-  // Go through all the locations
   for (const location of locations) {
     // Check if location was already recorded
     const locationExists: boolean = Object.values(locationsCatalogue).some(
       (existingLocation) => existingLocation.name === location.name,
     );
 
-    if (!CATEGORIES.has(location.catId)) return;
-
-    if (locationExists) return;
+    if (!CATEGORIES.has(location.catId)) {
+      continue;
+    }
+    if (locationExists) {
+      continue;
+    }
 
     // If one of the locations belongs to one of the categories above, and is not a duplicate
     // Hits location data API to get details on location
@@ -88,9 +91,31 @@ async function fetchLocations() {
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
-
+  const db = database(url);
   console.log("map-scrapper starting...");
   await fetchLocations();
+  await db.transaction(async (tx) => {
+    for (const locationId in locationsCatalogue) {
+      const locationData = locationsCatalogue[locationId];
+      await tx
+        .insert(mapLocation)
+        .values({
+          id: locationId,
+          name: locationData.name,
+          latitude: locationData.lat.toString(),
+          longitude: locationData.lng.toString(),
+          imageURLs: locationData.imageURLs,
+        })
+        .onConflictDoUpdate({
+          target: mapLocation.id,
+          set: {
+            name: locationData.name,
+            latitude: locationData.lat.toString(),
+            longitude: locationData.lng.toString(),
+          },
+        });
+    }
+  });
   const buildingInterfaceStr = `
 export interface Building {
 imageURLs: string[];
