@@ -710,11 +710,11 @@ export const studyRoomSlot = pgTable(
 
 // Map data
 export const mapLocation = pgTable("map_location", {
-  catId: varchar("id").notNull(),
+  id: numeric("id").primaryKey(),
+  name: varchar("name").notNull(),
   latitude: numeric("latitude").notNull(),
   longitude: numeric("longitude").notNull(),
-  id: varchar("id").primaryKey(),
-  name: varchar("name").notNull(),
+  imageURLs: json("image_urls").$type<string[]>(),
 });
 
 export const apExam = pgTable("ap_exam", {
