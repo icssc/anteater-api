@@ -14,8 +14,10 @@ type APExam = {
   catalogueName?: string;
   creditsAwarded: {
     acceptableScores: (1 | 2 | 3 | 4 | 5)[];
-    // units granted, including courses; the remaining units are typically accepted as a catch-all "elective units"
+    // units granted, most relevant for residency requirement
     unitsGranted: number;
+    // units of catch-all elective credit granted not through a course
+    electiveUnitsGranted: number;
     // GEs fulfilled directly and not through a course
     geFulfilled: string[];
     coursesGranted: CoursesGrantedTree;
@@ -30,6 +32,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -43,6 +46,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["ART HIS 40A"] },
       },
@@ -51,6 +55,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["ART HIS 40A", "ART HIS 40B"] },
       },
@@ -58,9 +63,11 @@ export default {
   },
   "AP Drawing": {
     creditsAwarded: [
+      // Elective credit only
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -72,6 +79,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -83,6 +91,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -95,7 +104,8 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
-        geFulfilled: ["II"],
+        electiveUnitsGranted: 8,
+        geFulfilled: [],
         coursesGranted: { AND: [] },
       },
     ],
@@ -108,6 +118,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -117,6 +128,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { OR: ["CHEM 1A", "ENGR 1A"] },
       },
@@ -128,6 +140,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -136,6 +149,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["CHINESE 1A", "CHINESE 1B", "CHINESE 1C", "CHINESE 2A"] },
       },
@@ -148,6 +162,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -165,6 +180,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["I&C SCI 20"] },
       },
@@ -177,6 +193,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -186,6 +203,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["ECON 20B", "MGMT 4B"] },
       },
@@ -198,6 +216,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -207,6 +226,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["ECON 20A", "MGMT 4A"] },
       },
@@ -220,6 +240,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["WRITING 50", { OR: ["ENGLISH 10", "ENGLISH 12"] }] },
       },
@@ -233,6 +254,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["WRITING 50", { OR: ["ENGLISH 10", "ENGLISH 12"] }] },
       },
@@ -245,6 +267,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -252,6 +275,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["EARTHSS 1"] },
       },
@@ -263,6 +287,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["FRENCH 1A", "FRENCH 1B", "FRENCH 1C"] },
       },
@@ -270,6 +295,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: ["VI"],
         coursesGranted: { AND: ["FRENCH 2A", "FRENCH 2B", "FRENCH 2C"] },
       },
@@ -281,6 +307,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -292,6 +319,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["GERMAN 1A", "GERMAN 1B", "GERMAN 1C"] },
       },
@@ -299,6 +327,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["GERMAN 2A", "GERMAN 2B", "GERMAN 2C"] },
       },
@@ -310,6 +339,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -319,6 +349,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         // let's just call it this; seems unlikely you'd want this counted as something else and then do a poli sci minor
         // and you'd have to ask an advisor to move it around
@@ -332,6 +363,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -341,6 +373,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         // same as above
         coursesGranted: { AND: ["POL SCI 51A"] },
       },
@@ -352,6 +385,7 @@ export default {
       {
         acceptableScores: [3, 4],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -361,6 +395,7 @@ export default {
       {
         acceptableScores: [5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: ["IV", "VIII"],
         coursesGranted: { AND: [] },
       },
@@ -372,6 +407,7 @@ export default {
       {
         acceptableScores: [3, 4],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -380,6 +416,7 @@ export default {
       {
         acceptableScores: [5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { OR: ["HISTORY 40A", "HISTORY 40B", "HISTORY 40C"] },
       },
@@ -391,6 +428,7 @@ export default {
       {
         acceptableScores: [3, 4],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -399,6 +437,7 @@ export default {
       {
         acceptableScores: [5],
         unitsGranted: 8,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { OR: ["HISTORY 21B", "HISTORY 21C"] },
       },
@@ -410,6 +449,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["ITALIAN 1A", "ITALIAN 1B", "ITALIAN 1C"] },
       },
@@ -417,6 +457,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["ITALIAN 2A", "ITALIAN 2B", "ITALIAN 2C"] },
       },
@@ -428,6 +469,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["JAPANSE 1A", "JAPANSE 1B", "JAPANSE 1C"] },
       },
@@ -435,6 +477,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["JAPANSE 2A", "JAPANSE 2B", "JAPANSE 2C"] },
       },
@@ -446,6 +489,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -454,6 +498,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: ["VI", "VIII"],
         coursesGranted: { AND: [] },
       },
@@ -466,6 +511,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
@@ -478,6 +524,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
@@ -485,6 +532,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: [{ AND: ["MATH 2A, MATH 2B"] }, { AND: ["MATH 5A", "MATH 5B"] }] },
       },
@@ -499,6 +547,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
@@ -511,6 +560,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -522,6 +572,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -533,6 +584,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 8,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -545,6 +597,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -552,6 +605,7 @@ export default {
       {
         acceptableScores: [4],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["PHYSICS 2"] },
       },
@@ -559,6 +613,7 @@ export default {
       {
         acceptableScores: [5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["PHYSICS 3A"] },
       },
@@ -571,6 +626,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -578,6 +634,7 @@ export default {
       {
         acceptableScores: [4],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["PHYSICS 2"] },
       },
@@ -585,6 +642,7 @@ export default {
       {
         acceptableScores: [5],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: ["PHYSICS 3C"] },
       },
@@ -597,6 +655,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 4,
+        electiveUnitsGranted: 4,
         geFulfilled: [],
         coursesGranted: { AND: [] },
       },
@@ -604,6 +663,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["PSCI 9", "PSYCH 7A"] },
       },
@@ -618,6 +678,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["SPANISH 1A", "SPANISH 1B", "SPANISH 1C"] },
       },
@@ -625,6 +686,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: ["VI"],
         coursesGranted: { AND: ["SPANISH 2A", "SPANISH 2B", "SPANISH 2C"] },
       },
@@ -636,6 +698,7 @@ export default {
       {
         acceptableScores: [3],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { AND: ["SPANISH 1A", "SPANISH 1B", "SPANISH 1C"] },
       },
@@ -643,6 +706,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
+        electiveUnitsGranted: 0,
         // all three are satisfied given prereq of spanish 1 series
         // spanish 3 and spanish 3h also satisfy different GEs but doing the AP gives you both
         geFulfilled: ["VI", "VII", "VIII"],
@@ -657,6 +721,7 @@ export default {
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
+        electiveUnitsGranted: 0,
         geFulfilled: [],
         coursesGranted: { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
       },
