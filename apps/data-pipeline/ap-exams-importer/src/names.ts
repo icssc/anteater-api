@@ -13,7 +13,7 @@ type CoursesGrantedTree =
 type APExam = {
   catalogueName?: string;
   creditsAwarded: {
-    acceptableScores: number[];
+    acceptableScores: (1 | 2 | 3 | 4 | 5)[];
     // units granted, including courses; the remaining units are typically accepted as a catch-all "elective units"
     unitsGranted: number;
     // GEs fulfilled directly and not through a course
