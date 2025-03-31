@@ -131,6 +131,14 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksMarkerRequirement
   );
 
+export type APCoursesGrantedTree =
+  | {
+      AND: APCoursesGrantedTree[] | string[];
+    }
+  | {
+      OR: APCoursesGrantedTree[] | string[];
+    };
+
 // Misc. enums
 
 export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
@@ -743,7 +751,39 @@ export const studyRoomSlot = pgTable(
 
 export const apExams = pgTable("ap_exams", {
   id: varchar("id").primaryKey(),
-  officialName: varchar("official_name").notNull(),
+  catalogueName: varchar("catalogue_name"),
+});
+
+export const apExamToReward = pgTable(
+  "ap_exam_to_reward",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    examId: varchar("exam_id")
+      .notNull()
+      .references(() => apExams.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    reward: uuid("reward")
+      .notNull()
+      .references(() => apExamReward.id, { onDelete: "cascade" }),
+  },
+  (table) => [uniqueIndex().on(table.examId, table.score)],
+);
+
+export const apExamReward = pgTable("ap_exam_reward", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  unitsGranted: integer("units_granted"),
+  electiveUnitsGranted: integer("elective_units_granted"),
+  GE1A: boolean("ge_1a").notNull().default(false),
+  GE1B: boolean("ge_1b").notNull().default(false),
+  GE2: boolean("ge_2").notNull().default(false),
+  GE3: boolean("ge_3").notNull().default(false),
+  GE4: boolean("ge_4").notNull().default(false),
+  GE5A: boolean("ge_5a").notNull().default(false),
+  GE5B: boolean("ge_5b").notNull().default(false),
+  GE6: boolean("ge_6").notNull().default(false),
+  GE7: boolean("ge_7").notNull().default(false),
+  GE8: boolean("ge_8").notNull().default(false),
+  coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
 
 // Materialized views
