@@ -1,14 +1,9 @@
 // https://apstudents.collegeboard.org/courses
 // https://catalogue.uci.edu/informationforprospectivestudents/undergraduateadmissions/#advancedplacementandinternationalbaccalaureatecredittext
 
-type CoursesGranted = string[];
-type CoursesGrantedTree =
-  | {
-      AND: CoursesGrantedTree[] | CoursesGranted;
-    }
-  | {
-      OR: CoursesGrantedTree[] | CoursesGranted;
-    };
+import type { APCoursesGrantedTree } from "@packages/db/schema";
+
+export const geCategories = ["1A", "1B", "2", "3", "4", "5A", "5B", "6", "7", "8"] as const;
 
 type APExam = {
   catalogueName?: string;
@@ -19,8 +14,8 @@ type APExam = {
     // units of catch-all elective credit granted not through a course
     electiveUnitsGranted: number;
     // GEs fulfilled directly and not through a course
-    geFulfilled: string[];
-    coursesGranted: CoursesGrantedTree;
+    geFulfilled: (typeof geCategories)[number][];
+    coursesGranted: APCoursesGrantedTree;
   }[];
 };
 type Mapping = Record<string, APExam>;
@@ -296,7 +291,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geFulfilled: ["VI"],
+        geFulfilled: ["6"],
         coursesGranted: { AND: ["FRENCH 2A", "FRENCH 2B", "FRENCH 2C"] },
       },
     ],
@@ -375,6 +370,7 @@ export default {
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         // same as above
+        geFulfilled: [],
         coursesGranted: { AND: ["POL SCI 51A"] },
       },
     ],
@@ -396,7 +392,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geFulfilled: ["IV", "VIII"],
+        geFulfilled: ["4", "8"],
         coursesGranted: { AND: [] },
       },
     ],
@@ -499,7 +495,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geFulfilled: ["VI", "VIII"],
+        geFulfilled: ["6", "8"],
         coursesGranted: { AND: [] },
       },
     ],
@@ -687,7 +683,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geFulfilled: ["VI"],
+        geFulfilled: ["6"],
         coursesGranted: { AND: ["SPANISH 2A", "SPANISH 2B", "SPANISH 2C"] },
       },
     ],
@@ -709,7 +705,7 @@ export default {
         electiveUnitsGranted: 0,
         // all three are satisfied given prereq of spanish 1 series
         // spanish 3 and spanish 3h also satisfy different GEs but doing the AP gives you both
-        geFulfilled: ["VI", "VII", "VIII"],
+        geFulfilled: ["6", "7", "8"],
         coursesGranted: { OR: ["SPANISH 3", "SPANISH 3H"] },
       },
     ],
