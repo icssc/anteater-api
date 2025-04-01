@@ -2,7 +2,7 @@ import { z } from "@hono/zod-openapi";
 import { courseLevels, terms } from "@packages/db/schema";
 import { yearSchema } from "./lib";
 
-const geCategories = [
+export const geCategories = [
   "GE-1A",
   "GE-1B",
   "GE-2",

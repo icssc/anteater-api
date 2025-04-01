@@ -1,7 +1,7 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import { apExamsQuerySchema, apExamsResponseSchema, errorSchema, responseSchema } from "$schema";
-import { apExamsService } from "$services";
+import { APExamsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
@@ -39,7 +39,7 @@ apExamsRouter.get(
 
 apExamsRouter.openapi(apExamsRoute, async (c) => {
   const query = c.req.valid("query");
-  const service = new apExamsService(database(c.env.DB.connectionString));
+  const service = new APExamsService(database(c.env.DB.connectionString));
   const res = await service.getAPExams(query);
   return res.length
     ? c.json({ ok: true, data: apExamsResponseSchema.parse(res) }, 200)
