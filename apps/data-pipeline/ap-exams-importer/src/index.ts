@@ -4,7 +4,7 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import apExamData, { type geCategories } from "./names";
+import apExamData, { type geCategories } from "./data.ts";
 
 const geCategoryToFlag = {
   "GE-1A": "grantsGE1A",
