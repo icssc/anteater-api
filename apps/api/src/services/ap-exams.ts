@@ -43,10 +43,10 @@ function accumulateRows(
       const examObj = {
         fullName: exam.id,
         catalogueName: exam.catalogueName,
-        creditsAwarded: [],
+        rewards: [],
       };
       if (scores && reward) {
-        examObj.creditsAwarded.push({
+        examObj.rewards.push({
           acceptableScores: scores,
           ...reward,
           geCategories: Object.entries(geCategoryToFlag)
@@ -56,7 +56,7 @@ function accumulateRows(
       }
       exams.set(exam.id, examObj);
     } else {
-      exams.get(exam.id)?.creditsAwarded.push({
+      exams.get(exam.id)?.rewards.push({
         acceptableScores: scores,
         ...reward,
         geCategories: Object.entries(geCategoryToFlag)

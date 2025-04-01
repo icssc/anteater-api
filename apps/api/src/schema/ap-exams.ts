@@ -59,7 +59,7 @@ export const apExamsResponseSchema = z.array(
         "The name given to this AP Exam in the UCI Catalogue, if the UCI Catalogue names this exam",
       example: "AP ECONOMICS:MICRO",
     }),
-    creditsAwarded: apExamsRewardSchema
+    rewards: apExamsRewardSchema
       .array()
       .openapi({ description: "The reward objects for various scores on this exam" }),
   }),
