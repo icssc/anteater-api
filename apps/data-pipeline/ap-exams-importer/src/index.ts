@@ -2,7 +2,7 @@ import { exit } from "node:process";
 
 import { database } from "@packages/db";
 
-import { apExamReward, apExamToReward, apExams } from "@packages/db/schema";
+import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import apExamData, { type geCategories } from "./names";
 
@@ -29,9 +29,9 @@ async function main() {
   await db.transaction(async (tx) => {
     for (const [fullName, examData] of Object.entries(apExamData)) {
       await tx
-        .insert(apExams)
+        .insert(apExam)
         .values({ id: fullName, catalogueName: examData?.catalogueName ?? null })
-        .onConflictDoUpdate({ target: apExams.id, set: conflictUpdateSetAllCols(apExams) });
+        .onConflictDoUpdate({ target: apExam.id, set: conflictUpdateSetAllCols(apExam) });
 
       for (const reward of examData.creditsAwarded) {
         const mappedCategories = reward.geGranted.map((cat) => geCategoryToFlag[cat]);

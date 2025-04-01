@@ -749,7 +749,7 @@ export const studyRoomSlot = pgTable(
   ],
 );
 
-export const apExams = pgTable("ap_exams", {
+export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),
   catalogueName: varchar("catalogue_name"),
 });
@@ -760,7 +760,7 @@ export const apExamToReward = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     examId: varchar("exam_id")
       .notNull()
-      .references(() => apExams.id, { onDelete: "cascade" }),
+      .references(() => apExam.id, { onDelete: "cascade" }),
     score: integer("score").notNull(),
     reward: uuid("reward")
       .notNull()

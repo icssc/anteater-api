@@ -1,9 +1,34 @@
 {
-  "id": "6d37f4b3-6232-4e09-aacc-e7f796e37835",
+  "id": "0ba6d477-a48a-455b-871e-a00d9d0070b3",
   "prevId": "f33c0893-c236-4ea2-80df-360e81ecd36a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.ap_exam": {
+      "name": "ap_exam",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "catalogue_name": {
+          "name": "catalogue_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.ap_exam_reward": {
       "name": "ap_exam_reward",
       "schema": "",
@@ -166,10 +191,10 @@
         }
       },
       "foreignKeys": {
-        "ap_exam_to_reward_exam_id_ap_exams_id_fk": {
-          "name": "ap_exam_to_reward_exam_id_ap_exams_id_fk",
+        "ap_exam_to_reward_exam_id_ap_exam_id_fk": {
+          "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
           "tableFrom": "ap_exam_to_reward",
-          "tableTo": "ap_exams",
+          "tableTo": "ap_exam",
           "columnsFrom": ["exam_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
@@ -185,31 +210,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ap_exams": {
-      "name": "ap_exams",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "catalogue_name": {
-          "name": "catalogue_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
