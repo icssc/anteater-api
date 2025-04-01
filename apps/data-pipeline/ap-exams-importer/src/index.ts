@@ -33,7 +33,7 @@ async function main() {
         .values({ id: fullName, catalogueName: examData?.catalogueName ?? null })
         .onConflictDoUpdate({ target: apExam.id, set: conflictUpdateSetAllCols(apExam) });
 
-      for (const reward of examData.creditsAwarded) {
+      for (const reward of examData.rewards) {
         const mappedCategories = reward.geGranted.map((cat) => geCategoryToFlag[cat]);
         const geFlags = Object.fromEntries(
           Object.values(geCategoryToFlag).map((f) => [f, mappedCategories.includes(f)]),

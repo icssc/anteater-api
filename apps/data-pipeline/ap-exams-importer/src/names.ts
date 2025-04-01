@@ -18,7 +18,7 @@ export const geCategories = [
 
 type APExam = {
   catalogueName?: string;
-  creditsAwarded: {
+  rewards: {
     acceptableScores: (1 | 2 | 3 | 4 | 5)[];
     // units granted, most relevant for residency requirement
     unitsGranted: number;
@@ -34,7 +34,7 @@ type Mapping = Record<string, APExam>;
 export default {
   "AP African American Studies": {
     // Satisfies one year of U.S. History for the Area A requirement.
-    creditsAwarded: [
+    rewards: [
       {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
@@ -45,7 +45,7 @@ export default {
     ],
   },
   "AP Art History": {
-    creditsAwarded: [
+    rewards: [
       // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A, and
       // satisfaction of category VIII, plus 4 units of elective credit; may not replace School of Humanities
       // requirements
@@ -68,7 +68,7 @@ export default {
     ],
   },
   "AP Drawing": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -80,7 +80,7 @@ export default {
     ],
   },
   "AP 2-D Art and Design": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -92,7 +92,7 @@ export default {
     ],
   },
   "AP 3-D Art and Design": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -104,7 +104,7 @@ export default {
     ],
   },
   "AP Biology": {
-    creditsAwarded: [
+    rewards: [
       // Non-Bio. Sci. majors earn one Biological Sciences course toward Category II of the UCI GE requirement.
       // Bio. Sci. majors earn elective credit only
       {
@@ -119,7 +119,7 @@ export default {
   // Capstone Research and Seminar: "Approved as Area G college-prep elective only. No university credit awarded"
   "AP Chemistry": {
     catalogueName: "AP CHEMISTRY",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -141,7 +141,7 @@ export default {
     ],
   },
   "AP Chinese Language and Culture": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -163,7 +163,7 @@ export default {
   },
   "AP Computer Science A": {
     catalogueName: "AP COMP SCI A",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -178,10 +178,10 @@ export default {
   "AP Computer Science AB": {
     catalogueName: "AP COMP SCI AB",
     // so we have no idea what they'd accept it as
-    creditsAwarded: [],
+    rewards: [],
   },
   "AP Computer Science Principles": {
-    creditsAwarded: [
+    rewards: [
       // I&C SCI 20
       {
         acceptableScores: [3, 4, 5],
@@ -194,7 +194,7 @@ export default {
   },
   "AP Macroeconomics": {
     catalogueName: "AP ECONOMICS:MACRO",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -217,7 +217,7 @@ export default {
   },
   "AP Microeconomics": {
     catalogueName: "AP ECONOMICS:MICRO",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -240,7 +240,7 @@ export default {
   },
   "AP English Language and Composition": {
     catalogueName: "AP ENGLISH LANGUAGE",
-    creditsAwarded: [
+    rewards: [
       // WRITING 50 and one course toward category IV of the UCI GE requirement for ENGLISH 10 or ENGLISH 12; may not
       // replace Literary Journalism major or minor, English major or minor, or School of Humanities requirements
       {
@@ -254,7 +254,7 @@ export default {
   },
   "AP English Literature and Composition": {
     catalogueName: "AP ENGLISH LIT",
-    creditsAwarded: [
+    rewards: [
       // WRITING 50 and one course toward category IV of the UCI GE requirement for ENGLISH 10 or ENGLISH 12; may not
       // replace Literary Journalism major or minor, English major or minor, or School of Humanities requirements
       {
@@ -268,7 +268,7 @@ export default {
   },
   "AP Environmental Science": {
     catalogueName: "AP ENVIRONMENTAL SCI",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -288,7 +288,7 @@ export default {
     ],
   },
   "AP French Language and Culture": {
-    creditsAwarded: [
+    rewards: [
       // FRENCH 1A-FRENCH 1B-FRENCH 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -308,7 +308,7 @@ export default {
     ],
   },
   "AP Human Geography": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -320,7 +320,7 @@ export default {
     ],
   },
   "AP German Language and Culture": {
-    creditsAwarded: [
+    rewards: [
       // GERMAN 1A-GERMAN 1B-GERMAN 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -340,7 +340,7 @@ export default {
     ],
   },
   "AP United States Government and Politics": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -364,7 +364,7 @@ export default {
     ],
   },
   "AP Comparative Government and Politics": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -387,7 +387,7 @@ export default {
     ],
   },
   "AP European History": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4],
@@ -409,7 +409,7 @@ export default {
     ],
   },
   "AP United States History": {
-    creditsAwarded: [
+    rewards: [
       // Satisfies American History and Institutions requirement
       {
         acceptableScores: [3, 4],
@@ -430,7 +430,7 @@ export default {
     ],
   },
   "AP World History: Modern": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4],
@@ -451,7 +451,7 @@ export default {
     ],
   },
   "AP Italian Language and Culture": {
-    creditsAwarded: [
+    rewards: [
       // ITALIAN 1A-ITALIAN 1B-ITALIAN 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -471,7 +471,7 @@ export default {
     ],
   },
   "AP Japanese Language and Culture": {
-    creditsAwarded: [
+    rewards: [
       // JAPANSE 1A-JAPANSE 1B-JAPANSE 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -491,7 +491,7 @@ export default {
     ],
   },
   "AP Latin": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -513,7 +513,7 @@ export default {
   },
   "AP Calculus AB": {
     catalogueName: "AP CALCULUS AB",
-    creditsAwarded: [
+    rewards: [
       // MATH 2A or MATH 5A
       {
         acceptableScores: [3, 4, 5],
@@ -526,7 +526,7 @@ export default {
   },
   "AP Calculus BC": {
     catalogueName: "AP CALCULUS BC",
-    creditsAwarded: [
+    rewards: [
       // MATH 2A or MATH 5A
       {
         acceptableScores: [3],
@@ -547,7 +547,7 @@ export default {
   },
   "AP Calculus BC, Calculus AB subscore": {
     catalogueName: "AP CALCULUS AB SUB",
-    creditsAwarded: [
+    rewards: [
       // Students who take the Calculus BC examination and earn a subscore of 3 or higher on the Calculus AB portion
       // will receive credit for the Calculus AB examination, even if they do not receive a score of 3 or higher on the
       // BC examination.
@@ -562,7 +562,7 @@ export default {
   },
   // precalculus: "No university credit awarded."
   "AP Music Theory": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -574,7 +574,7 @@ export default {
     ],
   },
   "AP Physics 1: Algebra-Based": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -586,7 +586,7 @@ export default {
     ],
   },
   "AP Physics 2: Algebra-Based": {
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3, 4, 5],
@@ -599,7 +599,7 @@ export default {
   },
   "AP PHYSICS C:MECH": {
     catalogueName: "AP Physics C: Mechanics",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -628,7 +628,7 @@ export default {
   },
   "AP Physics C: Electricity and Magnetism": {
     catalogueName: "AP PHYSICS C:E/M",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -657,7 +657,7 @@ export default {
   },
   "AP Psychology": {
     catalogueName: "AP PSYCHOLOGY",
-    creditsAwarded: [
+    rewards: [
       // Elective credit only
       {
         acceptableScores: [3],
@@ -680,7 +680,7 @@ export default {
   // AP seminar: "Satisfies the UC Entry Level Writing Requirement. No university credit awarded"
   "AP Spanish Language and Culture": {
     catalogueName: "AP SPANISH LANGUAGE",
-    creditsAwarded: [
+    rewards: [
       // SPANISH 1A-SPANISH 1B-SPANISH 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -700,7 +700,7 @@ export default {
     ],
   },
   "AP Spanish Literature and Culture": {
-    creditsAwarded: [
+    rewards: [
       // SPANISH 1A-SPANISH 1B-SPANISH 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
@@ -723,7 +723,7 @@ export default {
   },
   "AP Statistics": {
     catalogueName: "AP STATISTICS",
-    creditsAwarded: [
+    rewards: [
       // STATS 7 or STATS 8 or MGMT 7 or SOCECOL 13 or EDUC 15
       {
         acceptableScores: [3, 4, 5],
