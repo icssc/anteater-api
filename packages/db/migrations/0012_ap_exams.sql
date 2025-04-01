@@ -2,16 +2,16 @@ CREATE TABLE IF NOT EXISTS "ap_exam_reward" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"units_granted" integer,
 	"elective_units_granted" integer,
-	"ge_1a" boolean DEFAULT false NOT NULL,
-	"ge_1b" boolean DEFAULT false NOT NULL,
-	"ge_2" boolean DEFAULT false NOT NULL,
-	"ge_3" boolean DEFAULT false NOT NULL,
-	"ge_4" boolean DEFAULT false NOT NULL,
-	"ge_5a" boolean DEFAULT false NOT NULL,
-	"ge_5b" boolean DEFAULT false NOT NULL,
-	"ge_6" boolean DEFAULT false NOT NULL,
-	"ge_7" boolean DEFAULT false NOT NULL,
-	"ge_8" boolean DEFAULT false NOT NULL,
+	"grants_ge_1a" boolean DEFAULT false NOT NULL,
+	"grants_ge_1b" boolean DEFAULT false NOT NULL,
+	"grants_ge_2" boolean DEFAULT false NOT NULL,
+	"grants_ge_3" boolean DEFAULT false NOT NULL,
+	"grants_ge_4" boolean DEFAULT false NOT NULL,
+	"grants_ge_5a" boolean DEFAULT false NOT NULL,
+	"grants_ge_5b" boolean DEFAULT false NOT NULL,
+	"grants_ge_6" boolean DEFAULT false NOT NULL,
+	"grants_ge_7" boolean DEFAULT false NOT NULL,
+	"grants_ge_8" boolean DEFAULT false NOT NULL,
 	"courses_granted" json NOT NULL
 );
 --> statement-breakpoint
@@ -38,3 +38,5 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "ap_exam_to_reward_exam_id_score_index" ON "ap_exam_to_reward" USING btree ("exam_id","score");

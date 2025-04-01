@@ -3,7 +3,18 @@
 
 import type { APCoursesGrantedTree } from "@packages/db/schema";
 
-export const geCategories = ["1A", "1B", "2", "3", "4", "5A", "5B", "6", "7", "8"] as const;
+export const geCategories = [
+  "GE-1A",
+  "GE-1B",
+  "GE-2",
+  "GE-3",
+  "GE-4",
+  "GE-5A",
+  "GE-5B",
+  "GE-6",
+  "GE-7",
+  "GE-8",
+] as const;
 
 type APExam = {
   catalogueName?: string;

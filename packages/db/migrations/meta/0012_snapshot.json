@@ -1,5 +1,5 @@
 {
-  "id": "1d7f4066-f76c-4de1-b3b3-7a2570070368",
+  "id": "6d37f4b3-6232-4e09-aacc-e7f796e37835",
   "prevId": "f33c0893-c236-4ea2-80df-360e81ecd36a",
   "version": "7",
   "dialect": "postgresql",
@@ -27,71 +27,71 @@
           "primaryKey": false,
           "notNull": false
         },
-        "ge_1a": {
-          "name": "ge_1a",
+        "grants_ge_1a": {
+          "name": "grants_ge_1a",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_1b": {
-          "name": "ge_1b",
+        "grants_ge_1b": {
+          "name": "grants_ge_1b",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_2": {
-          "name": "ge_2",
+        "grants_ge_2": {
+          "name": "grants_ge_2",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_3": {
-          "name": "ge_3",
+        "grants_ge_3": {
+          "name": "grants_ge_3",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_4": {
-          "name": "ge_4",
+        "grants_ge_4": {
+          "name": "grants_ge_4",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_5a": {
-          "name": "ge_5a",
+        "grants_ge_5a": {
+          "name": "grants_ge_5a",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_5b": {
-          "name": "ge_5b",
+        "grants_ge_5b": {
+          "name": "grants_ge_5b",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_6": {
-          "name": "ge_6",
+        "grants_ge_6": {
+          "name": "grants_ge_6",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_7": {
-          "name": "ge_7",
+        "grants_ge_7": {
+          "name": "grants_ge_7",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ge_8": {
-          "name": "ge_8",
+        "grants_ge_8": {
+          "name": "grants_ge_8",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -142,7 +142,29 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "ap_exam_to_reward_exam_id_score_index": {
+          "name": "ap_exam_to_reward_exam_id_score_index",
+          "columns": [
+            {
+              "expression": "exam_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "ap_exam_to_reward_exam_id_ap_exams_id_fk": {
           "name": "ap_exam_to_reward_exam_id_ap_exams_id_fk",

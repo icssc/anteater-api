@@ -7,16 +7,16 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import apExamData, { type geCategories } from "./names";
 
 const geCategoryToFlag = {
-  "1A": "GE1A",
-  "1B": "GE1B",
-  "2": "GE2",
-  "3": "GE3",
-  "4": "GE4",
-  "5A": "GE5A",
-  "5B": "GE5B",
-  "6": "GE6",
-  "7": "GE7",
-  "8": "GE8",
+  "GE-1A": "grantsGE1A",
+  "GE-1B": "grantsGE1B",
+  "GE-2": "grantsGE2",
+  "GE-3": "grantsGE3",
+  "GE-4": "grantsGE4",
+  "GE-5A": "grantsGE5A",
+  "GE-5B": "grantsGE5B",
+  "GE-6": "grantsGE6",
+  "GE-7": "grantsGE7",
+  "GE-8": "grantsGE8",
 } as const;
 
 async function main() {
