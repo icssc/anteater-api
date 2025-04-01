@@ -1,11 +1,21 @@
 export const apExamsSchema = `#graphql
+type APExamReward @cacheControl(maxAge: 86400) {
+    acceptableScores: [Int!]!
+    unitsGranted: Int!
+    electiveUnitsGranted: Int!
+    geCategories: [String!]!
+    coursesGranted: JSON!
+}
+
 type APExam @cacheControl(maxAge: 86400) {
-    catalogueName: String!
-    officialName: String!
+    fullName: String!
+    catalogueName: String
+    rewards: [APExamReward!]!
 }
 
 input APExamsQuery {
-    id: String!,
+    fullName: String,
+    catalogueName: String,
 }
 
 extend type Query {

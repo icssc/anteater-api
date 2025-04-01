@@ -9,7 +9,7 @@ export const apExamResolvers = {
       const parsedArgs = apExamsQuerySchema.parse(args?.query ?? {});
       const service = new APExamsService(db);
       const res = await service.getAPExams(parsedArgs);
-      if (args?.query && !res.length)
+      if (args?.query && (parsedArgs.fullName || parsedArgs.catalogueName) && !res.length)
         throw new GraphQLError("Can't find any AP Exams; is your id correct?", {
           extensions: { code: "NOT_FOUND" },
         });
