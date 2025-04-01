@@ -34,7 +34,7 @@ async function main() {
         .onConflictDoUpdate({ target: apExams.id, set: conflictUpdateSetAllCols(apExams) });
 
       for (const reward of examData.creditsAwarded) {
-        const mappedCategories = reward.geFulfilled.map((cat) => geCategoryToFlag[cat]);
+        const mappedCategories = reward.geGranted.map((cat) => geCategoryToFlag[cat]);
         const geFlags = Object.fromEntries(
           Object.values(geCategoryToFlag).map((f) => [f, mappedCategories.includes(f)]),
         ) as Record<(typeof geCategoryToFlag)[(typeof geCategories)[number]], boolean>;
