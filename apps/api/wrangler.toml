@@ -18,7 +18,7 @@ enabled = true
 
 [[hyperdrive]]
 binding = "DB"
-id = "c498e76d4f68446ea55d0d92865257b5"
+id = "1c4c82477bfa4114a48c63d4dc838e73"
 
 [[durable_objects.bindings]]
 name = "RATE_LIMITER"
