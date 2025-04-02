@@ -13,13 +13,27 @@ export const apExamsQuerySchema = z.object({
   }),
 });
 
-export const coursesGrantedTree: z.ZodType<APCoursesGrantedTree> = z
+export const coursesGrantedTreeSchema: z.ZodType<APCoursesGrantedTree> = z
   .object({
-    AND: z.union([z.lazy(() => coursesGrantedTree), z.string()]).array(),
+    AND: z
+      .union([z.lazy(() => coursesGrantedTreeSchema), z.string()])
+      .array()
+      .openapi({
+        description: "All of these entries are granted",
+        type: "array",
+        // items: { $ref: "#/components/schemas/coursesGrantedTree" },
+      }),
   })
   .or(
     z.object({
-      OR: z.union([z.lazy(() => coursesGrantedTree), z.string()]).array(),
+      OR: z
+        .union([z.lazy(() => coursesGrantedTreeSchema), z.string()])
+        .array()
+        .openapi({
+          description: "Any one of these entries is granted",
+          type: "array",
+          items: { $ref: "#/components/schemas/coursesGrantedTree" },
+        }),
     }),
   );
 
@@ -43,7 +57,7 @@ export const apExamsRewardSchema = z.object({
   geCategories: z.enum(geCategories).array().openapi({
     description: "GE categories granted directly by this reward and not through any course",
   }),
-  coursesGranted: coursesGrantedTree.openapi({
+  coursesGranted: coursesGrantedTreeSchema.openapi({
     description: "The tree describing course credit granted by this reward",
   }),
 });

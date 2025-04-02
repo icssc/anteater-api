@@ -1,11 +1,19 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { apExamsQuerySchema, apExamsResponseSchema, errorSchema, responseSchema } from "$schema";
+import {
+  apExamsQuerySchema,
+  apExamsResponseSchema,
+  coursesGrantedTreeSchema,
+  errorSchema,
+  responseSchema,
+} from "$schema";
 import { APExamsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 
 const apExamsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+
+apExamsRouter.openAPIRegistry.register("coursesGrantedTree", coursesGrantedTreeSchema);
 
 const apExamsRoute = createRoute({
   summary: "Retrieve AP Exam names",
