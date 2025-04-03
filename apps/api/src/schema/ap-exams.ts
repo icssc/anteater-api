@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import type { APCoursesGrantedTree } from "@packages/db/schema";
-import { geCategories } from "./grades.ts";
+
+import { geCategories } from "./lib";
 
 export const apExamsQuerySchema = z.object({
   fullName: z.string().optional().openapi({

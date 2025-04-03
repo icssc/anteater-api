@@ -51,3 +51,16 @@ const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) =
 export const courseNumberSchema = z.string().transform(courseNumberTransform).openapi({
   example: "46,6B,51-53",
 });
+
+export const geCategories = [
+  "GE-1A",
+  "GE-1B",
+  "GE-2",
+  "GE-3",
+  "GE-4",
+  "GE-5A",
+  "GE-5B",
+  "GE-6",
+  "GE-7",
+  "GE-8",
+] as const;
