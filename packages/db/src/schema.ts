@@ -478,6 +478,49 @@ export const larcSection = pgTable(
   (table) => [index().on(table.courseId)],
 );
 
+export const websocSectionEnrollmentLive = pgTable(
+  "websoc_section_enrollment_live",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id")
+      .references(() => websocSection.id)
+      .notNull(),
+    scrapedAt: timestamp("scraped_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    numCurrentlyTotalEnrolled: integer("num_currently_total_enrolled"),
+    numCurrentlySectionEnrolled: integer("num_currently_section_enrolled"),
+    maxCapacity: integer("max_capacity").notNull(),
+    numOnWaitlist: integer("num_on_waitlist"),
+    numWaitlistCap: integer("num_waitlist_cap"),
+    numRequested: integer("num_requested"),
+    numNewOnlyReserved: integer("num_new_only_reserved"),
+    status: websocStatus("status"),
+    restrictions: varchar("restriction_string").notNull(), // Track restrictions
+    restrictionA: boolean("restriction_a").notNull().default(false),
+    restrictionB: boolean("restriction_b").notNull().default(false),
+    restrictionC: boolean("restriction_c").notNull().default(false),
+    restrictionD: boolean("restriction_d").notNull().default(false),
+    restrictionE: boolean("restriction_e").notNull().default(false),
+    restrictionF: boolean("restriction_f").notNull().default(false),
+    restrictionG: boolean("restriction_g").notNull().default(false),
+    restrictionH: boolean("restriction_h").notNull().default(false),
+    restrictionI: boolean("restriction_i").notNull().default(false),
+    restrictionJ: boolean("restriction_j").notNull().default(false),
+    restrictionK: boolean("restriction_k").notNull().default(false),
+    restrictionL: boolean("restriction_l").notNull().default(false),
+    restrictionM: boolean("restriction_m").notNull().default(false),
+    restrictionN: boolean("restriction_n").notNull().default(false),
+    restrictionO: boolean("restriction_o").notNull().default(false),
+    restrictionR: boolean("restriction_r").notNull().default(false),
+    restrictionS: boolean("restriction_s").notNull().default(false),
+    restrictionX: boolean("restriction_x").notNull().default(false),
+  },
+  (table) => [
+    index().on(table.sectionId),
+    index().on(table.scrapedAt),
+    uniqueIndex().on(table.sectionId, table.scrapedAt),
+  ],
+);
+
 // Course/Instructor tables
 
 export const course = pgTable(
