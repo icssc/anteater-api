@@ -45,7 +45,6 @@ function transformSectionRows(
   rows: {
     course: typeof websocCourse.$inferSelect;
     section: typeof websocSection.$inferSelect;
-    instructor: typeof websocInstructor.$inferSelect;
     meeting: typeof websocSectionMeeting.$inferSelect;
     location: typeof websocLocation.$inferSelect;
   }[],
@@ -72,7 +71,7 @@ function transformSectionRows(
         sectionType: row.section.sectionType,
         sectionNum: row.section.sectionNum,
         units: row.section.units,
-        instructors: new Set([row.instructor.name]),
+        instructors: new Set(row.section.instructors),
         meetings: [
           {
             bldg: new Set([`${row.location.building} ${row.location.room}`]),
@@ -94,7 +93,6 @@ function transformSectionRows(
     }
     const section = mapping.get(row.section.id);
     if (section) {
-      section.instructors.add(row.instructor.name);
       if (!section.meetings[row.meeting.meetingIndex]) {
         section.meetings[row.meeting.meetingIndex] = {
           bldg: new Set([`${row.location.building} ${row.location.room}`]),
@@ -125,11 +123,11 @@ export class EnrollmentHistoryService {
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-      .innerJoin(
+      .leftJoin(
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
-      .innerJoin(
+      .leftJoin(
         websocInstructor,
         eq(websocSectionToInstructor.instructorName, websocInstructor.name),
       )
