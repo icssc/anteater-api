@@ -79,7 +79,7 @@ export class APExamsService {
         exam: getTableColumns(apExam),
         scores: sql<
           number[]
-        >`array_remove(array_agg(${apExamToReward.score} ORDER BY ${apExamToReward.score} ASC), NULL)`,
+        >`ARRAY_REMOVE(ARRAY_AGG(${apExamToReward.score} ORDER BY ${apExamToReward.score} ASC), NULL)`,
         reward: getTableColumns(apExamReward),
       })
       .from(apExam)
