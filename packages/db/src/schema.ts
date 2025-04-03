@@ -486,6 +486,9 @@ export const course = pgTable(
     id: varchar("id").primaryKey(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
     department: varchar("department").notNull(),
+    shortenedDept: varchar("shortened_dept")
+      .notNull()
+      .generatedAlwaysAs((): SQL => sql`REPLACE(${course.department}, ' ', '')`),
     departmentAlias: varchar("department_alias"),
     courseNumber: varchar("course_number").notNull(),
     courseNumeric: integer("course_numeric")
@@ -535,6 +538,7 @@ export const course = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
 )`,
     ),
+    index("shortened_dept").on(table.shortenedDept),
   ],
 );
 

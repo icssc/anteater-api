@@ -71,6 +71,13 @@
       "when": 1738124981227,
       "tag": "0009_uc_ge_requirements",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1739651540396,
+      "tag": "0010_shortened_dept",
+      "breakpoints": true
     }
   ]
 }
