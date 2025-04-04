@@ -12,7 +12,7 @@ const mapLocationsRoute = createRoute({
   operationId: "getLocations",
   tags: ["Map"],
   method: "get",
-  path: "/map",
+  path: "/",
   description: "List all available map data existing",
   request: { query: mapQuerySchema },
   responses: {
