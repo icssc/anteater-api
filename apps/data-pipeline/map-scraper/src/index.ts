@@ -83,8 +83,6 @@ async function fetchLocations() {
       ? location.name.substring(location.name.indexOf("(") + 1, location.name.indexOf(")"))
       : location.name;
     locationIds[locationName] = location.id;
-
-    await sleep(250);
   }
 }
 
@@ -92,8 +90,9 @@ async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
-  console.log("map-scrapper starting...");
+  console.log("map scraper starting...");
   await fetchLocations();
+  console.log("Done fetching locations...");
   await db.transaction(async (tx) => {
     for (const locationId in locationsCatalogue) {
       const locationData = locationsCatalogue[locationId];
