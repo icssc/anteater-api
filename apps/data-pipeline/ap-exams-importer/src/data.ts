@@ -541,7 +541,7 @@ export default {
         unitsGranted: 8,
         electiveUnitsGranted: 0,
         geGranted: [],
-        coursesGranted: { OR: [{ AND: ["MATH 2A, MATH 2B"] }, { AND: ["MATH 5A", "MATH 5B"] }] },
+        coursesGranted: { OR: [{ AND: ["MATH 2A", "MATH 2B"] }, { AND: ["MATH 5A", "MATH 5B"] }] },
       },
     ],
   },
