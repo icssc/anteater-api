@@ -698,6 +698,33 @@ export const studyRoomSlot = pgTable(
   ],
 );
 
+export const libraryTraffic = pgTable(
+  "library_traffic",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // library_name: varchar("library_name").notNull(),
+    // floor_name: varchar("floor_name").notNull(),
+    // floor_number: integer("floor_number").notNull(),
+
+    location_name: varchar("location_name").notNull(),
+    traffic_count: integer("traffic_count").notNull(),
+    traffic_percentage: decimal("traffic_percentage", { precision: 4, scale: 2 }).notNull(),
+    timestamp: timestamp("timestamp").defaultNow().notNull(),
+    is_active: boolean("is_active").default(true),
+
+    // daily_average: decimal("daily_average", { precision: 4, scale: 2 }).notNull(),
+    // hourly_average: decimal("hourly_average", { precision: 4, scale: 2 }).notNull(),
+    // peak_hour: integer("peak_hour").notNull(),
+    // peak_percentage: decimal("peak_percentage", { precision: 4, scale: 2 }).notNull(),
+    // capacity: integer("capacity").notNull(),
+  },
+  (table) => [
+    index().on(table.timestamp),
+    index().on(table.location_name),
+    uniqueIndex().on(table.location_name, table.timestamp),
+  ],
+);
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {
