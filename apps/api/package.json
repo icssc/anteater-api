@@ -18,7 +18,7 @@
     "@hono/zod-openapi": "0.16.4",
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "@scalar/hono-api-reference": "0.5.158",
+    "@scalar/hono-api-reference": "0.8.0",
     "graphql": "16.9.0",
     "graphql-yoga": "5.8.0",
     "hono": "4.6.8",
