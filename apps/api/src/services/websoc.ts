@@ -149,9 +149,6 @@ function buildQuery(input: WebsocServiceInput, relatedCoursesSubquery?: SQL) {
       conditions.push(or(...sectionCodesConditions));
     }
   }
-  if (input.courseIds) {
-    conditions.push(inArray(websocCourse.courseId, input.courseIds));
-  }
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
   }
@@ -432,7 +429,6 @@ export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getWebsocResponse(input: WebsocServiceInput) {
-    // If related courses are enabled, generate the subquery using the available db.
     const relatedCoursesSubquery = input.includeRelatedCourses
       ? buildRelatedCoursesSubquery(input, this.db)
       : undefined;
