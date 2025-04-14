@@ -9,3 +9,7 @@ export * from "./search";
 export * from "./websoc";
 export * from "./week";
 export * from "./study-rooms";
+export { buildDivisionQuery } from "./util.ts";
+export { WebsocDivisionLikeInput } from "./util.ts";
+export { buildGEQuery } from "./util.ts";
+export { WebsocGELikeInput } from "./util.ts";

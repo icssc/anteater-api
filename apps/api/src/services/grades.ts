@@ -8,7 +8,8 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
-import { buildDivisionQuery, buildGEQuery } from "./websoc.ts";
+
+import { buildDivisionQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
