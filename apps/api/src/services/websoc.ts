@@ -1,4 +1,4 @@
-import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
+import type {websocQuerySchema, websocResponseSchema, websocSectionSchema} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
 import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
@@ -28,7 +28,7 @@ const termOrder = {
   Fall: 5,
 };
 
-export type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
+type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
 function buildQuery(input: WebsocServiceInput) {
   const conditions = [

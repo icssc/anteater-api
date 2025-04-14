@@ -1,10 +1,12 @@
+import type { websocQuerySchema } from "$schema";
 import { type SQL, and, gte, lte } from "@packages/db/drizzle";
 import { websocCourse } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
-import type { WebsocServiceInput } from "./websoc.ts";
+import type { z } from "zod";
+
+type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
 type WebsocGELikeInput = Pick<WebsocServiceInput, "ge">;
-
 export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
   const conditions = [];
 
@@ -47,7 +49,6 @@ export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
 }
 
 type WebsocDivisionLikeInput = Pick<WebsocServiceInput, "division">;
-
 export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | undefined> {
   const conditions = [];
 
