@@ -49,10 +49,10 @@ importers:
         version: 3.10.0(@envelop/core@5.0.2)(graphql-yoga@5.8.0(graphql@16.9.0))(graphql@16.9.0)
       '@hono-rate-limiter/cloudflare':
         specifier: 0.2.1
-        version: 0.2.1(@cloudflare/workers-types@4.20241230.0)(hono@4.6.8)
+        version: 0.2.1(@cloudflare/workers-types@4.20241230.0)(hono@4.7.6)
       '@hono/zod-openapi':
-        specifier: 0.16.4
-        version: 0.16.4(hono@4.6.8)(zod@3.23.8)
+        specifier: 0.19.4
+        version: 0.19.4(hono@4.7.6)(zod@3.24.2)
       '@packages/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -61,7 +61,7 @@ importers:
         version: link:../../packages/stdlib
       '@scalar/hono-api-reference':
         specifier: 0.8.0
-        version: 0.8.0(hono@4.6.8)
+        version: 0.8.0(hono@4.7.6)
       graphql:
         specifier: 16.9.0
         version: 16.9.0
@@ -69,14 +69,14 @@ importers:
         specifier: 5.8.0
         version: 5.8.0(graphql@16.9.0)
       hono:
-        specifier: 4.6.8
-        version: 4.6.8
+        specifier: 4.7.6
+        version: 4.7.6
       hono-rate-limiter:
         specifier: 0.4.0
-        version: 0.4.0(hono@4.6.8)
+        version: 0.4.0(hono@4.7.6)
       zod:
-        specifier: 3.23.8
-        version: 3.23.8
+        specifier: 3.24.2
+        version: 3.24.2
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -378,7 +378,7 @@ importers:
         version: 7.53.2(react@18.3.1)
       sst:
         specifier: 3.3.22
-        version: 3.3.22(hono@4.6.8)
+        version: 3.3.22(hono@4.7.6)
       tailwind-merge:
         specifier: 2.5.4
         version: 2.5.4
@@ -1527,15 +1527,15 @@ packages:
       '@cloudflare/workers-types': ^4.20240529.0
       hono: ^4.4.8
 
-  '@hono/zod-openapi@0.16.4':
-    resolution: {integrity: sha512-mnF6GthBaKex0D5PsY/4lYNtkaGJNE38bjeUI//EUqq7Ee4TNm2su35IUiFH4HcmJp5fWYMLyOJOpjnkClzEGw==}
+  '@hono/zod-openapi@0.19.4':
+    resolution: {integrity: sha512-wt/Hn5TudVLGQxARVBBGDN/ckDOWUQrw9gdZoDBfRb5+G8+AJ/qeRDV8iorKE3SyEeiRkJ5ErKevkjCsAgH69Q==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       hono: '>=4.3.6'
       zod: 3.*
 
-  '@hono/zod-validator@0.3.0':
-    resolution: {integrity: sha512-7XcTk3yYyk6ldrO/VuqsroE7stvDZxHJQcpATRAyha8rUxJNBPV3+6waDrARfgEqxOVlzIadm3/6sE/dPseXgQ==}
+  '@hono/zod-validator@0.4.3':
+    resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
     peerDependencies:
       hono: '>=3.9.0'
       zod: ^3.19.1
@@ -3126,8 +3126,8 @@ packages:
     peerDependencies:
       hono: ^4.1.1
 
-  hono@4.6.8:
-    resolution: {integrity: sha512-f+2Ec9JAzabT61pglDiLJcF/DjiSefZkjCn9bzm1cYLGkD5ExJ3Jnv93ax9h0bn7UPLHF81KktoyjdQfWI2n1Q==}
+  hono@4.7.6:
+    resolution: {integrity: sha512-564rVzELU+9BRqqx5k8sT2NFwGD3I3Vifdb6P7CmM6FiarOSY+fDC+6B+k9wcCb86ReoayteZP2ki0cRLN1jbw==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -4316,6 +4316,9 @@ packages:
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -4448,10 +4451,10 @@ snapshots:
   '@apollo/utils.withrequired@2.0.1':
     optional: true
 
-  '@asteasolutions/zod-to-openapi@7.2.0(zod@3.23.8)':
+  '@asteasolutions/zod-to-openapi@7.2.0(zod@3.24.2)':
     dependencies:
       openapi3-ts: 4.4.0
-      zod: 3.23.8
+      zod: 3.24.2
 
   '@auth/core@0.37.2':
     dependencies:
@@ -5095,22 +5098,22 @@ snapshots:
       '@repeaterjs/repeater': 3.0.6
       tslib: 2.8.0
 
-  '@hono-rate-limiter/cloudflare@0.2.1(@cloudflare/workers-types@4.20241230.0)(hono@4.6.8)':
+  '@hono-rate-limiter/cloudflare@0.2.1(@cloudflare/workers-types@4.20241230.0)(hono@4.7.6)':
     dependencies:
       '@cloudflare/workers-types': 4.20241230.0
-      hono: 4.6.8
+      hono: 4.7.6
 
-  '@hono/zod-openapi@0.16.4(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-openapi@0.19.4(hono@4.7.6)(zod@3.24.2)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 7.2.0(zod@3.23.8)
-      '@hono/zod-validator': 0.3.0(hono@4.6.8)(zod@3.23.8)
-      hono: 4.6.8
-      zod: 3.23.8
+      '@asteasolutions/zod-to-openapi': 7.2.0(zod@3.24.2)
+      '@hono/zod-validator': 0.4.3(hono@4.7.6)(zod@3.24.2)
+      hono: 4.7.6
+      zod: 3.24.2
 
-  '@hono/zod-validator@0.3.0(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-validator@0.4.3(hono@4.7.6)(zod@3.24.2)':
     dependencies:
-      hono: 4.6.8
-      zod: 3.23.8
+      hono: 4.7.6
+      zod: 3.24.2
 
   '@hookform/resolvers@3.9.1(react-hook-form@7.53.2(react@18.3.1))':
     dependencies:
@@ -5780,14 +5783,14 @@ snapshots:
     dependencies:
       '@scalar/types': 0.1.6
 
-  '@scalar/hono-api-reference@0.8.0(hono@4.6.8)':
+  '@scalar/hono-api-reference@0.8.0(hono@4.7.6)':
     dependencies:
       '@scalar/core': 0.2.6
-      hono: 4.6.8
+      hono: 4.7.6
 
   '@scalar/openapi-types@0.2.0':
     dependencies:
-      zod: 3.23.8
+      zod: 3.24.2
 
   '@scalar/types@0.1.6':
     dependencies:
@@ -5795,7 +5798,7 @@ snapshots:
       '@unhead/schema': 1.11.20
       nanoid: 5.1.5
       type-fest: 4.39.1
-      zod: 3.23.8
+      zod: 3.24.2
 
   '@swc/counter@0.1.3': {}
 
@@ -6708,11 +6711,11 @@ snapshots:
 
   heap@0.2.7: {}
 
-  hono-rate-limiter@0.4.0(hono@4.6.8):
+  hono-rate-limiter@0.4.0(hono@4.7.6):
     dependencies:
-      hono: 4.6.8
+      hono: 4.7.6
 
-  hono@4.6.8: {}
+  hono@4.7.6: {}
 
   hookable@5.5.3: {}
 
@@ -6943,7 +6946,7 @@ snapshots:
       workerd: 1.20241230.0
       ws: 8.18.0
       youch: 3.3.4
-      zod: 3.23.8
+      zod: 3.24.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -7515,13 +7518,13 @@ snapshots:
   sst-linux-x86@3.3.22:
     optional: true
 
-  sst@3.3.22(hono@4.6.8):
+  sst@3.3.22(hono@4.7.6):
     dependencies:
       aws4fetch: 1.0.20
       jose: 5.2.3
       openid-client: 5.6.4
     optionalDependencies:
-      hono: 4.6.8
+      hono: 4.7.6
       sst-darwin-arm64: 3.3.22
       sst-darwin-x64: 3.3.22
       sst-linux-arm64: 3.3.22
@@ -7882,3 +7885,5 @@ snapshots:
   zhead@2.2.4: {}
 
   zod@3.23.8: {}
+
+  zod@3.24.2: {}
