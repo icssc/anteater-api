@@ -1,4 +1,4 @@
-import type { apExamsQuerySchema } from "$schema";
+import type {apExamsQuerySchema, apExamsRewardSchema} from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, getTableColumns, sql } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
@@ -39,11 +39,15 @@ function accumulateRows(
 ) {
   const exams = new Map();
   for (const { exam, scores, reward } of rows) {
+    if (reward === null) {
+      continue;
+    }
+
     if (!exams.has(exam.id)) {
       const examObj = {
         fullName: exam.id,
         catalogueName: exam.catalogueName,
-        rewards: [],
+        rewards: [] as z.infer<typeof apExamsRewardSchema>[],
       };
       if (scores && reward) {
         examObj.rewards.push({
@@ -51,7 +55,7 @@ function accumulateRows(
           ...reward,
           geCategories: Object.entries(geCategoryToFlag)
             .filter(([_, col]) => reward[col])
-            .map(([cat, _]) => cat),
+            .map(([cat, _]) => cat as keyof typeof geCategoryToFlag),
         });
       }
       exams.set(exam.id, examObj);
@@ -60,7 +64,7 @@ function accumulateRows(
         acceptableScores: scores,
         ...reward,
         geCategories: Object.entries(geCategoryToFlag)
-          .filter(([cat, col]) => reward[col])
+          .filter(([_, col]) => reward[col])
           .map(([cat, _]) => cat),
       });
     }
