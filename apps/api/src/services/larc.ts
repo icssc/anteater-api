@@ -1,10 +1,10 @@
 import type { larcQuerySchema, larcResponseSchema, larcSectionSchema } from "$schema";
 import type { database } from "@packages/db";
-import { type SQL, eq, getTableColumns, gte, ilike, lte, or } from "@packages/db/drizzle";
+import { eq, getTableColumns, gte, ilike, lte } from "@packages/db/drizzle";
 import { and } from "@packages/db/drizzle";
 import { larcSection, websocCourse } from "@packages/db/schema";
-import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
+import { buildDaysOfWeekQuery, buildMultiCourseNumberQuery } from "./util.ts";
 
 type LarcSessionServiceInput = z.infer<typeof larcQuerySchema>;
 
@@ -20,60 +20,14 @@ function buildQuery(input: LarcSessionServiceInput) {
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
   }
-  if (input.courseNumber) {
-    const courseNumberConditions: Array<SQL | undefined> = [];
-    for (const num of input.courseNumber) {
-      switch (num._type) {
-        case "ParsedInteger":
-          courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
-          break;
-        case "ParsedString":
-          courseNumberConditions.push(eq(websocCourse.courseNumber, num.value));
-          break;
-        case "ParsedRange":
-          courseNumberConditions.push(
-            and(gte(websocCourse.courseNumeric, num.min), lte(websocCourse.courseNumeric, num.max)),
-          );
-          break;
-      }
-    }
-    conditions.push(or(...courseNumberConditions));
-  }
+  conditions.push(...buildMultiCourseNumberQuery(input));
   if (input.instructorName) {
     conditions.push(ilike(larcSection.instructor, `${input.instructorName}%`));
   }
   if (input.building) {
     conditions.push(eq(larcSection.building, input.building.toUpperCase()));
   }
-  if (input.days) {
-    const daysConditions: SQL[] = [];
-    for (const day of input.days) {
-      switch (day) {
-        case "M":
-          daysConditions.push(isTrue(larcSection.meetsMonday));
-          break;
-        case "Tu":
-          daysConditions.push(isTrue(larcSection.meetsTuesday));
-          break;
-        case "W":
-          daysConditions.push(isTrue(larcSection.meetsWednesday));
-          break;
-        case "Th":
-          daysConditions.push(isTrue(larcSection.meetsThursday));
-          break;
-        case "F":
-          daysConditions.push(isTrue(larcSection.meetsFriday));
-          break;
-        case "S":
-          daysConditions.push(isTrue(larcSection.meetsSaturday));
-          break;
-        case "Su":
-          daysConditions.push(isTrue(larcSection.meetsSunday));
-          break;
-      }
-    }
-    conditions.push(or(...daysConditions));
-  }
+  conditions.push(...buildDaysOfWeekQuery(larcSection, input));
   if (input.startTime) {
     conditions.push(gte(larcSection.startTime, input.startTime));
   }
