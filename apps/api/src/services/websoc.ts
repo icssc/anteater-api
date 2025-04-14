@@ -17,7 +17,12 @@ import {
 import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
-import { buildMultiCourseNumberQuery, buildDivisionQuery, buildGEQuery } from "./util.ts";
+import {
+  buildDaysOfWeekQuery,
+  buildDivisionQuery,
+  buildGEQuery,
+  buildMultiCourseNumberQuery,
+} from "./util.ts";
 
 const termOrder = {
   Winter: 0,
@@ -61,35 +66,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
   }
-  if (input.days) {
-    const daysConditions: SQL[] = [];
-    for (const day of input.days) {
-      switch (day) {
-        case "M":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsMonday));
-          break;
-        case "Tu":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsTuesday));
-          break;
-        case "W":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsWednesday));
-          break;
-        case "Th":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsThursday));
-          break;
-        case "F":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsFriday));
-          break;
-        case "S":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsSaturday));
-          break;
-        case "Su":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsSunday));
-          break;
-      }
-    }
-    conditions.push(or(...daysConditions));
-  }
+  conditions.push(...buildDaysOfWeekQuery(websocSectionMeeting, input));
   if (input.building) {
     conditions.push(eq(websocLocation.building, input.building.toUpperCase()));
   }

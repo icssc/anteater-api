@@ -1,5 +1,6 @@
 import type { websocQuerySchema } from "$schema";
-import { type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
+import { type ColumnBaseConfig, type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
+import type { PgColumn } from "@packages/db/drizzle-pg";
 import { websocCourse } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
@@ -74,7 +75,9 @@ export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | 
 }
 
 type WebsocMultiCourseNumberLikeInput = Pick<WebsocServiceInput, "courseNumber">;
-export function buildMultiCourseNumberQuery(input: WebsocMultiCourseNumberLikeInput): Array<SQL | undefined> {
+export function buildMultiCourseNumberQuery(
+  input: WebsocMultiCourseNumberLikeInput,
+): Array<SQL | undefined> {
   const conditions = [];
 
   if (input.courseNumber) {
@@ -95,6 +98,55 @@ export function buildMultiCourseNumberQuery(input: WebsocMultiCourseNumberLikeIn
       }
     }
     conditions.push(or(...courseNumberConditions));
+  }
+
+  return conditions;
+}
+
+type WebsocDaysOfWeekLikeInput = Pick<WebsocServiceInput, "days">;
+interface WebsocMeetsLikeTable {
+  meetsMonday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsTuesday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsWednesday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsThursday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsFriday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsSaturday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  meetsSunday: PgColumn<ColumnBaseConfig<"boolean", string>>;
+}
+export function buildDaysOfWeekQuery(
+  table: WebsocMeetsLikeTable,
+  input: WebsocDaysOfWeekLikeInput,
+): Array<SQL | undefined> {
+  const conditions = [];
+
+  if (input.days) {
+    const daysConditions: SQL[] = [];
+    for (const day of input.days) {
+      switch (day) {
+        case "M":
+          daysConditions.push(isTrue(table.meetsMonday));
+          break;
+        case "Tu":
+          daysConditions.push(isTrue(table.meetsTuesday));
+          break;
+        case "W":
+          daysConditions.push(isTrue(table.meetsWednesday));
+          break;
+        case "Th":
+          daysConditions.push(isTrue(table.meetsThursday));
+          break;
+        case "F":
+          daysConditions.push(isTrue(table.meetsFriday));
+          break;
+        case "S":
+          daysConditions.push(isTrue(table.meetsSaturday));
+          break;
+        case "Su":
+          daysConditions.push(isTrue(table.meetsSunday));
+          break;
+      }
+    }
+    conditions.push(or(...daysConditions));
   }
 
   return conditions;
