@@ -72,6 +72,32 @@ export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
   return conditions;
 }
 
+type WebsocDivisionLikeInput = Pick<WebsocServiceInput, "division">;
+
+export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | undefined> {
+  const conditions = [];
+
+  if (input.division) {
+    switch (input.division) {
+      case "LowerDiv":
+        conditions.push(
+          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
+        );
+        break;
+      case "UpperDiv":
+        conditions.push(
+          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
+        );
+        break;
+      case "Graduate":
+        conditions.push(gte(websocCourse.courseNumeric, 200));
+        break;
+    }
+  }
+
+  return conditions;
+}
+
 function buildQuery(input: WebsocServiceInput) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
@@ -156,23 +182,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  if (input.division) {
-    switch (input.division) {
-      case "LowerDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
-        );
-        break;
-      case "UpperDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
-        );
-        break;
-      case "Graduate":
-        conditions.push(gte(websocCourse.courseNumeric, 200));
-        break;
-    }
-  }
+  conditions.push(...buildDivisionQuery(input));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }

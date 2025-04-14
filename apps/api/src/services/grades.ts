@@ -1,6 +1,6 @@
 import type { aggregateGradesSchema, gradesQuerySchema, rawGradeSchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, avg, eq, gt, gte, inArray, lte, or, sql, sum } from "@packages/db/drizzle";
+import { and, avg, eq, gt, inArray, or, sql, sum } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocSection,
@@ -8,7 +8,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
-import { buildGEQuery } from "./websoc.ts";
+import { buildDivisionQuery, buildGEQuery } from "./websoc.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
@@ -32,23 +32,7 @@ function buildQuery(input: GradesServiceInput) {
   if (input.sectionCode) {
     conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode)));
   }
-  if (input.division) {
-    switch (input.division) {
-      case "LowerDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
-        );
-        break;
-      case "UpperDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
-        );
-        break;
-      case "Graduate":
-        conditions.push(gte(websocCourse.courseNumeric, 200));
-        break;
-    }
-  }
+  conditions.push(...buildDivisionQuery(input));
   conditions.push(...buildGEQuery(input));
   if (input.excludePNP) {
     conditions.push(
