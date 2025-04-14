@@ -1,4 +1,4 @@
-import type {websocQuerySchema, websocResponseSchema, websocSectionSchema} from "$schema";
+import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
 import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
@@ -17,7 +17,7 @@ import {
 import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
-import { buildDivisionQuery, buildGEQuery } from "./util.ts";
+import { buildMultiCourseNumberQuery, buildDivisionQuery, buildGEQuery } from "./util.ts";
 
 const termOrder = {
   Winter: 0,
@@ -41,25 +41,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.courseTitle) {
     conditions.push(eq(websocCourse.courseTitle, input.courseTitle));
   }
-  if (input.courseNumber) {
-    const courseNumberConditions: Array<SQL | undefined> = [];
-    for (const num of input.courseNumber) {
-      switch (num._type) {
-        case "ParsedInteger":
-          courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
-          break;
-        case "ParsedString":
-          courseNumberConditions.push(eq(websocCourse.courseNumber, num.value));
-          break;
-        case "ParsedRange":
-          courseNumberConditions.push(
-            and(gte(websocCourse.courseNumeric, num.min), lte(websocCourse.courseNumeric, num.max)),
-          );
-          break;
-      }
-    }
-    conditions.push(or(...courseNumberConditions));
-  }
+  conditions.push(...buildMultiCourseNumberQuery(input));
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];
     for (const code of input.sectionCodes) {

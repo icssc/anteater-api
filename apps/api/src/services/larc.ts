@@ -5,6 +5,7 @@ import { and } from "@packages/db/drizzle";
 import { larcSection, websocCourse } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
+import { buildMultiCourseNumberQuery } from "./util.ts";
 
 type LarcSessionServiceInput = z.infer<typeof larcQuerySchema>;
 
@@ -20,25 +21,7 @@ function buildQuery(input: LarcSessionServiceInput) {
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
   }
-  if (input.courseNumber) {
-    const courseNumberConditions: Array<SQL | undefined> = [];
-    for (const num of input.courseNumber) {
-      switch (num._type) {
-        case "ParsedInteger":
-          courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
-          break;
-        case "ParsedString":
-          courseNumberConditions.push(eq(websocCourse.courseNumber, num.value));
-          break;
-        case "ParsedRange":
-          courseNumberConditions.push(
-            and(gte(websocCourse.courseNumeric, num.min), lte(websocCourse.courseNumeric, num.max)),
-          );
-          break;
-      }
-    }
-    conditions.push(or(...courseNumberConditions));
-  }
+  conditions.push(...buildMultiCourseNumberQuery(input));
   if (input.instructorName) {
     conditions.push(ilike(larcSection.instructor, `${input.instructorName}%`));
   }

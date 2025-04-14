@@ -1,5 +1,5 @@
 import type { websocQuerySchema } from "$schema";
-import { type SQL, and, gte, lte } from "@packages/db/drizzle";
+import { type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
 import { websocCourse } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
@@ -68,6 +68,33 @@ export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | 
         conditions.push(gte(websocCourse.courseNumeric, 200));
         break;
     }
+  }
+
+  return conditions;
+}
+
+type WebsocMultiCourseNumberLikeInput = Pick<WebsocServiceInput, "courseNumber">;
+export function buildMultiCourseNumberQuery(input: WebsocMultiCourseNumberLikeInput): Array<SQL | undefined> {
+  const conditions = [];
+
+  if (input.courseNumber) {
+    const courseNumberConditions: Array<SQL | undefined> = [];
+    for (const num of input.courseNumber) {
+      switch (num._type) {
+        case "ParsedInteger":
+          courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
+          break;
+        case "ParsedString":
+          courseNumberConditions.push(eq(websocCourse.courseNumber, num.value));
+          break;
+        case "ParsedRange":
+          courseNumberConditions.push(
+            and(gte(websocCourse.courseNumeric, num.min), lte(websocCourse.courseNumeric, num.max)),
+          );
+          break;
+      }
+    }
+    conditions.push(or(...courseNumberConditions));
   }
 
   return conditions;
