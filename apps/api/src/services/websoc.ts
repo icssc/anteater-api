@@ -29,10 +29,11 @@ const termOrder = {
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
-function buildQuery(input: WebsocServiceInput) {
-  const conditions = [
-    and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
-  ];
+type WebsocGELikeInput = Pick<WebsocServiceInput, "ge">;
+
+export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
+  const conditions = [];
+
   if (input.ge) {
     switch (input.ge) {
       case "GE-1A":
@@ -67,6 +68,15 @@ function buildQuery(input: WebsocServiceInput) {
         break;
     }
   }
+
+  return conditions;
+}
+
+function buildQuery(input: WebsocServiceInput) {
+  const conditions = [
+    and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
+  ];
+  conditions.push(...buildGEQuery(input));
   if (input.department) {
     conditions.push(eq(websocDepartment.deptCode, input.department));
   }

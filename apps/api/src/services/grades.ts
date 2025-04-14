@@ -7,8 +7,8 @@ import {
   websocSectionGrade,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
+import { buildGEQuery } from "./websoc.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
@@ -49,40 +49,7 @@ function buildQuery(input: GradesServiceInput) {
         break;
     }
   }
-  if (input.ge) {
-    switch (input.ge) {
-      case "GE-1A":
-        conditions.push(isTrue(websocCourse.isGE1A));
-        break;
-      case "GE-1B":
-        conditions.push(isTrue(websocCourse.isGE1B));
-        break;
-      case "GE-2":
-        conditions.push(isTrue(websocCourse.isGE2));
-        break;
-      case "GE-3":
-        conditions.push(isTrue(websocCourse.isGE3));
-        break;
-      case "GE-4":
-        conditions.push(isTrue(websocCourse.isGE4));
-        break;
-      case "GE-5A":
-        conditions.push(isTrue(websocCourse.isGE5A));
-        break;
-      case "GE-5B":
-        conditions.push(isTrue(websocCourse.isGE5B));
-        break;
-      case "GE-6":
-        conditions.push(isTrue(websocCourse.isGE6));
-        break;
-      case "GE-7":
-        conditions.push(isTrue(websocCourse.isGE7));
-        break;
-      case "GE-8":
-        conditions.push(isTrue(websocCourse.isGE8));
-        break;
-    }
-  }
+  conditions.push(...buildGEQuery(input));
   if (input.excludePNP) {
     conditions.push(
       or(
