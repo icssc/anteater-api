@@ -2,6 +2,7 @@ export * from "./ap-exams";
 export * from "./calendar";
 export * from "./courses";
 export * from "./enrollment-history";
+export * from "./enrollment-changes";
 export * from "./grades";
 export * from "./instructors";
 export * from "./programs";
