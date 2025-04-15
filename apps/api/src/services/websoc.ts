@@ -8,7 +8,7 @@ import {
   gt,
   gte,
   ilike,
-  inArray,
+  isNotNull,
   like,
   lte,
   ne,
@@ -399,56 +399,23 @@ function transformTerm(term: { year: string; quarter: Term }) {
 export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getWebsocResponse(input: WebsocServiceInput) {
-    if (input.includeRelatedCourses) {
-      const sub = this.db
-        .select({ courseId: websocCourse.id })
-        .from(websocSchool)
-        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
-        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-        .leftJoin(
-          websocSectionToInstructor,
-          eq(websocSection.id, websocSectionToInstructor.sectionId),
-        )
-        .leftJoin(
-          websocInstructor,
-          eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-        )
-        .leftJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
-        .leftJoin(
-          websocSectionMeetingToLocation,
-          eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
-        )
-        .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
-        .where(buildQuery(input));
-
-      return this.db
-        .select({
-          school: getTableColumns(websocSchool),
-          department: getTableColumns(websocDepartment),
-          course: getTableColumns(websocCourse),
-          section: getTableColumns(websocSection),
-        })
-        .from(websocSchool)
-        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
-        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-        .where(inArray(websocCourse.id, sub))
-        .then(transformRows);
-    }
-
-    return this.db
-      .select({
-        school: getTableColumns(websocSchool),
-        department: getTableColumns(websocDepartment),
-        course: getTableColumns(websocCourse),
-        section: getTableColumns(websocSection),
-      })
+  makeSelect(
+    selection: Parameters<ReturnType<typeof database>["select"]>[0],
+    includeFilterTables?: boolean,
+  ) {
+    // makeSelect<T extends SelectedFields>(selection: T, includeFilterTables?: boolean) {
+    const base = this.db
+      .select(selection)
       .from(websocSchool)
       .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
       .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId));
+
+    if (!includeFilterTables) {
+      return base;
+    }
+
+    return base
       .leftJoin(
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
@@ -462,8 +429,34 @@ export class WebsocService {
         websocSectionMeetingToLocation,
         eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
       )
-      .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
+      .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
+  }
+
+  async getWebsocResponse(input: WebsocServiceInput) {
+    // final selection of actual data we need to process on our end
+    const selectionToReturn = {
+      school: getTableColumns(websocSchool),
+      department: getTableColumns(websocDepartment),
+      course: getTableColumns(websocCourse),
+      section: getTableColumns(websocSection),
+    };
+
+    if (input.includeRelatedCourses) {
+      // pull only the course IDs; don't need any data from subquery
+      const sub = this.makeSelect({ courseId: websocCourse.id }, true)
+        .where(buildQuery(input))
+        .as("sub");
+
+      return this.makeSelect(selectionToReturn, false)
+        .leftJoin(sub, eq(websocCourse.id, sub.courseId))
+        .where(isNotNull(sub.courseId))
+        .then((rows) => rows as Row[])
+        .then(transformRows);
+    }
+
+    return this.makeSelect(selectionToReturn, true)
       .where(buildQuery(input))
+      .then((rows) => rows as Row[])
       .then(transformRows);
   }
 
