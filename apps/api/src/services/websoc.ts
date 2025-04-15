@@ -1,19 +1,7 @@
 import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import {
-  and,
-  eq,
-  getTableColumns,
-  gt,
-  gte,
-  ilike,
-  isNotNull,
-  like,
-  lte,
-  ne,
-  or,
-} from "@packages/db/drizzle";
+import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
   websocCourse,
@@ -448,8 +436,7 @@ export class WebsocService {
         .as("sub");
 
       return this.makeSelect(selectionToReturn, false)
-        .leftJoin(sub, eq(websocCourse.id, sub.courseId))
-        .where(isNotNull(sub.courseId))
+        .rightJoin(sub, eq(websocCourse.id, sub.courseId))
         .then((rows) => rows as Row[])
         .then(transformRows);
     }
