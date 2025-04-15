@@ -72,95 +72,104 @@ export type ParsedNumber = ParsedInteger | ParsedString | ParsedRange;
 const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)[number] =>
   (restrictionCodes as readonly string[]).includes(code);
 
-export const websocQuerySchema = z.object({
-  year: yearSchema,
-  quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }),
-  ge: z
-    .enum(geCategories)
-    .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z.string().optional(),
-  courseTitle: z.string().optional(),
-  courseNumber: courseNumberSchema.optional(),
-  sectionCodes: z
-    .string()
-    .optional()
-    .transform((codes, ctx) => {
-      if (!codes) return undefined;
-      const parsedNums: Exclude<ParsedNumber, ParsedString>[] = [];
-      for (const code of codes.split(",").map((code) => code.trim())) {
-        if (code.includes("-")) {
-          const [lower, upper] = code.split("-");
-          if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
+export const websocQuerySchema = z
+  .object({
+    year: yearSchema,
+    quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }),
+    ge: z
+      .enum(geCategories)
+      .optional()
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    department: z.string().optional(),
+    courseTitle: z.string().optional(),
+    courseNumber: courseNumberSchema.optional(),
+    sectionCodes: z
+      .string()
+      .optional()
+      .transform((codes, ctx) => {
+        if (!codes) return undefined;
+        const parsedNums: Exclude<ParsedNumber, ParsedString>[] = [];
+        for (const code of codes.split(",").map((code) => code.trim())) {
+          if (code.includes("-")) {
+            const [lower, upper] = code.split("-");
+            if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `'${code}' is not a valid section code range. A valid section code range consists of valid section codes, which are base-10 integers.`,
+              });
+              return z.NEVER;
+            }
+            parsedNums.push({
+              _type: "ParsedRange",
+              min: Number.parseInt(lower, 10),
+              max: Number.parseInt(upper, 10),
+            });
+            continue;
+          }
+          if (!isBaseTenInt(code)) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: `'${code}' is not a valid section code range. A valid section code range consists of valid section codes, which are base-10 integers.`,
+              message: `'${code}' is not a valid section code. A valid section code is a base-10 integer.`,
             });
             return z.NEVER;
           }
-          parsedNums.push({
-            _type: "ParsedRange",
-            min: Number.parseInt(lower, 10),
-            max: Number.parseInt(upper, 10),
-          });
-          continue;
+          parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
         }
-        if (!isBaseTenInt(code)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `'${code}' is not a valid section code. A valid section code is a base-10 integer.`,
-          });
-          return z.NEVER;
+        return parsedNums;
+      }),
+    instructorName: z.string().optional(),
+    days: daysSchema.optional(),
+    building: z.string().optional(),
+    room: z.string().optional(),
+    division: z
+      .enum(courseLevels)
+      .or(z.literal("ANY"))
+      .optional()
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    sectionType: z
+      .union([z.enum(anyArray), z.enum(websocSectionTypes)])
+      .optional()
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    fullCourses: z
+      .enum(fullCoursesOptions)
+      .optional()
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    cancelledCourses: z.enum(cancelledCoursesOptions).optional(),
+    units: z.optional(z.literal("VAR").or(z.string())),
+    startTime: timeSchema.optional(),
+    endTime: timeSchema.optional(),
+    excludeRestrictionCodes: z
+      .string()
+      .optional()
+      .transform((codes, ctx) => {
+        if (!codes) return undefined;
+        const parsedCodes: Array<(typeof restrictionCodes)[number]> = [];
+        for (const code of codes.split(",").map((code) => code.trim())) {
+          if (!isValidRestrictionCode(code)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `'${code}' is not a valid restriction code. Valid restriction codes are ${restrictionCodes.join(", ")}.`,
+            });
+            return z.NEVER;
+          }
+          parsedCodes.push(code);
         }
-        parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
-      }
-      return parsedNums;
-    }),
-  instructorName: z.string().optional(),
-  days: daysSchema.optional(),
-  building: z.string().optional(),
-  room: z.string().optional(),
-  division: z
-    .enum(courseLevels)
-    .or(z.literal("ANY"))
-    .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  sectionType: z
-    .union([z.enum(anyArray), z.enum(websocSectionTypes)])
-    .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  fullCourses: z
-    .enum(fullCoursesOptions)
-    .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  cancelledCourses: z.enum(cancelledCoursesOptions).optional(),
-  units: z.optional(z.literal("VAR").or(z.string())),
-  startTime: timeSchema.optional(),
-  endTime: timeSchema.optional(),
-  excludeRestrictionCodes: z
-    .string()
-    .optional()
-    .transform((codes, ctx) => {
-      if (!codes) return undefined;
-      const parsedCodes: Array<(typeof restrictionCodes)[number]> = [];
-      for (const code of codes.split(",").map((code) => code.trim())) {
-        if (!isValidRestrictionCode(code)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `'${code}' is not a valid restriction code. Valid restriction codes are ${restrictionCodes.join(", ")}.`,
-          });
-          return z.NEVER;
-        }
-        parsedCodes.push(code);
-      }
-      return parsedCodes;
-    }),
-  includeRelatedCourses: z
-    .enum(["true", "false"])
-    .transform((x) => x === "true")
-    .pipe(z.boolean())
-    .optional(),
-});
+        return parsedCodes;
+      }),
+    includeRelatedCourses: z
+      .enum(["true", "false"])
+      .transform((x) => x === "true")
+      .pipe(z.boolean())
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      !data.includeRelatedCourses || (data.includeRelatedCourses && data.sectionCodes != null),
+    {
+      message: "The includeRelatedCourses flag can only be used when sectionCodes are provided.",
+      path: ["includeRelatedCourses"],
+    },
+  );
 
 export const hourMinuteSchema = z.object({
   hour: z.number(),
