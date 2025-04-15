@@ -1,8 +1,19 @@
 import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
-import { inArray } from "@packages/db/drizzle";
+import {
+  and,
+  eq,
+  getTableColumns,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  like,
+  lte,
+  ne,
+  or,
+} from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
   websocCourse,
@@ -30,41 +41,7 @@ const termOrder = {
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
-function buildRelatedCoursesSubquery(
-  input: WebsocServiceInput,
-  db: ReturnType<typeof database>,
-): SQL {
-  const sectionCodesPredicates: Array<SQL> = [];
-  if (input.sectionCodes) {
-    for (const code of input.sectionCodes) {
-      switch (code._type) {
-        case "ParsedInteger":
-          sectionCodesPredicates.push(eq(websocSection.sectionCode, code.value));
-          break;
-        case "ParsedRange":
-          sectionCodesPredicates.push(
-            and(gte(websocSection.sectionCode, code.min), lte(websocSection.sectionCode, code.max)),
-          );
-          break;
-      }
-    }
-  }
-  return db
-    .select({ courseId: websocSection.courseId })
-    .from(websocSchool)
-    .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
-    .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-    .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-    .where(
-      and(
-        eq(websocSchool.year, input.year),
-        eq(websocSchool.quarter, input.quarter),
-        or(...sectionCodesPredicates),
-      ),
-    );
-}
-
-function buildQuery(input: WebsocServiceInput, relatedCoursesSubquery?: SQL) {
+function buildQuery(input: WebsocServiceInput) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
   ];
@@ -141,13 +118,7 @@ function buildQuery(input: WebsocServiceInput, relatedCoursesSubquery?: SQL) {
           break;
       }
     }
-    if (input.includeRelatedCourses && relatedCoursesSubquery) {
-      conditions.push(
-        or(or(...sectionCodesConditions), inArray(websocCourse.id, relatedCoursesSubquery)),
-      );
-    } else {
-      conditions.push(or(...sectionCodesConditions));
-    }
+    conditions.push(or(...sectionCodesConditions));
   }
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
@@ -429,9 +400,43 @@ export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getWebsocResponse(input: WebsocServiceInput) {
-    const relatedCoursesSubquery = input.includeRelatedCourses
-      ? buildRelatedCoursesSubquery(input, this.db)
-      : undefined;
+    if (input.includeRelatedCourses) {
+      const sub = this.db
+        .select({ courseId: websocCourse.id })
+        .from(websocSchool)
+        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
+        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
+        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+        .leftJoin(
+          websocSectionToInstructor,
+          eq(websocSection.id, websocSectionToInstructor.sectionId),
+        )
+        .leftJoin(
+          websocInstructor,
+          eq(websocSectionToInstructor.instructorName, websocInstructor.name),
+        )
+        .leftJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
+        .leftJoin(
+          websocSectionMeetingToLocation,
+          eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
+        )
+        .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
+        .where(buildQuery(input));
+
+      return this.db
+        .select({
+          school: getTableColumns(websocSchool),
+          department: getTableColumns(websocDepartment),
+          course: getTableColumns(websocCourse),
+          section: getTableColumns(websocSection),
+        })
+        .from(websocSchool)
+        .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
+        .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
+        .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+        .where(inArray(websocCourse.id, sub))
+        .then(transformRows);
+    }
 
     return this.db
       .select({
@@ -458,7 +463,7 @@ export class WebsocService {
         eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
       )
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
-      .where(buildQuery(input, relatedCoursesSubquery))
+      .where(buildQuery(input))
       .then(transformRows);
   }
 
