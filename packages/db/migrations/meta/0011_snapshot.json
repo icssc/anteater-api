@@ -1,9 +1,221 @@
 {
-  "id": "f33c0893-c236-4ea2-80df-360e81ecd36a",
+  "id": "656b8ada-bd71-46b6-aaaa-2e568646f6f5",
   "prevId": "a60d57cd-09db-46d6-adbc-5f9a78bae0b8",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.ap_exam": {
+      "name": "ap_exam",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "catalogue_name": {
+          "name": "catalogue_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_reward": {
+      "name": "ap_exam_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "units_granted": {
+          "name": "units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elective_units_granted": {
+          "name": "elective_units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grants_ge_1a": {
+          "name": "grants_ge_1a",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_1b": {
+          "name": "grants_ge_1b",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_2": {
+          "name": "grants_ge_2",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_3": {
+          "name": "grants_ge_3",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_4": {
+          "name": "grants_ge_4",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_5a": {
+          "name": "grants_ge_5a",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_5b": {
+          "name": "grants_ge_5b",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_6": {
+          "name": "grants_ge_6",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_7": {
+          "name": "grants_ge_7",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_8": {
+          "name": "grants_ge_8",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "courses_granted": {
+          "name": "courses_granted",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_to_reward": {
+      "name": "ap_exam_to_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "exam_id": {
+          "name": "exam_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reward": {
+          "name": "reward",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ap_exam_to_reward_exam_id_score_index": {
+          "name": "ap_exam_to_reward_exam_id_score_index",
+          "columns": [
+            {
+              "expression": "exam_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ap_exam_to_reward_exam_id_ap_exam_id_fk": {
+          "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam",
+          "columnsFrom": ["exam_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ap_exam_to_reward_reward_ap_exam_reward_id_fk": {
+          "name": "ap_exam_to_reward_reward_ap_exam_reward_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam_reward",
+          "columnsFrom": ["reward"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.calendar_term": {
       "name": "calendar_term",
       "schema": "",
@@ -2550,282 +2762,6 @@
         "websoc_section_enrollment_section_id_websoc_section_id_fk": {
           "name": "websoc_section_enrollment_section_id_websoc_section_id_fk",
           "tableFrom": "websoc_section_enrollment",
-          "tableTo": "websoc_section",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.websoc_section_enrollment_live": {
-      "name": "websoc_section_enrollment_live",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "section_id": {
-          "name": "section_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scraped_at": {
-          "name": "scraped_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "num_currently_total_enrolled": {
-          "name": "num_currently_total_enrolled",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "num_currently_section_enrolled": {
-          "name": "num_currently_section_enrolled",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "max_capacity": {
-          "name": "max_capacity",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "num_on_waitlist": {
-          "name": "num_on_waitlist",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "num_waitlist_cap": {
-          "name": "num_waitlist_cap",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "num_requested": {
-          "name": "num_requested",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "num_new_only_reserved": {
-          "name": "num_new_only_reserved",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "websoc_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "restriction_string": {
-          "name": "restriction_string",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "restriction_a": {
-          "name": "restriction_a",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_b": {
-          "name": "restriction_b",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_c": {
-          "name": "restriction_c",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_d": {
-          "name": "restriction_d",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_e": {
-          "name": "restriction_e",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_f": {
-          "name": "restriction_f",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_g": {
-          "name": "restriction_g",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_h": {
-          "name": "restriction_h",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_i": {
-          "name": "restriction_i",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_j": {
-          "name": "restriction_j",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_k": {
-          "name": "restriction_k",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_l": {
-          "name": "restriction_l",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_m": {
-          "name": "restriction_m",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_n": {
-          "name": "restriction_n",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_o": {
-          "name": "restriction_o",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_r": {
-          "name": "restriction_r",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_s": {
-          "name": "restriction_s",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "restriction_x": {
-          "name": "restriction_x",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        }
-      },
-      "indexes": {
-        "websoc_section_enrollment_live_section_id_index": {
-          "name": "websoc_section_enrollment_live_section_id_index",
-          "columns": [
-            {
-              "expression": "section_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "websoc_section_enrollment_live_scraped_at_index": {
-          "name": "websoc_section_enrollment_live_scraped_at_index",
-          "columns": [
-            {
-              "expression": "scraped_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "websoc_section_enrollment_live_section_id_scraped_at_index": {
-          "name": "websoc_section_enrollment_live_section_id_scraped_at_index",
-          "columns": [
-            {
-              "expression": "section_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "scraped_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "websoc_section_enrollment_live_section_id_websoc_section_id_fk": {
-          "name": "websoc_section_enrollment_live_section_id_websoc_section_id_fk",
-          "tableFrom": "websoc_section_enrollment_live",
           "tableTo": "websoc_section",
           "columnsFrom": ["section_id"],
           "columnsTo": ["id"],
