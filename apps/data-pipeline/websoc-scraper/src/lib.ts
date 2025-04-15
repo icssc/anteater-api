@@ -23,6 +23,7 @@ import {
   websocSchool,
   websocSection,
   websocSectionEnrollment,
+  websocSectionEnrollmentLive,
   websocSectionMeeting,
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
@@ -476,27 +477,30 @@ const doChunkUpsert = async (
         )
         .filter(notNull),
     );
+    const mappedSectionsWithPadded = mappedSections.map((section) => ({
+      ...section,
+      paddedSectionCode: section.sectionCode.toString(10).padStart(5, "0"),
+    }));
+
     const sections = await tx
       .insert(websocSection)
-      .values(mappedSections)
+      .values(mappedSectionsWithPadded)
       .onConflictDoUpdate({
         target: [websocSection.year, websocSection.quarter, websocSection.sectionCode],
         set: conflictUpdateSetAllCols(websocSection),
       })
-      .returning({
-        id: websocSection.id,
-        sectionCode: websocSection.sectionCode,
-      })
+      .returning({ id: websocSection.id, sectionCode: websocSection.sectionCode })
       .then(
         (rows) =>
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
+
     const enrollmentEntries = await tx
       .insert(websocSectionEnrollment)
       .values(
-        mappedSections
-          .map(({ sectionCode, ...rest }) => {
-            const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+        mappedSectionsWithPadded
+          .map(({ paddedSectionCode, ...rest }) => {
+            const sectionId = sections.get(paddedSectionCode);
             return sectionId ? { sectionId, ...rest } : undefined;
           })
           .filter(notNull),
@@ -505,7 +509,89 @@ const doChunkUpsert = async (
         target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
       })
       .returning({ id: websocSectionEnrollment.id });
+
     console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+
+    const enrollmentLive = await tx
+      .insert(websocSectionEnrollmentLive)
+      .values(
+        mappedSectionsWithPadded
+          .map(
+            ({
+              paddedSectionCode,
+              numCurrentlyTotalEnrolled,
+              numCurrentlySectionEnrolled,
+              numOnWaitlist,
+              numRequested,
+              numNewOnlyReserved,
+              status,
+              maxCapacity,
+              numWaitlistCap,
+              restrictions,
+              restrictionA,
+              restrictionB,
+              restrictionC,
+              restrictionD,
+              restrictionE,
+              restrictionF,
+              restrictionG,
+              restrictionH,
+              restrictionI,
+              restrictionJ,
+              restrictionK,
+              restrictionL,
+              restrictionM,
+              restrictionN,
+              restrictionO,
+              restrictionR,
+              restrictionS,
+              restrictionX,
+            }) => {
+              const sectionId = sections.get(paddedSectionCode);
+              return sectionId
+                ? {
+                    sectionId,
+                    numCurrentlyTotalEnrolled,
+                    numCurrentlySectionEnrolled,
+                    numOnWaitlist,
+                    numRequested,
+                    numNewOnlyReserved,
+                    status,
+                    maxCapacity,
+                    numWaitlistCap,
+                    restrictions,
+                    restrictionA,
+                    restrictionB,
+                    restrictionC,
+                    restrictionD,
+                    restrictionE,
+                    restrictionF,
+                    restrictionG,
+                    restrictionH,
+                    restrictionI,
+                    restrictionJ,
+                    restrictionK,
+                    restrictionL,
+                    restrictionM,
+                    restrictionN,
+                    restrictionO,
+                    restrictionR,
+                    restrictionS,
+                    restrictionX,
+                  }
+                : undefined;
+            },
+          )
+          .filter(notNull),
+      )
+      .returning({ id: websocSectionEnrollment.id });
+
+    console.log(`Inserted ${enrollmentLive.length} enrollment live entries`);
+
+    await tx
+      .delete(websocSectionEnrollmentLive)
+      .where(lte(websocSectionEnrollmentLive.scrapedAt, sql`NOW() - INTERVAL '1 hour'`));
+
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
