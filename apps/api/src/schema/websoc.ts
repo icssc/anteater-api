@@ -30,7 +30,7 @@ const fullCoursesOptions = [
 
 const cancelledCoursesOptions = ["Exclude", "Include", "Only"] as const;
 
-export const restrictionCodes = [
+const restrictionCodes = [
   "A",
   "B",
   "C",
@@ -216,7 +216,7 @@ export const numCurrentlyEnrolledSchema = z.object({
 
 export const websocSectionSchema = z.object({
   units: z.string(),
-  status: sectionStatusSchema,
+  status: z.enum(websocStatuses).or(z.literal("")),
   meetings: websocSectionMeetingSchema.array(),
   finalExam: websocSectionFinalExamSchema,
   sectionNum: z.string(),
@@ -230,7 +230,10 @@ export const websocSectionSchema = z.object({
   numWaitlistCap: z.string(),
   sectionComment: z.string(),
   numNewOnlyReserved: z.string(),
-  numCurrentlyEnrolled: numCurrentlyEnrolledSchema,
+  numCurrentlyEnrolled: z.object({
+    totalEnrolled: z.string(),
+    sectionEnrolled: z.string(),
+  }),
   updatedAt: z.coerce.date(),
   webURL: z.string(),
 });
