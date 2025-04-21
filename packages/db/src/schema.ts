@@ -131,6 +131,14 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksMarkerRequirement
   );
 
+export type APCoursesGrantedTree =
+  | {
+      AND: APCoursesGrantedTree[] | string[];
+    }
+  | {
+      OR: APCoursesGrantedTree[] | string[];
+    };
+
 // Misc. enums
 
 export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
@@ -697,6 +705,43 @@ export const studyRoomSlot = pgTable(
     uniqueIndex().on(table.studyRoomId, table.start, table.end),
   ],
 );
+
+export const apExam = pgTable("ap_exam", {
+  id: varchar("id").primaryKey(),
+  catalogueName: varchar("catalogue_name"),
+});
+
+export const apExamToReward = pgTable(
+  "ap_exam_to_reward",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    examId: varchar("exam_id")
+      .notNull()
+      .references(() => apExam.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    reward: uuid("reward")
+      .notNull()
+      .references(() => apExamReward.id, { onDelete: "cascade" }),
+  },
+  (table) => [uniqueIndex().on(table.examId, table.score)],
+);
+
+export const apExamReward = pgTable("ap_exam_reward", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  unitsGranted: integer("units_granted"),
+  electiveUnitsGranted: integer("elective_units_granted"),
+  grantsGE1A: boolean("grants_ge_1a").notNull().default(false),
+  grantsGE1B: boolean("grants_ge_1b").notNull().default(false),
+  grantsGE2: boolean("grants_ge_2").notNull().default(false),
+  grantsGE3: boolean("grants_ge_3").notNull().default(false),
+  grantsGE4: boolean("grants_ge_4").notNull().default(false),
+  grantsGE5A: boolean("grants_ge_5a").notNull().default(false),
+  grantsGE5B: boolean("grants_ge_5b").notNull().default(false),
+  grantsGE6: boolean("grants_ge_6").notNull().default(false),
+  grantsGE7: boolean("grants_ge_7").notNull().default(false),
+  grantsGE8: boolean("grants_ge_8").notNull().default(false),
+  coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
+});
 
 export const libraryTraffic = pgTable(
   "library_traffic",

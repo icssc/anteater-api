@@ -1,9 +1,221 @@
 {
-  "id": "66f503c1-b6db-4371-b53b-1a046551ac01",
+  "id": "656b8ada-bd71-46b6-aaaa-2e568646f6f5",
   "prevId": "a60d57cd-09db-46d6-adbc-5f9a78bae0b8",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.ap_exam": {
+      "name": "ap_exam",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "catalogue_name": {
+          "name": "catalogue_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_reward": {
+      "name": "ap_exam_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "units_granted": {
+          "name": "units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elective_units_granted": {
+          "name": "elective_units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grants_ge_1a": {
+          "name": "grants_ge_1a",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_1b": {
+          "name": "grants_ge_1b",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_2": {
+          "name": "grants_ge_2",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_3": {
+          "name": "grants_ge_3",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_4": {
+          "name": "grants_ge_4",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_5a": {
+          "name": "grants_ge_5a",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_5b": {
+          "name": "grants_ge_5b",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_6": {
+          "name": "grants_ge_6",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_7": {
+          "name": "grants_ge_7",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grants_ge_8": {
+          "name": "grants_ge_8",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "courses_granted": {
+          "name": "courses_granted",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_to_reward": {
+      "name": "ap_exam_to_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "exam_id": {
+          "name": "exam_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reward": {
+          "name": "reward",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ap_exam_to_reward_exam_id_score_index": {
+          "name": "ap_exam_to_reward_exam_id_score_index",
+          "columns": [
+            {
+              "expression": "exam_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ap_exam_to_reward_exam_id_ap_exam_id_fk": {
+          "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam",
+          "columnsFrom": ["exam_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ap_exam_to_reward_reward_ap_exam_reward_id_fk": {
+          "name": "ap_exam_to_reward_reward_ap_exam_reward_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam_reward",
+          "columnsFrom": ["reward"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.calendar_term": {
       "name": "calendar_term",
       "schema": "",
@@ -652,110 +864,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic": {
-      "name": "library_traffic",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "location_name": {
-          "name": "location_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "numeric(4, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        }
-      },
-      "indexes": {
-        "library_traffic_timestamp_index": {
-          "name": "library_traffic_timestamp_index",
-          "columns": [
-            {
-              "expression": "timestamp",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "library_traffic_location_name_index": {
-          "name": "library_traffic_location_name_index",
-          "columns": [
-            {
-              "expression": "location_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "library_traffic_location_name_timestamp_index": {
-          "name": "library_traffic_location_name_timestamp_index",
-          "columns": [
-            {
-              "expression": "location_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "timestamp",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

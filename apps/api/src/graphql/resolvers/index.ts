@@ -1,3 +1,4 @@
+import { apExamResolvers } from "$graphql/resolvers/ap-exams";
 import { calendarResolvers } from "$graphql/resolvers/calendar";
 import { coursesResolvers } from "$graphql/resolvers/courses";
 import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
@@ -13,6 +14,7 @@ import { weekResolvers } from "$graphql/resolvers/week";
 import { mergeResolvers } from "@graphql-tools/merge";
 
 export const resolvers = mergeResolvers([
+  apExamResolvers,
   calendarResolvers,
   coursesResolvers,
   enrollmentHistoryResolvers,
