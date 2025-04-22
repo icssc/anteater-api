@@ -1,11 +1,13 @@
 {
-  "name": "@apps/library-busyness-scraper",
+  "name": "@apps/library-traffic-scraper",
   "version": "0.0.0",
   "private": true,
-  "description": "Scraper for libarry floor busyness",
+  "description": "Scraper for library busyness data",
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "deploy": "wrangler deploy",
+    "postinstall": "wrangler types --x-include-runtime",
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
@@ -13,5 +15,7 @@
     "cheerio": "1.0.0",
     "cross-fetch": "4.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "wrangler": "3.100.0"
+  }
 }
