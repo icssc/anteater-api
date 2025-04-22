@@ -73,7 +73,9 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
     const txt = await fetch(url).then((r) => r.text());
     let parsed = JSON.parse(txt);
 
-    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+    if (typeof parsed === "string") {
+      parsed = JSON.parse(parsed);
+    }
 
     if (parsed.data && typeof parsed.data === "object") {
       return parsed.data;
@@ -105,7 +107,7 @@ export async function doScrape(DB_URL: string) {
       .values([
         {
           id: data.id,
-          name: data.name,
+          locationName: data.name,
           trafficCount: data.count,
           trafficPercentage: String(data.percentage),
           timestamp: new Date(data.timestamp),

@@ -746,28 +746,27 @@ export const apExamReward = pgTable("ap_exam_reward", {
 export const libraryTraffic = pgTable(
   "library_traffic",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    // library_name: varchar("library_name").notNull(),
-    // floor_name: varchar("floor_name").notNull(),
-    // floor_number: integer("floor_number").notNull(),
-
-    location_name: varchar("location_name").notNull(),
-    traffic_count: integer("traffic_count").notNull(),
-    traffic_percentage: decimal("traffic_percentage", { precision: 4, scale: 2 }).notNull(),
-    timestamp: timestamp("timestamp").defaultNow().notNull(),
-    is_active: boolean("is_active").default(true),
-
-    // daily_average: decimal("daily_average", { precision: 4, scale: 2 }).notNull(),
-    // hourly_average: decimal("hourly_average", { precision: 4, scale: 2 }).notNull(),
-    // peak_hour: integer("peak_hour").notNull(),
-    // peak_percentage: decimal("peak_percentage", { precision: 4, scale: 2 }).notNull(),
-    // capacity: integer("capacity").notNull(),
+    id: integer("id").primaryKey(),
+    locationName: varchar("location_name").notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: decimal("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
   },
-  (table) => [
-    index().on(table.timestamp),
-    index().on(table.location_name),
-    uniqueIndex().on(table.location_name, table.timestamp),
-  ],
+  (table) => [index().on(table.id), index().on(table.locationName)],
+);
+
+export const libraryTrafficHistory = pgTable(
+  "library_traffic_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    locationId: integer("location_id")
+      .references(() => libraryTraffic.id)
+      .notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: decimal("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+  },
+  (table) => [index().on(table.timestamp), index().on(table.locationId)],
 );
 
 // Materialized views
