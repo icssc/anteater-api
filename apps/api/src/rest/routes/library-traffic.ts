@@ -11,14 +11,14 @@ import { database } from "@packages/db";
 
 const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
-const latestTrafficRoute = createRoute({
+const libraryTrafficRoute = createRoute({
   summary: "Retrieve latest library traffic data",
-  operationId: "latestLibraryTraffic",
+  operationId: "libraryTraffic",
   tags: ["Library Traffic"],
   method: "get",
   path: "/",
   request: { query: libraryTrafficQuerySchema },
-  description: "Retrieves the most recent traffic data for all floors or a specific floor.",
+  description: "Retrieves the latest traffic data for all floors or a specific floor.",
   responses: {
     200: {
       content: {
@@ -33,9 +33,10 @@ const latestTrafficRoute = createRoute({
   },
 });
 
-libraryTrafficRouter.openapi(latestTrafficRoute, async (c) => {
+libraryTrafficRouter.openapi(libraryTrafficRoute, async (c) => {
+  const query = c.req.valid("query");
   const service = new LibraryTrafficService(database(c.env.DB.connectionString));
-  const res = await service.getLatestTrafficData();
+  const res = await service.getLibraryTraffic(query);
 
   return c.json({ ok: true, data: libraryTrafficSchema.array().parse(res) }, 200);
 });
