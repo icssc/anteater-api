@@ -1,14 +1,17 @@
 export const libraryTrafficSchema = `#graphql
 type LibraryTraffic {
   id: String!
-  location_name: String!
-  traffic_count: Int!
-  traffic_percentage: Float! 
+  locationName: String!
+  trafficCount: Int!
+  trafficPercentage: Float! 
   timestamp: String!
-  is_active: Boolean!
+}
+
+input LibraryTrafficQuery {
+  locationName: String
 }
 
 extend type Query {
-  latestLibraryTraffic(floor_name: String): [LibraryTraffic!]!
+  libraryTraffic(query: LibraryTrafficQuery): [LibraryTraffic!]!
 }
 `;
