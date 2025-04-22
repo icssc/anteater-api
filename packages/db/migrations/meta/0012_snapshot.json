@@ -1,5 +1,5 @@
 {
-  "id": "7087de71-7e32-4249-82e2-5f2f48cd62a5",
+  "id": "a64ba8a0-1b4f-450a-9669-ba026fd6f3ca",
   "prevId": "656b8ada-bd71-46b6-aaaa-2e568646f6f5",
   "version": "7",
   "dialect": "postgresql",
@@ -880,20 +880,20 @@
           "primaryKey": true,
           "notNull": true
         },
-        "name": {
-          "name": "name",
+        "location_name": {
+          "name": "location_name",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "trafficCount": {
-          "name": "trafficCount",
+        "traffic_count": {
+          "name": "traffic_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "trafficPercentage": {
-          "name": "trafficPercentage",
+        "traffic_percentage": {
+          "name": "traffic_percentage",
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
@@ -921,11 +921,11 @@
           "method": "btree",
           "with": {}
         },
-        "library_traffic_name_index": {
-          "name": "library_traffic_name_index",
+        "library_traffic_location_name_index": {
+          "name": "library_traffic_location_name_index",
           "columns": [
             {
-              "expression": "name",
+              "expression": "location_name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -955,20 +955,20 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "locationId": {
-          "name": "locationId",
+        "location_id": {
+          "name": "location_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "trafficCount": {
-          "name": "trafficCount",
+        "traffic_count": {
+          "name": "traffic_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "trafficPercentage": {
-          "name": "trafficPercentage",
+        "traffic_percentage": {
+          "name": "traffic_percentage",
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
@@ -997,11 +997,11 @@
           "method": "btree",
           "with": {}
         },
-        "library_traffic_history_locationId_index": {
-          "name": "library_traffic_history_locationId_index",
+        "library_traffic_history_location_id_index": {
+          "name": "library_traffic_history_location_id_index",
           "columns": [
             {
-              "expression": "locationId",
+              "expression": "location_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1014,11 +1014,11 @@
         }
       },
       "foreignKeys": {
-        "library_traffic_history_locationId_library_traffic_id_fk": {
-          "name": "library_traffic_history_locationId_library_traffic_id_fk",
+        "library_traffic_history_location_id_library_traffic_id_fk": {
+          "name": "library_traffic_history_location_id_library_traffic_id_fk",
           "tableFrom": "library_traffic_history",
           "tableTo": "library_traffic",
-          "columnsFrom": ["locationId"],
+          "columnsFrom": ["location_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
