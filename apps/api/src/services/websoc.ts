@@ -391,7 +391,6 @@ export class WebsocService {
     selection: Parameters<ReturnType<typeof database>["select"]>[0],
     includeFilterTables?: boolean,
   ) {
-    // makeSelect<T extends SelectedFields>(selection: T, includeFilterTables?: boolean) {
     const base = this.db
       .select(selection)
       .from(websocSchool)
