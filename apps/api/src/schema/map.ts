@@ -17,5 +17,13 @@ export const mapResponseSchema = z.array(
       description: "The generic name of the location",
       example: "Phoenix Food Court",
     }),
+    longitude: z.string().openapi({
+      description: "The longitude of the selected location",
+      example: "23423",
+    }),
+    latitude: z.string().openapi({
+      description: "The latitude of the selected location",
+      example: "23425",
+    }),
   }),
 );
