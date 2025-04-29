@@ -8,12 +8,12 @@ import { database } from "@packages/db";
 const mapRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const mapLocationsRoute = createRoute({
-  summary: "Retrieve map data for locations",
+  summary: "Retrieve coordinates for locations",
   operationId: "getLocations",
   tags: ["Map"],
   method: "get",
   path: "/",
-  description: "List all available map data existing",
+  description: "List all available map data from UCI's interactive map'",
   request: { query: mapQuerySchema },
   responses: {
     200: {

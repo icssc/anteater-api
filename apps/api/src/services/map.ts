@@ -15,6 +15,6 @@ export class MapService {
         latitude: mapLocation.latitude,
       })
       .from(mapLocation)
-      .where(query.id ? eq(mapLocation.id, mapLocation.id) : undefined);
+      .where(query.id ? eq(mapLocation.id, query.id) : undefined);
   }
 }

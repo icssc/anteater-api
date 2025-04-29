@@ -3,7 +3,7 @@ import { z } from "@hono/zod-openapi";
 export const mapQuerySchema = z.object({
   id: z.string().optional().openapi({
     description: "The ID of a specific location request, if provided",
-    example: "8067",
+    example: "83021",
   }),
 });
 
@@ -11,19 +11,19 @@ export const mapResponseSchema = z.array(
   z.object({
     id: z.string().openapi({
       description: "ID of this location",
-      example: "4563",
+      example: "83021",
     }),
     name: z.string().openapi({
       description: "The generic name of the location",
-      example: "Phoenix Food Court",
+      example: "Art Studio (ART)",
     }),
     longitude: z.string().openapi({
       description: "The longitude of the selected location",
-      example: "23423",
+      example: "-117.844887",
     }),
     latitude: z.string().openapi({
       description: "The latitude of the selected location",
-      example: "23425",
+      example: "33.650162",
     }),
   }),
 );
