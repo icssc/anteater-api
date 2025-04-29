@@ -11,8 +11,8 @@ export class MapService {
       .select({
         id: mapLocation.id,
         name: mapLocation.name,
-        longitude: mapLocation.longitude,
         latitude: mapLocation.latitude,
+        longitude: mapLocation.longitude,
       })
       .from(mapLocation)
       .where(query.id ? eq(mapLocation.id, query.id) : undefined);
