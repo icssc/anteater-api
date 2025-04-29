@@ -8,6 +8,7 @@ import { enums } from "./enums";
 import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
 import { larcSchema } from "./larc";
+import { mapSchema } from "./map";
 import { searchSchema } from "./search";
 import { studyRoomsGraphQLSchema } from "./study-rooms";
 import { websocSchema } from "./websoc";
@@ -41,6 +42,7 @@ export const typeDefs = mergeTypeDefs([
   gradesSchema,
   instructorsSchema,
   larcSchema,
+  mapSchema,
   programsSchema,
   searchSchema,
   websocSchema,

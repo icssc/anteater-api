@@ -12,6 +12,6 @@ input MapQuery {
 }
 
 extend type Query {
-    coordinates(quert: MapQuery): [MapPreview!]!
+    locations(query: MapQuery): [MapPreview!]!
 }
 `;
