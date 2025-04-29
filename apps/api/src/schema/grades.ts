@@ -1,19 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { courseLevels, terms } from "@packages/db/schema";
-import { yearSchema } from "./lib";
-
-const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
+import { geCategories, yearSchema } from "./lib";
 
 export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
