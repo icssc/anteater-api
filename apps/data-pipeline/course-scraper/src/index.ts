@@ -4,8 +4,8 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { desc, eq, inArray } from "@packages/db/drizzle";
-import type { Prerequisite, PrerequisiteTree } from "@packages/db/schema";
+import { desc, eq, inArray, or } from "@packages/db/drizzle";
+import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
@@ -500,6 +500,77 @@ async function scrapeCoursesInDepartment(meta: {
   logger.info(`Finished scraping courses for ${deptCode}`);
 }
 
+const isCoursePrereqWithId =
+  (id: string) =>
+  (x: Prerequisite | PrerequisiteTree): x is CoursePrerequisite =>
+    isPrereq(x) && x.prereqType === "course" && x.courseId === id;
+
+/**
+ * The renaming of I&C SCI 32A to I&C SCI H32 is, as of the 2024-25 academic year, not internally consistent.
+ * Some courses that require 32A have been modified to require H32 only, while others still require 32A only.
+ * This shim finds all courses that require 32A or H32 (but not both),
+ * and adds the other course to the appropriate subtree of the course's prerequisite tree.
+ * Since 32A appears only in OR-clauses of courses' prereq trees, this should be a simple change.
+ */
+async function patchH32(meta: {
+  db: ReturnType<typeof database>;
+}) {
+  const { db } = meta;
+  const courses = await db
+    .select({ id: course.id, prerequisiteTree: course.prerequisiteTree })
+    .from(prerequisite)
+    .innerJoin(course, eq(course.id, prerequisite.dependencyId))
+    .where(
+      or(
+        eq(prerequisite.prerequisiteId, "I&CSCI32A"),
+        eq(prerequisite.prerequisiteId, "I&CSCIH32"),
+      ),
+    )
+    .then((x) => new Map(x.map(({ id, prerequisiteTree }) => [id, prerequisiteTree])));
+  for (const [id, prerequisiteTree] of courses) {
+    const newPrereqTree = JSON.parse(JSON.stringify(prerequisiteTree)) as PrerequisiteTree;
+    // pathological case; these courses should all have non-empty prerequisite trees
+    if (!newPrereqTree.AND) continue;
+    // Prereq tree is an AND of one OR, so 32A/H32 must be in this block
+    if (newPrereqTree.AND.length === 1) {
+      const orNode = newPrereqTree.AND[0] as PrerequisiteTree;
+      const node32A = orNode.OR?.find(isCoursePrereqWithId("I&C SCI 32A"));
+      const nodeH32 = orNode.OR?.find(isCoursePrereqWithId("I&C SCI H32"));
+      // if both exist then don't do anything
+      if (!node32A || !nodeH32) {
+        const originalNode = (node32A ?? nodeH32) as CoursePrerequisite;
+        (newPrereqTree.AND[0] as PrerequisiteTree).OR?.push({
+          ...originalNode,
+          courseId: originalNode.courseId === "I&C SCI 32A" ? "I&C SCI H32" : "I&C SCI 32A",
+        });
+      }
+    } else {
+      const orNodeIndex = newPrereqTree.AND.findIndex(
+        (x) =>
+          !isPrereq(x) &&
+          x.OR?.some(
+            (y) =>
+              isPrereq(y) &&
+              y.prereqType === "course" &&
+              (y.courseId === "I&C SCI 32A" || y.courseId === "I&C SCI H32"),
+          ),
+      );
+      const orNode = newPrereqTree.AND[orNodeIndex] as PrerequisiteTree;
+      const node32A = orNode.OR?.find(isCoursePrereqWithId("I&C SCI 32A"));
+      const nodeH32 = orNode.OR?.find(isCoursePrereqWithId("I&C SCI H32"));
+      // if both exist then don't do anything
+      if (!node32A || !nodeH32) {
+        const originalNode = (node32A ?? nodeH32) as CoursePrerequisite;
+        (newPrereqTree.AND[orNodeIndex] as PrerequisiteTree).OR?.push({
+          ...originalNode,
+          courseId: originalNode.courseId === "I&C SCI 32A" ? "I&C SCI H32" : "I&C SCI 32A",
+        });
+      }
+    }
+    await db.update(course).set({ prerequisiteTree: newPrereqTree }).where(eq(course.id, id));
+  }
+}
+
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
@@ -557,6 +628,8 @@ async function main() {
       prereqs: prerequisites.get(deptCode),
     });
   }
+  logger.info("Running 32A/H32 shim...");
+  await patchH32({ db });
   logger.info("All done!");
   exit(0);
 }
