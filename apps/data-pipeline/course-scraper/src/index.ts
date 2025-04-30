@@ -628,7 +628,7 @@ async function main() {
       prereqs: prerequisites.get(deptCode),
     });
   }
-  logger.info("Running 32A/H32 shim...");
+  logger.info("Running I&C SCI 32A/H32 shim...");
   await patchH32({ db });
   logger.info("All done!");
   exit(0);
