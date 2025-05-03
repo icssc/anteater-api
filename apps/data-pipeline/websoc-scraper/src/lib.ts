@@ -85,12 +85,14 @@ async function getTermsToScrape(db: ReturnType<typeof database>) {
   const now = new Date();
   return db
     .select({
-      id: calendarTerm.id,
-      year: calendarTerm.year,
-      quarter: calendarTerm.quarter,
+      name: calendarTerm.id,
+      lastScraped: websocMeta.lastScraped,
+      lastDeptScraped: websocMeta.lastDeptScraped,
     })
     .from(calendarTerm)
-    .where(and(gte(calendarTerm.finalsStart, now), lte(calendarTerm.socAvailable, now)));
+    .leftJoin(websocMeta, eq(websocMeta.name, calendarTerm.id))
+    .where(and(gte(calendarTerm.finalsStart, now), lte(calendarTerm.socAvailable, now)))
+    .orderBy(asc(sql`COALESCE(${websocMeta.lastScraped}, '1970-01-01'::DATE)`));
 }
 
 const termToName = (term: Term) => `${term.year} ${term.quarter}`;
@@ -905,17 +907,8 @@ async function ingestChunk(
 
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("websoc-scraper starting");
-  const termsToScrape = await getTermsToScrape(db);
-  const termsInDatabase = await db
-    .select()
-    .from(websocMeta)
-    .where(
-      inArray(
-        websocMeta.name,
-        termsToScrape.map((term) => term.id),
-      ),
-    )
-    .orderBy(asc(websocMeta.lastScraped));
+  const termsInDatabase = await getTermsToScrape(db);
+  console.log(termsInDatabase);
   const term = termsInDatabase.find((x) => x.lastDeptScraped !== null) ?? termsInDatabase[0];
   if (term?.name) {
     try {
