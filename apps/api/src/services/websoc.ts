@@ -432,6 +432,7 @@ export class WebsocService {
       // pull only the course IDs; don't need any data from subquery
       const sub = this.makeSelect({ courseId: websocCourse.id }, true)
         .where(buildQuery(input))
+        .limit(1000)
         .as("sub");
 
       return this.makeSelect(selectionToReturn, false)
