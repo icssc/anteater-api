@@ -3,9 +3,9 @@ import { z } from "@hono/zod-openapi";
 export const libraryTrafficQuerySchema = z.object({
   locationName: z
     .string()
-    .describe("Filter results by exact location name")
     .openapi({
       example: "3rd Floor",
+      description: "Filter results by exact location name",
     })
     .optional(),
 });
