@@ -159,7 +159,11 @@ export const websocQuerySchema = z.object({
     .string()
     .transform((x) => x.toLowerCase() === "true")
     .pipe(z.boolean())
-    .optional(),
+    .optional()
+    .openapi({
+      description:
+        "Returns all sections from courses that contain at least one section matching your filters, even if those additional sections don't meet your existing filter criteria.",
+    }),
 });
 
 export const hourMinuteSchema = z.object({
