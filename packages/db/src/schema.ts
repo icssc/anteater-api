@@ -753,7 +753,7 @@ export const libraryTraffic = pgTable(
     trafficPercentage: decimal("traffic_percentage").notNull(),
     timestamp: timestamp("timestamp").notNull(),
   },
-  (table) => [index().on(table.id), index().on(table.locationName)],
+  (table) => [index().on(table.locationName)],
 );
 
 export const libraryTrafficHistory = pgTable(
