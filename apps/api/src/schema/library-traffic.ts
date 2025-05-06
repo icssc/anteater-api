@@ -3,18 +3,39 @@ import { z } from "@hono/zod-openapi";
 export const libraryTrafficQuerySchema = z.object({
   locationName: z
     .string()
+    .describe("Filter results by exact location name")
     .openapi({
-      param: { name: "locationName", in: "query" },
+      example: "3rd Floor",
     })
     .optional(),
 });
 
 export const libraryTrafficSchema = z.object({
   id: z.number().int().nonnegative().openapi({ example: 245 }),
-  locationName: z.string().openapi({ example: "3rd Floor" }),
-  trafficCount: z.number().int().nonnegative().openapi({ example: 57 }),
-  trafficPercentage: z.number().min(0).max(1).openapi({ example: 0.33 }),
-  timestamp: z.string().openapi({
-    example: "2025-01-01T12:34:56.789Z",
+
+  locationName: z.string().openapi({
+    example: "3rd Floor",
+    description: "Name of the library location",
   }),
+
+  trafficCount: z.number().int().nonnegative().openapi({
+    example: 57,
+    description: "Number of people currently detected at the location",
+  }),
+
+  trafficPercentage: z
+    .union([z.string(), z.number().min(0).max(1)])
+    .transform((v) => Number(v))
+    .openapi({
+      example: 0.33,
+      description: "Occupancy as a decimal percentage of total capacity (0 to 1)",
+    }),
+
+  timestamp: z
+    .union([z.string(), z.date()])
+    .transform((v) => new Date(v).toISOString())
+    .openapi({
+      example: "2025-01-01T12:34:56.789Z",
+      description: "When the library traffic was recorded (ISO timestamp)",
+    }),
 });
