@@ -155,6 +155,15 @@ export const websocQuerySchema = z.object({
       }
       return parsedCodes;
     }),
+  includeRelatedCourses: z.coerce
+    .string()
+    .transform((x) => x.toLowerCase() === "true")
+    .pipe(z.boolean())
+    .optional()
+    .openapi({
+      description:
+        "Returns all sections from courses that contain at least one section matching your filters, even if those additional sections don't meet your existing filter criteria.",
+    }),
 });
 
 export const hourMinuteSchema = z.object({
@@ -192,6 +201,13 @@ export const websocSectionFinalExamSchema = z.discriminatedUnion("examStatus", [
     bldg: z.string().array(),
   }),
 ]);
+
+export const sectionStatusSchema = z.enum(websocStatuses).or(z.literal(""));
+
+export const numCurrentlyEnrolledSchema = z.object({
+  totalEnrolled: z.string(),
+  sectionEnrolled: z.string(),
+});
 
 export const websocSectionSchema = z.object({
   units: z.string(),
