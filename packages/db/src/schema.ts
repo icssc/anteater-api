@@ -133,10 +133,10 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 
 export type APCoursesGrantedTree =
   | {
-      AND: APCoursesGrantedTree[] | string[];
+      AND: (APCoursesGrantedTree | string)[];
     }
   | {
-      OR: APCoursesGrantedTree[] | string[];
+      OR: (APCoursesGrantedTree | string)[];
     };
 
 // Misc. enums

@@ -17,7 +17,8 @@ export const apExamsQuerySchema = z.object({
 export const coursesGrantedTreeSchema: z.ZodType<APCoursesGrantedTree> = z
   .object({
     AND: z
-      .union([z.lazy(() => coursesGrantedTreeSchema).array(), z.string().array()])
+      .union([z.lazy(() => coursesGrantedTreeSchema), z.string()])
+      .array()
       .openapi({
         description: "All of these entries are granted",
         type: "array",
@@ -26,13 +27,11 @@ export const coursesGrantedTreeSchema: z.ZodType<APCoursesGrantedTree> = z
   })
   .or(
     z.object({
-      OR: z
-        .union([z.lazy(() => coursesGrantedTreeSchema).array(), z.string().array()])
-        .openapi({
-          description: "Any one of these entries is granted",
-          type: "array",
-          items: { $ref: "#/components/schemas/coursesGrantedTree" },
-        }),
+      OR: z.union([z.lazy(() => coursesGrantedTreeSchema).array(), z.string().array()]).openapi({
+        description: "Any one of these entries is granted",
+        type: "array",
+        items: { $ref: "#/components/schemas/coursesGrantedTree" },
+      }),
     }),
   );
 

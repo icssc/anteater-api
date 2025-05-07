@@ -1,4 +1,4 @@
-import type {apExamsQuerySchema, apExamsRewardSchema} from "$schema";
+import type { apExamsQuerySchema, apExamsRewardSchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, getTableColumns, sql } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
