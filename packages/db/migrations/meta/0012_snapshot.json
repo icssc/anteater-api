@@ -1,5 +1,5 @@
 {
-  "id": "a64ba8a0-1b4f-450a-9669-ba026fd6f3ca",
+  "id": "0f36315b-6278-4d7d-ae58-fd9c53bca9ec",
   "prevId": "656b8ada-bd71-46b6-aaaa-2e568646f6f5",
   "version": "7",
   "dialect": "postgresql",
@@ -44,13 +44,13 @@
           "name": "units_granted",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "elective_units_granted": {
           "name": "elective_units_granted",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "grants_ge_1a": {
           "name": "grants_ge_1a",
@@ -859,166 +859,6 @@
           "tableFrom": "larc_section",
           "tableTo": "websoc_course",
           "columnsFrom": ["course_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic": {
-      "name": "library_traffic",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "location_name": {
-          "name": "location_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "library_traffic_id_index": {
-          "name": "library_traffic_id_index",
-          "columns": [
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "library_traffic_location_name_index": {
-          "name": "library_traffic_location_name_index",
-          "columns": [
-            {
-              "expression": "location_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic_history": {
-      "name": "library_traffic_history",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "location_id": {
-          "name": "location_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "library_traffic_history_timestamp_index": {
-          "name": "library_traffic_history_timestamp_index",
-          "columns": [
-            {
-              "expression": "timestamp",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "library_traffic_history_location_id_index": {
-          "name": "library_traffic_history_location_id_index",
-          "columns": [
-            {
-              "expression": "location_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "library_traffic_history_location_id_library_traffic_id_fk": {
-          "name": "library_traffic_history_location_id_library_traffic_id_fk",
-          "tableFrom": "library_traffic_history",
-          "tableTo": "library_traffic",
-          "columnsFrom": ["location_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"

@@ -133,10 +133,10 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 
 export type APCoursesGrantedTree =
   | {
-      AND: APCoursesGrantedTree[] | string[];
+      AND: (APCoursesGrantedTree | string)[];
     }
   | {
-      OR: APCoursesGrantedTree[] | string[];
+      OR: (APCoursesGrantedTree | string)[];
     };
 
 // Misc. enums
@@ -728,8 +728,8 @@ export const apExamToReward = pgTable(
 
 export const apExamReward = pgTable("ap_exam_reward", {
   id: uuid("id").primaryKey().defaultRandom(),
-  unitsGranted: integer("units_granted"),
-  electiveUnitsGranted: integer("elective_units_granted"),
+  unitsGranted: integer("units_granted").notNull(),
+  electiveUnitsGranted: integer("elective_units_granted").notNull(),
   grantsGE1A: boolean("grants_ge_1a").notNull().default(false),
   grantsGE1B: boolean("grants_ge_1b").notNull().default(false),
   grantsGE2: boolean("grants_ge_2").notNull().default(false),
