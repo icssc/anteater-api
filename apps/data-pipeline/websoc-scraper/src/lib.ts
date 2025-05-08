@@ -11,7 +11,7 @@ import type {
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
 import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
-import type { WebsocSectionFinalExam } from "@packages/db/schema";
+import { type WebsocSectionFinalExam, websocSectionEnrollment } from "@packages/db/schema";
 import {
   calendarTerm,
   course,
@@ -22,7 +22,6 @@ import {
   websocMeta,
   websocSchool,
   websocSection,
-  websocSectionEnrollment,
   websocSectionMeeting,
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
@@ -384,6 +383,7 @@ function meetingMapper(
 
 const doChunkUpsert = async (
   db: ReturnType<typeof database>,
+  scrapeInterval: string,
   term: Term,
   resp: WebsocResponse,
   department: string | null,
@@ -493,21 +493,68 @@ const doChunkUpsert = async (
         (rows) =>
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
-    const enrollmentEntries = await tx
-      .insert(websocSectionEnrollment)
-      .values(
-        mappedSections
-          .map(({ sectionCode, ...rest }) => {
-            const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-            return sectionId ? { sectionId, ...rest } : undefined;
-          })
-          .filter(notNull),
-      )
-      .onConflictDoNothing({
-        target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
-      })
-      .returning({ id: websocSectionEnrollment.id });
-    console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+
+    const to_insert = sql.join(
+      mappedSections
+        .map(({ sectionCode, ...rest }) => {
+          const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+          return sectionId
+            ? sql.join(
+                [
+                  sql.raw("("),
+                  sql.join(
+                    [
+                      sectionId,
+                      rest.year,
+                      rest.quarter,
+                      rest.maxCapacity,
+                      rest.numCurrentlyTotalEnrolled,
+                      rest.numOnWaitlist,
+                      rest.numWaitlistCap,
+                      rest.numRequested,
+                      rest.numNewOnlyReserved,
+                      rest.status,
+                    ].map((s) => sql`${s}`),
+                    sql.raw(", "),
+                  ),
+                  sql.raw(")"),
+                ],
+                sql.raw(""),
+              )
+            : undefined;
+        })
+        .filter(notNull),
+      sql.raw(", "),
+    );
+
+    const lmao = await tx.execute(
+      sql`
+      insert into websoc_section_enrollment_2 (section_id, year, quarter, max_capacity, num_currently_total_enrolled,
+                                               num_on_waitlist, num_waitlist_cap, num_requested, num_new_only_reserved,
+                                               status)
+      SELECT hi.section_id::uuid,
+             hi.year,
+             hi.quarter::term,
+             hi.max_capacity::int,
+             hi.num_currently_total_enrolled::int,
+             hi.num_on_waitlist::int,
+             hi.num_waitlist_cap::int,
+             hi.num_requested::int,
+             hi.num_new_only_reserved::int,
+             hi.status::websoc_status
+      from (VALUES ${to_insert}) as hi(section_id, year, quarter, max_capacity,
+                                       num_currently_total_enrolled,
+                                       num_on_waitlist, num_waitlist_cap, num_requested,
+                                       num_new_only_reserved,
+                                       status)
+             left join websoc_section_enrollment_2 on hi.section_id::uuid = websoc_section_enrollment_2.section_id and
+                                                      websoc_section_enrollment_2.created_at >
+                                                      NOW() - interval ${sql.raw(`'${scrapeInterval}'`)}
+      where websoc_section_enrollment_2.section_id is null
+      RETURNING websoc_section_enrollment_2.id
+    `.mapWith(websocSectionEnrollment.id),
+    );
+    console.log(`Inserted ${lmao.length} enrollment entries`);
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
@@ -805,6 +852,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
 
 export async function scrapeTerm(
   db: ReturnType<typeof database>,
+  scrapeInterval: string,
   term: Term,
   departments: string[],
 ) {
@@ -830,7 +878,7 @@ export async function scrapeTerm(
         department,
         cancelledCourses: "Include",
       }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      if (resp.schools.length) await doChunkUpsert(db, scrapeInterval, term, resp, department);
       await sleep(1000);
     }
   } else if (!sectionCodeBounds.length) {
@@ -841,7 +889,7 @@ export async function scrapeTerm(
         department,
         cancelledCourses: "Include",
       }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      if (resp.schools.length) await doChunkUpsert(db, scrapeInterval, term, resp, department);
       await sleep(1000);
     }
   } else {
@@ -849,7 +897,7 @@ export async function scrapeTerm(
     for (let i = 0; i < sectionCodeBounds.length; i += 2) {
       const lower = sectionCodeBounds[i] as `${number}`;
       const upper = (sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE) as `${number}`;
-      await ingestChunk(db, term, lower, upper);
+      await ingestChunk(db, scrapeInterval, term, lower, upper);
     }
   }
   await scrapeGEsForTerm(db, term);
@@ -865,6 +913,7 @@ export async function scrapeTerm(
 
 async function ingestChunk(
   db: ReturnType<typeof database>,
+  scrapeInterval: string,
   term: Term,
   lower: `${number}`,
   upper: `${number}`,
@@ -876,7 +925,7 @@ async function ingestChunk(
       sectionCodes,
       cancelledCourses: "Include",
     }).then(normalizeResponse);
-    if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+    if (resp.schools.length) await doChunkUpsert(db, scrapeInterval, term, resp, null);
     await sleep(1000);
   } catch (e) {
     /*
@@ -900,13 +949,29 @@ async function ingestChunk(
     console.log(`Chunk ${sectionCodes} failed (probably too large); bisecting and trying again...`);
 
     const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
-    await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
-    await ingestChunk(db, term, (middleInt + 1).toString().padStart(5, "0") as `${number}`, upper);
+    await ingestChunk(
+      db,
+      scrapeInterval,
+      term,
+      lower,
+      middleInt.toString().padStart(5, "0") as `${number}`,
+    );
+    await ingestChunk(
+      db,
+      scrapeInterval,
+      term,
+      (middleInt + 1).toString().padStart(5, "0") as `${number}`,
+      upper,
+    );
   }
 }
 
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("websoc-scraper starting");
+
+  // TODO: dynamic
+  const scrapeInterval = "1 days";
+
   const termsInDatabase = await getTermsToScrape(db);
   console.log(termsInDatabase);
   const term = termsInDatabase.find((x) => x.lastDeptScraped !== null) ?? termsInDatabase[0];
@@ -915,6 +980,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
       const departments = await getDepts(db);
       await scrapeTerm(
         db,
+        scrapeInterval,
         nameToTerm(term.name),
         term?.lastDeptScraped ? departments.slice(departments.indexOf(term.lastDeptScraped)) : [],
       );
