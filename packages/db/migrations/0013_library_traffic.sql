@@ -20,7 +20,5 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "library_traffic_id_index" ON "library_traffic" USING btree ("id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "library_traffic_location_name_index" ON "library_traffic" USING btree ("location_name");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "library_traffic_history_timestamp_index" ON "library_traffic_history" USING btree ("timestamp");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "library_traffic_history_location_id_index" ON "library_traffic_history" USING btree ("location_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "library_traffic_history_location_id_timestamp_index" ON "library_traffic_history" USING btree ("location_id","timestamp");
