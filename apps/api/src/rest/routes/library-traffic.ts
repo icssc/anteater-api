@@ -22,7 +22,7 @@ const libraryTrafficRoute = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(libraryTrafficSchema.array()) },
+        "application/json": { schema: responseSchema(libraryTrafficSchema) },
       },
       description: "Successful operation",
     },
@@ -38,7 +38,7 @@ libraryTrafficRouter.openapi(libraryTrafficRoute, async (c) => {
   const service = new LibraryTrafficService(database(c.env.DB.connectionString));
   const res = await service.getLibraryTraffic(query);
 
-  return c.json({ ok: true, data: libraryTrafficSchema.array().parse(res) }, 200);
+  return c.json({ ok: true, data: libraryTrafficSchema.parse(res) }, 200);
 });
 
 export { libraryTrafficRouter };

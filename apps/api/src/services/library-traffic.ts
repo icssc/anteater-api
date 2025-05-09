@@ -5,15 +5,12 @@ import { libraryTraffic } from "@packages/db/schema";
 import type { z } from "zod";
 
 type LibraryTrafficServiceInput = z.infer<typeof libraryTrafficQuerySchema>;
-
 type LibraryTrafficServiceOutput = z.infer<typeof libraryTrafficSchema>;
 
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getLibraryTraffic(
-    input: LibraryTrafficServiceInput,
-  ): Promise<LibraryTrafficServiceOutput[]> {
+  async getLibraryTraffic(input: LibraryTrafficServiceInput): Promise<LibraryTrafficServiceOutput> {
     const rows = await this.db
       .select({
         id: libraryTraffic.id,
@@ -25,6 +22,6 @@ export class LibraryTrafficService {
       .from(libraryTraffic)
       .where(input.locationName ? eq(libraryTraffic.locationName, input.locationName) : undefined);
 
-    return rows.map((row) => libraryTrafficSchema.parse(row));
+    return libraryTrafficSchema.parse(rows);
   }
 }
