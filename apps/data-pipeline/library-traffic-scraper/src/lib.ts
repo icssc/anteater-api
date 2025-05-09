@@ -1,5 +1,6 @@
 import { database } from "@packages/db";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
+import { load } from "cheerio";
 import fetch from "cross-fetch";
 
 type RawRespOK = {
@@ -35,6 +36,26 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   return null;
 }
 
+function extractLocationIds(pageHtml: string): string[] {
+  const $ = load(pageHtml);
+
+  let locationIds: string[] = [];
+
+  $("script").each((_, scriptTag) => {
+    const content = $(scriptTag).html();
+    if (!content?.includes("locationIds")) return;
+
+    const match = content.match(/locationIds\s*=\s*\[([^\]]+)\]/);
+    if (match) {
+      locationIds = match[1].split(",").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+    }
+  });
+  if (locationIds.length === 0) {
+    console.error("Could not find any locationIds in page HTML");
+  }
+  return locationIds;
+}
+
 export async function doScrape(DB_URL: string): Promise<void> {
   console.log("Starting library traffic scrape.");
 
@@ -42,21 +63,11 @@ export async function doScrape(DB_URL: string): Promise<void> {
     r.text(),
   );
 
-  const scriptBlockMatch = pageHtml.match(
-    /<script\b[^>]*>([\s\S]*?locationIds[\s\S]*?)<\/script>/i,
-  );
-  if (!scriptBlockMatch) {
-    console.error("Could not find script with locationIds");
+  const locationIds = extractLocationIds(pageHtml);
+  if (locationIds.length === 0) {
+    console.error("No location IDs found on the page");
     return;
   }
-
-  const idsMatch = scriptBlockMatch[1].match(/locationIds\s*=\s*\[([^\]]+)\]/);
-  if (!idsMatch) {
-    console.error("Failed to parse locationIds");
-    return;
-  }
-
-  const locationIds = idsMatch[1].split(",").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
 
   const db = database(DB_URL);
 

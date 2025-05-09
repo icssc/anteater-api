@@ -766,7 +766,7 @@ export const libraryTrafficHistory = pgTable(
     trafficPercentage: decimal("traffic_percentage").notNull(),
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
-  (table) => [index().on(table.timestamp), index().on(table.locationId)],
+  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
 // Materialized views
