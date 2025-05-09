@@ -195,8 +195,12 @@
           "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
           "tableFrom": "ap_exam_to_reward",
           "tableTo": "ap_exam",
-          "columnsFrom": ["exam_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "exam_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -204,8 +208,12 @@
           "name": "ap_exam_to_reward_reward_ap_exam_reward_id_fk",
           "tableFrom": "ap_exam_to_reward",
           "tableTo": "ap_exam_reward",
-          "columnsFrom": ["reward"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reward"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -712,8 +720,12 @@
           "name": "instructor_to_websoc_instructor_instructor_ucinetid_instructor_ucinetid_fk",
           "tableFrom": "instructor_to_websoc_instructor",
           "tableTo": "instructor",
-          "columnsFrom": ["instructor_ucinetid"],
-          "columnsTo": ["ucinetid"],
+          "columnsFrom": [
+            "instructor_ucinetid"
+          ],
+          "columnsTo": [
+            "ucinetid"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -721,8 +733,12 @@
           "name": "instructor_to_websoc_instructor_websoc_instructor_name_websoc_instructor_name_fk",
           "tableFrom": "instructor_to_websoc_instructor",
           "tableTo": "websoc_instructor",
-          "columnsFrom": ["websoc_instructor_name"],
-          "columnsTo": ["name"],
+          "columnsFrom": [
+            "websoc_instructor_name"
+          ],
+          "columnsTo": [
+            "name"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -858,8 +874,12 @@
           "name": "larc_section_course_id_websoc_course_id_fk",
           "tableFrom": "larc_section",
           "tableTo": "websoc_course",
-          "columnsFrom": ["course_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "course_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -927,8 +947,12 @@
           "name": "major_degree_id_degree_id_fk",
           "tableFrom": "major",
           "tableTo": "degree",
-          "columnsFrom": ["degree_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "degree_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1151,8 +1175,12 @@
           "name": "specialization_major_id_major_id_fk",
           "tableFrom": "specialization",
           "tableTo": "major",
-          "columnsFrom": ["major_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "major_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1263,8 +1291,12 @@
           "name": "study_room_study_location_id_study_location_id_fk",
           "tableFrom": "study_room",
           "tableTo": "study_location",
-          "columnsFrom": ["study_location_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "study_location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1360,8 +1392,12 @@
           "name": "study_room_slot_study_room_id_study_room_id_fk",
           "tableFrom": "study_room_slot",
           "tableTo": "study_room",
-          "columnsFrom": ["study_room_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "study_room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1947,8 +1983,12 @@
           "name": "websoc_course_department_id_websoc_department_id_fk",
           "tableFrom": "websoc_course",
           "tableTo": "websoc_department",
-          "columnsFrom": ["department_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "department_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2081,8 +2121,12 @@
           "name": "websoc_department_school_id_websoc_school_id_fk",
           "tableFrom": "websoc_department",
           "tableTo": "websoc_school",
-          "columnsFrom": ["school_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2627,8 +2671,12 @@
           "name": "websoc_section_course_id_websoc_course_id_fk",
           "tableFrom": "websoc_section",
           "tableTo": "websoc_course",
-          "columnsFrom": ["course_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "course_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2763,8 +2811,12 @@
           "name": "websoc_section_enrollment_section_id_websoc_section_id_fk",
           "tableFrom": "websoc_section_enrollment",
           "tableTo": "websoc_section",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2869,8 +2921,12 @@
           "name": "websoc_section_grade_section_id_websoc_section_id_fk",
           "tableFrom": "websoc_section_grade",
           "tableTo": "websoc_section",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2880,7 +2936,9 @@
         "websoc_section_grade_section_id_unique": {
           "name": "websoc_section_grade_section_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["section_id"]
+          "columns": [
+            "section_id"
+          ]
         }
       },
       "policies": {},
@@ -3028,8 +3086,12 @@
           "name": "websoc_section_meeting_section_id_websoc_section_id_fk",
           "tableFrom": "websoc_section_meeting",
           "tableTo": "websoc_section",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3122,8 +3184,12 @@
           "name": "websoc_section_meeting_to_location_section_id_websoc_section_meeting_id_fk",
           "tableFrom": "websoc_section_meeting_to_location",
           "tableTo": "websoc_section_meeting",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3131,8 +3197,12 @@
           "name": "websoc_section_meeting_to_location_location_id_websoc_location_id_fk",
           "tableFrom": "websoc_section_meeting_to_location",
           "tableTo": "websoc_location",
-          "columnsFrom": ["location_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "location_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3204,8 +3274,12 @@
           "name": "websoc_section_to_instructor_section_id_websoc_section_id_fk",
           "tableFrom": "websoc_section_to_instructor",
           "tableTo": "websoc_section",
-          "columnsFrom": ["section_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3213,8 +3287,12 @@
           "name": "websoc_section_to_instructor_instructor_name_websoc_instructor_name_fk",
           "tableFrom": "websoc_section_to_instructor",
           "tableTo": "websoc_instructor",
-          "columnsFrom": ["instructor_name"],
-          "columnsTo": ["name"],
+          "columnsFrom": [
+            "instructor_name"
+          ],
+          "columnsTo": [
+            "name"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3230,17 +3308,31 @@
     "public.course_level": {
       "name": "course_level",
       "schema": "public",
-      "values": ["LowerDiv", "UpperDiv", "Graduate"]
+      "values": [
+        "LowerDiv",
+        "UpperDiv",
+        "Graduate"
+      ]
     },
     "public.division": {
       "name": "division",
       "schema": "public",
-      "values": ["Undergraduate", "Graduate"]
+      "values": [
+        "Undergraduate",
+        "Graduate"
+      ]
     },
     "public.term": {
       "name": "term",
       "schema": "public",
-      "values": ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"]
+      "values": [
+        "Fall",
+        "Winter",
+        "Spring",
+        "Summer1",
+        "Summer10wk",
+        "Summer2"
+      ]
     },
     "public.websoc_section_type": {
       "name": "websoc_section_type",
@@ -3263,7 +3355,12 @@
     "public.websoc_status": {
       "name": "websoc_status",
       "schema": "public",
-      "values": ["OPEN", "Waitl", "FULL", "NewOnly"]
+      "values": [
+        "OPEN",
+        "Waitl",
+        "FULL",
+        "NewOnly"
+      ]
     }
   },
   "schemas": {},
