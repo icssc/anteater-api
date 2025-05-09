@@ -10,7 +10,7 @@ export const libraryTrafficQuerySchema = z.object({
     .optional(),
 });
 
-export const libraryTrafficSchema = z.object({
+export const libraryTrafficEntrySchema = z.object({
   id: z.number().int().nonnegative().openapi({ example: 245 }),
 
   locationName: z.string().openapi({
@@ -31,11 +31,13 @@ export const libraryTrafficSchema = z.object({
       description: "Occupancy as a decimal percentage of total capacity (0 to 1)",
     }),
 
-  timestamp: z
-    .union([z.string(), z.date()])
-    .transform((v) => new Date(v).toISOString())
+  timestamp: z.coerce
+    .date()
+    .transform((d) => d.toISOString())
     .openapi({
       example: "2025-01-01T12:34:56.789Z",
       description: "When the library traffic was recorded (ISO timestamp)",
     }),
 });
+
+export const libraryTrafficSchema = z.array(libraryTrafficEntrySchema);
