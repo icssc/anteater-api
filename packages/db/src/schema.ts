@@ -743,6 +743,32 @@ export const apExamReward = pgTable("ap_exam_reward", {
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
 
+export const libraryTraffic = pgTable(
+  "library_traffic",
+  {
+    id: integer("id").primaryKey(),
+    locationName: varchar("location_name").notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: decimal("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
+  },
+  (table) => [index().on(table.locationName)],
+);
+
+export const libraryTrafficHistory = pgTable(
+  "library_traffic_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    locationId: integer("location_id")
+      .references(() => libraryTraffic.id)
+      .notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: decimal("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {

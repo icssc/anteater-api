@@ -248,6 +248,22 @@ importers:
         specifier: 3.100.0
         version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
 
+  apps/data-pipeline/library-traffic-scraper:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      cheerio:
+        specifier: 1.0.0
+        version: 1.0.0
+      cross-fetch:
+        specifier: 4.0.0
+        version: 4.0.0
+    devDependencies:
+      wrangler:
+        specifier: 3.100.0
+        version: 3.100.0(@cloudflare/workers-types@4.20241230.0)
+
   apps/data-pipeline/mview-refresher:
     dependencies:
       '@packages/db':
@@ -4244,6 +4260,7 @@ packages:
   wrangler@3.100.0:
     resolution: {integrity: sha512-+nsZK374Xnp2BEQQuB/18pnObgsOey0AHVlg75pAdwNaKAmB2aa0/E5rFb7i89DiiwFYoZMz3cARY1UKcm/WQQ==}
     engines: {node: '>=16.17.0'}
+    deprecated: Downgrade to 3.99.0
     hasBin: true
     peerDependencies:
       '@cloudflare/workers-types': ^4.20241230.0
