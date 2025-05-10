@@ -36,82 +36,76 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   return null;
 }
 
-function extractLocationIds(pageHtml: string): string[] {
-  const $ = load(pageHtml);
-
-  let locationIds: string[] = [];
-
-  $("script").each((_, scriptTag) => {
-    const content = $(scriptTag).html();
-    if (!content?.includes("locationIds")) return;
-
-    const match = content.match(/locationIds\s*=\s*\[([^\]]+)\]/);
-    if (match) {
-      locationIds = match[1].split(",").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
-    }
-  });
-  if (locationIds.length === 0) {
-    console.error("Could not find any locationIds in page HTML");
-  }
-  return locationIds;
-}
-
-export async function doScrape(DB_URL: string): Promise<void> {
-  console.log("Starting library traffic scrape.");
-
-  const pageHtml = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
+async function getLocationIds(): Promise<string[]> {
+  const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
     r.text(),
   );
+  const $ = load(html);
 
-  const locationIds = extractLocationIds(pageHtml);
-  if (locationIds.length === 0) {
-    console.error("No location IDs found on the page");
-    return;
+  const script = $("script")
+    .toArray()
+    .find((el) => {
+      const content = $(el).html();
+      return content?.includes("locationIds");
+    });
+
+  if (!script) {
+    throw new Error("Could not find script containing locationIds");
   }
 
+  const scriptContent = $(script).html();
+  const match = scriptContent?.match(/locationIds\s*=\s*\[([^\]]+)\]/);
+
+  if (!match) {
+    throw new Error("Could not extract locationIds array");
+  }
+
+  return match[1].split(",").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+}
+
+export async function doScrape(DB_URL: string) {
+  console.log("Starting library traffic scrape.");
   const db = database(DB_URL);
 
+  const locationIds = await getLocationIds();
+
   for (const id of locationIds) {
-    try {
-      const data = await fetchLocation(id);
-      if (!data) {
-        console.warn(`No usable data for location ID ${id}`);
-        continue;
-      }
+    const data = await fetchLocation(id);
+    if (!data) {
+      console.warn(`No data for location ID ${id}`);
+      continue;
+    }
 
-      console.log(`Fetched "${data.name}": count=${data.count}, pct=${data.percentage}%`);
+    console.log(`Fetched "${data.name}": count=${data.count}, pct=${data.percentage}%`);
 
-      await db
-        .insert(libraryTraffic)
-        .values([
-          {
-            id: data.id,
-            locationName: data.name,
-            trafficCount: data.count,
-            trafficPercentage: String(data.percentage),
-            timestamp: new Date(data.timestamp),
-          },
-        ])
-        .onConflictDoUpdate({
-          target: [libraryTraffic.id],
-          set: {
-            trafficCount: data.count,
-            trafficPercentage: String(data.percentage),
-            timestamp: new Date(data.timestamp),
-          },
-        });
-
-      await db.insert(libraryTrafficHistory).values([
+    await db
+      .insert(libraryTraffic)
+      .values([
         {
-          locationId: data.id,
+          id: data.id,
+          locationName: data.name,
           trafficCount: data.count,
           trafficPercentage: String(data.percentage),
           timestamp: new Date(data.timestamp),
         },
-      ]);
-    } catch (err) {
-      console.error(`Skipping location ID ${id} due to fatal error.`);
-    }
+      ])
+      .onConflictDoUpdate({
+        target: [libraryTraffic.id],
+        set: {
+          trafficCount: data.count,
+          trafficPercentage: String(data.percentage),
+          timestamp: new Date(data.timestamp),
+        },
+      });
+
+    await db.insert(libraryTrafficHistory).values([
+      {
+        locationId: data.id,
+        trafficCount: data.count,
+        trafficPercentage: String(data.percentage),
+        timestamp: new Date(data.timestamp),
+      },
+    ]);
   }
 
   console.log("Library traffic scrape complete.");
