@@ -14,6 +14,3 @@ enabled = true
 [[hyperdrive]]
 binding = "DB"
 id = "1c4c82477bfa4114a48c63d4dc838e73"
-
-[env.development.vars]
-DB_URL = "postgres://postgres:postgres@localhost:5432/anteater_api"
