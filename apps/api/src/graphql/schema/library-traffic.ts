@@ -1,6 +1,6 @@
 export const libraryTrafficSchema = `#graphql
 type LibraryTraffic {
-  id: String!
+  id: Int!
   locationName: String!
   trafficCount: Int!
   trafficPercentage: Float! 
