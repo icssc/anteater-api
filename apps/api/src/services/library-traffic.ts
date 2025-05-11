@@ -10,10 +10,8 @@ type LibraryTrafficServiceOutput = typeof libraryTraffic.$inferSelect;
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getLibraryTraffic(
-    input: LibraryTrafficServiceInput,
-  ): Promise<LibraryTrafficServiceOutput[]> {
-    return await this.db
+  getLibraryTraffic(input: LibraryTrafficServiceInput): Promise<LibraryTrafficServiceOutput[]> {
+    return this.db
       .select({
         id: libraryTraffic.id,
         locationName: libraryTraffic.locationName,

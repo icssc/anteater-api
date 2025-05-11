@@ -12,25 +12,21 @@ export const libraryTrafficQuerySchema = z.object({
 
 export const libraryTrafficEntrySchema = z.object({
   id: z.number().int().nonnegative().openapi({ example: 245 }),
-
   locationName: z.string().openapi({
     example: "3rd Floor",
     description: "Name of the library location",
   }),
-
   trafficCount: z.number().int().nonnegative().openapi({
     example: 57,
     description: "Number of people currently detected at the location",
   }),
-
-  trafficPercentage: z
-    .union([z.string(), z.number().min(0).max(1)])
+  trafficPercentage: z.coerce
+    .number()
     .transform((v) => Number(v))
     .openapi({
       example: 0.33,
       description: "Occupancy as a decimal percentage of total capacity (0 to 1)",
     }),
-
   timestamp: z.coerce
     .date()
     .transform((d) => d.toISOString())
