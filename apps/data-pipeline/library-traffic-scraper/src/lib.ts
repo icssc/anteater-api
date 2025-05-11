@@ -85,7 +85,7 @@ export async function doScrape(DB_URL: string) {
           id: data.id,
           locationName: data.name,
           trafficCount: data.count,
-          trafficPercentage: String(data.percentage),
+          trafficPercentage: data.percentage,
           timestamp: new Date(data.timestamp),
         },
       ])
@@ -93,7 +93,7 @@ export async function doScrape(DB_URL: string) {
         target: [libraryTraffic.id],
         set: {
           trafficCount: data.count,
-          trafficPercentage: String(data.percentage),
+          trafficPercentage: data.percentage,
           timestamp: new Date(data.timestamp),
         },
       });
@@ -102,7 +102,7 @@ export async function doScrape(DB_URL: string) {
       {
         locationId: data.id,
         trafficCount: data.count,
-        trafficPercentage: String(data.percentage),
+        trafficPercentage: data.percentage,
         timestamp: new Date(data.timestamp),
       },
     ]);
