@@ -1,6 +1,7 @@
 export const libraryTrafficSchema = `#graphql
 type LibraryTraffic {
   id: Int!
+  libraryName: String!
   locationName: String!
   trafficCount: Int!
   trafficPercentage: Float! 
@@ -8,6 +9,7 @@ type LibraryTraffic {
 }
 
 input LibraryTrafficQuery {
+  libraryName: String
   locationName: String
 }
 

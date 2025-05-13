@@ -1,10 +1,17 @@
 import { z } from "@hono/zod-openapi";
 
 export const libraryTrafficQuerySchema = z.object({
+  libraryName: z
+    .string()
+    .openapi({
+      example: "Langson Library",
+      description: "Filter results by library name",
+    })
+    .optional(),
   locationName: z
     .string()
     .openapi({
-      example: "3rd Floor",
+      example: "4th Floor – Nordstrom Honors Study Room",
       description: "Filter results by exact location name",
     })
     .optional(),
@@ -12,9 +19,13 @@ export const libraryTrafficQuerySchema = z.object({
 
 export const libraryTrafficEntrySchema = z.object({
   id: z.number().int().nonnegative().openapi({ example: 245 }),
+  libraryName: z.string().openapi({
+    example: "Langson Library",
+    description: "Name of the library that owns this location",
+  }),
   locationName: z.string().openapi({
-    example: "3rd Floor",
-    description: "Name of the library location",
+    example: "4th Floor - Nordstrom Honors Study Room",
+    description: "Name of the floor / section inside the library",
   }),
   trafficCount: z.number().int().nonnegative().openapi({
     example: 57,

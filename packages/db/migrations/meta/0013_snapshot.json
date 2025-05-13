@@ -1,5 +1,5 @@
 {
-  "id": "fe132df8-c4b4-4b12-866b-c5c50ef3a4b5",
+  "id": "a8230d50-e3f7-4ca3-b8c3-63c377847df9",
   "prevId": "0f36315b-6278-4d7d-ae58-fd9c53bca9ec",
   "version": "7",
   "dialect": "postgresql",
@@ -880,6 +880,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "library_name": {
+          "name": "library_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "location_name": {
           "name": "location_name",
           "type": "varchar",
@@ -894,7 +900,7 @@
         },
         "traffic_percentage": {
           "name": "traffic_percentage",
-          "type": "numeric",
+          "type": "real",
           "primaryKey": false,
           "notNull": true
         },
@@ -954,7 +960,7 @@
         },
         "traffic_percentage": {
           "name": "traffic_percentage",
-          "type": "numeric",
+          "type": "real",
           "primaryKey": false,
           "notNull": true
         },
