@@ -11,7 +11,7 @@ export const libraryTrafficQuerySchema = z.object({
   locationName: z
     .string()
     .openapi({
-      example: "4th Floor – Nordstrom Honors Study Room",
+      example: "4th Floor - Nordstrom Honors Study Room",
       description: "Filter results by exact location name",
     })
     .optional(),
