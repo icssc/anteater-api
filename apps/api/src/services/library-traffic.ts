@@ -14,6 +14,7 @@ export class LibraryTrafficService {
     return this.db
       .select({
         id: libraryTraffic.id,
+        libraryName: libraryTraffic.libraryName,
         locationName: libraryTraffic.locationName,
         trafficCount: libraryTraffic.trafficCount,
         trafficPercentage: libraryTraffic.trafficPercentage,

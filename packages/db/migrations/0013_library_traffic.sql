@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS "library_traffic" (
 	"id" integer PRIMARY KEY NOT NULL,
+	"library_name" varchar NOT NULL,
 	"location_name" varchar NOT NULL,
 	"traffic_count" integer NOT NULL,
-	"traffic_percentage" numeric NOT NULL,
+	"traffic_percentage" real NOT NULL,
 	"timestamp" timestamp NOT NULL
 );
 --> statement-breakpoint
@@ -10,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "library_traffic_history" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"location_id" integer NOT NULL,
 	"traffic_count" integer NOT NULL,
-	"traffic_percentage" numeric NOT NULL,
+	"traffic_percentage" real NOT NULL,
 	"timestamp" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

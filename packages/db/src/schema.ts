@@ -749,6 +749,7 @@ export const libraryTraffic = pgTable(
   "library_traffic",
   {
     id: integer("id").primaryKey(),
+    libraryName: varchar("library_name").notNull(),
     locationName: varchar("location_name").notNull(),
     trafficCount: integer("traffic_count").notNull(),
     trafficPercentage: real("traffic_percentage").notNull(),
