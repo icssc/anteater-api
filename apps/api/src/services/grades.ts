@@ -1,14 +1,15 @@
 import type { aggregateGradesSchema, gradesQuerySchema, rawGradeSchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, avg, eq, gt, gte, inArray, lte, or, sql, sum } from "@packages/db/drizzle";
+import { and, avg, eq, gt, inArray, or, sql, sum } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocSection,
   websocSectionGrade,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
+
+import { buildDivisionQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
@@ -32,57 +33,8 @@ function buildQuery(input: GradesServiceInput) {
   if (input.sectionCode) {
     conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode)));
   }
-  if (input.division) {
-    switch (input.division) {
-      case "LowerDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
-        );
-        break;
-      case "UpperDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
-        );
-        break;
-      case "Graduate":
-        conditions.push(gte(websocCourse.courseNumeric, 200));
-        break;
-    }
-  }
-  if (input.ge) {
-    switch (input.ge) {
-      case "GE-1A":
-        conditions.push(isTrue(websocCourse.isGE1A));
-        break;
-      case "GE-1B":
-        conditions.push(isTrue(websocCourse.isGE1B));
-        break;
-      case "GE-2":
-        conditions.push(isTrue(websocCourse.isGE2));
-        break;
-      case "GE-3":
-        conditions.push(isTrue(websocCourse.isGE3));
-        break;
-      case "GE-4":
-        conditions.push(isTrue(websocCourse.isGE4));
-        break;
-      case "GE-5A":
-        conditions.push(isTrue(websocCourse.isGE5A));
-        break;
-      case "GE-5B":
-        conditions.push(isTrue(websocCourse.isGE5B));
-        break;
-      case "GE-6":
-        conditions.push(isTrue(websocCourse.isGE6));
-        break;
-      case "GE-7":
-        conditions.push(isTrue(websocCourse.isGE7));
-        break;
-      case "GE-8":
-        conditions.push(isTrue(websocCourse.isGE8));
-        break;
-    }
-  }
+  conditions.push(...buildDivisionQuery(input));
+  conditions.push(...buildGEQuery(input));
   if (input.excludePNP) {
     conditions.push(
       or(

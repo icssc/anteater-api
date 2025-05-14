@@ -17,6 +17,12 @@ import {
 import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
+import {
+  buildDaysOfWeekQuery,
+  buildDivisionQuery,
+  buildGEQuery,
+  buildMultiCourseNumberQuery,
+} from "./util.ts";
 
 const termOrder = {
   Winter: 0,
@@ -33,65 +39,14 @@ function buildQuery(input: WebsocServiceInput) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
   ];
-  if (input.ge) {
-    switch (input.ge) {
-      case "GE-1A":
-        conditions.push(isTrue(websocCourse.isGE1A));
-        break;
-      case "GE-1B":
-        conditions.push(isTrue(websocCourse.isGE1B));
-        break;
-      case "GE-2":
-        conditions.push(isTrue(websocCourse.isGE2));
-        break;
-      case "GE-3":
-        conditions.push(isTrue(websocCourse.isGE3));
-        break;
-      case "GE-4":
-        conditions.push(isTrue(websocCourse.isGE4));
-        break;
-      case "GE-5A":
-        conditions.push(isTrue(websocCourse.isGE5A));
-        break;
-      case "GE-5B":
-        conditions.push(isTrue(websocCourse.isGE5B));
-        break;
-      case "GE-6":
-        conditions.push(isTrue(websocCourse.isGE6));
-        break;
-      case "GE-7":
-        conditions.push(isTrue(websocCourse.isGE7));
-        break;
-      case "GE-8":
-        conditions.push(isTrue(websocCourse.isGE8));
-        break;
-    }
-  }
+  conditions.push(...buildGEQuery(input));
   if (input.department) {
     conditions.push(eq(websocDepartment.deptCode, input.department));
   }
   if (input.courseTitle) {
     conditions.push(eq(websocCourse.courseTitle, input.courseTitle));
   }
-  if (input.courseNumber) {
-    const courseNumberConditions: Array<SQL | undefined> = [];
-    for (const num of input.courseNumber) {
-      switch (num._type) {
-        case "ParsedInteger":
-          courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
-          break;
-        case "ParsedString":
-          courseNumberConditions.push(eq(websocCourse.courseNumber, num.value));
-          break;
-        case "ParsedRange":
-          courseNumberConditions.push(
-            and(gte(websocCourse.courseNumeric, num.min), lte(websocCourse.courseNumeric, num.max)),
-          );
-          break;
-      }
-    }
-    conditions.push(or(...courseNumberConditions));
-  }
+  conditions.push(...buildMultiCourseNumberQuery(input));
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];
     for (const code of input.sectionCodes) {
@@ -111,58 +66,14 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
   }
-  if (input.days) {
-    const daysConditions: SQL[] = [];
-    for (const day of input.days) {
-      switch (day) {
-        case "M":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsMonday));
-          break;
-        case "Tu":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsTuesday));
-          break;
-        case "W":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsWednesday));
-          break;
-        case "Th":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsThursday));
-          break;
-        case "F":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsFriday));
-          break;
-        case "S":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsSaturday));
-          break;
-        case "Su":
-          daysConditions.push(isTrue(websocSectionMeeting.meetsSunday));
-          break;
-      }
-    }
-    conditions.push(or(...daysConditions));
-  }
+  conditions.push(...buildDaysOfWeekQuery(websocSectionMeeting, input));
   if (input.building) {
     conditions.push(eq(websocLocation.building, input.building.toUpperCase()));
   }
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  if (input.division) {
-    switch (input.division) {
-      case "LowerDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
-        );
-        break;
-      case "UpperDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
-        );
-        break;
-      case "Graduate":
-        conditions.push(gte(websocCourse.courseNumeric, 200));
-        break;
-    }
-  }
+  conditions.push(...buildDivisionQuery(input));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }
@@ -387,18 +298,22 @@ function transformTerm(term: { year: string; quarter: Term }) {
 export class WebsocService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getWebsocResponse(input: WebsocServiceInput) {
-    return this.db
-      .select({
-        school: getTableColumns(websocSchool),
-        department: getTableColumns(websocDepartment),
-        course: getTableColumns(websocCourse),
-        section: getTableColumns(websocSection),
-      })
+  makeSelect(
+    selection: Parameters<ReturnType<typeof database>["select"]>[0],
+    includeFilterTables?: boolean,
+  ) {
+    const base = this.db
+      .select(selection)
       .from(websocSchool)
       .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
       .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
-      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId));
+
+    if (!includeFilterTables) {
+      return base;
+    }
+
+    return base
       .leftJoin(
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
@@ -412,8 +327,34 @@ export class WebsocService {
         websocSectionMeetingToLocation,
         eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
       )
-      .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
+      .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
+  }
+
+  async getWebsocResponse(input: WebsocServiceInput) {
+    // final selection of actual data we need to process on our end
+    const selectionToReturn = {
+      school: getTableColumns(websocSchool),
+      department: getTableColumns(websocDepartment),
+      course: getTableColumns(websocCourse),
+      section: getTableColumns(websocSection),
+    };
+
+    if (input.includeRelatedCourses) {
+      // pull only the course IDs; don't need any data from subquery
+      const sub = this.makeSelect({ courseId: websocCourse.id }, true)
+        .where(buildQuery(input))
+        .limit(1000)
+        .as("sub");
+
+      return this.makeSelect(selectionToReturn, false)
+        .rightJoin(sub, eq(websocCourse.id, sub.courseId))
+        .then((rows) => rows as Row[])
+        .then(transformRows);
+    }
+
+    return this.makeSelect(selectionToReturn, true)
       .where(buildQuery(input))
+      .then((rows) => rows as Row[])
       .then(transformRows);
   }
 
