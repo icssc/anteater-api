@@ -420,9 +420,6 @@ importers:
       dotenv:
         specifier: 16.4.5
         version: 16.4.5
-      dotenv-cli:
-        specifier: 7.4.2
-        version: 7.4.2
       drizzle-kit:
         specifier: 0.27.0
         version: 0.27.0
@@ -4247,7 +4244,6 @@ packages:
   wrangler@3.100.0:
     resolution: {integrity: sha512-+nsZK374Xnp2BEQQuB/18pnObgsOey0AHVlg75pAdwNaKAmB2aa0/E5rFb7i89DiiwFYoZMz3cARY1UKcm/WQQ==}
     engines: {node: '>=16.17.0'}
-    deprecated: Downgrade to 3.99.0
     hasBin: true
     peerDependencies:
       '@cloudflare/workers-types': ^4.20241230.0
