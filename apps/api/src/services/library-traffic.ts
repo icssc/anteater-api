@@ -1,16 +1,18 @@
-import type { libraryTrafficQuerySchema } from "$schema";
+import { libraryTrafficEntrySchema, type libraryTrafficQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq } from "@packages/db/drizzle";
 import { libraryTraffic } from "@packages/db/schema";
 import type { z } from "zod";
 
 type LibraryTrafficServiceInput = z.infer<typeof libraryTrafficQuerySchema>;
-type LibraryTrafficServiceOutput = typeof libraryTraffic.$inferSelect;
+type LibraryTrafficServiceOutput = z.infer<typeof libraryTrafficEntrySchema>;
 
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  getLibraryTraffic(input: LibraryTrafficServiceInput): Promise<LibraryTrafficServiceOutput[]> {
+  async getLibraryTraffic(
+    input: LibraryTrafficServiceInput,
+  ): Promise<LibraryTrafficServiceOutput[]> {
     const queryParams = [];
 
     if (input.libraryName) {
@@ -21,7 +23,7 @@ export class LibraryTrafficService {
       queryParams.push(eq(libraryTraffic.locationName, input.locationName));
     }
 
-    return this.db
+    const rows = await this.db
       .select({
         id: libraryTraffic.id,
         libraryName: libraryTraffic.libraryName,
@@ -32,5 +34,7 @@ export class LibraryTrafficService {
       })
       .from(libraryTraffic)
       .where(queryParams.length ? and(...queryParams) : undefined);
+
+    return rows.map((r) => libraryTrafficEntrySchema.parse(r));
   }
 }
