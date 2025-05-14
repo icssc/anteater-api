@@ -494,7 +494,7 @@ const doChunkUpsert = async (
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
 
-    const to_insert = sql.join(
+    const enrollmentDataToInsert = sql.join(
       mappedSections
         .map(({ sectionCode, ...rest }) => {
           const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
@@ -527,34 +527,34 @@ const doChunkUpsert = async (
       sql.raw(", "),
     );
 
-    const lmao = await tx.execute(
+    const enrollmentInsert = await tx.execute(
       sql`
-      insert into websoc_section_enrollment_2 (section_id, year, quarter, max_capacity, num_currently_total_enrolled,
+      insert into websoc_section_enrollment (section_id, year, quarter, max_capacity, num_currently_total_enrolled,
                                                num_on_waitlist, num_waitlist_cap, num_requested, num_new_only_reserved,
                                                status)
-      SELECT hi.section_id::uuid,
-             hi.year,
-             hi.quarter::term,
-             hi.max_capacity::int,
-             hi.num_currently_total_enrolled::int,
-             hi.num_on_waitlist::int,
-             hi.num_waitlist_cap::int,
-             hi.num_requested::int,
-             hi.num_new_only_reserved::int,
-             hi.status::websoc_status
-      from (VALUES ${to_insert}) as hi(section_id, year, quarter, max_capacity,
+      SELECT temp.section_id::uuid,
+             temp.year,
+             temp.quarter::term,
+             temp.max_capacity::int,
+             temp.num_currently_total_enrolled::int,
+             temp.num_on_waitlist::int,
+             temp.num_waitlist_cap::int,
+             temp.num_requested::int,
+             temp.num_new_only_reserved::int,
+             temp.status::websoc_status
+      from (VALUES ${enrollmentDataToInsert}) as temp(section_id, year, quarter, max_capacity,
                                        num_currently_total_enrolled,
                                        num_on_waitlist, num_waitlist_cap, num_requested,
                                        num_new_only_reserved,
                                        status)
-             left join websoc_section_enrollment_2 on hi.section_id::uuid = websoc_section_enrollment_2.section_id and
-                                                      websoc_section_enrollment_2.created_at >
+             left join websoc_section_enrollment on temp.section_id::uuid = websoc_section_enrollment.section_id and
+                                                      websoc_section_enrollment.created_at >
                                                       NOW() - interval ${sql.raw(`'${scrapeInterval}'`)}
-      where websoc_section_enrollment_2.section_id is null
-      RETURNING websoc_section_enrollment_2.id
+      where websoc_section_enrollment.section_id is null
+      RETURNING websoc_section_enrollment.id
     `.mapWith(websocSectionEnrollment.id),
     );
-    console.log(`Inserted ${lmao.length} enrollment entries`);
+    console.log(`Inserted ${enrollmentInsert.length} enrollment entries`);
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
