@@ -92,6 +92,13 @@
       "when": 1744672816733,
       "tag": "0012_ap_exams_units_not_null",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1747337370614,
+      "tag": "0013_search_index_dept",
+      "breakpoints": true
     }
   ]
 }
