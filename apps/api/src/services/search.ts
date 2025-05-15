@@ -17,6 +17,7 @@ const COURSES_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.id}, '')), 'A') ||
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.department}, '')), 'B') ||
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.departmentAlias}, '')), 'B') ||
+  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.shortenedDept}, '')), 'B') ||
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.courseNumber}, '')), 'B') ||
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.courseNumeric}::TEXT, '')), 'B') ||
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.title}, '')), 'C') ||
