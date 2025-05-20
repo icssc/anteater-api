@@ -97,17 +97,65 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   return null;
 }
 
+type ScrapeStatus = "active" | "idle" | "skip";
+
+export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
+  const pacificTime = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
+  );
+  const hour = pacificTime.getHours();
+  const day = pacificTime.getDay();
+
+  if (library === "LL" || library === "SL") {
+    if (day >= 1 && day <= 4 && hour >= 8 && hour <= 23) return "active"; // Mon–Thu: 8am–11pm
+    if (day === 5 && hour >= 8 && hour <= 18) return "active"; // Fri: 8am–6pm
+    if (day === 6 && hour >= 13 && hour <= 17) return "active"; // Sat: 1pm–5pm
+    if (day === 0 && hour >= 13 && hour <= 21) return "active"; // Sun: 1pm–9pm
+    return "idle";
+  }
+
+  if (library === "LGSC") {
+    if (day >= 1 && day <= 4 && (hour >= 8 || hour <= 3)) return "active"; // Mon–Thu: 8am–3am
+    if (day === 5 && hour >= 8 && hour <= 21) return "active"; // Fri: 8am–9pm
+    if (day === 6 && hour >= 17 && hour <= 21) return "active"; // Sat: 5pm–9pm
+    if (day === 0 && (hour >= 17 || hour <= 3)) return "active"; // Sun: 5pm–3am
+    return "idle";
+  }
+  return "skip";
+}
+
 export async function doScrape(DB_URL: string) {
-  console.log("Starting library traffic scrape …");
+  console.log("Starting library traffic scrape.");
   const db = database(DB_URL);
   const lookup = await collectLocationMeta();
 
+  const now = new Date();
+  const minutes = now.getMinutes();
+
   for (const [id, meta] of Object.entries(lookup)) {
+    const status = getScrapeStatus(
+      meta.libraryName === "Langson Library"
+        ? "LL"
+        : meta.libraryName === "Science Library"
+          ? "SL"
+          : "LGSC",
+    );
+
+    if (status === "skip") {
+      console.error(`Skipping ${meta.libraryName} — unknown library code.`);
+      continue;
+    }
+
+    if (status === "idle" && minutes !== 0) {
+      console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
+      continue;
+    }
+
     const data = await fetchLocation(id);
     if (!data) continue;
 
     console.log(
-      `[${meta.libraryName.padEnd(18)}] "${meta.locationLabel}": ` +
+      `[${meta.libraryName.padEnd(20)}] "${meta.locationLabel}": ` +
         `count=${data.count}, pct=${data.percentage}`,
     );
 
