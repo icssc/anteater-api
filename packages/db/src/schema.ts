@@ -929,12 +929,15 @@ export const studyRoomView = pgMaterializedView("study_room_view").as((qb) => {
       description: studyRoom.description,
       directions: studyRoom.directions,
       techEnhanced: studyRoom.techEnhanced,
-      slots: sql`ARRAY_AGG(JSONB_BUILD_OBJECT(
-      'studyRoomId', ${studyRoomSlot.studyRoomId},
-      'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
-      'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
-      'isAvailable', ${studyRoomSlot.isAvailable}
-    ))`.as("slots"),
+      slots:
+        sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
+        ELSE JSONB_BUILD_OBJECT(
+          'studyRoomId', ${studyRoomSlot.studyRoomId},
+          'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
+          'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
+          'isAvailable', ${studyRoomSlot.isAvailable}
+        )
+        END), ARRAY[]::JSONB[]), NULL)`.as("slots"),
     })
     .from(studyRoom)
     .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
