@@ -1,5 +1,5 @@
 {
-  "id": "a8230d50-e3f7-4ca3-b8c3-63c377847df9",
+  "id": "377e089d-8452-46d4-89b6-05854b62f3c1",
   "prevId": "0f36315b-6278-4d7d-ae58-fd9c53bca9ec",
   "version": "7",
   "dialect": "postgresql",
@@ -505,7 +505,7 @@
           "name": "course_search_index",
           "columns": [
             {
-              "expression": "(\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"id\", '')), 'A') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"department\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"department_alias\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"course_number\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"course_numeric\"::TEXT, '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"title\", '')), 'C') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"description\", '')), 'D')\n)",
+              "expression": "(\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"id\", '')), 'A') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"department\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"department_alias\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"shortened_dept\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"course_number\", '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"course_numeric\"::TEXT, '')), 'B') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"title\", '')), 'C') ||\n SETWEIGHT(TO_TSVECTOR('english', COALESCE(\"description\", '')), 'D')\n)",
               "asc": true,
               "isExpression": true,
               "nulls": "last"
@@ -859,148 +859,6 @@
           "tableFrom": "larc_section",
           "tableTo": "websoc_course",
           "columnsFrom": ["course_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic": {
-      "name": "library_traffic",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "library_name": {
-          "name": "library_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location_name": {
-          "name": "location_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "library_traffic_location_name_index": {
-          "name": "library_traffic_location_name_index",
-          "columns": [
-            {
-              "expression": "location_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic_history": {
-      "name": "library_traffic_history",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "location_id": {
-          "name": "location_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "library_traffic_history_location_id_timestamp_index": {
-          "name": "library_traffic_history_location_id_timestamp_index",
-          "columns": [
-            {
-              "expression": "location_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "timestamp",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "library_traffic_history_location_id_library_traffic_id_fk": {
-          "name": "library_traffic_history_location_id_library_traffic_id_fk",
-          "tableFrom": "library_traffic_history",
-          "tableTo": "library_traffic",
-          "columnsFrom": ["location_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"

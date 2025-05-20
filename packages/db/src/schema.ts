@@ -541,6 +541,7 @@ export const course = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.department}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.departmentAlias}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.shortenedDept}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumber}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumeric}::TEXT, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'C') ||
