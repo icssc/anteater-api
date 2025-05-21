@@ -603,6 +603,47 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
   return Array.from(new Set(programPaths));
 }
 
+/*
+ * Transforms the original sample program format to have a Fall, Winter, Spring structure
+ * @param sampleYears The original sample years data from the scraper
+ * @returns The transformed data with Fall, Winter, Spring structure
+ */
+function transformToTermStructure(sampleYears: Array<{ year: string; curriculum: string[][] }>): {
+  sampleProgram: Array<{ Fall: string[]; Winter: string[]; Spring: string[] }>;
+} {
+  const transformedProgram: Array<{ Fall: string[]; Winter: string[]; Spring: string[] }> = [];
+
+  for (const yearData of sampleYears) {
+    const yearTerms: { Fall: string[]; Winter: string[]; Spring: string[] } = {
+      Fall: [],
+      Winter: [],
+      Spring: [],
+    };
+
+    const curriculum = yearData.curriculum;
+
+    for (const row of curriculum) {
+      if (row.length >= 1 && row[0].trim()) {
+        yearTerms.Fall.push(row[0].trim());
+      }
+
+      if (row.length >= 2 && row[1].trim()) {
+        yearTerms.Winter.push(row[1].trim());
+      }
+
+      if (row.length >= 3 && row[2].trim()) {
+        yearTerms.Spring.push(row[2].trim());
+      }
+    }
+
+    transformedProgram.push(yearTerms);
+  }
+
+  return {
+    sampleProgram: transformedProgram,
+  };
+}
+
 async function scrapeSamplePrograms(programPath: string) {
   const url = `${CATALOGUE_URL}${programPath}`;
   const html = await fetchWithDelay(url);
@@ -619,7 +660,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
   const mainProgramTable = sampleProgramContainer.find("table.sc_plangrid");
 
-  if (sampleProgramContainer.children("table.sc_plangrid") > 0) {
+  if (sampleProgramContainer.children("table.sc_plangrid").length > 0) {
     let currentYear: string | null = null;
     let currentCurriculum: string[][] = [];
 
@@ -683,7 +724,22 @@ async function scrapeSamplePrograms(programPath: string) {
     });
   }
   if (sampleYears.length > 0) {
-    const res = [{ programName: programName, sampleProgram: sampleYears }];
+    // const res = [{ programName: programName, sampleProgram: sampleYears }];
+    // console.log(JSON.stringify(res, null, 2));
+    const transformedTermsResult = transformToTermStructure(sampleYears);
+    const combinedProgram = [];
+
+    for (let i = 0; i < sampleYears.length; i++) {
+      combinedProgram.push({
+        year: sampleYears[i].year,
+        ...transformedTermsResult.sampleProgram[i],
+      });
+    }
+
+    const res = {
+      programName: programName,
+      sampleProgram: combinedProgram,
+    };
     console.log(JSON.stringify(res, null, 2));
   }
 }
