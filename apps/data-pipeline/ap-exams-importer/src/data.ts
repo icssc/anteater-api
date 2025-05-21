@@ -597,8 +597,8 @@ export default {
       },
     ],
   },
-  "AP PHYSICS C:MECH": {
-    catalogueName: "AP Physics C: Mechanics",
+  "AP Physics C: Mechanics": {
+    catalogueName: "AP PHYSICS C:MECH",
     rewards: [
       // Elective credit only
       {
