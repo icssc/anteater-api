@@ -1,5 +1,3 @@
-import { existsSync, statSync, writeFileSync } from "node:fs";
-import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
@@ -10,7 +8,6 @@ import { course, prerequisite, websocDepartment, websocSchool } from "@packages/
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
-import { hasChildren } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
@@ -571,67 +568,206 @@ async function patchH32(meta: {
   }
 }
 
+async function fetchSchoolsPath(catalogue: string) {
+  const html = await fetchWithDelay(`${catalogue}/schoolsandprograms/`);
+  const $ = load(html);
+  const paths: string[] = [];
+  $("#textcontainer h4 a").each((_, a) => {
+    const href = $(a).attr("href");
+    if (href?.startsWith("/")) {
+      paths.push(href);
+    }
+  });
+  return paths;
+}
+
+async function collectProgramPathsFromSchools(): Promise<string[]> {
+  const schools = await fetchSchoolsPath(CATALOGUE_URL);
+  const programPaths: string[] = [];
+
+  for (const schoolPath of schools) {
+    const html = await fetchWithDelay(`${CATALOGUE_URL}${schoolPath}`);
+    const $ = load(html);
+
+    const container = $("#majorsminorsandgraduateprogramstextcontainer");
+    if (!container.length) {
+      continue;
+    }
+    container.find("ul li a").each((_, a) => {
+      const href = $(a).attr("href");
+      if (href?.startsWith("/")) {
+        programPaths.push(href);
+      }
+    });
+  }
+  return Array.from(new Set(programPaths));
+}
+
+async function scrapeSamplePrograms(programPath: string) {
+  const url = `${CATALOGUE_URL}${programPath}`;
+  const html = await fetchWithDelay(url);
+  const $ = load(html);
+
+  const programName = $("h1.page-title").text().normalize("NFKD").split("(")[0].trim();
+  const sampleProgramContainer = $("#sampleprogramtextcontainer");
+
+  const sampleYears: { year: string; curriculum: string[][] }[] = [];
+
+  if (!sampleProgramContainer.length) {
+    return;
+  }
+
+  const mainProgramTable = sampleProgramContainer.find("table.sc_plangrid");
+
+  if (sampleProgramContainer.children("table.sc_plangrid") > 0) {
+    let currentYear: string | null = null;
+    let currentCurriculum: string[][] = [];
+
+    mainProgramTable.find("tr").each((_j, tr_el) => {
+      const $tr = $(tr_el);
+
+      if ($tr.hasClass("plangridyear")) {
+        const yearText = $tr.find("th").text().trim();
+        if (yearText) {
+          if (currentYear !== null) {
+            sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
+          }
+          currentYear = yearText;
+          currentCurriculum = [];
+        }
+      } else if ($tr.hasClass("plangridterm")) {
+      } else {
+        const rowData: string[] = [];
+        $tr.find("td").each((_k, td_el) => {
+          rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
+        });
+        if (rowData.some((cell) => cell.length > 0)) {
+          currentCurriculum.push(rowData);
+        }
+      }
+    });
+
+    if (currentYear !== null) {
+      sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
+    }
+  } else {
+    sampleProgramContainer.find("h4").each((_i, h4_el) => {
+      const yearTitle = $(h4_el).text().trim();
+      const contentDiv = $(h4_el).next("div");
+      const contentTable = contentDiv.find("table.sc_plangrid");
+
+      if (yearTitle && contentTable.length) {
+        logger.debug(`Found H4 "${yearTitle}" with nested table for ${programPath}.`);
+        const curriculum: string[][] = [];
+
+        contentTable.find("tr").each((_j, tr_el) => {
+          const $tr = $(tr_el);
+
+          if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) {
+            return;
+          }
+          if ($tr.hasClass("plangridterm")) {
+            return;
+          }
+
+          const rowData: string[] = [];
+          $tr.find("th, td").each((_k, cell_el) => {
+            rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
+          });
+          if (rowData.some((cell) => cell.length > 0)) {
+            curriculum.push(rowData);
+          }
+        });
+        sampleYears.push({ year: yearTitle, curriculum });
+      }
+    });
+  }
+  if (sampleYears.length > 0) {
+    const res = [{ programName: programName, sampleProgram: sampleYears }];
+    console.log(JSON.stringify(res, null, 2));
+  }
+}
+
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
-  logger.info("course-scraper starting");
-  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
-  if (existsSync("./prerequisites.json")) {
-    const stats = statSync("./prerequisites.json");
-    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
-    if (readlineSync.keyInYNStrict("Use this dump?")) {
-      prerequisites = new Map(
-        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
-          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
-        ),
-      );
-      logger.info("Prerequisite dump loaded.");
-    }
-  }
-  if (!prerequisites.size) {
-    logger.info("Scraping prerequisites...");
-    prerequisites = await scrapePrerequisites();
-    writeFileSync(
-      "./prerequisites.json",
-      JSON.stringify(
-        Object.fromEntries(
-          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
-        ),
-      ),
-    );
-    logger.info("Wrote prerequisites to file.");
-  }
-  logger.info("Scraping courses...");
-  logger.info("Scraping list of departments...");
-  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
-  const $ = load(allCoursesText);
-  const departments = new Map(
-    $("#atozindex")
-      .children()
-      .toArray()
-      .filter((el) => el.type === "tag" && el.name === "ul")
-      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
-      .map((el): [string, string] | undefined =>
-        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
-          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
-          : undefined,
-      )
-      .filter((entry) => !!entry),
+  const program = console.log(
+    await scrapeSamplePrograms("/clairetrevorschoolofthearts/departmentofdance/dance_ba/"),
   );
-  logger.info(`Found ${departments.size} departments to scrape`);
-  for (const [deptCode, deptPath] of departments) {
-    await scrapeCoursesInDepartment({
-      db,
-      deptCode,
-      deptPath,
-      prereqs: prerequisites.get(deptCode),
-    });
-  }
-  logger.info("Running I&C SCI 32A/H32 shim...");
-  await patchH32({ db });
-  logger.info("All done!");
-  exit(0);
+  console.log(
+    await scrapeSamplePrograms(
+      "/charliedunlopschoolofbiologicalsciences/departmentofmolecularbiologyandbiochemistry/biochemistryandmolecularbiology_bs",
+    ),
+  );
+  ///  const programs = await collectProgramPathsFromSchools();
+  //  logger.info(`Found ${programs.size} departments to scrape`);
+  //  for (const program of programs) {
+  //    console.log(await scrapeSamplePrograms(program));
+  //  }
 }
+
+//async function main() {
+//  const url = process.env.DB_URL;
+//  if (!url) throw new Error("DB_URL not found");
+//  const db = database(url);
+//  logger.info("course-scraper starting");
+//  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
+//  if (existsSync("./prerequisites.json")) {
+//    const stats = statSync("./prerequisites.json");
+//    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
+//    if (readlineSync.keyInYNStrict("Use this dump?")) {
+//      prerequisites = new Map(
+//        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
+//          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
+//        ),
+//      );
+//      logger.info("Prerequisite dump loaded.");
+//    }
+//  }
+//  if (!prerequisites.size) {
+//    logger.info("Scraping prerequisites...");
+//    prerequisites = await scrapePrerequisites();
+//    writeFileSync(
+//      "./prerequisites.json",
+//      JSON.stringify(
+//        Object.fromEntries(
+//          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
+//        ),
+//      ),
+//    );
+//    logger.info("Wrote prerequisites to file.");
+//  }
+//  logger.info("Scraping courses...");
+//  logger.info("Scraping list of departments...");
+//  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
+//  const $ = load(allCoursesText);
+//  const departments = new Map(
+//    $("#atozindex")
+//      .children()
+//      .toArray()
+//      .filter((el) => el.type === "tag" && el.name === "ul")
+//      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
+//      .map((el): [string, string] | undefined =>
+//        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
+//          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
+//          : undefined,
+//      )
+//      .filter((entry) => !!entry),
+//  );
+//  logger.info(`Found ${departments.size} departments to scrape`);
+//  for (const [deptCode, deptPath] of departments) {
+//    await scrapeCoursesInDepartment({
+//      db,
+//      deptCode,
+//      deptPath,
+//      prereqs: prerequisites.get(deptCode),
+//    });
+//  }
+//  logger.info("Running I&C SCI 32A/H32 shim...");
+//  await patchH32({ db });
+//  logger.info("All done!");
+//  exit(0);
+//}
 
 main().then();
