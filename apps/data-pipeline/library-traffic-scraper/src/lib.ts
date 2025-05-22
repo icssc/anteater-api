@@ -97,6 +97,9 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   return null;
 }
 
+// - "active": Library location is open — perform scrape every 15 minutes.
+// - "idle": Library is closed — perform scrape every 60 minutes.
+// - "skip": Library is nonexistent — do not scrape at all.
 type ScrapeStatus = "active" | "idle" | "skip";
 
 export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
@@ -107,18 +110,18 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
   const day = pacificTime.getDay();
 
   if (library === "LL" || library === "SL") {
-    if (day >= 1 && day <= 4 && hour >= 8 && hour <= 23) return "active"; // Mon–Thu: 8am–11pm
-    if (day === 5 && hour >= 8 && hour <= 18) return "active"; // Fri: 8am–6pm
-    if (day === 6 && hour >= 13 && hour <= 17) return "active"; // Sat: 1pm–5pm
-    if (day === 0 && hour >= 13 && hour <= 21) return "active"; // Sun: 1pm–9pm
+    if (day >= 1 && day <= 4 && hour >= 8 && hour < 23) return "active"; // Mon–Thu: 8am–11pm
+    if (day === 5 && hour >= 8 && hour < 18) return "active"; // Fri: 8am–6pm
+    if (day === 6 && hour >= 13 && hour < 17) return "active"; // Sat: 1pm–5pm
+    if (day === 0 && hour >= 13 && hour < 21) return "active"; // Sun: 1pm–9pm
     return "idle";
   }
 
   if (library === "LGSC") {
-    if (day >= 1 && day <= 4 && (hour >= 8 || hour <= 3)) return "active"; // Mon–Thu: 8am–3am
-    if (day === 5 && hour >= 8 && hour <= 21) return "active"; // Fri: 8am–9pm
-    if (day === 6 && hour >= 17 && hour <= 21) return "active"; // Sat: 5pm–9pm
-    if (day === 0 && (hour >= 17 || hour <= 3)) return "active"; // Sun: 5pm–3am
+    if (day >= 1 && day <= 4 && (hour >= 8 || hour < 3)) return "active"; // Mon–Thu: 8am–3am
+    if (day === 5 && hour >= 8 && hour < 21) return "active"; // Fri: 8am–9pm
+    if (day === 6 && hour >= 17 && hour < 21) return "active"; // Sat: 5pm–9pm
+    if (day === 0 && (hour >= 17 || hour < 3)) return "active"; // Sun: 5pm–3am
     return "idle";
   }
   return "skip";
@@ -129,24 +132,24 @@ export async function doScrape(DB_URL: string) {
   const db = database(DB_URL);
   const lookup = await collectLocationMeta();
 
-  const now = new Date();
-  const minutes = now.getMinutes();
+  const dateNow = new Date();
+  const minutes = dateNow.getMinutes();
 
   for (const [id, meta] of Object.entries(lookup)) {
-    const status = getScrapeStatus(
-      meta.libraryName === "Langson Library"
-        ? "LL"
-        : meta.libraryName === "Science Library"
-          ? "SL"
-          : "LGSC",
-    );
+    const libraryCodeMap: Record<string, "LL" | "SL" | "LGSC"> = {
+      "Langson Library": "LL",
+      "Science Library": "SL",
+      "Gateway Study Center": "LGSC",
+    };
+
+    const status = getScrapeStatus(libraryCodeMap[meta.libraryName]);
 
     if (status === "skip") {
       console.error(`Skipping ${meta.libraryName} — unknown library code.`);
       continue;
     }
 
-    if (status === "idle" && minutes !== 0) {
+    if (status === "idle" && minutes > 5 && minutes < 55) {
       console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
       continue;
     }
