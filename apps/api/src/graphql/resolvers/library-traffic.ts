@@ -12,7 +12,7 @@ export const libraryTrafficResolvers = {
 
       if (res.length === 0) {
         throw new GraphQLError("Library traffic data not found: check for typos in query", {
-          extensions: { code: "NOT_FOUND" },
+          extensions: { code: "UNPROCESSABLE_ENTITY" },
         });
       }
 
