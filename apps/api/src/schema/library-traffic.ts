@@ -31,13 +31,10 @@ export const libraryTrafficEntrySchema = z.object({
     example: 57,
     description: "Number of people currently detected at the location",
   }),
-  trafficPercentage: z.coerce
-    .number()
-    .transform((v) => Number(v))
-    .openapi({
-      example: 0.33,
-      description: "Occupancy as a decimal percentage of total capacity (0 to 1)",
-    }),
+  trafficPercentage: z.coerce.number().openapi({
+    example: 0.33,
+    description: "Occupancy as a decimal percentage of total capacity (0 to 1)",
+  }),
   timestamp: z.coerce
     .date()
     .transform((d) => d.toISOString())
