@@ -136,20 +136,22 @@ export async function doScrape(DB_URL: string) {
   const minutes = dateNow.getMinutes();
 
   for (const [id, meta] of Object.entries(lookup)) {
-    const libraryCodeMap: Record<string, "LL" | "SL" | "LGSC"> = {
+    const libraryCodeMap = {
       "Langson Library": "LL",
       "Science Library": "SL",
       "Gateway Study Center": "LGSC",
-    };
+    } as const;
 
-    const status = getScrapeStatus(libraryCodeMap[meta.libraryName]);
+    const code = libraryCodeMap[meta.libraryName as keyof typeof libraryCodeMap];
+    const status = getScrapeStatus(code);
 
     if (status === "skip") {
       console.error(`Skipping ${meta.libraryName} — unknown library code.`);
       continue;
     }
 
-    if (status === "idle" && minutes > 5 && minutes < 55) {
+    // Scrape hourly within the first 15 minutes while library is closed.
+    if (status === "idle" && minutes >= 15) {
       console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
       continue;
     }
