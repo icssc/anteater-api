@@ -1,5 +1,5 @@
 {
-  "id": "2c3424ae-c941-4a35-9c21-2e81e5bdf015",
+  "id": "318832f2-3776-4b6e-9d3b-fe6fb254d573",
   "prevId": "377e089d-8452-46d4-89b6-05854b62f3c1",
   "version": "7",
   "dialect": "postgresql",
@@ -859,148 +859,6 @@
           "tableFrom": "larc_section",
           "tableTo": "websoc_course",
           "columnsFrom": ["course_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic": {
-      "name": "library_traffic",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "library_name": {
-          "name": "library_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location_name": {
-          "name": "location_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "library_traffic_location_name_index": {
-          "name": "library_traffic_location_name_index",
-          "columns": [
-            {
-              "expression": "location_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.library_traffic_history": {
-      "name": "library_traffic_history",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "location_id": {
-          "name": "location_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_count": {
-          "name": "traffic_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "traffic_percentage": {
-          "name": "traffic_percentage",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "library_traffic_history_location_id_timestamp_index": {
-          "name": "library_traffic_history_location_id_timestamp_index",
-          "columns": [
-            {
-              "expression": "location_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "timestamp",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "library_traffic_history_location_id_library_traffic_id_fk": {
-          "name": "library_traffic_history_location_id_library_traffic_id_fk",
-          "tableFrom": "library_traffic_history",
-          "tableTo": "library_traffic",
-          "columnsFrom": ["location_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -3719,7 +3577,7 @@
           "notNull": true
         }
       },
-      "definition": "select \"study_room\".\"id\", \"study_room\".\"name\", \"study_room\".\"capacity\", \"study_room\".\"location\", \"study_room\".\"description\", \"study_room\".\"directions\", \"study_room\".\"tech_enhanced\", ARRAY_AGG(JSONB_BUILD_OBJECT(\n      'studyRoomId', \"study_room_slot\".\"study_room_id\",\n      'start', to_json(\"study_room_slot\".\"start\" AT TIME ZONE 'America/Los_Angeles'),\n      'end', to_json(\"study_room_slot\".\"end\" AT TIME ZONE 'America/Los_Angeles'),\n      'isAvailable', \"study_room_slot\".\"is_available\"\n    )) as \"slots\" from \"study_room\" left join \"study_room_slot\" on \"study_room\".\"id\" = \"study_room_slot\".\"study_room_id\" group by \"study_room\".\"id\"",
+      "definition": "select \"study_room\".\"id\", \"study_room\".\"name\", \"study_room\".\"capacity\", \"study_room\".\"location\", \"study_room\".\"description\", \"study_room\".\"directions\", \"study_room\".\"tech_enhanced\", ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN \"study_room_slot\".\"study_room_id\" IS NULL THEN NULL\n        ELSE JSONB_BUILD_OBJECT(\n          'studyRoomId', \"study_room_slot\".\"study_room_id\",\n          'start', to_json(\"study_room_slot\".\"start\" AT TIME ZONE 'America/Los_Angeles'),\n          'end', to_json(\"study_room_slot\".\"end\" AT TIME ZONE 'America/Los_Angeles'),\n          'isAvailable', \"study_room_slot\".\"is_available\"\n        )\n        END), ARRAY[]::JSONB[]), NULL) as \"slots\" from \"study_room\" left join \"study_room_slot\" on \"study_room\".\"id\" = \"study_room_slot\".\"study_room_id\" group by \"study_room\".\"id\"",
       "name": "study_room_view",
       "schema": "public",
       "isExisting": false,
