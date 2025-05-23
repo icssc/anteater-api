@@ -83,17 +83,17 @@ export const studyRoomsQuerySchema = z.object({
     description: 'If present, returned rooms will have this value for "techEnhanced"',
     example: true,
   }),
-  dates: z
+  dates: z.coerce
     .string()
     .transform((l) => l.split(","))
-    .pipe(z.coerce.date())
+    .pipe(z.coerce.date().array())
     .optional()
     .openapi({
       description:
         "If present, a comma-separated list of YYYY-MM-DD dates on which slots must fall. The date(s) are interpreted in UCI time, America/Los_Angeles.",
       example: "2025-04-04,2025-04-07",
     }),
-  times: z
+  times: z.coerce
     .string()
     .transform((l) => l.split(","))
     .pipe(timeRangeSchema.array())
