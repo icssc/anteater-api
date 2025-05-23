@@ -39,10 +39,12 @@ export class StudyRoomsService {
         or(
           ...input.times.map(([lower, upper]) =>
             and(
+              // 1. the end time be later than the lower bound of the user-specified range; otherwise, the slot is certainly too early
               gt(
                 sql`(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles')::TIME`,
                 sql`(${lower.getUTCHours().toString().padStart(2, "0")} || ${lower.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
               ),
+              // 2. the start time must be earlier than the upper bound of the user-specified range; otherwise, the slot is certainly too late
               lt(
                 sql`(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles')::TIME`,
                 sql`(${upper.getUTCHours().toString().padStart(2, "0")} || ${upper.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
