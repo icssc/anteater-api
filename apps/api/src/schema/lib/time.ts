@@ -1,6 +1,8 @@
 import { z } from "@hono/zod-openapi";
 
-const TIME_REGEX = /^(\d{1,2}):(\d{2})([ap]m?)?$/i;
+const TIME_REGEX_PART = "(\\d{1,2}):(\\d{2})([ap]m?)?";
+export const TIME_REGEX = new RegExp(`^${TIME_REGEX_PART}$`, "i");
+export const TIME_RANGE_REGEX = new RegExp(`^${TIME_REGEX_PART}-${TIME_REGEX_PART}$`, "i");
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
 
@@ -53,3 +55,13 @@ export const timeSchema = z
   .regex(TIME_REGEX)
   .openapi({ description: "Time string in 12 or 24 hour format", example: "2:00pm" })
   .transform(transformTime);
+
+export const timeRangeSchema = z
+  .string()
+  .regex(TIME_RANGE_REGEX)
+  .transform((s) => s.split("-"))
+  .pipe(timeSchema.array().length(2))
+  .openapi({
+    description: "Time range; endpoints may be in 12 or 24 hour format",
+    example: "8:00am-14:00",
+  });

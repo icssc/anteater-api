@@ -1,7 +1,7 @@
 import type { studyRoomsQuerySchema } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, eq, gte, lte, or, sql } from "@packages/db/drizzle";
+import { and, eq, gt, gte, lt, lte, or, sql } from "@packages/db/drizzle";
 import { studyRoom, studyRoomSlot } from "@packages/db/schema";
 
 type StudyRoomsServiceInput = z.infer<typeof studyRoomsQuerySchema>;
@@ -15,13 +15,14 @@ export class StudyRoomsService {
   }
 
   async getStudyRooms(input: StudyRoomsServiceInput) {
+    await this.db.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
+
     const conditions = [];
     if (input.location) conditions.push(eq(studyRoom.location, input.location));
     if (input.capacityMin) conditions.push(gte(studyRoom.capacity, input.capacityMin));
     if (input.capacityMax) conditions.push(lte(studyRoom.capacity, input.capacityMax));
     if (input.isTechEnhanced !== undefined)
       conditions.push(eq(studyRoom.techEnhanced, input.isTechEnhanced));
-    console.log(input);
     if (input.dates)
       conditions.push(
         or(
@@ -29,6 +30,23 @@ export class StudyRoomsService {
             eq(
               sql`(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles')::DATE`,
               sql`${date.toISOString()}::DATE`,
+            ),
+          ),
+        ),
+      );
+    if (input.times)
+      conditions.push(
+        or(
+          ...input.times.map(([lower, upper]) =>
+            and(
+              gt(
+                sql`(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles')::TIME`,
+                sql`(${lower.getUTCHours().toString().padStart(2, "0")} || ${lower.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
+              ),
+              lt(
+                sql`(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles')::TIME`,
+                sql`(${upper.getUTCHours().toString().padStart(2, "0")} || ${upper.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
+              ),
             ),
           ),
         ),
