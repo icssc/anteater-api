@@ -63,12 +63,14 @@ export class StudyRoomsService {
         description: studyRoom.description,
         directions: studyRoom.directions,
         techEnhanced: studyRoom.techEnhanced,
+        url: sql`'https://spaces.lib.uci.edu/space/' || ${studyRoom.id}`,
         slots:
           sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
             ELSE JSONB_BUILD_OBJECT(
               'studyRoomId', ${studyRoomSlot.studyRoomId},
               'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
               'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
+              'url', 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || to_char(${studyRoomSlot.start}::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times', 
               'isAvailable', ${studyRoomSlot.isAvailable}
             )
             END), ARRAY[]::JSONB[]), NULL)`.as("slots"),

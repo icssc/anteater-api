@@ -11,6 +11,12 @@ export const slotSchema = z.object({
     description: "The end time of this slot",
     example: "2021-01-06T08:30:00-08:00",
   }),
+  url: z.string().openapi({
+    description:
+      "The link to this specific slot on the UCI Libraries site. " +
+      "This link focuses on the specific room containing this slot, eagerly selects this slot for booking, and jumps to the submit button.",
+    example: "https://spaces.lib.uci.edu/space/44704?date=2025-05-23T09:00Z#submit_times",
+  }),
   isAvailable: z.boolean().openapi({
     description: "Whether this slot is available",
     example: false,
@@ -46,6 +52,10 @@ export const studyRoomSchema = z.object({
     description:
       "Whether this room is tech enhanced, typically indicating the presence of an external monitor, AC outlets, and/or a PC.",
     example: true,
+  }),
+  url: z.string().openapi({
+    description: "The link to this specific room on the UCI Libraries site.",
+    example: "https://spaces.lib.uci.edu/space/44670",
   }),
   slots: z.array(slotSchema).openapi({
     description: "The time slots available for this room",
