@@ -3,6 +3,7 @@ export const studyRoomsGraphQLSchema = `#graphql
     studyRoomId: String!
     start: String!
     end: String!
+    url: String!
     isAvailable: Boolean!
   }
 
@@ -14,6 +15,7 @@ export const studyRoomsGraphQLSchema = `#graphql
     description: String
     directions: String
     techEnhanced: Boolean!
+    url: String!
     slots: [Slot]!
   }
 
@@ -22,6 +24,8 @@ export const studyRoomsGraphQLSchema = `#graphql
     capacityMin: Int
     capacityMax: Int
     isTechEnhanced: Boolean
+    dates: [String!],
+    times: [String!],
   }
 
   extend type Query {
