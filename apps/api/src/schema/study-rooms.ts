@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { timeRangeSchema, timeSchema } from "./lib";
+import { timeRangeSchema } from "./lib";
 
 export const slotSchema = z.object({
   studyRoomId: z.string(),
@@ -86,7 +86,7 @@ export const studyRoomsQuerySchema = z.object({
   dates: z
     .string()
     .transform((l) => l.split(","))
-    .pipe(timeSchema.array())
+    .pipe(z.coerce.date())
     .optional()
     .openapi({
       description:
