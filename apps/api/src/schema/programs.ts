@@ -50,6 +50,13 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const sampleProgramsQuerySchema = z.object({
+  programName: z.string().optional().openapi({
+    description: "A program name to query sample programs for",
+    example: "Computer Science B.S.",
+  }),
+});
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -272,4 +279,41 @@ export const ugradRequirementsResponseSchema = z.object({
   requirements: z
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),
+});
+
+export const sampleProgramsYearSchema = z.object({
+  year: z.string().openapi({
+    description: "Year of this sample program",
+  }),
+  Fall: z.array(z.string()).openapi({
+    description: "Fall course list of this sample program",
+  }),
+});
+
+export const sampleProgramsResponseSchema = z.object({
+  programName: z.string().openapi({
+    description: "Program name of this sample program",
+    example: "Biochemistry and Molecular Biology, B.S.",
+  }),
+  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+    description: "List of courses of this program",
+    example: [
+      {
+        year: "Freshman",
+        Fall: ["BIO SCI 93", "BIO SCI 93L", "CHEM 1A", "BIO SCI 2A"],
+        Winter: ["BIO SCI 94", "BIO SCI 94L", "CHEM 1B", "Lower-Division Writing1"],
+        Spring: [
+          "CHEM 1C- 1LC",
+          "STATS 7 or 8 (or Math 5A or General Education)",
+          "Lower-Division Writing1",
+        ],
+      },
+      {
+        year: "Sophomore",
+        Fall: ["BIO SCI 97", "CHEM 51A", "CHEM 1LD", "MATH 5A or 5B"],
+        Winter: ["BIO SCI 98", "CHEM 51B- 51LB", "MATH 5B (or General Education)"],
+        Spring: ["BIO SCI 99", "CHEM 51C- 51LC"],
+      },
+    ],
+  }),
 });

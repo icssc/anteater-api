@@ -1,3 +1,5 @@
+import { existsSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
@@ -8,6 +10,7 @@ import { course, prerequisite, websocDepartment, websocSchool } from "@packages/
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
+import { hasChildren } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
@@ -748,82 +751,68 @@ async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
-  const program = console.log(
-    await scrapeSamplePrograms("/clairetrevorschoolofthearts/departmentofdance/dance_ba/"),
+  logger.info("course-scraper starting");
+  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
+  if (existsSync("./prerequisites.json")) {
+    const stats = statSync("./prerequisites.json");
+    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
+    if (readlineSync.keyInYNStrict("Use this dump?")) {
+      prerequisites = new Map(
+        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
+          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
+        ),
+      );
+      logger.info("Prerequisite dump loaded.");
+    }
+  }
+  if (!prerequisites.size) {
+    logger.info("Scraping prerequisites...");
+    prerequisites = await scrapePrerequisites();
+    writeFileSync(
+      "./prerequisites.json",
+      JSON.stringify(
+        Object.fromEntries(
+          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
+        ),
+      ),
+    );
+    logger.info("Wrote prerequisites to file.");
+  }
+  logger.info("Scraping courses...");
+  logger.info("Scraping list of departments...");
+  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
+  const $ = load(allCoursesText);
+  const departments = new Map(
+    $("#atozindex")
+      .children()
+      .toArray()
+      .filter((el) => el.type === "tag" && el.name === "ul")
+      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
+      .map((el): [string, string] | undefined =>
+        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
+          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
+          : undefined,
+      )
+      .filter((entry) => !!entry),
   );
-  console.log(
-    await scrapeSamplePrograms(
-      "/charliedunlopschoolofbiologicalsciences/departmentofmolecularbiologyandbiochemistry/biochemistryandmolecularbiology_bs",
-    ),
-  );
-  ///  const programs = await collectProgramPathsFromSchools();
-  //  logger.info(`Found ${programs.size} departments to scrape`);
-  //  for (const program of programs) {
-  //    console.log(await scrapeSamplePrograms(program));
-  //  }
-}
+  logger.info(`Found ${departments.size} departments to scrape`);
+  for (const [deptCode, deptPath] of departments) {
+    await scrapeCoursesInDepartment({
+      db,
+      deptCode,
+      deptPath,
+      prereqs: prerequisites.get(deptCode),
+    });
+  }
+  logger.info("Running I&C SCI 32A/H32 shim...");
+  await patchH32({ db });
 
-//async function main() {
-//  const url = process.env.DB_URL;
-//  if (!url) throw new Error("DB_URL not found");
-//  const db = database(url);
-//  logger.info("course-scraper starting");
-//  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
-//  if (existsSync("./prerequisites.json")) {
-//    const stats = statSync("./prerequisites.json");
-//    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
-//    if (readlineSync.keyInYNStrict("Use this dump?")) {
-//      prerequisites = new Map(
-//        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
-//          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
-//        ),
-//      );
-//      logger.info("Prerequisite dump loaded.");
-//    }
-//  }
-//  if (!prerequisites.size) {
-//    logger.info("Scraping prerequisites...");
-//    prerequisites = await scrapePrerequisites();
-//    writeFileSync(
-//      "./prerequisites.json",
-//      JSON.stringify(
-//        Object.fromEntries(
-//          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
-//        ),
-//      ),
-//    );
-//    logger.info("Wrote prerequisites to file.");
-//  }
-//  logger.info("Scraping courses...");
-//  logger.info("Scraping list of departments...");
-//  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
-//  const $ = load(allCoursesText);
-//  const departments = new Map(
-//    $("#atozindex")
-//      .children()
-//      .toArray()
-//      .filter((el) => el.type === "tag" && el.name === "ul")
-//      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
-//      .map((el): [string, string] | undefined =>
-//        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
-//          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
-//          : undefined,
-//      )
-//      .filter((entry) => !!entry),
-//  );
-//  logger.info(`Found ${departments.size} departments to scrape`);
-//  for (const [deptCode, deptPath] of departments) {
-//    await scrapeCoursesInDepartment({
-//      db,
-//      deptCode,
-//      deptPath,
-//      prereqs: prerequisites.get(deptCode),
-//    });
-//  }
-//  logger.info("Running I&C SCI 32A/H32 shim...");
-//  await patchH32({ db });
-//  logger.info("All done!");
-//  exit(0);
-//}
+  const programs = await collectProgramPathsFromSchools();
+  for (const program of programs) {
+    console.log(await scrapeSamplePrograms(program));
+  }
+  logger.info("All done!");
+  exit(0);
+}
 
 main().then();

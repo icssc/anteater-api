@@ -3,13 +3,21 @@ import type {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  sampleProgramQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
-import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import {
+  degree,
+  major,
+  minor,
+  sampleProgram,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
@@ -121,5 +129,15 @@ export class ProgramsService {
       .limit(1);
 
     return orNull(got);
+  }
+
+  async getSamplePrograms(query: z.infer<typeof sampleProgramQuerySchema>) {
+    return this.db
+      .select({
+        programName: sampleProgram.programName,
+        sampleProgram: sampleProgram.sampleProgram,
+      })
+      .from(sampleProgram)
+      .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
   }
 }

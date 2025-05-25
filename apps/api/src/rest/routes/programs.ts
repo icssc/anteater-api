@@ -12,6 +12,8 @@ import {
   minorsResponseSchema,
   programRequirementSchema,
   responseSchema,
+  sampleProgramsQuerySchema,
+  sampleProgramsResponseSchema,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
   specializationsQuerySchema,
@@ -227,6 +229,32 @@ const ugradRequirements = createRoute({
   },
 });
 
+const samplePrograms = createRoute({
+  summary: "Sample Programs",
+  operationId: "getSamplePrograms",
+  tags: ["Programs"],
+  method: "get",
+  path: "/samplePrograms",
+  description: "List all available sample programs in UCI's current catalogue.",
+  request: { query: sampleProgramsQuerySchema },
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(sampleProgramsResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Sample program data not found",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
 programsRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
@@ -320,6 +348,19 @@ programsRouter.openapi(ugradRequirements, async (c) => {
         },
         404,
       );
+});
+
+programsRouter.openapi(samplePrograms, async (c) => {
+  const query = c.req.valid("query");
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getSamplePrograms(query);
+  if (query?.programName && !res.length) {
+    return c.json(
+      { ok: false, message: "No data for a sample program by that program major" },
+      404,
+    );
+  }
+  return c.json({ ok: true, data: sampleProgramsResponseSchema.parse(res) }, 200);
 });
 
 export { programsRouter };
