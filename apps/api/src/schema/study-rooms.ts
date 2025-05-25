@@ -102,6 +102,6 @@ export const studyRoomsQuerySchema = z.object({
       description:
         "If present, a comma-separated list of time ranges. Returned slots will overlap at least one of these ranges. " +
         "The bounds of ranges can be in 12- or 24-hour format.",
-      example: "12:00-12:45pm",
+      examples: ["10:00am-5:00pm", "10:00-17:00"],
     }),
 });
