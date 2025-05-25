@@ -63,5 +63,5 @@ export const timeRangeSchema = z
   .pipe(timeSchema.array().length(2))
   .openapi({
     description: "Time range; endpoints may be in 12 or 24 hour format",
-    example: "8:00am-14:00",
+    examples: ["8:00am-2:00pm", "08:00-14:00"],
   });
