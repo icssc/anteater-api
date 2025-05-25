@@ -53,7 +53,7 @@ const transformTime = (time: string, ctx: z.RefinementCtx): Date => {
 export const timeSchema = z
   .string()
   .regex(TIME_REGEX)
-  .openapi({ description: "Time string in 12 or 24 hour format", example: "2:00pm" })
+  .openapi({ description: "Time string in 12 or 24 hour format", examples: ["7:30pm", "19:30"] })
   .transform(transformTime);
 
 export const timeRangeSchema = z
