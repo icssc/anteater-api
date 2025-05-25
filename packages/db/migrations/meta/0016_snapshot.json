@@ -1,6 +1,6 @@
 {
-  "id": "a9924971-b88f-40d5-97a9-1b1fbd7867cd",
-  "prevId": "318832f2-3776-4b6e-9d3b-fe6fb254d573",
+  "id": "2ecd8d37-d386-4031-a384-9682f5ba5790",
+  "prevId": "a9924971-b88f-40d5-97a9-1b1fbd7867cd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3670,57 +3670,6 @@
       },
       "definition": "with \"shortened_names_cte\" as (select \"instructor_ucinetid\", ARRAY_AGG(\"websoc_instructor_name\") as \"shortened_names\" from \"instructor_to_websoc_instructor\" group by \"instructor_to_websoc_instructor\".\"instructor_ucinetid\"), \"courses_cte\" as (with \"terms_cte\" as (select \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL) as \"terms\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" group by \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\") select \"terms_cte\".\"instructor_ucinetid\", \"course\".\"id\", \n          CASE WHEN \"course\".\"id\" IS NULL\n          THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n               'id', \"course\".\"id\",\n               'title', \"course\".\"title\",\n               'department', \"course\".\"department\",\n               'courseNumber', \"course\".\"course_number\",\n               'terms', COALESCE(\"terms\", ARRAY[]::TEXT[])\n          )\n          END\n           as \"course_info\" from \"course\" left join \"terms_cte\" on \"terms_cte\".\"id\" = \"course\".\"id\" group by \"course\".\"id\", \"terms_cte\".\"instructor_ucinetid\", \"terms\") select \"instructor\".\"ucinetid\", \"instructor\".\"name\", \"instructor\".\"title\", \"instructor\".\"email\", \"instructor\".\"department\", COALESCE(\"shortened_names\", ARRAY[]::TEXT[]) as \"shortened_names\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT \"course_info\"), NULL)\n         as \"courses\" from \"instructor\" left join \"shortened_names_cte\" on \"shortened_names_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" left join \"courses_cte\" on \"courses_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" where \"instructor\".\"ucinetid\" <> 'student' group by \"instructor\".\"ucinetid\", \"shortened_names\"",
       "name": "instructor_view",
-      "schema": "public",
-      "isExisting": false,
-      "materialized": true
-    },
-    "public.study_room_view": {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "capacity": {
-          "name": "capacity",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location": {
-          "name": "location",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "directions": {
-          "name": "directions",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tech_enhanced": {
-          "name": "tech_enhanced",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "definition": "select \"study_room\".\"id\", \"study_room\".\"name\", \"study_room\".\"capacity\", \"study_room\".\"location\", \"study_room\".\"description\", \"study_room\".\"directions\", \"study_room\".\"tech_enhanced\", ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN \"study_room_slot\".\"study_room_id\" IS NULL THEN NULL\n        ELSE JSONB_BUILD_OBJECT(\n          'studyRoomId', \"study_room_slot\".\"study_room_id\",\n          'start', to_json(\"study_room_slot\".\"start\" AT TIME ZONE 'America/Los_Angeles'),\n          'end', to_json(\"study_room_slot\".\"end\" AT TIME ZONE 'America/Los_Angeles'),\n          'isAvailable', \"study_room_slot\".\"is_available\"\n        )\n        END), ARRAY[]::JSONB[]), NULL) as \"slots\" from \"study_room\" left join \"study_room_slot\" on \"study_room\".\"id\" = \"study_room_slot\".\"study_room_id\" group by \"study_room\".\"id\"",
-      "name": "study_room_view",
       "schema": "public",
       "isExisting": false,
       "materialized": true

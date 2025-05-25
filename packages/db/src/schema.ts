@@ -11,6 +11,7 @@ import {
   pgEnum,
   pgMaterializedView,
   pgTable,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -743,6 +744,33 @@ export const apExamReward = pgTable("ap_exam_reward", {
   grantsGE8: boolean("grants_ge_8").notNull().default(false),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
+
+export const libraryTraffic = pgTable(
+  "library_traffic",
+  {
+    id: integer("id").primaryKey(),
+    libraryName: varchar("library_name").notNull(),
+    locationName: varchar("location_name").notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
+  },
+  (table) => [index().on(table.locationName)],
+);
+
+export const libraryTrafficHistory = pgTable(
+  "library_traffic_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    locationId: integer("location_id")
+      .references(() => libraryTraffic.id)
+      .notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
 
 // Materialized views
 

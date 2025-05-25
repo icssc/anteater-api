@@ -1,0 +1,1 @@
+DROP MATERIALIZED VIEW "public"."study_room_view";
