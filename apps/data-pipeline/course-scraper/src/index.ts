@@ -7,6 +7,7 @@ import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
+import { type SampleProgram, sampleProgram } from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
@@ -647,6 +648,63 @@ function transformToTermStructure(sampleYears: Array<{ year: string; curriculum:
   };
 }
 
+async function storeSampleProgramsInDB(
+  db: ReturnType<typeof database>,
+  scrapedPrograms: Array<{ programName: string; sampleProgram: SampleProgram[] }>,
+) {
+  if (!scrapedPrograms.length) {
+    logger.info("No sample programs to store.");
+    return;
+  }
+
+  logger.info("Fetching sample programs from database...");
+  const dbPrograms = await db
+    .select()
+    .from(sampleProgram)
+    .where(
+      inArray(
+        sampleProgram.programName,
+        scrapedPrograms.map((program) => program.programName),
+      ),
+    );
+
+  const sortedDbPrograms = sortKeys(dbPrograms, { deep: true });
+  const sortedScrapedPrograms = sortKeys(scrapedPrograms, { deep: true });
+
+  const programDiff = diffString(sortedDbPrograms, sortedScrapedPrograms);
+  if (!programDiff.length) {
+    logger.info("No difference found between database and scraped sample program data.");
+    return;
+  }
+
+  console.log("Difference between database and scraped sample program data:");
+  console.log(programDiff);
+  if (!readlineSync.keyInYNStrict("Is this ok")) {
+    logger.error("Cancelling sample program update.");
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    // Delete existing programs
+    await tx.delete(sampleProgram).where(
+      inArray(
+        sampleProgram.programName,
+        scrapedPrograms.map((program) => program.programName),
+      ),
+    );
+
+    // Insert new programs (only the two fields that exist)
+    await tx.insert(sampleProgram).values(
+      scrapedPrograms.map((program) => ({
+        programName: program.programName,
+        sampleProgram: program.sampleProgram,
+      })),
+    );
+  });
+
+  logger.info(`Successfully stored ${scrapedPrograms.length} sample programs`);
+}
+
 async function scrapeSamplePrograms(programPath: string) {
   const url = `${CATALOGUE_URL}${programPath}`;
   const html = await fetchWithDelay(url);
@@ -744,7 +802,9 @@ async function scrapeSamplePrograms(programPath: string) {
       sampleProgram: combinedProgram,
     };
     console.log(JSON.stringify(res, null, 2));
+    return res;
   }
+  return null;
 }
 
 async function main() {
@@ -807,10 +867,29 @@ async function main() {
   logger.info("Running I&C SCI 32A/H32 shim...");
   await patchH32({ db });
 
+  // const programs = await collectProgramPathsFromSchools();
+  // for (const program of programs) {
+  //   console.log(await scrapeSamplePrograms(program));
+  // }
+
+  logger.info("Starting sample program scraping...");
   const programs = await collectProgramPathsFromSchools();
-  for (const program of programs) {
-    console.log(await scrapeSamplePrograms(program));
+  const scrapedPrograms = [];
+
+  for (const programPath of programs) {
+    try {
+      const sampleProgramData = await scrapeSamplePrograms(programPath);
+      if (sampleProgramData) {
+        scrapedPrograms.push(sampleProgramData);
+      }
+    } catch (error) {
+      logger.error(`Error processing ${programPath}:`, error);
+    }
   }
+
+  // Store all scraped programs at once (following course scraper pattern)
+  await storeSampleProgramsInDB(db, scrapedPrograms);
+
   logger.info("All done!");
   exit(0);
 }

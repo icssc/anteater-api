@@ -53,7 +53,7 @@ export const ugradRequirementsQuerySchema = z.object({
 export const sampleProgramsQuerySchema = z.object({
   programName: z.string().optional().openapi({
     description: "A program name to query sample programs for",
-    example: "Computer Science B.S.",
+    example: "Computer Science, B.S.",
   }),
 });
 
@@ -288,32 +288,40 @@ export const sampleProgramsYearSchema = z.object({
   Fall: z.array(z.string()).openapi({
     description: "Fall course list of this sample program",
   }),
+  Winter: z.array(z.string()).openapi({
+    description: "Winter course list of this sample program",
+  }),
+  Spring: z.array(z.string()).openapi({
+    description: "Spring course list of this sample program",
+  }),
 });
 
-export const sampleProgramsResponseSchema = z.object({
-  programName: z.string().openapi({
-    description: "Program name of this sample program",
-    example: "Biochemistry and Molecular Biology, B.S.",
+export const sampleProgramsResponseSchema = z.array(
+  z.object({
+    programName: z.string().openapi({
+      description: "Program name of this sample program",
+      example: "Biochemistry and Molecular Biology, B.S.",
+    }),
+    sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+      description: "List of courses of this program",
+      example: [
+        {
+          year: "Freshman",
+          Fall: ["BIO SCI 93", "BIO SCI 93L", "CHEM 1A", "BIO SCI 2A"],
+          Winter: ["BIO SCI 94", "BIO SCI 94L", "CHEM 1B", "Lower-Division Writing1"],
+          Spring: [
+            "CHEM 1C- 1LC",
+            "STATS 7 or 8 (or Math 5A or General Education)",
+            "Lower-Division Writing1",
+          ],
+        },
+        {
+          year: "Sophomore",
+          Fall: ["BIO SCI 97", "CHEM 51A", "CHEM 1LD", "MATH 5A or 5B"],
+          Winter: ["BIO SCI 98", "CHEM 51B- 51LB", "MATH 5B (or General Education)"],
+          Spring: ["BIO SCI 99", "CHEM 51C- 51LC"],
+        },
+      ],
+    }),
   }),
-  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
-    description: "List of courses of this program",
-    example: [
-      {
-        year: "Freshman",
-        Fall: ["BIO SCI 93", "BIO SCI 93L", "CHEM 1A", "BIO SCI 2A"],
-        Winter: ["BIO SCI 94", "BIO SCI 94L", "CHEM 1B", "Lower-Division Writing1"],
-        Spring: [
-          "CHEM 1C- 1LC",
-          "STATS 7 or 8 (or Math 5A or General Education)",
-          "Lower-Division Writing1",
-        ],
-      },
-      {
-        year: "Sophomore",
-        Fall: ["BIO SCI 97", "CHEM 51A", "CHEM 1LD", "MATH 5A or 5B"],
-        Winter: ["BIO SCI 98", "CHEM 51B- 51LB", "MATH 5B (or General Education)"],
-        Spring: ["BIO SCI 99", "CHEM 51C- 51LC"],
-      },
-    ],
-  }),
-});
+);
