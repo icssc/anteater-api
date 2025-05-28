@@ -785,8 +785,6 @@ async function scrapeSamplePrograms(programPath: string) {
     });
   }
   if (sampleYears.length > 0) {
-    // const res = [{ programName: programName, sampleProgram: sampleYears }];
-    // console.log(JSON.stringify(res, null, 2));
     const transformedTermsResult = transformToTermStructure(sampleYears);
     const combinedProgram = [];
 
@@ -801,7 +799,7 @@ async function scrapeSamplePrograms(programPath: string) {
       programName: programName,
       sampleProgram: combinedProgram,
     };
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
     return res;
   }
   return null;
@@ -866,16 +864,9 @@ async function main() {
   }
   logger.info("Running I&C SCI 32A/H32 shim...");
   await patchH32({ db });
-
-  // const programs = await collectProgramPathsFromSchools();
-  // for (const program of programs) {
-  //   console.log(await scrapeSamplePrograms(program));
-  // }
-
   logger.info("Starting sample program scraping...");
   const programs = await collectProgramPathsFromSchools();
   const scrapedPrograms = [];
-
   for (const programPath of programs) {
     try {
       const sampleProgramData = await scrapeSamplePrograms(programPath);
@@ -886,10 +877,7 @@ async function main() {
       logger.error(`Error processing ${programPath}:`, error);
     }
   }
-
-  // Store all scraped programs at once (following course scraper pattern)
   await storeSampleProgramsInDB(db, scrapedPrograms);
-
   logger.info("All done!");
   exit(0);
 }
