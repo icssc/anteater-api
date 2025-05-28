@@ -78,12 +78,11 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
     programName: String!
-    sampleProgram: 
+    sampleProgram: [String]!
 }
 
 input ProgramRequirementsQuery {
     programId: String!
-    sampleProgram: [String]!
 }
 
 input MajorsQuery {
