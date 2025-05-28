@@ -3,7 +3,7 @@ import type {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
-  sampleProgramQuerySchema,
+  sampleProgramsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
@@ -131,7 +131,7 @@ export class ProgramsService {
     return orNull(got);
   }
 
-  async getSamplePrograms(query: z.infer<typeof sampleProgramQuerySchema>) {
+  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
     return this.db
       .select({
         programName: sampleProgram.programName,
