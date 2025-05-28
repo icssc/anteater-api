@@ -77,7 +77,6 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
 }
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
-    programName: String!
     sampleProgram: [String]!
 }
 
