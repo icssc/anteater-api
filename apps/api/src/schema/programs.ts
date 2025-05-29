@@ -283,16 +283,16 @@ export const ugradRequirementsResponseSchema = z.object({
 
 export const sampleProgramsYearSchema = z.object({
   year: z.string().openapi({
-    description: "Year of this sample program",
+    description: "Academic level or year standing",
   }),
   Fall: z.array(z.string()).openapi({
-    description: "Fall course list of this sample program",
+    description: "Courses recommended for Fall quarter of this academic level",
   }),
   Winter: z.array(z.string()).openapi({
-    description: "Winter course list of this sample program",
+    description: "Courses recommended for Winter quarter of this academic level",
   }),
   Spring: z.array(z.string()).openapi({
-    description: "Spring course list of this sample program",
+    description: "Courses recommended for Spring quarter of this academic level",
   }),
 });
 

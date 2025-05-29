@@ -84,6 +84,7 @@ type YearPlan {
 }
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
+    programName: String!
     sampleProgram: [YearPlan!]!
 }
 
@@ -119,6 +120,6 @@ extend type Query {
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!
-    samplePrograms(query: SampleProgramsQuery!): SampleProgramsRequirements!
+    samplePrograms(query: SampleProgramsQuery!): [SampleProgramsRequirements!]!
 }
 `;

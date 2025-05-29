@@ -94,7 +94,7 @@ export const programResolvers = {
         throw new GraphQLError("No data for a sample program by that name", {
           extensions: { code: "NOT_FOUND" },
         });
-      return { sampleProgram: res[0].sampleProgram };
+      return res;
     },
   },
   ProgramRequirement: {
