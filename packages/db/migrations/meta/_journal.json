@@ -85,13 +85,6 @@
       "when": 1743648060318,
       "tag": "0011_ap_exams",
       "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "7",
-      "when": 1743459655735,
-      "tag": "0013_map_locations",
-      "breakpoints": true
     }
   ]
 }
