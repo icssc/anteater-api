@@ -244,7 +244,7 @@ const samplePrograms = createRoute({
   operationId: "getSamplePrograms",
   tags: ["Programs"],
   method: "get",
-  path: "/samplePrograms",
+  path: "/samples",
   description: "List all available sample programs in UCI's current catalogue.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
