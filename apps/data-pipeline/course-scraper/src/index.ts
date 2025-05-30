@@ -7,11 +7,11 @@ import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
-import { type SampleProgram, sampleProgram } from "@packages/db/schema";
+import { type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
-import { load } from "cheerio";
+import { type Cheerio, load } from "cheerio";
 import fetch from "cross-fetch";
-import { hasChildren } from "domhandler";
+import { type AnyNode, hasChildren } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
@@ -613,34 +613,34 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
  * @returns The transformed data with Fall, Winter, Spring structure
  */
 function transformToTermStructure(sampleYears: Array<{ year: string; curriculum: string[][] }>): {
-  sampleProgram: Array<{ Fall: string[]; Winter: string[]; Spring: string[] }>;
+  sampleProgram: Array<{ curriculum: Array<{ term: string; courses: string[] }> }>;
 } {
-  const transformedProgram: Array<{ Fall: string[]; Winter: string[]; Spring: string[] }> = [];
+  const transformedProgram: Array<{ curriculum: Array<{ term: string; courses: string[] }> }> = [];
 
   for (const yearData of sampleYears) {
-    const yearTerms: { Fall: string[]; Winter: string[]; Spring: string[] } = {
-      Fall: [],
-      Winter: [],
-      Spring: [],
-    };
+    const yearTerms: Array<{ term: string; courses: string[] }> = [
+      { term: "Fall", courses: [] },
+      { term: "Winter", courses: [] },
+      { term: "Spring", courses: [] },
+    ];
 
     const curriculum = yearData.curriculum;
 
     for (const row of curriculum) {
       if (row.length >= 1 && row[0].trim()) {
-        yearTerms.Fall.push(row[0].trim());
+        yearTerms[0].courses.push(row[0].trim());
       }
 
       if (row.length >= 2 && row[1].trim()) {
-        yearTerms.Winter.push(row[1].trim());
+        yearTerms[1].courses.push(row[1].trim());
       }
 
       if (row.length >= 3 && row[2].trim()) {
-        yearTerms.Spring.push(row[2].trim());
+        yearTerms[2].courses.push(row[2].trim());
       }
     }
 
-    transformedProgram.push(yearTerms);
+    transformedProgram.push({ curriculum: yearTerms });
   }
 
   return {
@@ -650,7 +650,11 @@ function transformToTermStructure(sampleYears: Array<{ year: string; curriculum:
 
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
-  scrapedPrograms: Array<{ programName: string; sampleProgram: SampleProgram[] }>,
+  scrapedPrograms: Array<{
+    programName: string;
+    sampleProgram: SampleProgramEntry[];
+    notes: string[];
+  }>,
 ) {
   if (!scrapedPrograms.length) {
     logger.info("No sample programs to store.");
@@ -685,7 +689,6 @@ async function storeSampleProgramsInDB(
   }
 
   await db.transaction(async (tx) => {
-    // Delete existing programs
     await tx.delete(sampleProgram).where(
       inArray(
         sampleProgram.programName,
@@ -693,11 +696,11 @@ async function storeSampleProgramsInDB(
       ),
     );
 
-    // Insert new programs (only the two fields that exist)
     await tx.insert(sampleProgram).values(
       scrapedPrograms.map((program) => ({
         programName: program.programName,
         sampleProgram: program.sampleProgram,
+        programNotes: JSON.stringify(program.notes),
       })),
     );
   });
@@ -713,19 +716,38 @@ async function scrapeSamplePrograms(programPath: string) {
   const programName = $("h1.page-title").text().normalize("NFKD").split("(")[0].trim();
   const sampleProgramContainer = $("#sampleprogramtextcontainer");
 
+  if (!sampleProgramContainer.length) return;
+
   const sampleYears: { year: string; curriculum: string[][] }[] = [];
+  const notes: string[] = [];
 
-  if (!sampleProgramContainer.length) {
-    return;
-  }
+  const parseTable = (table: Cheerio<AnyNode>, year: string) => {
+    const curriculum: string[][] = [];
 
-  const mainProgramTable = sampleProgramContainer.find("table.sc_plangrid");
+    table.find("tr").each((_j, tr_el) => {
+      const $tr = $(tr_el);
+
+      if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) return;
+      if ($tr.hasClass("plangridterm")) return;
+
+      const rowData: string[] = [];
+      $tr.find("th, td").each((_k, cell_el) => {
+        rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
+      });
+
+      if (rowData.some((cell) => cell.length > 0)) {
+        curriculum.push(rowData);
+      }
+    });
+
+    sampleYears.push({ year, curriculum });
+  };
 
   if (sampleProgramContainer.children("table.sc_plangrid").length > 0) {
     let currentYear: string | null = null;
     let currentCurriculum: string[][] = [];
 
-    mainProgramTable.find("tr").each((_j, tr_el) => {
+    sampleProgramContainer.find("table.sc_plangrid tr").each((_j, tr_el) => {
       const $tr = $(tr_el);
 
       if ($tr.hasClass("plangridyear")) {
@@ -737,12 +759,12 @@ async function scrapeSamplePrograms(programPath: string) {
           currentYear = yearText;
           currentCurriculum = [];
         }
-      } else if ($tr.hasClass("plangridterm")) {
-      } else {
+      } else if (!$tr.hasClass("plangridterm")) {
         const rowData: string[] = [];
         $tr.find("td").each((_k, td_el) => {
           rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
         });
+
         if (rowData.some((cell) => cell.length > 0)) {
           currentCurriculum.push(rowData);
         }
@@ -755,54 +777,117 @@ async function scrapeSamplePrograms(programPath: string) {
   } else {
     sampleProgramContainer.find("h4").each((_i, h4_el) => {
       const yearTitle = $(h4_el).text().trim();
-      const contentDiv = $(h4_el).next("div");
-      const contentTable = contentDiv.find("table.sc_plangrid");
+      const contentTable = $(h4_el).next("div").find("table.sc_plangrid");
 
       if (yearTitle && contentTable.length) {
         logger.debug(`Found H4 "${yearTitle}" with nested table for ${programPath}.`);
-        const curriculum: string[][] = [];
-
-        contentTable.find("tr").each((_j, tr_el) => {
-          const $tr = $(tr_el);
-
-          if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) {
-            return;
-          }
-          if ($tr.hasClass("plangridterm")) {
-            return;
-          }
-
-          const rowData: string[] = [];
-          $tr.find("th, td").each((_k, cell_el) => {
-            rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
-          });
-          if (rowData.some((cell) => cell.length > 0)) {
-            curriculum.push(rowData);
-          }
-        });
-        sampleYears.push({ year: yearTitle, curriculum });
+        parseTable(contentTable, yearTitle);
       }
     });
   }
-  if (sampleYears.length > 0) {
-    const transformedTermsResult = transformToTermStructure(sampleYears);
-    const combinedProgram = [];
 
-    for (let i = 0; i < sampleYears.length; i++) {
-      combinedProgram.push({
-        year: sampleYears[i].year,
-        ...transformedTermsResult.sampleProgram[i],
+  sampleProgramContainer.find("h6:contains('NOTES')").each((_i, h6_el) => {
+    $(h6_el)
+      .nextUntil("h1, h2, h3, h4, h5, h6, table")
+      .filter("p")
+      .each((_j, p_el) => {
+        notes.push($(p_el).text().trim());
       });
-    }
+    $(h6_el)
+      .next("ol")
+      .find("li")
+      .each((_j, li_el) => {
+        notes.push($(li_el).text().trim());
+      });
+  });
 
-    const res = {
-      programName: programName,
-      sampleProgram: combinedProgram,
-    };
-    // console.log(JSON.stringify(res, null, 2));
-    return res;
+  sampleProgramContainer.find("p").each((_i, p_el) => {
+    const pText = $(p_el).text().trim();
+    if (pText.match(/^NOTES\s*:\s*/i)) {
+      const remainingText = pText.replace(/^NOTES\s*:\s*/i, "").trim();
+      if (remainingText.length > 0) {
+        notes.push(remainingText);
+      }
+      let currentElement = $(p_el).next();
+      while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
+        if (currentElement.is("p")) {
+          const paragraphContent = currentElement.text().trim();
+          if (paragraphContent.length > 0 && !paragraphContent.match(/^NOTES\s*:\s*/i)) {
+            notes.push(paragraphContent);
+          }
+        } else if (currentElement.is("ol")) {
+          currentElement.find("li").each((_k, li_el) => {
+            notes.push($(li_el).text().trim());
+          });
+          break;
+        }
+        currentElement = currentElement.next();
+      }
+    }
+  });
+
+  sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
+    $(dl_el)
+      .find("dd")
+      .each((_j, dd_el) => {
+        const noteText = $(dd_el).find("p").text().trim();
+        if (noteText.length > 0) {
+          notes.push(noteText);
+        }
+      });
+  });
+
+  sampleProgramContainer.find("p").each((_i, p_el) => {
+    const pText = $(p_el).text().trim();
+    if (
+      (pText.startsWith("*") || pText.match(/^<sup>\s*\d+\s*<\/sup>/i)) &&
+      !pText.match(/^NOTES\s*:\s*/i)
+    ) {
+      if (!$(p_el).closest("dl.sc_footnotes").length) {
+        notes.push(pText);
+      }
+    }
+  });
+
+  if (notes.length === 0) {
+    sampleProgramContainer.find("ol").each((_i, ol_el) => {
+      const prevElement = $(ol_el).prev();
+      if (
+        prevElement.is("table") ||
+        prevElement.is("h6") ||
+        (prevElement.is("p") && prevElement.text().toLowerCase().includes("notes"))
+      ) {
+        $(ol_el)
+          .find("li")
+          .each((_j, li_el) => {
+            notes.push($(li_el).text().trim());
+          });
+      }
+    });
   }
-  return null;
+
+  if (sampleYears.length === 0) return null;
+
+  const transformedTermsResult = transformToTermStructure(sampleYears);
+
+  const sampleProgram = sampleYears.map((yearObj, i) => ({
+    year: yearObj.year,
+    ...transformedTermsResult.sampleProgram[i],
+  }));
+
+  const res = {
+    programName,
+    sampleProgram,
+    notes,
+  };
+
+  console.log(JSON.stringify(res, null, 2));
+
+  return {
+    programName,
+    sampleProgram,
+    notes,
+  };
 }
 
 async function main() {

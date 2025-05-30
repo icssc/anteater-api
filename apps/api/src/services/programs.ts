@@ -136,6 +136,7 @@ export class ProgramsService {
       .select({
         programName: sampleProgram.programName,
         sampleProgram: sampleProgram.sampleProgram,
+        notes: sampleProgram.programNotes,
       })
       .from(sampleProgram)
       .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
