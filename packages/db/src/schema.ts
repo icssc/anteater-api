@@ -134,10 +134,10 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 
 export type APCoursesGrantedTree =
   | {
-      AND: APCoursesGrantedTree[] | string[];
+      AND: (APCoursesGrantedTree | string)[];
     }
   | {
-      OR: APCoursesGrantedTree[] | string[];
+      OR: (APCoursesGrantedTree | string)[];
     };
 
 // Misc. enums
@@ -541,6 +541,7 @@ export const course = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.department}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.departmentAlias}, '')), 'B') ||
+ SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.shortenedDept}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumber}, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumeric}::TEXT, '')), 'B') ||
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'C') ||
@@ -738,8 +739,8 @@ export const apExamToReward = pgTable(
 
 export const apExamReward = pgTable("ap_exam_reward", {
   id: uuid("id").primaryKey().defaultRandom(),
-  unitsGranted: integer("units_granted"),
-  electiveUnitsGranted: integer("elective_units_granted"),
+  unitsGranted: integer("units_granted").notNull(),
+  electiveUnitsGranted: integer("elective_units_granted").notNull(),
   grantsGE1A: boolean("grants_ge_1a").notNull().default(false),
   grantsGE1B: boolean("grants_ge_1b").notNull().default(false),
   grantsGE2: boolean("grants_ge_2").notNull().default(false),
@@ -926,26 +927,4 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
     .leftJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
     .where(ne(instructor.ucinetid, "student"))
     .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
-});
-
-export const studyRoomView = pgMaterializedView("study_room_view").as((qb) => {
-  return qb
-    .select({
-      id: studyRoom.id,
-      name: studyRoom.name,
-      capacity: studyRoom.capacity,
-      location: studyRoom.location,
-      description: studyRoom.description,
-      directions: studyRoom.directions,
-      techEnhanced: studyRoom.techEnhanced,
-      slots: sql`ARRAY_AGG(JSONB_BUILD_OBJECT(
-      'studyRoomId', ${studyRoomSlot.studyRoomId},
-      'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
-      'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
-      'isAvailable', ${studyRoomSlot.isAvailable}
-    ))`.as("slots"),
-    })
-    .from(studyRoom)
-    .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
-    .groupBy(studyRoom.id);
 });
