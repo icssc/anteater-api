@@ -89,7 +89,7 @@ type YearPlan {
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
     programName: String!
     sampleProgram: [YearPlan!]!
-    notes: String!
+    notes: [String!]!
 }
 
 input ProgramRequirementsQuery {

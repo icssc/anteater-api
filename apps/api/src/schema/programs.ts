@@ -325,7 +325,7 @@ export const sampleProgramsResponseSchemaObject = z.object({
       },
     ],
   }),
-  notes: z.string().openapi({
+  notes: z.array(z.string()).openapi({
     description: "A list of important notes or footnotes related to this sample program.",
     example: [
       "Students are advised that this sample program lists the minimum requirements; it is possible that students may have to take additional courses to prepare for required courses.",

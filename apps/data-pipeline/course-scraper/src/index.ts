@@ -880,14 +880,7 @@ async function scrapeSamplePrograms(programPath: string) {
     sampleProgram,
     notes,
   };
-
-  console.log(JSON.stringify(res, null, 2));
-
-  return {
-    programName,
-    sampleProgram,
-    notes,
-  };
+  return res;
 }
 
 async function main() {

@@ -132,7 +132,7 @@ export class ProgramsService {
   }
 
   async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
-    return this.db
+    const results = await this.db
       .select({
         programName: sampleProgram.programName,
         sampleProgram: sampleProgram.sampleProgram,
@@ -140,5 +140,14 @@ export class ProgramsService {
       })
       .from(sampleProgram)
       .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
+    return results.map((program) => {
+      let parsedNotes: string[];
+      try {
+        parsedNotes = JSON.parse(program.notes || "[]");
+      } catch {
+        parsedNotes = [];
+      }
+      return { ...program, notes: parsedNotes };
+    });
   }
 }
