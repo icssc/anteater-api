@@ -76,6 +76,22 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
+type Curriculum {
+    term: String!
+    courses: [String!]!
+}
+
+type YearPlan {
+    year: String!
+    curriculum: [Curriculum!]!
+}
+
+type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
+    programName: String!
+    sampleProgram: [YearPlan!]!
+    notes: [String!]!
+}
+
 input ProgramRequirementsQuery {
     programId: String!
 }
@@ -96,6 +112,10 @@ input UgradRequrementsQuery {
     id: UgradRequirementsBlockId!
 }
 
+input SampleProgramsQuery {
+    programName: String!
+}
+
 extend type Query {
     majors(query: MajorsQuery): [MajorPreview!]!
     minors(query: MinorsQuery): [MinorPreview!]!
@@ -104,5 +124,6 @@ extend type Query {
     minor(query: ProgramRequirementsQuery!): Program!
     specialization(query: ProgramRequirementsQuery!): Program!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!
+    samplePrograms(query: SampleProgramsQuery!): [SampleProgramsRequirements!]!
 }
 `;
