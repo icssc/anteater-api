@@ -7,7 +7,7 @@ import type { z } from "zod";
 export class MapService {
   constructor(private readonly db: ReturnType<typeof database>) {}
   async getLocations(query: z.infer<typeof mapQuerySchema>) {
-    return this.db
+    const results = await this.db
       .select({
         id: mapLocation.id,
         name: mapLocation.name,
@@ -16,5 +16,11 @@ export class MapService {
       })
       .from(mapLocation)
       .where(query.id ? eq(mapLocation.id, query.id) : undefined);
+
+    return results.map((r) => ({
+      ...r,
+      latitude: Number(r.latitude),
+      longitude: Number(r.longitude),
+    }));
   }
 }
