@@ -17,13 +17,13 @@ export const mapResponseSchema = z.array(
       description: "The generic name of the location",
       example: "Art Studio (ART)",
     }),
-    latitude: z.string().openapi({
+    latitude: z.number().openapi({
       description: "The latitude of the selected location",
-      example: "33.650162",
+      example: 33.650162,
     }),
-    longitude: z.string().openapi({
+    longitude: z.number().openapi({
       description: "The longitude of the selected location",
-      example: "-117.844887",
+      example: -117.844887,
     }),
   }),
 );

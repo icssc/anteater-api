@@ -27,6 +27,11 @@ const CATEGORIES: Set<number> = new Set([
   44402, 44538, 44537, 44399, 8396, 11907, 8400, 10486, 11906, 11889, 8310, 8312, 8393, 8394, 8397,
   8398, 8399, 8404, 8407, 8408, 11891, 11892, 11899, 11900, 11902, 21318, 8406, 11908, 11935,
 ]);
+
+// The Concept3D API key is hardcoded here, which is generally a bad practice due to the security risks.
+// For truly sensitive keys, environment variables or a secrets manager would be used (as with DB_URL).
+// This approach was considered pragmatic for this specific utility and non-sensitive key.
+
 const LOCATIONS_LIST_API =
   "https://api.concept3d.com/locations?map=463&key=0001085cc708b9cef47080f064612ca5";
 const LOCATIONS_DETAIL_API = (id: number) =>
@@ -115,25 +120,6 @@ async function main() {
         });
     }
   });
-  const buildingInterfaceStr = `
-export interface Building {
-imageURLs: string[];
-lat: number;
-lng: number;
-name: string;
-}\n\n`;
-
-  const buildingCatalogueStr = `
-const buildingCatalogue: Record<string, Building> = ${JSON.stringify(
-    locationsCatalogue,
-    null,
-    4,
-  )};\nexport default buildingCatalogue;`;
-
-  const locationStr = `
-const locations: Record<string, number> = ${JSON.stringify(locationIds, null, 4)};
-\nexport default locations;`;
-  console.log(buildingInterfaceStr + buildingCatalogueStr + locationStr);
   exit(0);
 }
 
