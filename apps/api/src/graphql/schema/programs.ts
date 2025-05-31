@@ -76,16 +76,20 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
+type Curriculum {
+    term: String!
+    courses: [String!]!
+}
+
 type YearPlan {
     year: String!
-    Fall: [String!]!
-    Winter: [String!]!
-    Spring: [String!]!
+    curriculum: [Curriculum!]!
 }
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
     programName: String!
     sampleProgram: [YearPlan!]!
+    notes: String!
 }
 
 input ProgramRequirementsQuery {
