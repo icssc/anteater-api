@@ -1,11 +1,9 @@
+import { database } from "@packages/db";
 import { doScrape } from "./lib";
 
-interface Env {
-  DB_URL: string;
-}
-
 export default {
-  async scheduled(_: ScheduledController, env: Env): Promise<void> {
-    await doScrape(env.DB_URL);
+  async scheduled(_, env) {
+    const db = database(env.DB.connectionString);
+    await doScrape(db);
   },
 } satisfies ExportedHandler<Env>;
