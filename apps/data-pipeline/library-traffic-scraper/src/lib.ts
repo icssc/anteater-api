@@ -1,4 +1,4 @@
-import { database } from "@packages/db";
+import type { database } from "@packages/db";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
@@ -127,9 +127,9 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
   return "skip";
 }
 
-export async function doScrape(DB_URL: string) {
+export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
-  const db = database(DB_URL);
+  // const db = database(DB_URL);
   const lookup = await collectLocationMeta();
 
   const dateNow = new Date();
