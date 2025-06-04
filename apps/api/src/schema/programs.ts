@@ -284,18 +284,26 @@ export const ugradRequirementsResponseSchema = z.object({
 export const sampleProgramTermSchema = z.object({
   term: z.string().openapi({
     description: "Academic term (e.g., Fall, Winter, Spring)",
+    example: "Fall",
   }),
   courses: z.array(z.string()).openapi({
     description: "Courses recommended for this academic term",
+    example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
   }),
 });
 
 export const sampleProgramsYearSchema = z.object({
   year: z.string().openapi({
     description: "Academic level or year standing",
+    example: "Freshman",
   }),
   curriculum: z.array(sampleProgramTermSchema).openapi({
     description: "List of courses organized by term for this academic level",
+    example: [
+      { term: "Fall", courses: ["I&C SCI 31", "MATH 2A", "WRITING 40"] },
+      { term: "Winter", courses: ["I&C SCI 32", "MATH 2B", "WRITING 50"] },
+      { term: "Spring", courses: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"] },
+    ],
   }),
 });
 

@@ -1,5 +1,3 @@
-import { existsSync, statSync, writeFileSync } from "node:fs";
-import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
@@ -7,11 +5,11 @@ import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
-import { type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
+import { type CurriculumTerm, type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
 import fetch from "cross-fetch";
-import { type AnyNode, hasChildren } from "domhandler";
+import type { AnyNode } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
@@ -573,8 +571,10 @@ async function patchH32(meta: {
 }
 
 async function fetchSchoolsPath(catalogue: string) {
-  const html = await fetchWithDelay(`${catalogue}/schoolsandprograms/`);
-  const $ = load(html);
+  const schoolsAndPrograms = await fetchWithDelay(`${catalogue}/schoolsandprograms/`);
+  const $ = load(schoolsAndPrograms);
+
+  // Extract individual school and program paths
   const paths: string[] = [];
   $("#textcontainer h4 a").each((_, a) => {
     const href = $(a).attr("href");
@@ -607,18 +607,23 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
   return Array.from(new Set(programPaths));
 }
 
+type SampleYear = {
+  year: string;
+  curriculum: string[][];
+};
+
 /*
  * Transforms the original sample program format to have a Fall, Winter, Spring structure
  * @param sampleYears The original sample years data from the scraper
  * @returns The transformed data with Fall, Winter, Spring structure
  */
-function transformToTermStructure(sampleYears: Array<{ year: string; curriculum: string[][] }>): {
-  sampleProgram: Array<{ curriculum: Array<{ term: string; courses: string[] }> }>;
+function transformToTermStructure(sampleYears: SampleYear[]): {
+  sampleProgram: SampleProgramEntry[];
 } {
-  const transformedProgram: Array<{ curriculum: Array<{ term: string; courses: string[] }> }> = [];
+  const transformedProgram: SampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
-    const yearTerms: Array<{ term: string; courses: string[] }> = [
+    const yearTerms: CurriculumTerm[] = [
       { term: "Fall", courses: [] },
       { term: "Winter", courses: [] },
       { term: "Spring", courses: [] },
@@ -640,7 +645,10 @@ function transformToTermStructure(sampleYears: Array<{ year: string; curriculum:
       }
     }
 
-    transformedProgram.push({ curriculum: yearTerms });
+    transformedProgram.push({
+      year: yearData.year,
+      curriculum: yearTerms,
+    });
   }
 
   return {
@@ -870,8 +878,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
   const transformedTermsResult = transformToTermStructure(sampleYears);
 
-  const sampleProgram = sampleYears.map((yearObj, i) => ({
-    year: yearObj.year,
+  const sampleProgram = sampleYears.map((_, i) => ({
     ...transformedTermsResult.sampleProgram[i],
   }));
 
@@ -888,61 +895,61 @@ async function main() {
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
   logger.info("course-scraper starting");
-  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
-  if (existsSync("./prerequisites.json")) {
-    const stats = statSync("./prerequisites.json");
-    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
-    if (readlineSync.keyInYNStrict("Use this dump?")) {
-      prerequisites = new Map(
-        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
-          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
-        ),
-      );
-      logger.info("Prerequisite dump loaded.");
-    }
-  }
-  if (!prerequisites.size) {
-    logger.info("Scraping prerequisites...");
-    prerequisites = await scrapePrerequisites();
-    writeFileSync(
-      "./prerequisites.json",
-      JSON.stringify(
-        Object.fromEntries(
-          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
-        ),
-      ),
-    );
-    logger.info("Wrote prerequisites to file.");
-  }
-  logger.info("Scraping courses...");
-  logger.info("Scraping list of departments...");
-  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
-  const $ = load(allCoursesText);
-  const departments = new Map(
-    $("#atozindex")
-      .children()
-      .toArray()
-      .filter((el) => el.type === "tag" && el.name === "ul")
-      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
-      .map((el): [string, string] | undefined =>
-        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
-          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
-          : undefined,
-      )
-      .filter((entry) => !!entry),
-  );
-  logger.info(`Found ${departments.size} departments to scrape`);
-  for (const [deptCode, deptPath] of departments) {
-    await scrapeCoursesInDepartment({
-      db,
-      deptCode,
-      deptPath,
-      prereqs: prerequisites.get(deptCode),
-    });
-  }
-  logger.info("Running I&C SCI 32A/H32 shim...");
-  await patchH32({ db });
-  logger.info("Starting sample program scraping...");
+  //  let prerequisites = new Map<string, Map<string, PrerequisiteTree>>();
+  //  if (existsSync("./prerequisites.json")) {
+  //    const stats = statSync("./prerequisites.json");
+  //    logger.info(`Found a prerequisite dump on disk (last modified ${stats.mtime}).`);
+  //    if (readlineSync.keyInYNStrict("Use this dump?")) {
+  //      prerequisites = new Map(
+  //        Object.entries(JSON.parse(readFileSync("./prerequisites.json", { encoding: "utf8" }))).map(
+  //          ([k, v]) => [k, new Map(Object.entries(v as Record<string, PrerequisiteTree>))],
+  //        ),
+  //      );
+  //      logger.info("Prerequisite dump loaded.");
+  //    }
+  //  }
+  //  if (!prerequisites.size) {
+  //    logger.info("Scraping prerequisites...");
+  //    prerequisites = await scrapePrerequisites();
+  //    writeFileSync(
+  //      "./prerequisites.json",
+  //      JSON.stringify(
+  //        Object.fromEntries(
+  //          prerequisites.entries().map(([k, v]) => [k, Object.fromEntries(v.entries())]),
+  //        ),
+  //      ),
+  //    );
+  //    logger.info("Wrote prerequisites to file.");
+  //  }
+  //  logger.info("Scraping courses...");
+  //  logger.info("Scraping list of departments...");
+  //  const allCoursesText = await fetchWithDelay(`${CATALOGUE_URL}/allcourses`);
+  //  const $ = load(allCoursesText);
+  //  const departments = new Map(
+  //    $("#atozindex")
+  //      .children()
+  //      .toArray()
+  //      .filter((el) => el.type === "tag" && el.name === "ul")
+  //      .flatMap((el) => (hasChildren(el) ? Object.values(el.children).filter(hasChildren) : []))
+  //      .map((el): [string, string] | undefined =>
+  //        el.firstChild?.type === "tag" && el.firstChild.firstChild?.type === "text"
+  //          ? [el.firstChild.firstChild.data.split("(")[1].slice(0, -1), el.firstChild.attribs.href]
+  //          : undefined,
+  //      )
+  //      .filter((entry) => !!entry),
+  //  );
+  //  logger.info(`Found ${departments.size} departments to scrape`);
+  //  for (const [deptCode, deptPath] of departments) {
+  //    await scrapeCoursesInDepartment({
+  //      db,
+  //      deptCode,
+  //      deptPath,
+  //      prereqs: prerequisites.get(deptCode),
+  //    });
+  //  }
+  //  logger.info("Running I&C SCI 32A/H32 shim...");
+  //  await patchH32({ db });
+  //  logger.info("Starting sample program scraping...");
   const programs = await collectProgramPathsFromSchools();
   const scrapedPrograms = [];
   for (const programPath of programs) {
