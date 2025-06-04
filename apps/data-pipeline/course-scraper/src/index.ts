@@ -575,14 +575,14 @@ async function fetchSchoolsPath(catalogue: string) {
   const $ = load(schoolsAndPrograms);
 
   // Extract individual school and program paths
-  const paths: string[] = [];
+  const schoolAndProgramPaths: string[] = [];
   $("#textcontainer h4 a").each((_, a) => {
     const href = $(a).attr("href");
     if (href?.startsWith("/")) {
-      paths.push(href);
+      schoolAndProgramPaths.push(href);
     }
   });
-  return paths;
+  return schoolAndProgramPaths;
 }
 
 async function collectProgramPathsFromSchools(): Promise<string[]> {
@@ -658,11 +658,11 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
 
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
-  scrapedPrograms: Array<{
+  scrapedPrograms: {
     programName: string;
     sampleProgram: SampleProgramEntry[];
     notes: string[];
-  }>,
+  }[],
 ) {
   if (!scrapedPrograms.length) {
     logger.info("No sample programs to store.");
@@ -708,7 +708,7 @@ async function storeSampleProgramsInDB(
       scrapedPrograms.map((program) => ({
         programName: program.programName,
         sampleProgram: program.sampleProgram,
-        programNotes: JSON.stringify(program.notes),
+        programNotes: program.notes,
       })),
     );
   });
@@ -726,7 +726,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
   if (!sampleProgramContainer.length) return;
 
-  const sampleYears: { year: string; curriculum: string[][] }[] = [];
+  const sampleYears: SampleYear[] = [];
   const notes: string[] = [];
 
   const parseTable = (table: Cheerio<AnyNode>, year: string) => {

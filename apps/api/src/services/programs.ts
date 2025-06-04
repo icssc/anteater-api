@@ -140,14 +140,6 @@ export class ProgramsService {
       })
       .from(sampleProgram)
       .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
-    return results.map((program) => {
-      let parsedNotes: string[];
-      try {
-        parsedNotes = JSON.parse(program.notes || "[]");
-      } catch {
-        parsedNotes = [];
-      }
-      return { ...program, notes: parsedNotes };
-    });
+    return results;
   }
 }

@@ -1,5 +1,5 @@
 {
-  "id": "a42340ea-8ae9-4b0e-8d6e-517ab8a3759a",
+  "id": "d3e1aa1c-b25f-42b9-b3d0-7c1a0ed70825",
   "prevId": "d61c1141-bf8a-41bd-921c-551ec41b8764",
   "version": "7",
   "dialect": "postgresql",
@@ -1093,7 +1093,7 @@
         },
         "program_notes": {
           "name": "program_notes",
-          "type": "varchar",
+          "type": "varchar[]",
           "primaryKey": false,
           "notNull": true
         }

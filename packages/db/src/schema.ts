@@ -763,7 +763,7 @@ export const apExamReward = pgTable("ap_exam_reward", {
 export const sampleProgram = pgTable("sample_program", {
   programName: varchar("program_name").notNull(),
   sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
-  programNotes: varchar("program_notes").notNull(),
+  programNotes: varchar("program_notes").array().notNull(),
 });
 
 // Materialized views
