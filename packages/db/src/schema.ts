@@ -8,7 +8,6 @@ import {
   index,
   integer,
   json,
-  numeric,
   pgEnum,
   pgMaterializedView,
   pgTable,
@@ -710,11 +709,10 @@ export const studyRoomSlot = pgTable(
 
 // Map data
 export const mapLocation = pgTable("map_location", {
-  id: numeric("id").primaryKey(),
+  id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
-  latitude: numeric("latitude").notNull(),
-  longitude: numeric("longitude").notNull(),
-  imageURLs: json("image_urls").$type<string[]>(),
+  latitude: decimal("latitude").notNull(),
+  longitude: decimal("longitude").notNull(),
 });
 
 export const apExam = pgTable("ap_exam", {

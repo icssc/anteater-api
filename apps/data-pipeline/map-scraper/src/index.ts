@@ -6,87 +6,53 @@ interface LocationListData {
   catId: number;
   lat: number;
   lng: number;
-  id: number;
+  id: string;
   name: string;
-}
-
-interface LocationDetailData {
-  mediaUrlTypes: string[];
-  mediaUrls: string[];
 }
 
 interface BuildingLocation {
   name: string;
   lat: number;
   lng: number;
-  imageURLs: string[];
 }
+
+// API key, categories, Map ID values of non-secret constants are hardcoded.
+// Possible other solutions will be applied in the future.
 
 const CATEGORIES: Set<number> = new Set([
   8424, 8309, 8311, 8392, 8405, 44392, 44393, 44394, 44395, 44396, 44397, 44398, 44400, 44401,
   44402, 44538, 44537, 44399, 8396, 11907, 8400, 10486, 11906, 11889, 8310, 8312, 8393, 8394, 8397,
   8398, 8399, 8404, 8407, 8408, 11891, 11892, 11899, 11900, 11902, 21318, 8406, 11908, 11935,
 ]);
-
-// The Concept3D API key is hardcoded here, which is generally a bad practice due to the security risks.
-// For truly sensitive keys, environment variables or a secrets manager would be used (as with DB_URL).
-// This approach was considered pragmatic for this specific utility and non-sensitive key.
-
 const LOCATIONS_LIST_API =
   "https://api.concept3d.com/locations?map=463&key=0001085cc708b9cef47080f064612ca5";
-const LOCATIONS_DETAIL_API = (id: number) =>
-  `https://api.concept3d.com/locations/${id}?map=463&key=0001085cc708b9cef47080f064612ca5`;
-const locationsCatalogue: Record<number, BuildingLocation> = {};
-const locationIds: Record<string, number> = {};
 
-function sleep(ms: number): Promise<number> {
-  return new Promise((resolve) => setTimeout(() => resolve(ms), ms));
-}
+const locationsCatalogue: Record<string, BuildingLocation> = {};
+const locationIds: Record<string, string> = {};
 
 async function fetchLocations() {
   const locationsListResponse: Response = await fetch(LOCATIONS_LIST_API);
   const locations: LocationListData[] = (await locationsListResponse.json()) as LocationListData[];
   for (const location of locations) {
     // Check if location was already recorded
-    const locationExists: boolean = Object.values(locationsCatalogue).some(
+    const duplicateLocationsExist: boolean = Object.values(locationsCatalogue).some(
       (existingLocation) => existingLocation.name === location.name,
     );
 
     if (!CATEGORIES.has(location.catId)) {
       continue;
     }
-    if (locationExists) {
+    if (duplicateLocationsExist) {
       continue;
-    }
-
-    // If one of the locations belongs to one of the categories above, and is not a duplicate
-    // Hits location data API to get details on location
-    const locationsDetailResponse: Response = await fetch(LOCATIONS_DETAIL_API(location.id));
-    const locationData: LocationDetailData =
-      (await locationsDetailResponse.json()) as LocationDetailData;
-
-    const imgUrls: string[] = [];
-
-    // Collects image URLs by checking if type is an image
-    // { 'mediaUrlTypes': ['image', '...', 'image'], 'mediaUrls': ['xyz.jpg', '...', 'abc.png']}
-    if (locationData.mediaUrlTypes !== undefined) {
-      for (const [i, media] of locationData.mediaUrlTypes.entries()) {
-        if (media === "image") {
-          imgUrls.push(locationData.mediaUrls[i]);
-        }
-      }
     }
 
     locationsCatalogue[location.id] = {
       name: location.name,
       lat: location.lat,
       lng: location.lng,
-      imageURLs: imgUrls,
     };
 
-    const locationName: string = location.name.includes("(")
-      ? location.name.substring(location.name.indexOf("(") + 1, location.name.indexOf(")"))
-      : location.name;
+    const locationName = location.name.split("(")[1]?.split(")")[0] ?? location.name;
     locationIds[locationName] = location.id;
   }
 }
@@ -99,23 +65,21 @@ async function main() {
   await fetchLocations();
   console.log("Done fetching locations...");
   await db.transaction(async (tx) => {
-    for (const locationId in locationsCatalogue) {
-      const locationData = locationsCatalogue[locationId];
+    for (const [locationId, locationData] of Object.entries(locationsCatalogue)) {
       await tx
         .insert(mapLocation)
         .values({
           id: locationId,
           name: locationData.name,
-          latitude: locationData.lat.toString(),
-          longitude: locationData.lng.toString(),
-          imageURLs: locationData.imageURLs,
+          latitude: locationData.lat,
+          longitude: locationData.lng,
         })
         .onConflictDoUpdate({
           target: mapLocation.id,
           set: {
             name: locationData.name,
-            latitude: locationData.lat.toString(),
-            longitude: locationData.lng.toString(),
+            latitude: locationData.lat,
+            longitude: locationData.lng,
           },
         });
     }
