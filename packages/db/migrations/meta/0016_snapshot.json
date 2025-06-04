@@ -1,5 +1,5 @@
 {
-  "id": "4b38a8c0-9f91-41ed-a41f-7e7a07020dde",
+  "id": "f7577d06-27e9-49f3-828d-d44ec2a10697",
   "prevId": "d61c1141-bf8a-41bd-921c-551ec41b8764",
   "version": "7",
   "dialect": "postgresql",
@@ -945,7 +945,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "numeric",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
@@ -966,12 +966,6 @@
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
-        },
-        "image_urls": {
-          "name": "image_urls",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
