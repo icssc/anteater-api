@@ -26,9 +26,9 @@ const libraryTrafficRoute = createRoute({
       },
       description: "Successful operation",
     },
-    422: {
+    400: {
       content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
+      description: "No matching data found for the provided query parameters",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -45,7 +45,7 @@ libraryTrafficRouter.openapi(libraryTrafficRoute, async (c) => {
   if (res.length === 0) {
     return c.json(
       { ok: false, message: "Library traffic data not found: check for typos in query" },
-      422,
+      400,
     );
   }
 
