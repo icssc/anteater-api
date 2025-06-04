@@ -23,6 +23,7 @@ export interface LocationMeta {
   floorCode: string;
 }
 
+// Helper to sanitize and split raw JS array text content from HTML.
 function parseArray(src: string): string[] {
   return src
     .split(/[,\n]/)
@@ -30,6 +31,7 @@ function parseArray(src: string): string[] {
     .filter(Boolean);
 }
 
+// Build map of location metadata by ID from the UCI Libraries website.
 async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
     r.text(),
@@ -47,10 +49,10 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   const floorMatch = scriptText.match(/let\s+floors\s*=\s*\[([\s\S]*?)]/);
   if (!locMatch || !floorMatch) throw new Error("Unable to capture locationIds or floors array");
 
-  const ids = parseArray(locMatch[1]);
-  const codes = parseArray(floorMatch[1]);
+  const locationIds = parseArray(locMatch[1]);
+  const floorCodes = parseArray(floorMatch[1]);
 
-  if (ids.length !== codes.length)
+  if (locationIds.length !== floorCodes.length)
     throw new Error("locationIds and floors arrays are different lengths");
 
   const codeToLibrary = (code: string): string => {
@@ -59,37 +61,44 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
     return "Langson Library"; // fallback
   };
 
-  const meta: Record<string, LocationMeta> = {};
+  const locationMeta: Record<string, LocationMeta> = {};
 
-  ids.forEach((id, idx) => {
-    const code = codes[idx];
-    const root = $(`#leftSide${code}`);
+  locationIds.forEach((id, idx) => {
+    const floorCode = floorCodes[idx];
+    const locationSelection = $(`#leftSide${floorCode}`);
 
-    const primary = root.find("h2.card-title").first().text().trim();
+    const libraryLabel = locationSelection.find("h2.card-title").first().text().trim();
+    const subLocationLabel = locationSelection
+      .find("span.subLocation")
+      .first()
+      .text()
+      .trim()
+      .replace(/\s+/g, " ");
+    const fullLocationLabel = subLocationLabel
+      ? `${libraryLabel} - ${subLocationLabel}`
+      : libraryLabel || "Unknown";
 
-    const sub = root.find("span.subLocation").first().text().trim().replace(/\s+/g, " ");
-
-    const label = sub ? `${primary} - ${sub}` : primary || "Unknown";
-
-    meta[id] = {
+    locationMeta[id] = {
       id,
-      floorCode: code,
-      libraryName: codeToLibrary(code),
-      locationLabel: label,
+      floorCode: floorCode,
+      libraryName: codeToLibrary(floorCode),
+      locationLabel: fullLocationLabel,
     };
   });
 
-  return meta;
+  return locationMeta;
 }
 
 async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   const url = `https://www.lib.uci.edu/sites/all/scripts/occuspace.php?id=${id}`;
   try {
-    const raw = await fetch(url).then((r) => r.text());
-    const parsedOnce = JSON.parse(raw);
-    const parsed = typeof parsedOnce === "string" ? JSON.parse(parsedOnce) : parsedOnce;
-    if (parsed.data && typeof parsed.data === "object") return (parsed as RawRespOK).data;
-    console.warn(`ID ${id} responded with error: ${(parsed as RawRespErr).error}`);
+    const responseText = await fetch(url).then((r) => r.text());
+    const intermediateJson = JSON.parse(responseText);
+    const parsedResponse =
+      typeof intermediateJson === "string" ? JSON.parse(intermediateJson) : intermediateJson;
+    if (parsedResponse.data && typeof parsedResponse.data === "object")
+      return (parsedResponse as RawRespOK).data;
+    console.warn(`ID ${id} responded with error: ${(parsedResponse as RawRespErr).error}`);
   } catch (err) {
     console.error(`Unexpected error while fetching ID ${id}:`, err);
     throw err;
@@ -97,9 +106,12 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   return null;
 }
 
-// - "active": Library location is open — perform scrape every 15 minutes.
-// - "idle": Library is closed — perform scrape every 60 minutes.
-// - "skip": Library is nonexistent — do not scrape at all.
+/**
+ * Represents the possible statuses for library scraping based on operating hours.
+ * - "active": Library location is open — perform scrape every 15 minutes.
+ * - "idle": Library is closed — perform scrape every 60 minutes.
+ * - "skip": Library is unknown or not applicable for scraping - do not scrape.
+ */
 type ScrapeStatus = "active" | "idle" | "skip";
 
 export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
@@ -129,51 +141,51 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
 
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
-  // const db = database(DB_URL);
-  const lookup = await collectLocationMeta();
+  const locationMeta = await collectLocationMeta();
 
-  const dateNow = new Date();
-  const minutes = dateNow.getMinutes();
+  const currentTime = new Date();
+  const currentMinute = currentTime.getMinutes();
 
-  for (const [id, meta] of Object.entries(lookup)) {
+  for (const [id, meta] of Object.entries(locationMeta)) {
     const libraryCodeMap = {
       "Langson Library": "LL",
       "Science Library": "SL",
       "Gateway Study Center": "LGSC",
     } as const;
 
-    const code = libraryCodeMap[meta.libraryName as keyof typeof libraryCodeMap];
-    const status = getScrapeStatus(code);
+    const libraryCode = libraryCodeMap[meta.libraryName as keyof typeof libraryCodeMap];
+    const scrapeStatus = getScrapeStatus(libraryCode);
 
-    if (status === "skip") {
+    if (scrapeStatus === "skip") {
       console.error(`Skipping ${meta.libraryName} — unknown library code.`);
       continue;
     }
 
     // Scrape hourly within the first 15 minutes while library is closed.
-    if (status === "idle" && minutes >= 15) {
+    if (scrapeStatus === "idle" && currentMinute >= 15) {
       console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
       continue;
     }
 
-    const data = await fetchLocation(id);
-    if (!data) continue;
+    const locationData = await fetchLocation(id);
+    if (!locationData) continue;
 
     console.log(
       `[${meta.libraryName.padEnd(20)}] "${meta.locationLabel}": ` +
-        `count=${data.count}, pct=${data.percentage}`,
+        `count=${locationData.count}, pct=${locationData.percentage}`,
     );
 
+    // Upsert current snapshot in main library traffic table
     await db
       .insert(libraryTraffic)
       .values([
         {
-          id: data.id,
+          id: locationData.id,
           libraryName: meta.libraryName,
           locationName: meta.locationLabel,
-          trafficCount: data.count,
-          trafficPercentage: data.percentage,
-          timestamp: new Date(data.timestamp),
+          trafficCount: locationData.count,
+          trafficPercentage: locationData.percentage,
+          timestamp: new Date(locationData.timestamp),
         },
       ])
       .onConflictDoUpdate({
@@ -181,18 +193,19 @@ export async function doScrape(db: ReturnType<typeof database>) {
         set: {
           libraryName: meta.libraryName,
           locationName: meta.locationLabel,
-          trafficCount: data.count,
-          trafficPercentage: data.percentage,
-          timestamp: new Date(data.timestamp),
+          trafficCount: locationData.count,
+          trafficPercentage: locationData.percentage,
+          timestamp: new Date(locationData.timestamp),
         },
       });
 
+    // Accumulate historical data in library traffic history table
     await db.insert(libraryTrafficHistory).values([
       {
-        locationId: data.id,
-        trafficCount: data.count,
-        trafficPercentage: data.percentage,
-        timestamp: new Date(data.timestamp),
+        locationId: locationData.id,
+        trafficCount: locationData.count,
+        trafficPercentage: locationData.percentage,
+        timestamp: new Date(locationData.timestamp),
       },
     ]);
   }
