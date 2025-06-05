@@ -28,7 +28,11 @@ const libraryTrafficRoute = createRoute({
     },
     400: {
       content: { "application/json": { schema: errorSchema } },
-      description: "No matching data found for the provided query parameters",
+      description: "No matching data found for provided parameters",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },

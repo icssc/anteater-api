@@ -23,7 +23,7 @@ export interface LocationMeta {
   floorCode: string;
 }
 
-// Helper to sanitize and split raw JS array text content from HTML.
+// Helper to sanitize and split raw JS array text content from HTML
 function parseArray(src: string): string[] {
   return src
     .split(/[,\n]/)
@@ -31,7 +31,7 @@ function parseArray(src: string): string[] {
     .filter(Boolean);
 }
 
-// Build map of location metadata by ID from the UCI Libraries website.
+// Build map of location metadata by ID from the UCI Libraries website
 async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
     r.text(),
@@ -49,6 +49,9 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   const floorMatch = scriptText.match(/let\s+floors\s*=\s*\[([\s\S]*?)]/);
   if (!locMatch || !floorMatch) throw new Error("Unable to capture locationIds or floors array");
 
+  // Extract parallel arrays:
+  // - locationIds: unique Occuspace IDs for each location (i.e. ['245', '677', '205'])
+  // - floors: corresponding internal DOM codes for each location's container (i.e. ['-GSC-2', '-SL-3', '1'])
   const locationIds = parseArray(locMatch[1]);
   const floorCodes = parseArray(floorMatch[1]);
 
@@ -92,6 +95,7 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
 async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   const url = `https://www.lib.uci.edu/sites/all/scripts/occuspace.php?id=${id}`;
   try {
+    // Double-encoded JSON: double parse required
     const responseText = await fetch(url).then((r) => r.text());
     const intermediateJson = JSON.parse(responseText);
     const parsedResponse =
@@ -107,10 +111,10 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
 }
 
 /**
- * Represents the possible statuses for library scraping based on operating hours.
- * - "active": Library location is open — perform scrape every 15 minutes.
- * - "idle": Library is closed — perform scrape every 60 minutes.
- * - "skip": Library is unknown or not applicable for scraping - do not scrape.
+ * Represents the possible statuses for library scraping based on operating hours
+ * - "active": Library location is open — perform scrape every 15 minutes
+ * - "idle": Library is closed — perform scrape every 60 minutes
+ * - "skip": Library is unknown or not applicable for scraping - do not scrape
  */
 type ScrapeStatus = "active" | "idle" | "skip";
 
@@ -175,7 +179,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
       continue;
     }
 
-    // Scrape hourly within the first 15 minutes while library is closed.
+    // Scrape hourly within the first 15 minutes while library is closed
     if (scrapeStatus === "idle" && currentMinute >= 15) {
       console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
       continue;
