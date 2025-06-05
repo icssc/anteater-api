@@ -121,19 +121,33 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
   const hour = pacificTime.getHours();
   const day = pacificTime.getDay();
 
+  // Langson Library (LL) and Science Library (SL) - same operating hours
   if (library === "LL" || library === "SL") {
-    if (day >= 1 && day <= 4 && hour >= 8 && hour < 23) return "active"; // Mon–Thu: 8am–11pm
-    if (day === 5 && hour >= 8 && hour < 18) return "active"; // Fri: 8am–6pm
-    if (day === 6 && hour >= 13 && hour < 17) return "active"; // Sat: 1pm–5pm
-    if (day === 0 && hour >= 13 && hour < 21) return "active"; // Sun: 1pm–9pm
+    // Mon–Thu: Open from 8am to 11pm
+    if (day >= 1 && day <= 4 && hour >= 8 && hour < 23) return "active";
+    // Fri: Open from 8am to 6pm
+    if (day === 5 && hour >= 8 && hour < 18) return "active";
+    // Sat: Open from 1pm to 5pm
+    if (day === 6 && hour >= 13 && hour < 17) return "active";
+    // Sun: Open from 1pm to 9pm
+    if (day === 0 && hour >= 13 && hour < 21) return "active";
+
+    // Outside of above hours, the library is closed
     return "idle";
   }
 
+  // Libraries Gateway Study Center (LGSC)
   if (library === "LGSC") {
-    if (day >= 1 && day <= 4 && (hour >= 8 || hour < 3)) return "active"; // Mon–Thu: 8am–3am
-    if (day === 5 && hour >= 8 && hour < 21) return "active"; // Fri: 8am–9pm
-    if (day === 6 && hour >= 17 && hour < 21) return "active"; // Sat: 5pm–9pm
-    if (day === 0 && (hour >= 17 || hour < 3)) return "active"; // Sun: 5pm–3am
+    // Mon–Thu: Open from 8am until 3am the next day
+    if (day >= 1 && day <= 4 && (hour >= 8 || hour < 3)) return "active";
+    // Fri: Open from 8am to 9pm
+    if (day === 5 && hour >= 8 && hour < 21) return "active";
+    // Sat: Open from 5pm to 9pm
+    if (day === 6 && hour >= 17 && hour < 21) return "active";
+    // Sun: Open from 5pm to 3am the next day
+    if (day === 0 && (hour >= 17 || hour < 3)) return "active";
+
+    // Outside of above hours, the library is closed
     return "idle";
   }
   return "skip";
