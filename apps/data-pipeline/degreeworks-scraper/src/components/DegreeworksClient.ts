@@ -43,7 +43,7 @@ export class DegreeworksClient {
       .join("&");
   }
 
-  async getUgradRequirements(): Promise<[Block, Block] | undefined> {
+  async getUgradRequirements(): Promise<[Block, Block, Block | undefined] | undefined> {
     const params = DegreeworksClient.formatQueryParams({
       studentId: this.studentId,
       // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
@@ -72,7 +72,11 @@ export class DegreeworksClient {
       return;
     }
 
-    return [ucRequirements, geRequirements];
+    const honorsRequirements = json.blockArray.find(
+      (b) => b.requirementType === "OTHER" && b.requirementValue === "CHP",
+    );
+
+    return [ucRequirements, geRequirements, honorsRequirements];
   }
 
   async getMajorAudit(

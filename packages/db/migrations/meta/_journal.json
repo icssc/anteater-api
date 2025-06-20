@@ -113,6 +113,13 @@
       "when": 1748209598264,
       "tag": "0015_drop_study_rooms_mview",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1749338614838,
+      "tag": "0016_widen-school-requirement-id",
+      "breakpoints": true
     }
   ]
 }
