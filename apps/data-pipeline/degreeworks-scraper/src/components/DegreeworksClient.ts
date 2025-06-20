@@ -43,7 +43,7 @@ export class DegreeworksClient {
       .join("&");
   }
 
-  async getUgradRequirements(): Promise<[Block, Block] | undefined> {
+  async getUgradRequirements(): Promise<[Block, Block, Block | undefined] | undefined> {
     const params = DegreeworksClient.formatQueryParams({
       studentId: this.studentId,
       // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
@@ -72,7 +72,11 @@ export class DegreeworksClient {
       return;
     }
 
-    return [ucRequirements, geRequirements];
+    const honorsRequirements = json.blockArray.find(
+      (b) => b.requirementType === "OTHER" && b.requirementValue === "CHP",
+    );
+
+    return [ucRequirements, geRequirements, honorsRequirements];
   }
 
   async getMajorAudit(
@@ -160,7 +164,9 @@ export class DegreeworksClient {
   }
 
   async getMapping<T extends string>(path: T): Promise<Map<string, string>> {
-    const res = await fetch(`${DegreeworksClient.API_URL}/${path}`, { headers: this.headers });
+    const res = await fetch(`${DegreeworksClient.API_URL}/validations/special-entities/${path}`, {
+      headers: this.headers,
+    });
     await this.sleep();
     const json: DWMappingResponse<T> = await res.json();
     return new Map(json._embedded[path].map((x) => [x.key, x.description]));

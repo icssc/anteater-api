@@ -1,8 +1,8 @@
 import { exit } from "node:process";
 import { Scraper } from "$components";
 import { database } from "@packages/db";
-import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
 import type { Division } from "@packages/db/schema";
+import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 
 async function main() {
@@ -24,6 +24,7 @@ async function main() {
   } = scraper.get();
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
+  const honorsRequirementData = parsedUgradRequirements.get("HONORS");
 
   const degreeData = degreesAwarded
     .entries()
@@ -67,6 +68,21 @@ async function main() {
           {
             id: "GE",
             requirements: geRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    if (honorsRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "HONORS",
+            requirements: honorsRequirementData,
           },
         ])
         .onConflictDoUpdate({
