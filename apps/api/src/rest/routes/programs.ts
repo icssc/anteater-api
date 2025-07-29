@@ -12,6 +12,8 @@ import {
   minorsResponseSchema,
   programRequirementSchema,
   responseSchema,
+  sampleProgramsQuerySchema,
+  sampleProgramsResponseSchema,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
   specializationsQuerySchema,
@@ -90,7 +92,9 @@ const specializationsRoute = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(specializationsResponseSchema) },
+        "application/json": {
+          schema: responseSchema(specializationsResponseSchema),
+        },
       },
       description: "Successful operation",
     },
@@ -118,7 +122,9 @@ const majorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(majorRequirementsResponseSchema) },
+        "application/json": {
+          schema: responseSchema(majorRequirementsResponseSchema),
+        },
       },
       description: "Successful operation",
     },
@@ -148,7 +154,9 @@ const minorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(minorRequirementsResponseSchema) },
+        "application/json": {
+          schema: responseSchema(minorRequirementsResponseSchema),
+        },
       },
       description: "Successful operation",
     },
@@ -178,7 +186,9 @@ const specializationRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(specializationRequirementsResponseSchema) },
+        "application/json": {
+          schema: responseSchema(specializationRequirementsResponseSchema),
+        },
       },
       description: "Successful operation",
     },
@@ -208,7 +218,9 @@ const ugradRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(ugradRequirementsResponseSchema) },
+        "application/json": {
+          schema: responseSchema(ugradRequirementsResponseSchema),
+        },
       },
       description: "Successful operation",
     },
@@ -219,6 +231,34 @@ const ugradRequirements = createRoute({
     422: {
       content: { "application/json": { schema: errorSchema } },
       description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+const samplePrograms = createRoute({
+  summary: "Sample Programs",
+  operationId: "getSamplePrograms",
+  tags: ["Programs"],
+  method: "get",
+  path: "/samples",
+  description: "List all available sample programs in UCI's current catalogue.",
+  request: { query: sampleProgramsQuerySchema },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: responseSchema(sampleProgramsResponseSchema),
+        },
+      },
+      description: "Successful operation",
+    },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Sample program data not found",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -257,7 +297,13 @@ programsRouter.openapi(specializationsRoute, async (c) => {
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getSpecializations(query);
   if (query?.majorId && !res.length) {
-    return c.json({ ok: false, message: "No data on specializations for a major by that ID" }, 404);
+    return c.json(
+      {
+        ok: false,
+        message: "No data on specializations for a major by that ID",
+      },
+      404,
+    );
   }
   return c.json({ ok: true, data: specializationsResponseSchema.parse(res) }, 200);
 });
@@ -320,6 +366,22 @@ programsRouter.openapi(ugradRequirements, async (c) => {
         },
         404,
       );
+});
+
+programsRouter.openapi(samplePrograms, async (c) => {
+  const query = c.req.valid("query");
+  const service = new ProgramsService(database(c.env.DB.connectionString));
+  const res = await service.getSamplePrograms(query);
+  if (query?.programName && !res.length) {
+    return c.json(
+      {
+        ok: false,
+        message: "No data for a sample program by that program major",
+      },
+      404,
+    );
+  }
+  return c.json({ ok: true, data: sampleProgramsResponseSchema.parse(res) }, 200);
 });
 
 export { programsRouter };
