@@ -183,8 +183,11 @@ export class SearchService {
         },
       ),
     );
-    const courses = await this.courseMappingFromResults(results.course);
-    const instructors = await this.instructorMappingFromResults(results.instructor);
+
+    const lookedUp = {
+      course: await this.courseMappingFromResults(results.course),
+      instructor: await this.instructorMappingFromResults(results.instructor),
+    };
 
     return {
       count: results.course.size + results.instructor.size,
@@ -192,13 +195,13 @@ export class SearchService {
         ...results.course.entries().map(([key, rank]) => ({
           key,
           type: "course" as const,
-          result: getFromMapOrThrow(courses, key),
+          result: getFromMapOrThrow(lookedUp.course, key),
           rank,
         })),
         ...results.instructor.entries().map(([key, rank]) => ({
           key,
           type: "instructor" as const,
-          result: getFromMapOrThrow(instructors, key),
+          result: getFromMapOrThrow(lookedUp.instructor, key),
           rank,
         })),
       ]
