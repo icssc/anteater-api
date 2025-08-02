@@ -2,9 +2,13 @@ import { z } from "@hono/zod-openapi";
 import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
 
-const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
+export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
-const inputGECategories = [
+export const inputCourseLevelSchema = z.enum(inputCourseLevels, {
+  message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
+});
+
+export const inputGECategories = [
   "GE-1A",
   "GE-1B",
   "GE-2",
@@ -54,11 +58,7 @@ export const coursesQuerySchema = z.object({
   courseNumber: z.string().optional(),
   courseNumeric: z.coerce.number().optional(),
   titleContains: z.string().optional(),
-  courseLevel: z
-    .enum(inputCourseLevels, {
-      message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
-    })
-    .optional(),
+  courseLevel: inputCourseLevelSchema.optional(),
   minUnits: z.coerce.number().optional(),
   maxUnits: z.coerce.number().optional(),
   descriptionContains: z.string().optional(),

@@ -6,12 +6,13 @@ import type {
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { asc, desc, sql } from "@packages/db/drizzle";
+import { and, asc, desc, eq, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import type { CoursesService } from "./courses";
 import type { InstructorsService } from "./instructors";
+import { buildDivisionQuery, buildGEQuery, buildUnitBoundsQuery } from "./util.ts";
 
 const COURSES_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.id}, '')), 'A') ||
@@ -60,6 +61,20 @@ export class SearchService {
     private readonly instructorsService: InstructorsService,
   ) {}
 
+  private buildCourseConditions(input: SearchServiceInput) {
+    const courseConditions = [
+      ...buildGEQuery(input.ge),
+      ...buildDivisionQuery(input.courseLevel),
+      ...buildUnitBoundsQuery(course, input.minUnits, input.maxUnits),
+    ];
+
+    if (input.department) {
+      courseConditions.push(eq(course.department, input.department));
+    }
+
+    return and(...courseConditions);
+  }
+
   private async courseMappingFromResults(results: Map<string, number>) {
     return await this.coursesService
       .batchGetCourses(results.keys().toArray())
@@ -92,7 +107,7 @@ export class SearchService {
         rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
       })
       .from(course)
-      .where(sql`${COURSES_WEIGHTS} @@ ${query}`)
+      .where(and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${query}`))
       .orderBy((t) => [desc(t.rank), asc(t.id)])
       .then((rows) =>
         rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
@@ -147,12 +162,14 @@ export class SearchService {
   }
 
   async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
-    if (input.resultType === "course") {
-      return this.doSearchForCourses(input);
-    }
     if (input.resultType === "instructor") {
       return this.doSearchForInstructors(input);
     }
+
+    if (input.resultType === "course") {
+      return this.doSearchForCourses(input);
+    }
+
     const query = toQuery(input.query);
     const results = await unionAll(
       this.db
@@ -162,7 +179,7 @@ export class SearchService {
           rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(course)
-        .where(sql`${COURSES_WEIGHTS} @@ ${query}`),
+        .where(and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${query}`)),
       this.db
         .select({
           type: sql<SearchResultType>`'instructor'`,

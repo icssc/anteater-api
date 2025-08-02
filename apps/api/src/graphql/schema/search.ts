@@ -21,6 +21,11 @@ input SearchQuery {
     take: Int
     skip: Int
     resultType: SearchResultType
+    department: String
+    courseLevel: CourseLevel
+    minUnits: Float
+    maxUnits: Float
+    ge: String
 }
 
 extend type Query {

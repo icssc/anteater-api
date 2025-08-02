@@ -9,12 +9,13 @@ import type {
 import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, gte, ilike, inArray, lt, lte } from "@packages/db/drizzle";
+import { and, eq, gte, ilike, inArray, lt } from "@packages/db/drizzle";
 import type { CourseLevel, course } from "@packages/db/schema";
 import { courseView } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
+import { buildUnitBoundsQuery } from "./util.ts";
 
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
@@ -97,12 +98,7 @@ function buildQuery(input: CoursesServiceInput | CoursesByCursorServiceInput) {
         break;
     }
   }
-  if (input.minUnits) {
-    conditions.push(gte(courseView.minUnits, input.minUnits.toString(10)));
-  }
-  if (input.maxUnits) {
-    conditions.push(lte(courseView.maxUnits, input.maxUnits.toString(10)));
-  }
+  conditions.push(...buildUnitBoundsQuery(courseView, input.minUnits, input.maxUnits));
   if (input.descriptionContains) {
     conditions.push(ilike(courseView.description, `%${input.descriptionContains}%`));
   }

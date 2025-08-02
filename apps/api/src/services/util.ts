@@ -1,4 +1,4 @@
-import type { websocQuerySchema } from "$schema";
+import type { coursesQuerySchema, websocQuerySchema } from "$schema";
 import { type ColumnBaseConfig, type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
 import type { PgColumn } from "@packages/db/drizzle-pg";
 import { websocCourse } from "@packages/db/schema";
@@ -147,6 +147,30 @@ export function buildDaysOfWeekQuery(
       }
     }
     conditions.push(or(...daysConditions));
+  }
+
+  return conditions;
+}
+
+type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
+
+interface CourseUnitsLikeTable {
+  minUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
+  maxUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
+}
+
+export function buildUnitBoundsQuery(
+  table: CourseUnitsLikeTable,
+  minUnits: CoursesServiceInput["minUnits"],
+  maxUnits: CoursesServiceInput["maxUnits"],
+): Array<SQL | undefined> {
+  const conditions = [];
+
+  if (minUnits) {
+    conditions.push(gte(table.minUnits, minUnits.toString(10)));
+  }
+  if (maxUnits) {
+    conditions.push(lte(table.maxUnits, maxUnits.toString(10)));
   }
 
   return conditions;
