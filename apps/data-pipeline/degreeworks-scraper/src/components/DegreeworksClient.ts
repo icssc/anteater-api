@@ -160,7 +160,9 @@ export class DegreeworksClient {
   }
 
   async getMapping<T extends string>(path: T): Promise<Map<string, string>> {
-    const res = await fetch(`${DegreeworksClient.API_URL}/${path}`, { headers: this.headers });
+    const res = await fetch(`${DegreeworksClient.API_URL}/validations/special-entities/${path}`, {
+      headers: this.headers,
+    });
     await this.sleep();
     const json: DWMappingResponse<T> = await res.json();
     return new Map(json._embedded[path].map((x) => [x.key, x.description]));
