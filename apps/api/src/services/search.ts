@@ -51,6 +51,7 @@ function toQuery(query: string) {
 }
 
 type SearchServiceInput = z.infer<typeof searchQuerySchema>;
+type SearchResultType = "course" | "instructor";
 
 export class SearchService {
   constructor(
@@ -156,6 +157,7 @@ export class SearchService {
     const results = await unionAll(
       this.db
         .select({
+          type: sql<SearchResultType>`'course'`,
           id: course.id,
           rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
         })
@@ -163,36 +165,43 @@ export class SearchService {
         .where(sql`${COURSES_WEIGHTS} @@ ${query}`),
       this.db
         .select({
+          type: sql<SearchResultType>`'instructor'`,
           id: instructor.ucinetid,
           rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(instructor)
         .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
     ).then((rows) =>
-      rows.reduce((acc, row) => acc.set(row.id, row.rank), new Map<string, number>()),
+      rows.reduce(
+        (acc, row) => {
+          acc[row.type].set(row.id, row.rank);
+          return acc;
+        },
+        {
+          course: new Map<string, number>(),
+          instructor: new Map<string, number>(),
+        },
+      ),
     );
-    const courses = await this.courseMappingFromResults(results);
-    const instructors = await this.instructorMappingFromResults(results);
+    const courses = await this.courseMappingFromResults(results.course);
+    const instructors = await this.instructorMappingFromResults(results.instructor);
+
     return {
-      count: results.size,
-      results: results
-        .entries()
-        .map(([key, rank]) =>
-          courses.has(key)
-            ? {
-                key,
-                type: "course" as const,
-                result: getFromMapOrThrow(courses, key),
-                rank,
-              }
-            : {
-                key,
-                type: "instructor" as const,
-                result: getFromMapOrThrow(instructors, key),
-                rank,
-              },
-        )
-        .toArray()
+      count: results.course.size + results.instructor.size,
+      results: [
+        ...results.course.entries().map(([key, rank]) => ({
+          key,
+          type: "course" as const,
+          result: getFromMapOrThrow(courses, key),
+          rank,
+        })),
+        ...results.instructor.entries().map(([key, rank]) => ({
+          key,
+          type: "instructor" as const,
+          result: getFromMapOrThrow(instructors, key),
+          rank,
+        })),
+      ]
         .toSorted((a, b) => {
           const rankDiff = b.rank - a.rank;
           return Math.abs(rankDiff) < Number.EPSILON
