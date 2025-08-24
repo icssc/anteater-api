@@ -230,12 +230,6 @@ async function scrapePrerequisites() {
 
 const deepSortArray = <T extends unknown[]>(array: T): T => sortKeys(array, { deep: true });
 
-const courseMetaOrEmpty = (rawCourse: string[], key: string) =>
-  rawCourse
-    .find((x) => x.startsWith(key))
-    ?.replace(key, "")
-    .trim() ?? "";
-
 function generateGEs(rawCourse: string[]) {
   const maybeGEText = rawCourse.slice(-1)[0];
   const res = {
@@ -308,11 +302,10 @@ const textAfterLabel = (txt: string, label: string) => {
   return m ? stripFinalPeriod(m[1]) : "";
 };
 
-const parseUnitsStrict = (unitsText: string) => {
+const parseUnits = (unitsText: string) => {
   const raw = norm(unitsText)
     .replace(/Units?\./i, "Units")
     .replace(/Units?/i, "")
-    .replace(/[–—]/g, "-")
     .trim();
   if (raw.includes("-")) {
     const [lo, hi] = raw.split("-", 2).map((x) => x.trim());
@@ -373,7 +366,7 @@ async function scrapeCoursesInDepartment(meta: {
     const code = stripFinalPeriod(codeRaw);
     const title = stripFinalPeriod(titleRaw);
 
-    const { minUnits, maxUnits } = parseUnitsStrict(unitsRaw);
+    const { minUnits, maxUnits } = parseUnits(unitsRaw);
 
     const courseNumber = code.startsWith(deptCode) ? code.slice(deptCode.length).trim() : code;
     const courseNumeric = Number.parseInt(courseNumber.replace(/[A-Z]/g, ""), 10);
