@@ -58,6 +58,15 @@ const unitFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
 });
 
+const DEPT_TO_ALIAS: Record<string, string> = {
+  COMPSCI: "CS",
+  EARTHSS: "ESS",
+  "I&C SCI": "ICS",
+  IN4MATX: "INF",
+  ENGRMAE: "MAE",
+  WRITING: "WR",
+};
+
 async function fetchWithDelay(url: string, delayMs = 1000) {
   try {
     logger.info(`Making request to ${url}`);
@@ -445,10 +454,17 @@ async function scrapeCoursesInDepartment(meta: {
           courses.map((c) => c.id),
         ),
       )
-      .then((rows) => rows.map(({ courseNumeric, updatedAt, ...rest }) => rest)),
+      .then((rows) => rows.map(({ courseNumeric, ...rest }) => rest)),
   );
 
-  const courseDiff = diffString(dbCourses, courses);
+  const coursesForInsert = deepSortArray(
+    courses.map((c) => ({
+      ...c,
+      departmentAlias: DEPT_TO_ALIAS[c.department] ?? null,
+    })),
+  );
+
+  const courseDiff = diffString(dbCourses, coursesForInsert);
   if (!courseDiff.length) {
     logger.info(`No difference found between database and scraped course data for ${deptCode}.`);
   } else {
@@ -461,7 +477,7 @@ async function scrapeCoursesInDepartment(meta: {
   }
 
   const prereqRows = deepSortArray(
-    courses
+    coursesForInsert
       .map((c) => ({ id: c.id, prerequisiteList: prereqTreeToList(c.prerequisiteTree) }))
       .flatMap((c): (typeof prerequisite.$inferInsert)[] =>
         c.prerequisiteList.map((p) => ({
@@ -506,18 +522,18 @@ async function scrapeCoursesInDepartment(meta: {
   }
 
   await db.transaction(async (tx) => {
-    if (courses.length) {
+    if (coursesForInsert.length) {
       await tx.delete(course).where(
         inArray(
           course.id,
-          courses.map((c) => c.id),
+          coursesForInsert.map((c) => c.id),
         ),
       );
-      await tx.insert(course).values(courses);
+      await tx.insert(course).values(coursesForInsert);
       await tx.delete(prerequisite).where(
         inArray(
           prerequisite.dependencyId,
-          courses.map((c) => c.id),
+          coursesForInsert.map((c) => c.id),
         ),
       );
       if (prereqRows.length) {
