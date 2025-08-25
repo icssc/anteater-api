@@ -58,14 +58,103 @@ const unitFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
 });
 
-const DEPT_TO_ALIAS: Record<string, string> = {
+const DEPT_TO_ALIAS = {
   COMPSCI: "CS",
   EARTHSS: "ESS",
   "I&C SCI": "ICS",
   IN4MATX: "INF",
   ENGRMAE: "MAE",
   WRITING: "WR",
+} as const;
+
+type DeptAliasMap = typeof DEPT_TO_ALIAS;
+type DeptCode = keyof DeptAliasMap;
+const getDepartmentAlias = (dept: string): DeptAliasMap[DeptCode] | null =>
+  (DEPT_TO_ALIAS as Record<string, DeptAliasMap[DeptCode]>)[dept] ?? null;
+
+type ParseContext = {
+  $: ReturnType<typeof load>;
+  deptCode: string;
+  schoolName: string;
+  departmentName: string;
+  updatedAt: Date;
+  prereqs?: Map<string, PrerequisiteTree>;
 };
+
+function parseCourseBlock(
+  context: ParseContext,
+  el: DomElement,
+): typeof course.$inferInsert | null {
+  const { $, deptCode, schoolName, departmentName, prereqs, updatedAt } = context;
+
+  const $b = $(el);
+
+  const codeRaw = norm($b.find(".detail-code").first().text());
+  const titleRaw = norm($b.find(".detail-title").first().text());
+  const unitsRaw = norm($b.find(".detail-hours_html").first().text());
+  if (!codeRaw || !titleRaw || !unitsRaw) return null;
+
+  const code = stripFinalPeriod(codeRaw);
+  const title = stripFinalPeriod(titleRaw);
+
+  const { minUnits, maxUnits } = parseUnits(unitsRaw);
+
+  const courseNumber = code.startsWith(deptCode) ? code.slice(deptCode.length).trim() : code;
+  const courseNumeric = Number.parseInt(courseNumber.replace(/[A-Z]/g, ""), 10);
+  const courseLevel =
+    Number.isFinite(courseNumeric) && courseNumeric < 100
+      ? "LowerDiv"
+      : courseNumeric < 200
+        ? "UpperDiv"
+        : "Graduate";
+
+  const id = `${deptCode} ${courseNumber}`.replace(/ /g, "");
+
+  const desc = norm($b.find(".courseblockextra").first().text());
+  const prereqText = textAfterLabel($b.find(".detail-prereqs").first().text(), "Prerequisite");
+  const coreqText = textAfterLabel(
+    $b.find(".detail-coreqs, .detail-corequisites").first().text(),
+    "Corequisite",
+  );
+  const concText = textAfterLabel($b.find(".detail-concurrent").first().text(), "Concurrent with");
+  const sameAsText = textAfterLabel($b.find(".detail-sameas").first().text(), "Same as");
+  const overlapText = textAfterLabel($b.find(".detail-overlaps").first().text(), "Overlaps with");
+  const restrText = textAfterLabel($b.find(".detail-restrictions").first().text(), "Restriction");
+  const gradingText = textAfterLabel(
+    $b.find(".detail-grading_option").first().text(),
+    "Grading Option",
+  );
+  const repeatText = textAfterLabel(
+    $b.find(".detail-repeatability").first().text(),
+    "Repeatability",
+  );
+  const geText = norm($b.find(".detail-gened").first().text());
+  const geFlags = generateGEs(geText ? [geText] : []);
+
+  return {
+    id,
+    department: deptCode,
+    courseNumber,
+    school: schoolName,
+    title,
+    courseLevel,
+    minUnits,
+    maxUnits,
+    description: desc || "",
+    departmentName,
+    prerequisiteTree: prereqs?.get(`${deptCode} ${courseNumber}`) ?? {},
+    prerequisiteText: prereqText,
+    repeatability: repeatText,
+    gradingOption: gradingText,
+    concurrent: concText,
+    sameAs: sameAsText,
+    restriction: restrText,
+    overlap: overlapText,
+    corequisites: coreqText,
+    ...geFlags,
+    updatedAt,
+  };
+}
 
 async function fetchWithDelay(url: string, delayMs = 1000) {
   try {
@@ -355,84 +444,12 @@ async function scrapeCoursesInDepartment(meta: {
   const $ = load(departmentText);
   const departmentName = $("h1.page-title").text().normalize("NFKD").split("(")[0].trim();
 
-  const toCourse = (el: DomElement): typeof course.$inferInsert | null => {
-    const $b = $(el);
-
-    const codeRaw = norm($b.find(".detail-code").first().text());
-    const titleRaw = norm($b.find(".detail-title").first().text());
-    const unitsRaw = norm($b.find(".detail-hours_html").first().text());
-    if (!codeRaw || !titleRaw || !unitsRaw) return null;
-
-    const code = stripFinalPeriod(codeRaw);
-    const title = stripFinalPeriod(titleRaw);
-
-    const { minUnits, maxUnits } = parseUnits(unitsRaw);
-
-    const courseNumber = code.startsWith(deptCode) ? code.slice(deptCode.length).trim() : code;
-    const courseNumeric = Number.parseInt(courseNumber.replace(/[A-Z]/g, ""), 10);
-    const courseLevel =
-      Number.isFinite(courseNumeric) && courseNumeric < 100
-        ? "LowerDiv"
-        : courseNumeric < 200
-          ? "UpperDiv"
-          : "Graduate";
-
-    const id = `${deptCode} ${courseNumber}`.replace(/ /g, "");
-
-    const desc = norm($b.find(".courseblockextra").first().text());
-    const prereqText = textAfterLabel($b.find(".detail-prereqs").first().text(), "Prerequisite");
-    const coreqText = textAfterLabel(
-      $b.find(".detail-coreqs, .detail-corequisites").first().text(),
-      "Corequisite",
-    );
-    const concText = textAfterLabel(
-      $b.find(".detail-concurrent").first().text(),
-      "Concurrent with",
-    );
-    const sameAsText = textAfterLabel($b.find(".detail-sameas").first().text(), "Same as");
-    const overlapText = textAfterLabel($b.find(".detail-overlaps").first().text(), "Overlaps with");
-    const restrText = textAfterLabel($b.find(".detail-restrictions").first().text(), "Restriction");
-    const gradingText = textAfterLabel(
-      $b.find(".detail-grading_option").first().text(),
-      "Grading Option",
-    );
-    const repeatText = textAfterLabel(
-      $b.find(".detail-repeatability").first().text(),
-      "Repeatability",
-    );
-    const geText = norm($b.find(".detail-gened").first().text());
-
-    const geFlags = generateGEs(geText ? [geText] : []);
-
-    return {
-      id,
-      department: deptCode,
-      courseNumber,
-      school: schoolName,
-      title,
-      courseLevel,
-      minUnits,
-      maxUnits,
-      description: desc || "",
-      departmentName,
-      prerequisiteTree: prereqs?.get(`${deptCode} ${courseNumber}`) ?? {},
-      prerequisiteText: prereqText,
-      repeatability: repeatText,
-      gradingOption: gradingText,
-      concurrent: concText,
-      sameAs: sameAsText,
-      restriction: restrText,
-      overlap: overlapText,
-      corequisites: coreqText,
-      ...geFlags,
-      updatedAt,
-    };
-  };
+  const context: ParseContext = { $, deptCode, schoolName, departmentName, updatedAt, prereqs };
 
   const courses = deepSortArray(
     $("div.courses .courseblock")
       .toArray()
-      .map(toCourse)
+      .map((el) => parseCourseBlock(context, el))
       .filter((x): x is NonNullable<typeof x> => !!x),
   );
 
@@ -453,7 +470,7 @@ async function scrapeCoursesInDepartment(meta: {
   const coursesForInsert = deepSortArray(
     courses.map((c) => ({
       ...c,
-      departmentAlias: DEPT_TO_ALIAS[c.department] ?? null,
+      departmentAlias: getDepartmentAlias(c.department),
     })),
   );
 
