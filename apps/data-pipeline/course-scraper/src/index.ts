@@ -7,7 +7,7 @@ import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
-import { sleep } from "@packages/stdlib";
+import { orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
 import { hasChildren } from "domhandler";
@@ -69,8 +69,8 @@ const DEPT_TO_ALIAS = {
 
 type DeptAliasMap = typeof DEPT_TO_ALIAS;
 type DeptCode = keyof DeptAliasMap;
-const getDepartmentAlias = (dept: string): DeptAliasMap[DeptCode] | null =>
-  (DEPT_TO_ALIAS as Record<string, DeptAliasMap[DeptCode]>)[dept] ?? null;
+
+const getDepartmentAlias = (dept: string) => orNull(DEPT_TO_ALIAS[dept as DeptCode]);
 
 type ParseContext = {
   $: ReturnType<typeof load>;
