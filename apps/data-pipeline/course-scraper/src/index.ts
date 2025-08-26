@@ -387,7 +387,7 @@ function prereqTreeToList(tree: PrerequisiteTree): string[] {
 const norm = (s: string) => s.replace(/\s+/g, " ").trim().normalize("NFKD");
 const stripFinalPeriod = (s: string) => s.replace(/\.\s*$/, "");
 const textAfterLabel = (txt: string, label: string) => {
-  const m = norm(txt).match(new RegExp(`^${label}s?:\\s*(.+)$`, "i"));
+  const m = norm(txt).match(new RegExp(`^${label}s?:?\\s*(.+)$`, "i"));
   return m ? stripFinalPeriod(m[1]) : "";
 };
 
