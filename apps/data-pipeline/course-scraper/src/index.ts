@@ -118,7 +118,10 @@ function parseCourseBlock(
   );
   const concText = textAfterLabel($b.find(".detail-concurrent").first().text(), "Concurrent with");
   const sameAsText = textAfterLabel($b.find(".detail-same_as").first().text(), "Same as");
-  const overlapText = textAfterLabel($b.find(".detail-overlaps").first().text(), "Overlaps with");
+  const overlapText = textAfterLabel(
+    $b.find(".detail-overlaps_with").first().text(),
+    "Overlaps with",
+  );
   const restrText = textAfterLabel($b.find(".detail-restrictions").first().text(), "Restriction");
   const gradingText = textAfterLabel(
     $b.find(".detail-grading_option").first().text(),
