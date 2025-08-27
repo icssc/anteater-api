@@ -1,16 +1,17 @@
 import type { studyRoomsQuerySchema } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, eq, gt, gte, lt, lte, or, sql } from "@packages/db/drizzle";
+import { type SQL, and, eq, gt, gte, lt, lte, or, sql } from "@packages/db/drizzle";
 import { studyRoom, studyRoomSlot } from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
 
 type StudyRoomsServiceInput = z.infer<typeof studyRoomsQuerySchema>;
 
 export class StudyRoomsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getStudyRoomById(id: string) {
-    const [room] = await this.db
+  async getRoomsWhere(conds: SQL | undefined) {
+    return this.db
       .select({
         id: studyRoom.id,
         name: studyRoom.name,
@@ -33,8 +34,13 @@ export class StudyRoomsService {
       })
       .from(studyRoom)
       .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
-      .where(eq(studyRoom.id, id));
-    return room || null;
+      .where(conds)
+      .groupBy(studyRoom.id);
+  }
+
+  async getStudyRoomById(id: string) {
+    const [room] = await this.getRoomsWhere(eq(studyRoom.id, id));
+    return orNull(room);
   }
 
   async getStudyRooms(input: StudyRoomsServiceInput) {
@@ -77,30 +83,6 @@ export class StudyRoomsService {
         ),
       );
 
-    return this.db
-      .select({
-        id: studyRoom.id,
-        name: studyRoom.name,
-        capacity: studyRoom.capacity,
-        location: studyRoom.location,
-        description: studyRoom.description,
-        directions: studyRoom.directions,
-        techEnhanced: studyRoom.techEnhanced,
-        url: sql`'https://spaces.lib.uci.edu/space/' || ${studyRoom.id}`,
-        slots:
-          sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
-            ELSE JSONB_BUILD_OBJECT(
-              'studyRoomId', ${studyRoomSlot.studyRoomId},
-              'start', to_json(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
-              'end', to_json(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
-              'url', 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || to_char(${studyRoomSlot.start}::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times', 
-              'isAvailable', ${studyRoomSlot.isAvailable}
-            )
-            END), ARRAY[]::JSONB[]), NULL)`.as("slots"),
-      })
-      .from(studyRoom)
-      .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
-      .where(conditions.length ? and(...conditions) : undefined)
-      .groupBy(studyRoom.id);
+    return this.getRoomsWhere(conditions.length ? and(...conditions) : undefined);
   }
 }
