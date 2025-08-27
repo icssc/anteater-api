@@ -33,8 +33,7 @@ export class StudyRoomsService {
       })
       .from(studyRoom)
       .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
-      .where(eq(studyRoom.id, id))
-      .groupBy(studyRoom.id);
+      .where(eq(studyRoom.id, id));
     return room || null;
   }
 
