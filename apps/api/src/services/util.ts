@@ -1,4 +1,4 @@
-import type { websocQuerySchema } from "$schema";
+import type { coursesQuerySchema, websocQuerySchema } from "$schema";
 import { type ColumnBaseConfig, type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
 import type { PgColumn } from "@packages/db/drizzle-pg";
 import { websocCourse } from "@packages/db/schema";
@@ -7,12 +7,12 @@ import type { z } from "zod";
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
-type WebsocGELikeInput = Pick<WebsocServiceInput, "ge">;
-export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
+type WebsocGELikeInput = WebsocServiceInput["ge"];
+export function buildGEQuery(ge: WebsocGELikeInput): Array<SQL | undefined> {
   const conditions = [];
 
-  if (input.ge) {
-    switch (input.ge) {
+  if (ge) {
+    switch (ge) {
       case "GE-1A":
         conditions.push(isTrue(websocCourse.isGE1A));
         break;
@@ -49,12 +49,12 @@ export function buildGEQuery(input: WebsocGELikeInput): Array<SQL | undefined> {
   return conditions;
 }
 
-type WebsocDivisionLikeInput = Pick<WebsocServiceInput, "division">;
-export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | undefined> {
+type WebsocDivisionLikeInput = WebsocServiceInput["division"];
+export function buildDivisionQuery(division: WebsocDivisionLikeInput): Array<SQL | undefined> {
   const conditions = [];
 
-  if (input.division) {
-    switch (input.division) {
+  if (division) {
+    switch (division) {
       case "LowerDiv":
         conditions.push(
           and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
@@ -74,15 +74,15 @@ export function buildDivisionQuery(input: WebsocDivisionLikeInput): Array<SQL | 
   return conditions;
 }
 
-type WebsocMultiCourseNumberLikeInput = Pick<WebsocServiceInput, "courseNumber">;
+type WebsocMultiCourseNumberLikeInput = WebsocServiceInput["courseNumber"];
 export function buildMultiCourseNumberQuery(
-  input: WebsocMultiCourseNumberLikeInput,
+  courseNumber: WebsocMultiCourseNumberLikeInput,
 ): Array<SQL | undefined> {
   const conditions = [];
 
-  if (input.courseNumber) {
+  if (courseNumber) {
     const courseNumberConditions: Array<SQL | undefined> = [];
-    for (const num of input.courseNumber) {
+    for (const num of courseNumber) {
       switch (num._type) {
         case "ParsedInteger":
           courseNumberConditions.push(eq(websocCourse.courseNumeric, num.value));
@@ -103,7 +103,7 @@ export function buildMultiCourseNumberQuery(
   return conditions;
 }
 
-type WebsocDaysOfWeekLikeInput = Pick<WebsocServiceInput, "days">;
+type WebsocDaysOfWeekLikeInput = WebsocServiceInput["days"];
 interface WebsocMeetsLikeTable {
   meetsMonday: PgColumn<ColumnBaseConfig<"boolean", string>>;
   meetsTuesday: PgColumn<ColumnBaseConfig<"boolean", string>>;
@@ -115,13 +115,13 @@ interface WebsocMeetsLikeTable {
 }
 export function buildDaysOfWeekQuery(
   table: WebsocMeetsLikeTable,
-  input: WebsocDaysOfWeekLikeInput,
+  days: WebsocDaysOfWeekLikeInput,
 ): Array<SQL | undefined> {
   const conditions = [];
 
-  if (input.days) {
+  if (days) {
     const daysConditions: SQL[] = [];
-    for (const day of input.days) {
+    for (const day of days) {
       switch (day) {
         case "M":
           daysConditions.push(isTrue(table.meetsMonday));
@@ -147,6 +147,30 @@ export function buildDaysOfWeekQuery(
       }
     }
     conditions.push(or(...daysConditions));
+  }
+
+  return conditions;
+}
+
+type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
+
+interface CourseUnitsLikeTable {
+  minUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
+  maxUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
+}
+
+export function buildUnitBoundsQuery(
+  table: CourseUnitsLikeTable,
+  minUnits: CoursesServiceInput["minUnits"],
+  maxUnits: CoursesServiceInput["maxUnits"],
+): Array<SQL | undefined> {
+  const conditions = [];
+
+  if (minUnits) {
+    conditions.push(gte(table.minUnits, minUnits.toString(10)));
+  }
+  if (maxUnits) {
+    conditions.push(lte(table.maxUnits, maxUnits.toString(10)));
   }
 
   return conditions;

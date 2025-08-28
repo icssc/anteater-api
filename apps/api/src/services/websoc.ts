@@ -39,14 +39,14 @@ function buildQuery(input: WebsocServiceInput) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
   ];
-  conditions.push(...buildGEQuery(input));
+  conditions.push(...buildGEQuery(input.ge));
   if (input.department) {
     conditions.push(eq(websocDepartment.deptCode, input.department));
   }
   if (input.courseTitle) {
     conditions.push(eq(websocCourse.courseTitle, input.courseTitle));
   }
-  conditions.push(...buildMultiCourseNumberQuery(input));
+  conditions.push(...buildMultiCourseNumberQuery(input.courseNumber));
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];
     for (const code of input.sectionCodes) {
@@ -66,14 +66,14 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.instructorName) {
     conditions.push(ilike(websocInstructor.name, `${input.instructorName}%`));
   }
-  conditions.push(...buildDaysOfWeekQuery(websocSectionMeeting, input));
+  conditions.push(...buildDaysOfWeekQuery(websocSectionMeeting, input.days));
   if (input.building) {
     conditions.push(eq(websocLocation.building, input.building.toUpperCase()));
   }
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  conditions.push(...buildDivisionQuery(input));
+  conditions.push(...buildDivisionQuery(input.division));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }
