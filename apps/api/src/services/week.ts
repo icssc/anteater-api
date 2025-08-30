@@ -1,6 +1,6 @@
 import type { weekQuerySchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, gte, lte } from "@packages/db/drizzle";
+import { and, getTableColumns, gte, lte, or } from "@packages/db/drizzle";
 import { calendarTerm } from "@packages/db/schema";
 import type { z } from "zod";
 
@@ -48,23 +48,37 @@ export class WeekService {
     const m = month ?? today.getMonth() + 1;
     const d = day ?? today.getDate();
     const date = new Date(Date.UTC(y, m - 1, d));
+
+    const inInstructionCondition = and(
+      lte(calendarTerm.instructionStart, date),
+      gte(calendarTerm.instructionEnd, date),
+    );
+    const inFinalsCondition = and(
+      lte(calendarTerm.finalsStart, date),
+      gte(calendarTerm.finalsEnd, date),
+    );
+
     const termsInProgress = await this.db
-      .select()
+      .select({
+        ...getTableColumns(calendarTerm),
+        inInstruction: inInstructionCondition as NonNullable<typeof inInstructionCondition>,
+        inFinals: inFinalsCondition as NonNullable<typeof inFinalsCondition>,
+      })
       .from(calendarTerm)
-      .where(and(lte(calendarTerm.instructionStart, date), gte(calendarTerm.instructionEnd, date)));
-    const termsInFinals = await this.db
-      .select()
-      .from(calendarTerm)
-      .where(and(lte(calendarTerm.finalsStart, date), gte(calendarTerm.finalsEnd, date)));
-    if (!termsInProgress.length && !termsInFinals.length) {
+      .where(or(inInstructionCondition, inFinalsCondition));
+
+    const termsInInstruction = termsInProgress.filter((t) => t.inInstruction);
+    const termsInFinals = termsInProgress.filter((t) => t.inFinals);
+
+    if (!termsInInstruction.length && !termsInFinals.length) {
       return {
         weeks: [-1],
         quarters: ["N/A"],
         display: "Enjoy your break! 😎",
       };
     }
-    if (termsInProgress.length === 1 && !termsInFinals.length) {
-      const [term] = termsInProgress;
+    if (termsInInstruction.length === 1 && !termsInFinals.length) {
+      const [term] = termsInInstruction;
       const weeks: [number] = [getWeek(date, term)];
       const quarters: [string] = [getQuarter(term.year, term.quarter)];
       return {
@@ -73,7 +87,7 @@ export class WeekService {
         display: `Week ${weeks[0]} • ${quarters[0]}`,
       };
     }
-    if (!termsInProgress.length && termsInFinals.length === 1) {
+    if (!termsInInstruction.length && termsInFinals.length === 1) {
       const [term] = termsInFinals;
       const quarters: [string] = [getQuarter(term.year, term.quarter)];
       return {
@@ -82,9 +96,9 @@ export class WeekService {
         display: `Finals${term.quarter === "Summer2" ? "" : " Week"} • ${quarters[0]}. Good luck! 🤞`,
       };
     }
-    if (termsInProgress.length === 2 && !termsInFinals.length) {
-      const [week1, week2] = termsInProgress.map((x) => getWeek(date, x)) as [number, number];
-      const [quarter1, quarter2] = termsInProgress.map(({ year, quarter }) =>
+    if (termsInInstruction.length === 2 && !termsInFinals.length) {
+      const [week1, week2] = termsInInstruction.map((x) => getWeek(date, x)) as [number, number];
+      const [quarter1, quarter2] = termsInInstruction.map(({ year, quarter }) =>
         getQuarter(year, quarter),
       ) as [string, string];
       const display: string =
@@ -97,8 +111,8 @@ export class WeekService {
         display,
       };
     }
-    if (termsInProgress.length === 1 && termsInFinals.length === 1) {
-      const [termInProgress] = termsInProgress;
+    if (termsInInstruction.length === 1 && termsInFinals.length === 1) {
+      const [termInProgress] = termsInInstruction;
       const [termInFinals] = termsInFinals;
       const weeks: [number, number] = [getWeek(date, termInProgress), -1];
       const quarters = [termInProgress, termInFinals].map(({ year, quarter }) =>
