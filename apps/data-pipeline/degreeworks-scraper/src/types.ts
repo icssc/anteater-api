@@ -75,6 +75,17 @@ export type Block = {
   title: string;
   ruleArray: Rule[];
 };
+
+export interface UndergraduateRequirements {
+  // university of california-wide requirements, expressed in UCI coursework
+  UC: Block;
+  // general education requirements
+  GE: Block;
+  // requirements for the four year campus honors collegium program
+  CHC4: Block | undefined;
+  // TODO: two-year/transfer CHC here
+}
+
 export type DWAuditOKResponse = { blockArray: Block[] };
 export type DWAuditErrorResponse = { error: never };
 /**
