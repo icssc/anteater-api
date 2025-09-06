@@ -39,7 +39,7 @@ function buildQuery(input: WebsocServiceInput) {
   const conditions = [
     and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)),
   ];
-  conditions.push(...buildGEQuery(input.ge));
+  conditions.push(...buildGEQuery(websocCourse, input.ge));
   if (input.department) {
     conditions.push(eq(websocDepartment.deptCode, input.department));
   }

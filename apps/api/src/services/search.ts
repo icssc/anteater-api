@@ -6,7 +6,7 @@ import type {
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, asc, desc, eq, sql } from "@packages/db/drizzle";
+import { and, asc, desc, eq, or, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -62,8 +62,10 @@ export class SearchService {
   ) {}
 
   private buildCourseConditions(input: SearchServiceInput) {
+    const geIn = input.ge ?? [];
+
     const courseConditions = [
-      ...buildGEQuery(input.ge),
+      or(...geIn.flatMap((ge) => buildGEQuery(course, ge))),
       ...buildDivisionQuery(input.courseLevel),
       ...buildUnitBoundsQuery(course, input.minUnits, input.maxUnits),
     ];

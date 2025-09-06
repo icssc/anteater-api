@@ -25,7 +25,7 @@ input SearchQuery {
     courseLevel: CourseLevel
     minUnits: Float
     maxUnits: Float
-    ge: String
+    ge: [String!]
 }
 
 extend type Query {

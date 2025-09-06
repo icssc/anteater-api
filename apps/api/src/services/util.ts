@@ -8,40 +8,55 @@ import type { z } from "zod";
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
 type WebsocGELikeInput = WebsocServiceInput["ge"];
-export function buildGEQuery(ge: WebsocGELikeInput): Array<SQL | undefined> {
+interface WebsocGeLikeTable {
+  isGE1A: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE1B: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE2: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE3: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE4: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE5A: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE5B: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE6: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE7: PgColumn<ColumnBaseConfig<"boolean", string>>;
+  isGE8: PgColumn<ColumnBaseConfig<"boolean", string>>;
+}
+export function buildGEQuery(
+  table: WebsocGeLikeTable,
+  ge: WebsocGELikeInput,
+): Array<SQL | undefined> {
   const conditions = [];
 
   if (ge) {
     switch (ge) {
       case "GE-1A":
-        conditions.push(isTrue(websocCourse.isGE1A));
+        conditions.push(isTrue(table.isGE1A));
         break;
       case "GE-1B":
-        conditions.push(isTrue(websocCourse.isGE1B));
+        conditions.push(isTrue(table.isGE1B));
         break;
       case "GE-2":
-        conditions.push(isTrue(websocCourse.isGE2));
+        conditions.push(isTrue(table.isGE2));
         break;
       case "GE-3":
-        conditions.push(isTrue(websocCourse.isGE3));
+        conditions.push(isTrue(table.isGE3));
         break;
       case "GE-4":
-        conditions.push(isTrue(websocCourse.isGE4));
+        conditions.push(isTrue(table.isGE4));
         break;
       case "GE-5A":
-        conditions.push(isTrue(websocCourse.isGE5A));
+        conditions.push(isTrue(table.isGE5A));
         break;
       case "GE-5B":
-        conditions.push(isTrue(websocCourse.isGE5B));
+        conditions.push(isTrue(table.isGE5B));
         break;
       case "GE-6":
-        conditions.push(isTrue(websocCourse.isGE6));
+        conditions.push(isTrue(table.isGE6));
         break;
       case "GE-7":
-        conditions.push(isTrue(websocCourse.isGE7));
+        conditions.push(isTrue(table.isGE7));
         break;
       case "GE-8":
-        conditions.push(isTrue(websocCourse.isGE8));
+        conditions.push(isTrue(table.isGE8));
         break;
     }
   }
@@ -155,8 +170,8 @@ export function buildDaysOfWeekQuery(
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 interface CourseUnitsLikeTable {
-  minUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
-  maxUnits: PgColumn<ColumnBaseConfig<"decimal", string>>;
+  minUnits: PgColumn<ColumnBaseConfig<"string", "PgNumeric">>;
+  maxUnits: PgColumn<ColumnBaseConfig<"string", "PgNumeric">>;
 }
 
 export function buildUnitBoundsQuery(

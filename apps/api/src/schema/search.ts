@@ -20,9 +20,16 @@ export const searchQuerySchema = z.object({
   maxUnits: z.coerce.number().optional().openapi({
     description: "If searching for courses, they must grant at most this many units upon passage",
   }),
-  ge: z.enum(inputGECategories).optional().openapi({
-    description: "If searching for courses, they must fulfill this GE category",
-  }),
+  ge: z.coerce
+    .string()
+    .transform((l) => l.split(","))
+    .pipe(z.enum(inputGECategories).array())
+    .optional()
+    .openapi({
+      description:
+        "If searching for courses, they must fulfill at least one of these comma-separated GE categories",
+      example: "GE-1A,GE-4",
+    }),
 });
 
 export const searchResultSchema = z.discriminatedUnion("type", [
