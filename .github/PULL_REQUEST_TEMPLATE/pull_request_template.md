@@ -1,6 +1,6 @@
 ---
 name: PULL_REQUEST_TEMPLATE
-about: Describe the implementation, impacts, and specific details of a pull request
+about: Describe the implementation, impact, and other details of a pull request
 title: ""
 labels: ""
 assignees: ""
