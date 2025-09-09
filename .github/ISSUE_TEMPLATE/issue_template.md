@@ -1,10 +1,9 @@
 ---
 name: ISSUE_TEMPLATE
-about: Describe an issue present in the API or present a feature request
-title: ''
-labels: ''
-assignees: ''
-
+about: Describe an issue present in the API or make a feature request
+title: ""
+labels: ""
+assignees: ""
 ---
 
 <!--- Provide a general summary of the issue in the Title above -->
