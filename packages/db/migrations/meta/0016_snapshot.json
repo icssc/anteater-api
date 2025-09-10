@@ -1,5 +1,5 @@
 {
-  "id": "f7577d06-27e9-49f3-828d-d44ec2a10697",
+  "id": "c24790bf-b6da-490c-a8b0-3edf3eb2e42f",
   "prevId": "d61c1141-bf8a-41bd-921c-551ec41b8764",
   "version": "7",
   "dialect": "postgresql",
@@ -957,13 +957,13 @@
         },
         "latitude": {
           "name": "latitude",
-          "type": "numeric",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
         },
         "longitude": {
           "name": "longitude",
-          "type": "numeric",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
         }

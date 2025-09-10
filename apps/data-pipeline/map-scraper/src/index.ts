@@ -27,33 +27,18 @@ const CATEGORIES: Set<number> = new Set([
 const LOCATIONS_LIST_API =
   "https://api.concept3d.com/locations?map=463&key=0001085cc708b9cef47080f064612ca5";
 
-const locationsCatalogue: Record<string, BuildingLocation> = {};
-const locationIds: Record<string, string> = {};
+const locationsCatalogue = new Map<string, BuildingLocation>();
+const seenIds = new Set<string>();
 
 async function fetchLocations() {
   const locationsListResponse: Response = await fetch(LOCATIONS_LIST_API);
   const locations: LocationListData[] = (await locationsListResponse.json()) as LocationListData[];
   for (const location of locations) {
-    // Check if location was already recorded
-    const duplicateLocationsExist: boolean = Object.values(locationsCatalogue).some(
-      (existingLocation) => existingLocation.name === location.name,
-    );
+    const id = location.id;
+    if (!CATEGORIES.has(location.catId) || seenIds.has(id)) continue;
 
-    if (!CATEGORIES.has(location.catId)) {
-      continue;
-    }
-    if (duplicateLocationsExist) {
-      continue;
-    }
-
-    locationsCatalogue[location.id] = {
-      name: location.name,
-      lat: location.lat,
-      lng: location.lng,
-    };
-
-    const locationName = location.name.split("(")[1]?.split(")")[0] ?? location.name;
-    locationIds[locationName] = location.id;
+    locationsCatalogue.set(id, { name: location.name, lat: location.lat, lng: location.lng });
+    seenIds.add(id);
   }
 }
 
@@ -61,29 +46,43 @@ async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
-  console.log("map scraper starting...");
+
+  console.log("[main] map scraper starting…");
   await fetchLocations();
-  console.log("Done fetching locations...");
+  console.log("[main] upserting…");
+
+  let upserts = 0;
+  const sampleIds: string[] = [];
+
   await db.transaction(async (tx) => {
-    for (const [locationId, locationData] of Object.entries(locationsCatalogue)) {
+    for (const [id, data] of locationsCatalogue) {
+      if (upserts < 3) {
+        console.log(
+          `[db] upsert #${upserts + 1}: id=${id} name="${data.name}" lat=${data.lat} lng=${data.lng}`,
+        );
+        sampleIds.push(id);
+      }
       await tx
         .insert(mapLocation)
         .values({
-          id: locationId,
-          name: locationData.name,
-          latitude: locationData.lat,
-          longitude: locationData.lng,
+          id,
+          name: data.name,
+          latitude: data.lat, // requires double precision in schema
+          longitude: data.lng,
         })
         .onConflictDoUpdate({
           target: mapLocation.id,
           set: {
-            name: locationData.name,
-            latitude: locationData.lat,
-            longitude: locationData.lng,
+            name: data.name,
+            latitude: data.lat,
+            longitude: data.lng,
           },
         });
+      upserts++;
     }
   });
+  console.log(`[db] committed upserts=${upserts}`);
+
   exit(0);
 }
 
