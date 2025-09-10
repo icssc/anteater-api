@@ -1,11 +1,3 @@
----
-name: PULL_REQUEST_TEMPLATE
-about: Describe the implementation, impact, and other details of a pull request
-title: ""
-labels: ""
-assignees: ""
----
-
 <!--- Provide a general summary of your changes in the Title above -->
 
 ## Description
