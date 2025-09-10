@@ -4,19 +4,19 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import apExamData, { type geCategories } from "./data.ts";
+import apExamData, { geCategories, type geCategory } from "./data.ts";
 
-const geCategoryToFlag = {
-  "GE-1A": "grantsGE1A",
-  "GE-1B": "grantsGE1B",
-  "GE-2": "grantsGE2",
-  "GE-3": "grantsGE3",
-  "GE-4": "grantsGE4",
-  "GE-5A": "grantsGE5A",
-  "GE-5B": "grantsGE5B",
-  "GE-6": "grantsGE6",
-  "GE-7": "grantsGE7",
-  "GE-8": "grantsGE8",
+const geCategoryToColumn = {
+  "GE-1A": "ge1aCoursesGranted",
+  "GE-1B": "ge1bCoursesGranted",
+  "GE-2": "ge2CoursesGranted",
+  "GE-3": "ge3CoursesGranted",
+  "GE-4": "ge4CoursesGranted",
+  "GE-5A": "ge5aCoursesGranted",
+  "GE-5B": "ge5bCoursesGranted",
+  "GE-6": "ge6CoursesGranted",
+  "GE-7": "ge7CoursesGranted",
+  "GE-8": "ge8CoursesGranted",
 } as const;
 
 async function main() {
@@ -34,16 +34,16 @@ async function main() {
         .onConflictDoUpdate({ target: apExam.id, set: conflictUpdateSetAllCols(apExam) });
 
       for (const reward of examData.rewards) {
-        const mappedCategories = reward.geGranted.map((cat) => geCategoryToFlag[cat]);
-        const geFlags = Object.fromEntries(
-          Object.values(geCategoryToFlag).map((f) => [f, mappedCategories.includes(f)]),
-        ) as Record<(typeof geCategoryToFlag)[(typeof geCategories)[number]], boolean>;
+        const geCourses = Object.fromEntries(
+          geCategories.map((cat) => [geCategoryToColumn[cat], reward.geGranted?.[cat] ?? 0]),
+        ) as Record<(typeof geCategoryToColumn)[geCategory], number>;
+
         const { id: rewardId } = await tx
           .insert(apExamReward)
           .values({
             unitsGranted: reward.unitsGranted,
             electiveUnitsGranted: reward.electiveUnitsGranted,
-            ...geFlags,
+            ...geCourses,
             coursesGranted: reward.coursesGranted,
           })
           .returning({ id: apExamReward.id })
