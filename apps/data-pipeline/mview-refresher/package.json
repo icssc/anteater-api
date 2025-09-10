@@ -7,12 +7,12 @@
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
-    "postinstall": "wrangler types --x-include-runtime"
+    "postinstall": "wrangler types"
   },
   "dependencies": {
     "@packages/db": "workspace:*"
   },
   "devDependencies": {
-    "wrangler": "3.100.0"
+    "wrangler": "4.35.0"
   }
 }
