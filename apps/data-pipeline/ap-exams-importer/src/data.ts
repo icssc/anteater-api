@@ -718,6 +718,7 @@ export default {
     ],
   },
   "AP Spanish Literature and Culture": {
+    catalogueName: "AP SPANISH LIT",
     rewards: [
       // SPANISH 1A-SPANISH 1B-SPANISH 1C. Satisfies category VI of the UCI GE requirement
       {
