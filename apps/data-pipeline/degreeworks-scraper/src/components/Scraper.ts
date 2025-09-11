@@ -79,6 +79,7 @@ export class Scraper {
     const ret = new Map<string, DegreeWorksProgram>();
     for (const [schoolCode, majorCode, degreeCode] of degrees) {
       // todo: school blocks
+      // todo: humanities "liberal learnings"
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
