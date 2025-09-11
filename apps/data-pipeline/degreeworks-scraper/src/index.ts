@@ -18,9 +18,8 @@ async function main() {
     degreesAwarded,
     parsedUgradRequirements,
     parsedSpecializations,
-    parsedGradPrograms,
+    parsedPrograms,
     parsedMinorPrograms,
-    parsedUgradPrograms,
   } = scraper.get();
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
@@ -33,15 +32,16 @@ async function main() {
       division: (id.startsWith("B") ? "Undergraduate" : "Graduate") as Division,
     }))
     .toArray();
-  const majorData = [...parsedUgradPrograms.values(), ...parsedGradPrograms.values()].map(
-    ({ name, degreeType, code, requirements }) => ({
+  const majorData = parsedPrograms
+    .values()
+    .map(({ name, degreeType, code, requirements }) => ({
       id: `${degreeType}-${code}`,
       degreeId: degreeType ?? "",
       code,
       name,
       requirements,
-    }),
-  );
+    }))
+    .toArray();
   const minorData = parsedMinorPrograms
     .values()
     .map(({ name, code: id, requirements }) => ({ id, name, requirements }))

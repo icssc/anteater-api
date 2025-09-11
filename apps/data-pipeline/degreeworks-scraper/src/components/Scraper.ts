@@ -3,8 +3,12 @@ import type { database } from "@packages/db";
 import type { DegreeWorksProgram, DegreeWorksRequirement } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
+import { reportsResponseSchema } from "./schema.ts";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
+
+// (school code, major code, degree code)
+type ProgramTriplet = [string, string, string];
 
 export class Scraper {
   private ap!: AuditParser;
@@ -17,38 +21,92 @@ export class Scraper {
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
-  private parsedUgradPrograms = new Map<string, DegreeWorksProgram>();
-  private parsedGradPrograms = new Map<string, DegreeWorksProgram>();
+  // both undergrad majors and grad programs
+  private parsedPrograms = new Map<string, DegreeWorksProgram>();
   private parsedSpecializations = new Map<string, DegreeWorksProgram>();
   private degreesAwarded = new Map<string, string>();
 
   private constructor() {}
 
-  private async scrapePrograms(school: string, degrees: Set<string>) {
+  // note that the combination of major and degree is not unique, e.g. CSE, B.S.
+  // which is associated with both merage and bren
+  private async discoverValidDegrees(): Promise<ProgramTriplet[]> {
+    const validDegreeKeys = new Set(this.degrees.keys());
+
+    return reportsResponseSchema
+      .parse(
+        await fetch("https://www.reg.uci.edu/mdsd/api/reports", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // this is the broadest search possible as of this commit
+          body: JSON.stringify({
+            schoolCode: null,
+            majorCode: null,
+            majorTitle: null,
+            majorStartTermYyyyst: null,
+            majorEndTermYyyyst: null,
+            majorActive: true,
+            majorInactive: true,
+            underGraduate: true,
+            graduate: true,
+            degreeListAwarded: null,
+            degreeTitleRc: null,
+            degreeStartTermYyyyst: null,
+            degreeEndTermYyyyst: null,
+            degreeActive: true,
+            degreeInactive: true,
+          }),
+        }).then((r) => r.json()),
+      )
+      .filter(
+        (ent) =>
+          ent.degree.degreeCode != null &&
+          (!ent.major.endTermYyyyst ||
+            // the oldest major in degreeworks as of this commit is applied ecology, invalidated during
+            // academic year 2006-2007, so any major older than this is clearly out of the question
+
+            // note that this parse will break if degrees are ever invalidated during or after calendar year 2050 (even
+            // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
+            // two-digit year 49 is interpreted by new Date as the year 1949
+            new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
+          this.majorPrograms.has(ent.major.majorCode) &&
+          validDegreeKeys.has(ent.degree.degreeCode),
+      )
+      .map((ent) => [ent.school.schoolCode, ent.major.majorCode, ent.degree.degreeCode as string]);
+  }
+
+  private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
     const ret = new Map<string, DegreeWorksProgram>();
-    for (const degree of degrees) {
-      for (const majorCode of this.majorPrograms) {
-        const audit = await this.dw.getMajorAudit(degree, school, majorCode);
-        if (!audit) {
-          console.log(
-            `Requirements block not found (majorCode = ${majorCode}, degree = ${degree})`,
-          );
-          continue;
-        }
-        if (ret.has(audit.title)) {
-          console.log(
-            `Requirements block already exists for "${audit.title}" (majorCode = ${majorCode}, degree = ${degree})`,
-          );
-          continue;
-        }
-        ret.set(
-          audit.title,
-          await this.ap.parseBlock(`${school}-MAJOR-${majorCode}-${degree}`, audit),
-        );
+    for (const [schoolCode, majorCode, degreeCode] of degrees) {
+      // todo: school blocks
+      const audit = await this.dw.getMajorAudit(
+        degreeCode,
+        // bachelor's degrees probably get an abbreviation starting with B
+        degreeCode.startsWith("B") ? "U" : "G",
+        majorCode,
+      );
+
+      const majorBlock = audit?.major;
+      if (!majorBlock) {
         console.log(
-          `Requirements block found and parsed for "${audit.title}" (majorCode = ${majorCode}, degree = ${degree})`,
+          `Requirements block not found (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
+        continue;
       }
+
+      if (ret.has(majorBlock.title)) {
+        console.log(
+          `Requirements block already exists for "${majorBlock.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        );
+        continue;
+      }
+      ret.set(
+        majorBlock.title,
+        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorBlock),
+      );
+      console.log(
+        `Requirements block found and parsed for "${majorBlock.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+      );
     }
     return ret;
   }
@@ -78,12 +136,12 @@ export class Scraper {
     console.log(`Fetched ${this.degrees.size} degrees`);
     this.majorPrograms = new Set((await this.dw.getMapping("majors")).keys());
     console.log(`Fetched ${this.majorPrograms.size} major programs`);
+
+    console.log("[Scraper] discovering valid degrees");
+    const validDegrees = await this.discoverValidDegrees();
+
     this.minorPrograms = new Set((await this.dw.getMapping("minors")).keys());
     console.log(`Fetched ${this.minorPrograms.size} minor programs`);
-    const ugradDegrees = new Set<string>();
-    const gradDegrees = new Set<string>();
-    for (const degree of this.degrees.keys())
-      (degree.startsWith("B") ? ugradDegrees : gradDegrees).add(degree);
     this.parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
     console.log("Scraping minor program requirements");
     for (const minorCode of this.minorPrograms) {
@@ -100,16 +158,13 @@ export class Scraper {
         `Requirements block found and parsed for "${audit.title}" (minorCode = ${minorCode})`,
       );
     }
-    console.log("Scraping undergraduate program requirements");
-    this.parsedUgradPrograms = await this.scrapePrograms("U", ugradDegrees);
-    console.log("Scraping graduate program requirements");
-    this.parsedGradPrograms = await this.scrapePrograms("G", gradDegrees);
+
+    console.log("Scraping undergraduate and graduate program requirements");
+    this.parsedPrograms = await this.scrapePrograms(validDegrees);
+
     this.parsedSpecializations = new Map<string, DegreeWorksProgram>();
     console.log("Scraping all specialization requirements");
-    for (const [, { specs, school, code: majorCode, degreeType: degree }] of [
-      ...this.parsedUgradPrograms,
-      ...this.parsedGradPrograms,
-    ]) {
+    for (const [, { specs, school, code: majorCode, degreeType: degree }] of this.parsedPrograms) {
       if (!degree) throw new Error("Degree type is undefined");
       for (const specCode of specs) {
         const audit = await this.dw.getSpecAudit(degree, school, majorCode, specCode);
@@ -129,13 +184,9 @@ export class Scraper {
       }
     }
     this.degreesAwarded = new Map(
-      Array.from(
-        new Set(
-          [...this.parsedUgradPrograms, ...this.parsedGradPrograms].map(
-            ([, x]) => x.degreeType ?? "",
-          ),
-        ),
-      ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
+      Array.from(new Set(this.parsedPrograms.entries().map(([, x]) => x.degreeType ?? ""))).map(
+        (x): [string, string] => [x, this.degrees?.get(x) ?? ""],
+      ),
     );
 
     // Post-processing steps.
@@ -145,7 +196,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedUgradPrograms.get("Major in Art History") as DegreeWorksProgram;
+    const x = this.parsedPrograms.get("Major in Art History") as DegreeWorksProgram;
     const y = this.parsedSpecializations.get("AHGEO") as DegreeWorksProgram;
     const z = this.parsedSpecializations.get("AHPER") as DegreeWorksProgram;
     if (x && y && z) {
@@ -153,7 +204,7 @@ export class Scraper {
       x.requirements = [...x.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
-      this.parsedUgradPrograms.set("Major in Art History", x);
+      this.parsedPrograms.set("Major in Art History", x);
     }
 
     this.done = true;
@@ -163,8 +214,7 @@ export class Scraper {
     return {
       parsedUgradRequirements: this.parsedUgradRequirements,
       parsedMinorPrograms: this.parsedMinorPrograms,
-      parsedUgradPrograms: this.parsedUgradPrograms,
-      parsedGradPrograms: this.parsedGradPrograms,
+      parsedPrograms: this.parsedPrograms,
       parsedSpecializations: this.parsedSpecializations,
       degreesAwarded: this.degreesAwarded,
     };
