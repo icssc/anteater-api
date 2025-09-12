@@ -119,13 +119,13 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
     const ret = new Map<string, DegreeWorksProgram>();
     for (const [schoolCode, majorCode, degreeCode] of degrees) {
-      // todo: school blocks
       // todo: humanities "liberal learnings"
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
         degreeCode.startsWith("B") ? "U" : "G",
         majorCode,
+        schoolCode,
       );
 
       const majorBlock = audit?.major;
@@ -149,6 +149,8 @@ export class Scraper {
       console.log(
         `Requirements block found and parsed for "${majorBlock.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
+
+      // todo: handle school block
     }
     return ret;
   }
