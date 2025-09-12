@@ -3,7 +3,13 @@ import type { database } from "@packages/db";
 import type { DegreeWorksProgram, DegreeWorksRequirement } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
-import { reportsResponseSchema } from "./schema.ts";
+import type { z } from "zod";
+import {
+  type reportSchema,
+  reportsResponseSchema,
+  type rewardTypeSchema,
+  rewardTypesResponseSchema,
+} from "./schema.ts";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
@@ -28,36 +34,68 @@ export class Scraper {
 
   private constructor() {}
 
+  // some degreeShort from catalogue do not agree the degreeworks version but really are the same
+  private transformDegreeShort(input: string): string {
+    return (
+      {
+        "M.MGMT.": "M.I.M.",
+      }?.[input] ?? input
+    );
+  }
+
+  private findDwNameFor(
+    awardTypesMap: Map<string, z.infer<typeof rewardTypeSchema>>,
+    catalogueDegree: z.infer<typeof reportSchema>,
+  ): IteratorObject<string> {
+    return this.degrees
+      .entries()
+      .filter(
+        ([_k, v]) =>
+          v.toLowerCase() ===
+          this.transformDegreeShort(
+            awardTypesMap.get(catalogueDegree.degree.degreeCode as string)?.degreeShort as string,
+          ).toLowerCase(),
+      )
+      .map(([k, _v]) => k);
+  }
+
   // note that the combination of major and degree is not unique, e.g. CSE, B.S.
   // which is associated with both merage and bren
   private async discoverValidDegrees(): Promise<ProgramTriplet[]> {
     const validDegreeKeys = new Set(this.degrees.keys());
 
+    const [awardTypes, reports] = await Promise.all([
+      fetch("https://www.reg.uci.edu/mdsd/api/lookups/awardTypes").then((r) => r.json()),
+      fetch("https://www.reg.uci.edu/mdsd/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // this is the broadest search possible as of this commit
+        body: JSON.stringify({
+          schoolCode: null,
+          majorCode: null,
+          majorTitle: null,
+          majorStartTermYyyyst: null,
+          majorEndTermYyyyst: null,
+          majorActive: true,
+          majorInactive: true,
+          underGraduate: true,
+          graduate: true,
+          degreeListAwarded: null,
+          degreeTitleRc: null,
+          degreeStartTermYyyyst: null,
+          degreeEndTermYyyyst: null,
+          degreeActive: true,
+          degreeInactive: true,
+        }),
+      }).then((r) => r.json()),
+    ]);
+
+    const awardTypesMap = new Map(
+      rewardTypesResponseSchema.parse(awardTypes).map((ent) => [ent.degreeCode, ent]),
+    );
+
     return reportsResponseSchema
-      .parse(
-        await fetch("https://www.reg.uci.edu/mdsd/api/reports", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          // this is the broadest search possible as of this commit
-          body: JSON.stringify({
-            schoolCode: null,
-            majorCode: null,
-            majorTitle: null,
-            majorStartTermYyyyst: null,
-            majorEndTermYyyyst: null,
-            majorActive: true,
-            majorInactive: true,
-            underGraduate: true,
-            graduate: true,
-            degreeListAwarded: null,
-            degreeTitleRc: null,
-            degreeStartTermYyyyst: null,
-            degreeEndTermYyyyst: null,
-            degreeActive: true,
-            degreeInactive: true,
-          }),
-        }).then((r) => r.json()),
-      )
+      .parse(reports)
       .filter(
         (ent) =>
           ent.degree.degreeCode != null &&
@@ -69,10 +107,15 @@ export class Scraper {
             // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
             // two-digit year 49 is interpreted by new Date as the year 1949
             new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
-          this.majorPrograms.has(ent.major.majorCode) &&
-          validDegreeKeys.has(ent.degree.degreeCode),
+          this.majorPrograms.has(ent.major.majorCode),
       )
-      .map((ent) => [ent.school.schoolCode, ent.major.majorCode, ent.degree.degreeCode as string]);
+      .flatMap((ent) => {
+        const all = this.findDwNameFor(awardTypesMap, ent)
+          .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
+          .toArray();
+
+        return all;
+      });
   }
 
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
