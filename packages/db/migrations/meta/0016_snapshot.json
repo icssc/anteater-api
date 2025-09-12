@@ -1,5 +1,5 @@
 {
-  "id": "c24790bf-b6da-490c-a8b0-3edf3eb2e42f",
+  "id": "98b24c18-172d-49fc-b11e-9ad85a6ac541",
   "prevId": "d61c1141-bf8a-41bd-921c-551ec41b8764",
   "version": "7",
   "dialect": "postgresql",
@@ -964,6 +964,12 @@
         "longitude": {
           "name": "longitude",
           "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_urls": {
+          "name": "image_urls",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": true
         }

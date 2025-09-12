@@ -714,6 +714,7 @@ export const mapLocation = pgTable("map_location", {
   name: varchar("name").notNull(),
   latitude: doublePrecision("latitude").notNull(),
   longitude: doublePrecision("longitude").notNull(),
+  imageURLs: text("image_urls").array().notNull(),
 });
 
 export const apExam = pgTable("ap_exam", {

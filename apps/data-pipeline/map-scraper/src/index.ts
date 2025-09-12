@@ -10,10 +10,16 @@ interface LocationListData {
   name: string;
 }
 
+interface LocationDetailData {
+  mediaUrlTypes?: string[];
+  mediaUrls?: string[];
+}
+
 interface BuildingLocation {
   name: string;
   lat: number;
   lng: number;
+  imageURLs: string[];
 }
 
 // API key, categories, Map ID values of non-secret constants are hardcoded.
@@ -27,8 +33,33 @@ const CATEGORIES: Set<number> = new Set([
 const LOCATIONS_LIST_API =
   "https://api.concept3d.com/locations?map=463&key=0001085cc708b9cef47080f064612ca5";
 
+const getLocationDetail = (id: string) =>
+  `https://api.concept3d.com/locations/${id}?map=463&key=0001085cc708b9cef47080f064612ca5`;
+
 const locationsCatalogue = new Map<string, BuildingLocation>();
 const seenIds = new Set<string>();
+
+async function fetchImageUrls(id: string): Promise<string[]> {
+  try {
+    const res = await fetch(getLocationDetail(id));
+    if (!res.ok) {
+      console.warn(`[detail] ${id} HTTP ${res.status}`);
+      return [];
+    }
+    const data = (await res.json()) as LocationDetailData;
+    const types = Array.isArray(data.mediaUrlTypes) ? data.mediaUrlTypes : [];
+    const urls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [];
+
+    const out: string[] = [];
+    for (let i = 0; i < Math.min(types.length, urls.length); i++) {
+      if (types[i] === "image" && typeof urls[i] === "string") out.push(urls[i]);
+    }
+    return out;
+  } catch (e) {
+    console.warn(`[detail] ${id} failed:`, e);
+    return [];
+  }
+}
 
 async function fetchLocations() {
   const locationsListResponse: Response = await fetch(LOCATIONS_LIST_API);
@@ -37,7 +68,14 @@ async function fetchLocations() {
     const id = location.id;
     if (!CATEGORIES.has(location.catId) || seenIds.has(id)) continue;
 
-    locationsCatalogue.set(id, { name: location.name, lat: location.lat, lng: location.lng });
+    const imageURLs = await fetchImageUrls(id);
+
+    locationsCatalogue.set(id, {
+      name: location.name,
+      lat: location.lat,
+      lng: location.lng,
+      imageURLs: imageURLs,
+    });
     seenIds.add(id);
   }
 }
@@ -47,28 +85,22 @@ async function main() {
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
 
-  console.log("[main] map scraper starting…");
+  console.log("started map scraper");
   await fetchLocations();
-  console.log("[main] upserting…");
+  console.log("upserting…");
 
   let upserts = 0;
-  const sampleIds: string[] = [];
 
   await db.transaction(async (tx) => {
     for (const [id, data] of locationsCatalogue) {
-      if (upserts < 3) {
-        console.log(
-          `[db] upsert #${upserts + 1}: id=${id} name="${data.name}" lat=${data.lat} lng=${data.lng}`,
-        );
-        sampleIds.push(id);
-      }
       await tx
         .insert(mapLocation)
         .values({
           id,
           name: data.name,
-          latitude: data.lat, // requires double precision in schema
+          latitude: data.lat,
           longitude: data.lng,
+          imageURLs: data.imageURLs,
         })
         .onConflictDoUpdate({
           target: mapLocation.id,
@@ -76,12 +108,13 @@ async function main() {
             name: data.name,
             latitude: data.lat,
             longitude: data.lng,
+            imageURLs: data.imageURLs,
           },
         });
       upserts++;
     }
   });
-  console.log(`[db] committed upserts=${upserts}`);
+  console.log(`committed upserts = ${upserts}`);
 
   exit(0);
 }

@@ -13,6 +13,7 @@ export class MapService {
         name: mapLocation.name,
         latitude: mapLocation.latitude,
         longitude: mapLocation.longitude,
+        imageURLs: mapLocation.imageURLs,
       })
       .from(mapLocation)
       .where(query.id ? eq(mapLocation.id, query.id) : undefined);
