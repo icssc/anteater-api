@@ -5,7 +5,7 @@ import { GraphQLError } from "graphql/error";
 
 export const mapResolvers = {
   Query: {
-    locations: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+    map: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const parsedArgs = mapQuerySchema.parse(args?.query);
       const service = new MapService(db);
       const res = await service.getLocations(parsedArgs);

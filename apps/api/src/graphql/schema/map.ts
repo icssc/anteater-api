@@ -5,6 +5,8 @@ type MapPreview @cacheControl(maxAge: 86400) {
     name: String!
     latitude: Float!
     longitude: Float!
+    imageURLs: [String!]
+    
 }
 
 input MapQuery {
@@ -12,6 +14,6 @@ input MapQuery {
 }
 
 extend type Query {
-    locations(query: MapQuery): [MapPreview!]!
+    map(query: MapQuery): [MapPreview!]!
 }
 `;
