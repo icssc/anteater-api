@@ -110,11 +110,9 @@ export class Scraper {
           this.majorPrograms.has(ent.major.majorCode),
       )
       .flatMap((ent) =>
-        this.findDwNameFor(awardTypesMap, ent).map((dwName) => [
-          ent.school.schoolCode,
-          ent.major.majorCode,
-          dwName,
-        ]),
+        this.findDwNameFor(awardTypesMap, ent)
+          .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
+          .toArray(),
       );
   }
 
