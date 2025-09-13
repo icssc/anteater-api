@@ -59,8 +59,14 @@ export class Scraper {
       .map(([k, _v]) => k);
   }
 
-  // note that the combination of major and degree is not unique, e.g. CSE, B.S.
-  // which is associated with both merage and bren
+  /**
+   * * The combination of school and major is not unique; Computer Science and Engineering is affiliated with two
+   * schools simultaneously.
+   * * It is not guaranteed that every triplet is valid; e.g. the Doctor of Pharmacy is mapped to two different objects
+   * on DegreeWorks, meaning one is not valid.
+   * * However, we operate under the assumption that every valid triplet is among the ones returned by this method.
+   * @private
+   */
   private async discoverValidDegrees(): Promise<ProgramTriplet[]> {
     const [awardTypes, reports] = await Promise.all([
       fetch("https://www.reg.uci.edu/mdsd/api/lookups/awardTypes").then((r) => r.json()),
