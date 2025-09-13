@@ -63,7 +63,8 @@ export class Scraper {
    * * The combination of school and major is not unique; Computer Science and Engineering is affiliated with two
    * schools simultaneously.
    * * It is not guaranteed that every triplet is valid; e.g. the Doctor of Pharmacy is mapped to two different objects
-   * on DegreeWorks, meaning one is not valid.
+   * on DegreeWorks, meaning one is not valid. We also include all triples valid in 2006 and later, where triples which
+   * were never valid while DegreeWorks was in use will most likely not be valid there.
    * * However, we operate under the assumption that every valid triplet is among the ones returned by this method.
    * @private
    */
