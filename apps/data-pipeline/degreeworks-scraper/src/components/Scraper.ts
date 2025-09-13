@@ -62,8 +62,6 @@ export class Scraper {
   // note that the combination of major and degree is not unique, e.g. CSE, B.S.
   // which is associated with both merage and bren
   private async discoverValidDegrees(): Promise<ProgramTriplet[]> {
-    const validDegreeKeys = new Set(this.degrees.keys());
-
     const [awardTypes, reports] = await Promise.all([
       fetch("https://www.reg.uci.edu/mdsd/api/lookups/awardTypes").then((r) => r.json()),
       fetch("https://www.reg.uci.edu/mdsd/api/reports", {
