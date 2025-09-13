@@ -109,10 +109,11 @@ export class Scraper {
             new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
           this.majorPrograms.has(ent.major.majorCode),
       )
-      .flatMap((ent) =>
-        this.findDwNameFor(awardTypesMap, ent)
-          .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
-          .toArray(),
+      .flatMap(
+        (ent) =>
+          this.findDwNameFor(awardTypesMap, ent)
+            .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
+            .toArray() as ProgramTriplet[],
       );
   }
 
