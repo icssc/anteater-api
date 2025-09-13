@@ -113,12 +113,19 @@ export class Scraper {
             new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
           this.majorPrograms.has(ent.major.majorCode),
       )
-      .flatMap(
-        (ent) =>
-          this.findDwNameFor(awardTypesMap, ent)
-            .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
-            .toArray() as ProgramTriplet[],
-      );
+      .flatMap((ent) => {
+        const withMatchedDegree = this.findDwNameFor(awardTypesMap, ent)
+          .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
+          .toArray() as ProgramTriplet[];
+
+        if (withMatchedDegree.length === 0) {
+          console.log(
+            `warning: no degree code matched for school and major (${ent.school.schoolCode}, ${ent.major.majorCode})`,
+          );
+        }
+
+        return withMatchedDegree;
+      });
   }
 
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
