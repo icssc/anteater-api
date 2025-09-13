@@ -76,25 +76,11 @@ export class DegreeworksClient {
     return [ucRequirements, geRequirements];
   }
 
-  /**
-   *
-   * @param degree a degree code, e.g. "BS"
-   * @param school this corresponds to the UCI notion of division, e.g. "U" or "G"
-   * @param majorCode a major code
-   * @param college this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
-   */
   async getMajorAudit(
     degree: string,
     school: string,
     majorCode: string,
-    college?: string,
-  ): Promise<
-    | {
-        college?: Block;
-        major?: Block;
-      }
-    | undefined
-  > {
+  ): Promise<Block | undefined> {
     const res = await fetch(DegreeworksClient.AUDIT_URL, {
       method: "POST",
       body: JSON.stringify({
@@ -103,28 +89,18 @@ export class DegreeworksClient {
         school,
         studentId: this.studentId,
         classes: [],
-        goals: [
-          { code: "MAJOR", value: majorCode },
-          ...(college ? [{ code: "COLLEGE", value: college }] : []),
-        ],
+        goals: [{ code: "MAJOR", value: majorCode }],
       }),
       headers: this.headers,
     });
     await this.sleep();
     const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
 
-    if ("error" in json) {
-      return undefined;
-    }
-
-    return {
-      college: json.blockArray.find(
-        (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
-      ),
-      major: json.blockArray.find(
-        (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
-      ),
-    };
+    return "error" in json
+      ? undefined
+      : json.blockArray.find(
+          (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+        );
   }
 
   async getMinorAudit(minorCode: string): Promise<Block | undefined> {

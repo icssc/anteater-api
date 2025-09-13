@@ -119,38 +119,33 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
     const ret = new Map<string, DegreeWorksProgram>();
     for (const [schoolCode, majorCode, degreeCode] of degrees) {
-      // todo: humanities "liberal learnings"
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
         degreeCode.startsWith("B") ? "U" : "G",
         majorCode,
-        schoolCode,
       );
 
-      const majorBlock = audit?.major;
-      if (!majorBlock) {
+      if (!audit) {
         console.log(
           `Requirements block not found (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      if (ret.has(majorBlock.title)) {
+      if (ret.has(audit.title)) {
         console.log(
-          `Requirements block already exists for "${majorBlock.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${audit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
       ret.set(
-        majorBlock.title,
-        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorBlock),
+        audit.title,
+        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, audit),
       );
       console.log(
-        `Requirements block found and parsed for "${majorBlock.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        `Requirements block found and parsed for "${audit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
-
-      // todo: handle school block
     }
     return ret;
   }
