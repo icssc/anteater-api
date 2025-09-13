@@ -27,11 +27,10 @@ export class DegreeworksClient {
      * as the catalog year. Otherwise, we use the former.
      */
     const currentYear = new Date().getUTCFullYear();
-    dw.catalogYear = `${currentYear}${currentYear + 1}`;
-    const dataThisYear = await dw.getMajorAudit("BS", "U", "201").then((r) => r?.major);
-    if (!dataThisYear) {
-      dw.catalogYear = `${currentYear - 1}${currentYear}`;
-    }
+    const dataThisYear = await dw.getMajorAudit("BS", "U", "201");
+    dw.catalogYear = dataThisYear
+      ? `${currentYear}${currentYear + 1}`
+      : `${currentYear - 1}${currentYear}`;
     console.log(`[DegreeworksClient.new] Set catalogYear to ${dw.catalogYear}`);
     return dw;
   }
