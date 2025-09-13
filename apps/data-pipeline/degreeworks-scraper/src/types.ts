@@ -38,7 +38,7 @@ export type RuleIfStmt = {
   requirement: { ifPart: { ruleArray: Rule[] }; elsePart?: { ruleArray: Rule[] } };
 };
 /**
- * A rule that refers to another block (typically a specialization).
+ * A rule that refers to another block (typically a major mandating a specialization or school-wide requirements).
  */
 export type RuleBlock = {
   ruleType: "Block";

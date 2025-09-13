@@ -94,6 +94,7 @@ export class DegreeworksClient {
     });
     await this.sleep();
     const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
+
     return "error" in json
       ? undefined
       : json.blockArray.find(
