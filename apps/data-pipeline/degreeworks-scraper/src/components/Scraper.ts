@@ -154,10 +154,11 @@ export class Scraper {
         );
         continue;
       }
-      ret.set(
-        audit.title,
-        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, audit),
+      const block = await this.ap.parseBlock(
+        `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
+        audit,
       );
+      ret.set(block.code, block);
       console.log(
         `Requirements block found and parsed for "${audit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
