@@ -246,18 +246,12 @@ export class Scraper {
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
 
-    const ugradPrograms = new Map<string, DegreeWorksProgram>();
-    const postGradPrograms = new Map<string, DegreeWorksProgram>();
-    for (const [key, prog] of this.parsedPrograms.entries()) {
-      (prog.degreeType?.startsWith("B") ? ugradPrograms : postGradPrograms).set(key, prog);
-    }
-
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
       const associatedMajorCode = this.specializationParentCandidates(specCode);
 
       let specBlock: Block | undefined;
 
-      for (const [_candidateName, candidate] of associatedMajorCode) {
+      for (const [candidateName, candidate] of associatedMajorCode) {
         if (!candidate.degreeType) throw new Error("Degree type is undefined");
 
         specBlock = await this.dw.getSpecAudit(
@@ -281,14 +275,14 @@ export class Scraper {
           `warning: bruteforcing major associated with specialization ${specCode}: ${specName}`,
         );
 
-        // much more likely to have been an undergrad program
-        for (const [ugradProgramCode, ugradProgram] of ugradPrograms.entries()) {
-          if (!ugradProgram.degreeType) throw new Error("Degree type is undefined");
+        // TODO: much more likely to have been an undergrad program; try those first
+        for (const [programCode, program] of this.parsedPrograms.entries()) {
+          if (!program.degreeType) throw new Error("Degree type is undefined");
 
           const try_ = await this.dw.getSpecAudit(
-            ugradProgram.degreeType,
-            ugradProgram.school,
-            ugradProgram.code,
+            program.degreeType,
+            program.school,
+            program.code,
             specCode,
           );
           if (try_) {
