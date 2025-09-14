@@ -175,12 +175,16 @@ export class Scraper {
    * @private
    */
   private inferSpecializationMajorCode(specCode: string): string | undefined {
-    // there seems to be a soft convention that specializations are their major ID followed by uppercase letters
+    // there seems to be a soft convention that specializations are their major code followed by uppercase letters
     // starting from A; let's try to use that first
 
-    const maybeMajorCodePart = specCode.slice(0, specCode.length - 1);
-    if (this.parsedPrograms.has(maybeMajorCodePart)) {
-      return maybeMajorCodePart;
+    const asSuffixedMajorCode = specCode.match(/^(.+)[A-Z]$/);
+
+    if (asSuffixedMajorCode) {
+      const [, maybeMajorCode] = asSuffixedMajorCode;
+      if (this.parsedPrograms.has(maybeMajorCode)) {
+        return maybeMajorCode;
+      }
     }
 
     return undefined;
