@@ -22,17 +22,19 @@ export class AuditParser {
     ...this.parseBlockId(blockId),
     name: block.title,
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
-    specs: this.parseSpecs(block),
+    // populate later
+    specs: [],
   });
 
   lexOrd = new Intl.Collator().compare;
 
-  parseSpecs = (block: Block): string[] =>
-    JSON.stringify(block)
-      .matchAll(AuditParser.specOrOtherMatcher)
-      .map((x) => JSON.parse(`{${x[0]}}`).value)
-      .toArray()
-      .sort();
+  // as of this commit, this field has been removed
+  // parseSpecs = (block: Block): string[] =>
+  //   JSON.stringify(block)
+  //     .matchAll(AuditParser.specOrOtherMatcher)
+  //     .map((x) => JSON.parse(`{${x[0]}}`).value)
+  //     .toArray()
+  //     .sort();
 
   flattenIfStmt(ruleArray: Rule[]): Rule[] {
     const ret = [];

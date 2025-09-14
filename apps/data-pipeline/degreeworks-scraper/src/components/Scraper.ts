@@ -1,4 +1,5 @@
 import { AuditParser, DegreeworksClient } from "$components";
+import type { Block } from "$types";
 import type { database } from "@packages/db";
 import type { DegreeWorksProgram, DegreeWorksRequirement } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
@@ -23,6 +24,7 @@ export class Scraper {
   private degrees = new Map<string, string>();
   private majorPrograms = new Set<string>();
   private minorPrograms = new Set<string>();
+  private knownSpecializations = new Map<string, string>();
 
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
@@ -163,6 +165,24 @@ export class Scraper {
     return ret;
   }
 
+  /**
+   * We are not provided the list of specializations associated with a major, just the list of specializations.
+   * so we must match every specialization to a major. We employ some heuristics to do this.
+   * @param specCode the code associated with a specialization
+   * @private
+   */
+  private inferSpecializationMajorCode(specCode: string): string | undefined {
+    // there seems to be a soft convention that specializations are their major ID followed by uppercase letters
+    // starting from A; let's try to use that first
+
+    const maybeMajorCodePart = specCode.slice(0, specCode.length - 1);
+    if (this.parsedPrograms.has(maybeMajorCodePart)) {
+      return maybeMajorCodePart;
+    }
+
+    return undefined;
+  }
+
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
     console.log("[Scraper] degreeworks-scraper starting");
@@ -216,25 +236,81 @@ export class Scraper {
 
     this.parsedSpecializations = new Map<string, DegreeWorksProgram>();
     console.log("Scraping all specialization requirements");
-    for (const [, { specs, school, code: majorCode, degreeType: degree }] of this.parsedPrograms) {
-      if (!degree) throw new Error("Degree type is undefined");
-      for (const specCode of specs) {
-        const audit = await this.dw.getSpecAudit(degree, school, majorCode, specCode);
-        if (!audit) {
-          console.log(
-            `Requirements block not found (school = ${school}, majorCode = ${majorCode}, specCode = ${specCode}, degree = ${degree})`,
-          );
-          continue;
-        }
-        this.parsedSpecializations.set(
+
+    this.knownSpecializations = await this.dw.getMapping("specializations");
+
+    const ugradPrograms = new Map<string, DegreeWorksProgram>();
+    const postGradPrograms = new Map<string, DegreeWorksProgram>();
+    for (const [key, prog] of this.parsedPrograms.entries()) {
+      (prog.degreeType?.startsWith("B") ? ugradPrograms : postGradPrograms).set(key, prog);
+    }
+
+    for (const [specCode, specName] of this.knownSpecializations.entries()) {
+      const associatedMajorCode = this.inferSpecializationMajorCode(specCode);
+
+      let specBlock: Block | undefined;
+
+      if (associatedMajorCode) {
+        const associatedProgram = this.parsedPrograms.get(
+          associatedMajorCode,
+        ) as DegreeWorksProgram;
+        if (!associatedProgram.degreeType) throw new Error("Degree type is undefined");
+
+        specBlock = await this.dw.getSpecAudit(
+          associatedProgram.degreeType,
+          associatedProgram.school,
+          associatedProgram.code,
           specCode,
-          await this.ap.parseBlock(`${school}-SPEC-${specCode}-${degree}`, audit),
         );
+      } else {
         console.log(
-          `Requirements block found and parsed for "${audit.title}" (specCode = ${specCode})`,
+          `warning: bruteforcing major associated with specialization ${specCode}: ${specName}`,
         );
+        // much more likely to have been an undergrad program
+        for (const [ugradProgramCode, ugradProgram] of ugradPrograms.entries()) {
+          if (!ugradProgram.degreeType) throw new Error("Degree type is undefined");
+
+          const try_ = await this.dw.getSpecAudit(
+            ugradProgram.degreeType,
+            ugradProgram.school,
+            ugradProgram.code,
+            specCode,
+          );
+          if (try_) {
+            specBlock = try_;
+            break;
+          }
+        }
+      }
+
+      if (!specBlock) {
+        console.log(`todo ${specCode}`);
       }
     }
+
+    // TODO: optional specs e.g. ACM and chem
+
+    // for (const [, {specs, school, code: majorCode, degreeType: degree}] of [
+    //   ...this.parsedPrograms
+    // ]) {
+    //   if (!degree) throw new Error("Degree type is undefined");
+    //   for (const specCode of specs) {
+    //     const audit = await this.dw.getSpecAudit(degree, school, majorCode, specCode);
+    //     if (!audit) {
+    //       console.log(
+    //         `Requirements block not found (school = ${school}, majorCode = ${majorCode}, specCode = ${specCode}, degree = ${degree})`,
+    //       );
+    //       continue;
+    //     }
+    //     this.parsedSpecializations.set(
+    //       specCode,
+    //       await this.ap.parseBlock(`${school}-SPEC-${specCode}-${degree}`, audit),
+    //     );
+    //     console.log(
+    //       `Requirements block found and parsed for "${audit.title}" (specCode = ${specCode})`,
+    //     );
+    //   }
+    // }
     this.degreesAwarded = new Map(
       Array.from(new Set(this.parsedPrograms.entries().map(([, x]) => x.degreeType ?? ""))).map(
         (x): [string, string] => [x, this.degrees?.get(x) ?? ""],
