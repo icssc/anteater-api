@@ -173,7 +173,7 @@ export class Scraper {
    * @param specCode the code associated with a specialization
    * @private
    */
-  private inferSpecializationMajorCode(specCode: string): string | undefined {
+  private specializationParentCandidates(specCode: string): [string, DegreeWorksProgram][] {
     // there seems to be a soft convention that specializations are their major code followed by uppercase letters
     // starting from A; let's try to use that first
 
@@ -181,12 +181,13 @@ export class Scraper {
 
     if (asSuffixedMajorCode) {
       const [, maybeMajorCode] = asSuffixedMajorCode;
-      if (this.parsedPrograms.has(maybeMajorCode)) {
-        return maybeMajorCode;
-      }
+      return this.parsedPrograms
+        .entries()
+        .filter(([_k, prog]) => prog.code === maybeMajorCode)
+        .toArray();
     }
 
-    return undefined;
+    return [];
   }
 
   async run() {
@@ -252,26 +253,34 @@ export class Scraper {
     }
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
-      const associatedMajorCode = this.inferSpecializationMajorCode(specCode);
+      const associatedMajorCode = this.specializationParentCandidates(specCode);
 
       let specBlock: Block | undefined;
 
-      if (associatedMajorCode) {
-        const associatedProgram = this.parsedPrograms.get(
-          associatedMajorCode,
-        ) as DegreeWorksProgram;
-        if (!associatedProgram.degreeType) throw new Error("Degree type is undefined");
+      for (const [_candidateName, candidate] of associatedMajorCode) {
+        if (!candidate.degreeType) throw new Error("Degree type is undefined");
 
         specBlock = await this.dw.getSpecAudit(
-          associatedProgram.degreeType,
-          associatedProgram.school,
-          associatedProgram.code,
+          candidate.degreeType,
+          candidate.school,
+          candidate.code,
           specCode,
         );
-      } else {
+
+        if (specBlock) {
+          console.log(
+            `Specialization ${specName} (specCode = ${specCode}) found to be associated with ` +
+              `(majorCode = ${candidate.code}, degree = ${candidate.degreeType})`,
+          );
+          break;
+        }
+      }
+
+      if (!specBlock) {
         console.log(
           `warning: bruteforcing major associated with specialization ${specCode}: ${specName}`,
         );
+
         // much more likely to have been an undergrad program
         for (const [ugradProgramCode, ugradProgram] of ugradPrograms.entries()) {
           if (!ugradProgram.degreeType) throw new Error("Degree type is undefined");
