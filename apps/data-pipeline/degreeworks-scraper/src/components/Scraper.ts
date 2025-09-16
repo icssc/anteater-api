@@ -250,6 +250,7 @@ export class Scraper {
       const majorCandidates = this.specializationParentCandidates(specCode);
 
       let specBlock: Block | undefined;
+      let foundMajor: DegreeWorksProgram | undefined;
 
       for (const [candidateName, candidate] of majorCandidates) {
         if (!candidate.degreeType) throw new Error("Degree type is undefined");
@@ -262,10 +263,7 @@ export class Scraper {
         );
 
         if (specBlock) {
-          console.log(
-            `Specialization ${specName} (specCode = ${specCode}) found to be associated with ` +
-              `(majorCode = ${candidate.code}, degree = ${candidate.degreeType})`,
-          );
+          foundMajor = candidate;
           break;
         }
       }
@@ -287,13 +285,19 @@ export class Scraper {
           );
           if (try_) {
             specBlock = try_;
+            foundMajor = program;
             break;
           }
         }
       }
 
-      if (!specBlock) {
-        console.log(`todo ${specCode}`);
+      if (specBlock) {
+        console.log(
+          `Specialization ${specName} (specCode = ${specCode}) found to be associated with ` +
+            `(majorCode = ${(foundMajor as DegreeWorksProgram).code}, degree = ${(foundMajor as DegreeWorksProgram).degreeType})`,
+        );
+      } else {
+        console.log(`warning: no major associated with (specCode = ${specCode})`);
       }
     }
 
