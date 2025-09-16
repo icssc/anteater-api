@@ -297,7 +297,7 @@ export class Scraper {
             `(majorCode = ${(foundMajor as DegreeWorksProgram).code}, degree = ${(foundMajor as DegreeWorksProgram).degreeType})`,
         );
       } else {
-        console.log(`warning: no major associated with (specCode = ${specCode})`);
+        console.log(`warning: no known major associated with (specCode = ${specCode})`);
       }
     }
 
