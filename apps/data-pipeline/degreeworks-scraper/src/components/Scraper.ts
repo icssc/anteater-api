@@ -247,16 +247,16 @@ export class Scraper {
     this.knownSpecializations = await this.dw.getMapping("specializations");
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
-      const associatedMajorCode = this.specializationParentCandidates(specCode);
+      const majorCandidates = this.specializationParentCandidates(specCode);
 
       let specBlock: Block | undefined;
 
-      for (const [candidateName, candidate] of associatedMajorCode) {
+      for (const [candidateName, candidate] of majorCandidates) {
         if (!candidate.degreeType) throw new Error("Degree type is undefined");
 
         specBlock = await this.dw.getSpecAudit(
           candidate.degreeType,
-          candidate.school,
+          candidate.degreeType.startsWith("B") ? "U" : "G",
           candidate.code,
           specCode,
         );
@@ -281,7 +281,7 @@ export class Scraper {
 
           const try_ = await this.dw.getSpecAudit(
             program.degreeType,
-            program.school,
+            program.degreeType.startsWith("B") ? "U" : "G",
             program.code,
             specCode,
           );
