@@ -292,9 +292,22 @@ export class Scraper {
       }
 
       if (specBlock) {
+        const foundMajorAssured = foundMajor as DegreeWorksProgram;
         console.log(
           `Specialization ${specName} (specCode = ${specCode}) found to be associated with ` +
-            `(majorCode = ${(foundMajor as DegreeWorksProgram).code}, degree = ${(foundMajor as DegreeWorksProgram).degreeType})`,
+            `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
+        );
+
+        this.parsedSpecializations.set(
+          specCode,
+          await this.ap.parseBlock(
+            `${foundMajorAssured.school}-SPEC-${specCode}-${foundMajorAssured}`,
+            specBlock,
+          ),
+        );
+
+        console.log(
+          `Requirements block found and parsed for "${specBlock.title}" (specCode = ${specCode})`,
         );
       } else {
         console.log(`warning: no known major associated with ${specName} (specCode = ${specCode})`);
@@ -303,27 +316,6 @@ export class Scraper {
 
     // TODO: optional specs e.g. ACM and chem
 
-    // for (const [, {specs, school, code: majorCode, degreeType: degree}] of [
-    //   ...this.parsedPrograms
-    // ]) {
-    //   if (!degree) throw new Error("Degree type is undefined");
-    //   for (const specCode of specs) {
-    //     const audit = await this.dw.getSpecAudit(degree, school, majorCode, specCode);
-    //     if (!audit) {
-    //       console.log(
-    //         `Requirements block not found (school = ${school}, majorCode = ${majorCode}, specCode = ${specCode}, degree = ${degree})`,
-    //       );
-    //       continue;
-    //     }
-    //     this.parsedSpecializations.set(
-    //       specCode,
-    //       await this.ap.parseBlock(`${school}-SPEC-${specCode}-${degree}`, audit),
-    //     );
-    //     console.log(
-    //       `Requirements block found and parsed for "${audit.title}" (specCode = ${specCode})`,
-    //     );
-    //   }
-    // }
     this.degreesAwarded = new Map(
       Array.from(new Set(this.parsedPrograms.entries().map(([, x]) => x.degreeType ?? ""))).map(
         (x): [string, string] => [x, this.degrees?.get(x) ?? ""],
