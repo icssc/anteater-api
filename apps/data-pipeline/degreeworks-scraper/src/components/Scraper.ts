@@ -270,7 +270,7 @@ export class Scraper {
 
       if (!specBlock) {
         console.log(
-          `warning: bruteforcing major associated with specialization ${specCode}: ${specName}`,
+          `warning: bruteforcing major associated with specialization "${specName}" (specCode = ${specCode})`,
         );
 
         // TODO: much more likely to have been an undergrad program; try those first
@@ -294,7 +294,7 @@ export class Scraper {
       if (specBlock) {
         const foundMajorAssured = foundMajor as DegreeWorksProgram;
         console.log(
-          `Specialization ${specName} (specCode = ${specCode}) found to be associated with ` +
+          `Specialization "${specName}" (specCode = ${specCode}) found to be associated with ` +
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
         );
 
@@ -310,7 +310,9 @@ export class Scraper {
           `Requirements block found and parsed for "${specBlock.title}" (specCode = ${specCode})`,
         );
       } else {
-        console.log(`warning: no known major associated with ${specName} (specCode = ${specCode})`);
+        console.log(
+          `warning: no known major associated with "${specName}" (specCode = ${specCode})`,
+        );
       }
     }
 
