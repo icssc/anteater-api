@@ -301,7 +301,7 @@ export class Scraper {
         this.parsedSpecializations.set(
           specCode,
           await this.ap.parseBlock(
-            `${foundMajorAssured.school}-SPEC-${specCode}-${foundMajorAssured}`,
+            `${foundMajorAssured.school}-SPEC-${specCode}-${foundMajorAssured.degreeType}`,
             specBlock,
           ),
         );
