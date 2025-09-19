@@ -276,7 +276,7 @@ export class Scraper {
         }
       }
 
-      if (!specBlock || !foundMajor) {
+      if (newlyResolved && (!specBlock || !foundMajor)) {
         const majorCandidates = this.specializationParentCandidates(specCode);
 
         for (const [candidateName, candidate] of majorCandidates) {
@@ -296,7 +296,7 @@ export class Scraper {
         }
       }
 
-      if (!specBlock || !foundMajor) {
+      if (newlyResolved && (!specBlock || !foundMajor)) {
         console.log(
           `warning: bruteforcing major associated with specialization "${specName}" (specCode = ${specCode})`,
         );
