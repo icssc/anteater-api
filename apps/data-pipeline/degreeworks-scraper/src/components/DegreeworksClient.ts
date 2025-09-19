@@ -169,4 +169,8 @@ export class DegreeworksClient {
     const json: DWMappingResponse<T> = await res.json();
     return new Map(json._embedded[path].map((x) => [x.key, x.description]));
   }
+
+  getCatalogYear() {
+    return this.catalogYear;
+  }
 }
