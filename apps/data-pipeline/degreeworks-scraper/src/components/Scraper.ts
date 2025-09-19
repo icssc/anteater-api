@@ -1,7 +1,12 @@
+import * as fs from "node:fs/promises";
 import { AuditParser, DegreeworksClient } from "$components";
-import type { Block } from "$types";
+import type { Block, SpecializationCache } from "$types";
 import type { database } from "@packages/db";
-import type { DegreeWorksProgram, DegreeWorksRequirement } from "@packages/db/schema";
+import type {
+  DegreeWorksProgram,
+  DegreeWorksProgramId,
+  DegreeWorksRequirement,
+} from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 import type { z } from "zod";
@@ -25,6 +30,7 @@ export class Scraper {
   private majorPrograms = new Set<string>();
   private minorPrograms = new Set<string>();
   private knownSpecializations = new Map<string, string>();
+  private specializationCache = new Map<string, SpecializationCache | null>();
 
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
@@ -243,32 +249,53 @@ export class Scraper {
 
     this.parsedSpecializations = new Map<string, DegreeWorksProgram>();
     console.log("Scraping all specialization requirements");
+    this.specializationCache = await fs
+      .readFile("spec_cache.json", {
+        encoding: "utf-8",
+        flag: "a+",
+      })
+      .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+    console.log(`loading ${this.specializationCache.size} cached specializations`);
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
-      const majorCandidates = this.specializationParentCandidates(specCode);
+      await fs.writeFile(
+        "spec_cache.json",
+        JSON.stringify(Object.fromEntries(this.specializationCache), undefined, 4),
+      );
 
       let specBlock: Block | undefined;
-      let foundMajor: DegreeWorksProgram | undefined;
+      let foundMajor: DegreeWorksProgramId | undefined;
 
-      for (const [candidateName, candidate] of majorCandidates) {
-        if (!candidate.degreeType) throw new Error("Degree type is undefined");
+      if (this.specializationCache.has(specCode)) {
+        console.log(`found cached association for ${specCode}`);
+        const got = this.specializationCache.get(specCode) as NonNullable<SpecializationCache>;
+        specBlock = got.block;
+        foundMajor = got.parent;
+      }
 
-        specBlock = await this.dw.getSpecAudit(
-          candidate.degreeType,
-          candidate.degreeType.startsWith("B") ? "U" : "G",
-          candidate.code,
-          specCode,
-        );
+      if (!specBlock || !foundMajor) {
+        const majorCandidates = this.specializationParentCandidates(specCode);
 
-        if (specBlock) {
-          foundMajor = candidate;
-          break;
+        for (const [candidateName, candidate] of majorCandidates) {
+          if (!candidate.degreeType) throw new Error("Degree type is undefined");
+
+          specBlock = await this.dw.getSpecAudit(
+            candidate.degreeType,
+            candidate.degreeType.startsWith("B") ? "U" : "G",
+            candidate.code,
+            specCode,
+          );
+
+          if (specBlock) {
+            foundMajor = candidate;
+            break;
+          }
         }
       }
 
-      if (!specBlock) {
+      if (!specBlock || !foundMajor) {
         console.log(
           `warning: bruteforcing major associated with specialization "${specName}" (specCode = ${specCode})`,
         );
@@ -283,6 +310,7 @@ export class Scraper {
             program.code,
             specCode,
           );
+
           if (try_) {
             specBlock = try_;
             foundMajor = program;
@@ -300,6 +328,13 @@ export class Scraper {
 
         foundMajorAssured.specs.push(specCode);
 
+        this.specializationCache.set(specCode, {
+          // we are storing the entire program even though we only need the DegreeWorksProgramId supertype
+          // however, this is fine because we never read the other fields (we couldn't because of the type system)
+          parent: foundMajorAssured,
+          block: specBlock,
+        });
+
         this.parsedSpecializations.set(
           specCode,
           await this.ap.parseBlock(
@@ -315,6 +350,8 @@ export class Scraper {
         console.log(
           `warning: no known major associated with "${specName}" (specCode = ${specCode})`,
         );
+
+        this.specializationCache.set(specCode, null);
       }
     }
 
