@@ -36,7 +36,7 @@ export class Scraper {
 
   private constructor() {}
 
-  // some degreeShort from catalogue do not agree the degreeworks version but really are the same
+  // some degreeShort from catalogue do not agree with the degreeworks version but really are the same
   private transformDegreeShort(input: string): string {
     return (
       {
