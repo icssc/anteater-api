@@ -298,6 +298,8 @@ export class Scraper {
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
         );
 
+        foundMajorAssured.specs.push(specCode);
+
         this.parsedSpecializations.set(
           specCode,
           await this.ap.parseBlock(
