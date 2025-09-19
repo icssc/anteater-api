@@ -266,9 +266,11 @@ export class Scraper {
 
       if (this.specializationCache.has(specCode)) {
         console.log(`found cached association for ${specCode}`);
-        const got = this.specializationCache.get(specCode) as NonNullable<SpecializationCache>;
-        specBlock = got.block;
-        foundMajor = got.parent;
+        const got = this.specializationCache.get(specCode) as SpecializationCache | null;
+        if (got !== null) {
+          specBlock = got.block;
+          foundMajor = got.parent;
+        }
       }
 
       if (!specBlock || !foundMajor) {
