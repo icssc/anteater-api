@@ -263,10 +263,13 @@ export class Scraper {
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
       let specBlock: Block | undefined;
       let foundMajor: DegreeWorksProgramId | undefined;
+      let newlyResolved = true;
 
       if (this.specializationCache.has(specCode)) {
         console.log(`found cached association for ${specCode}`);
         const got = this.specializationCache.get(specCode) as SpecializationCache | null;
+        newlyResolved = false;
+
         if (got !== null) {
           specBlock = got.block;
           foundMajor = got.parent;
@@ -352,10 +355,13 @@ export class Scraper {
         this.specializationCache.set(specCode, null);
       }
 
-      await fs.writeFile(
-        specCacheFilename,
-        JSON.stringify(Object.fromEntries(this.specializationCache), undefined, 4),
-      );
+      if (newlyResolved) {
+        // don't write to disk if we resolved this latest iteration from cache
+        await fs.writeFile(
+          specCacheFilename,
+          JSON.stringify(Object.fromEntries(this.specializationCache), undefined, 4),
+        );
+      }
     }
 
     // TODO: optional specs e.g. ACM and chem
