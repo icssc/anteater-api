@@ -249,8 +249,9 @@ export class Scraper {
 
     this.parsedSpecializations = new Map<string, DegreeWorksProgram>();
     console.log("Scraping all specialization requirements");
+    const specCacheFilename = `spec-cache-${this.dw.getCatalogYear()}.json`;
     this.specializationCache = await fs
-      .readFile("spec_cache.json", {
+      .readFile(specCacheFilename, {
         encoding: "utf-8",
         flag: "a+",
       })
@@ -260,11 +261,6 @@ export class Scraper {
     this.knownSpecializations = await this.dw.getMapping("specializations");
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
-      await fs.writeFile(
-        "spec_cache.json",
-        JSON.stringify(Object.fromEntries(this.specializationCache), undefined, 4),
-      );
-
       let specBlock: Block | undefined;
       let foundMajor: DegreeWorksProgramId | undefined;
 
@@ -353,6 +349,11 @@ export class Scraper {
 
         this.specializationCache.set(specCode, null);
       }
+
+      await fs.writeFile(
+        specCacheFilename,
+        JSON.stringify(Object.fromEntries(this.specializationCache), undefined, 4),
+      );
     }
 
     // TODO: optional specs e.g. ACM and chem
