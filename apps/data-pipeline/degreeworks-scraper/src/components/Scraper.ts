@@ -261,7 +261,7 @@ export class Scraper {
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
-    this.parsedSpecializations = new Map<string, DegreeWorksProgram>();
+    this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
     const specCacheFilename = `spec-cache-${this.dw.getCatalogYear()}.json`;
     this.specializationCache = await fs
