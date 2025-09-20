@@ -180,6 +180,14 @@ export class Scraper {
    * @private
    */
   private specializationParentCandidates(specCode: string): [string, DegreeWorksProgram][] {
+    // as of this commit, this spec is seemingly valid with any major but that's not really true
+    if (specCode === "OACSC") {
+      // "optional american chemical society certification"
+      const chemMajor = "Major in Chemistry";
+      const inMap = this.parsedPrograms.get(chemMajor);
+      return inMap ? [[chemMajor, inMap]] : [];
+    }
+
     // there seems to be a soft convention that specializations are their major code followed by uppercase letters
     // starting from A; let's try to use that first
 
