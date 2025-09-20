@@ -83,7 +83,7 @@ export type PrerequisiteTree = {
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "MAJOR" | "MINOR" | "SPEC";
+  programType: "SCHOOL" | "MAJOR" | "MINOR" | "SPEC";
   code: string;
   degreeType?: string;
 };
@@ -98,6 +98,12 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    */
   specs: string[];
 };
+
+/**
+ * (school, major) pair, because school requirements can vary by major
+ * eventually, we may want degree type; e.g. MFA provides some requirements
+ */
+export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";

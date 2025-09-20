@@ -34,7 +34,7 @@ async function main() {
     .toArray();
   const majorData = parsedPrograms
     .values()
-    .map(({ name, degreeType, code, requirements }) => ({
+    .map(([_school, { name, degreeType, code, requirements }]) => ({
       id: `${degreeType}-${code}`,
       degreeId: degreeType ?? "",
       code,
