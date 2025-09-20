@@ -37,7 +37,11 @@ export class Scraper {
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
   // both undergrad majors and grad programs
   private parsedPrograms = new Map<string, DegreeWorksProgram>();
-  private parsedSpecializations = new Map<string, [DegreeWorksProgramId, DegreeWorksProgram]>();
+  // (parent major, name, program object)
+  private parsedSpecializations = new Map<
+    string,
+    [DegreeWorksProgramId, string, DegreeWorksProgram]
+  >();
   private degreesAwarded = new Map<string, string>();
 
   private constructor() {}
@@ -346,6 +350,9 @@ export class Scraper {
 
         this.parsedSpecializations.set(specCode, [
           foundMajorAssured,
+          // don't use the block name because we would rather the display name be as it appears in the
+          // degreeworks dropdown, not the block title
+          specName,
           await this.ap.parseBlock(
             `${foundMajorAssured.school}-SPEC-${specCode}-${foundMajorAssured.degreeType}`,
             specBlock,
@@ -388,8 +395,8 @@ export class Scraper {
     // that it's probably not worth the effort to write a general solution.
 
     const x = this.parsedPrograms.get("Major in Art History") as DegreeWorksProgram;
-    const y = this.parsedSpecializations.get("AHGEO")?.[1] as DegreeWorksProgram;
-    const z = this.parsedSpecializations.get("AHPER")?.[1] as DegreeWorksProgram;
+    const y = this.parsedSpecializations.get("AHGEO")?.[2] as DegreeWorksProgram;
+    const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
     if (x && y && z) {
       x.specs = [];
       x.requirements = [...x.requirements, ...y.requirements, ...z.requirements];

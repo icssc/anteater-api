@@ -48,10 +48,10 @@ async function main() {
     .toArray();
   const specData = parsedSpecializations
     .values()
-    .map(([majorId, { name, degreeType, code, requirements }]) => ({
+    .map(([majorId, specName, { name, degreeType, code, requirements }]) => ({
       id: `${degreeType}-${code}`,
+      name: specName,
       majorId: `${majorId.degreeType}-${majorId.code}`,
-      name,
       requirements,
     }))
     .toArray();
