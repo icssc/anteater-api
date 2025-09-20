@@ -205,6 +205,8 @@ export class Scraper {
         .toArray();
     }
 
+    // no more heuristics; sorry, no candidates
+
     return [];
   }
 
