@@ -28,7 +28,7 @@ export class AuditParser {
 
   lexOrd = new Intl.Collator().compare;
 
-  // as of this commit, this field has been removed
+  // as of this commit, this field is usually not provided
   // parseSpecs = (block: Block): string[] =>
   //   JSON.stringify(block)
   //     .matchAll(AuditParser.specOrOtherMatcher)
