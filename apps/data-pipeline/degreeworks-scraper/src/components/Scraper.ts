@@ -309,27 +309,10 @@ export class Scraper {
       }
 
       if (newlyResolved && (!specBlock || !foundMajor)) {
-        console.log(
-          `warning: bruteforcing major associated with specialization "${specName}" (specCode = ${specCode})`,
-        );
+        console.log(`warning: no major associated with "${specName}" (specCode = ${specCode})`);
 
-        // TODO: much more likely to have been an undergrad program; try those first
-        for (const [programCode, program] of this.parsedPrograms.entries()) {
-          if (!program.degreeType) throw new Error("Degree type is undefined");
-
-          const try_ = await this.dw.getSpecAudit(
-            program.degreeType,
-            program.degreeType.startsWith("B") ? "U" : "G",
-            program.code,
-            specCode,
-          );
-
-          if (try_) {
-            specBlock = try_;
-            foundMajor = program;
-            break;
-          }
-        }
+        // if the convention of specialization codes being one letter appended to a major code is ever broken,
+        // we would need to bruteforce to find which major is associated with this spec
       }
 
       if (specBlock) {
