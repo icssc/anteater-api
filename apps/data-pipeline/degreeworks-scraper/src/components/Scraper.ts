@@ -267,6 +267,7 @@ export class Scraper {
     this.specializationCache = await fs
       .readFile(specCacheFilename, {
         encoding: "utf-8",
+        // create if DNE, then open for reading + appending (but we care about reading)
         flag: "a+",
       })
       .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
