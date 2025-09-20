@@ -15,7 +15,7 @@ import {
   reportsResponseSchema,
   type rewardTypeSchema,
   rewardTypesResponseSchema,
-} from "./schema.ts";
+} from "../schema.ts";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
