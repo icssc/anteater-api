@@ -173,7 +173,7 @@ export class Scraper {
       ret.set(majorAudit.title, [
         audit?.college
           ? await this.ap.parseBlock(
-              `${schoolCode}-SCHOOL-${majorCode}-${degreeCode}`,
+              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
               audit?.college,
             )
           : undefined,

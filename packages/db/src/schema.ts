@@ -84,7 +84,7 @@ export type PrerequisiteTree = {
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "SCHOOL" | "MAJOR" | "MINOR" | "SPEC";
+  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
   code: string;
   degreeType?: string;
 };
