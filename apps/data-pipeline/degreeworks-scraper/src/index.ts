@@ -1,7 +1,15 @@
+import * as assert from "node:assert";
 import { exit } from "node:process";
 import { Scraper } from "$components";
 import { database } from "@packages/db";
-import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import {
+  collegeRequirement,
+  degree,
+  major,
+  minor,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
 import type { Division } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 
@@ -32,20 +40,47 @@ async function main() {
       division: (id.startsWith("B") ? "Undergraduate" : "Graduate") as Division,
     }))
     .toArray();
+
+  const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
   const majorData = parsedPrograms
     .values()
-    .map(({ name, degreeType, code, requirements }) => ({
-      id: `${degreeType}-${code}`,
-      degreeId: degreeType ?? "",
-      code,
-      name,
-      requirements,
-    }))
+    .map(([college, { name, degreeType, code, requirements }]) => {
+      let collegeBlockIndex: number | undefined;
+      if (college?.requirements) {
+        const wouldInsert = { name: college.name, requirements: college.requirements };
+        const existing = collegeBlocks.findIndex((schoolExisting) => {
+          try {
+            assert.deepStrictEqual(schoolExisting, wouldInsert);
+            return true;
+          } catch {
+            return false;
+          }
+        });
+
+        if (existing === -1) {
+          collegeBlocks.push(wouldInsert);
+          collegeBlockIndex = collegeBlocks.length - 1;
+        } else {
+          collegeBlockIndex = existing;
+        }
+      }
+
+      return {
+        id: `${degreeType}-${code}`,
+        degreeId: degreeType ?? "",
+        code,
+        name,
+        requirements,
+        ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+      };
+    })
     .toArray();
+
   const minorData = parsedMinorPrograms
     .values()
     .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
     .toArray();
+
   const specData = parsedSpecializations
     .values()
     .map(([majorId, specName, { name, degreeType, code, requirements }]) => ({
@@ -79,6 +114,25 @@ async function main() {
       .insert(degree)
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
+
+    // we need to determine the db ID of school blocks and update major objects accordingly first
+    const collegeBlockIds = await tx
+      .insert(collegeRequirement)
+      .values(collegeBlocks)
+      .onConflictDoUpdate({
+        target: collegeRequirement.requirements,
+        set: conflictUpdateSetAllCols(collegeRequirement),
+      })
+      .returning({ id: collegeRequirement.id })
+      .then((rows) => rows.map(({ id }) => id));
+
+    for (const majorObj of majorData) {
+      if (majorObj.collegeBlockIndex !== undefined) {
+        (majorObj as typeof major.$inferInsert).college =
+          collegeBlockIds[majorObj.collegeBlockIndex];
+      }
+    }
+
     await tx
       .insert(major)
       .values(majorData)

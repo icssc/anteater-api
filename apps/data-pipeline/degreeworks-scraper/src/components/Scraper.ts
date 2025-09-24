@@ -6,6 +6,7 @@ import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  MajorProgram,
 } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -35,8 +36,8 @@ export class Scraper {
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
-  // both undergrad majors and grad programs
-  private parsedPrograms = new Map<string, DegreeWorksProgram>();
+  // both undergrad majors and grad programs; tuple of (school, program)
+  private parsedPrograms = new Map<string, MajorProgram>();
   // (parent major, name, program object)
   private parsedSpecializations = new Map<
     string,
@@ -142,36 +143,45 @@ export class Scraper {
   }
 
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
-    const ret = new Map<string, DegreeWorksProgram>();
+    const ret = new Map<string, MajorProgram>();
     for (const [schoolCode, majorCode, degreeCode] of degrees) {
+      // TODO: humanities "liberal learnings"
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
         degreeCode.startsWith("B") ? "U" : "G",
         majorCode,
+        schoolCode,
       );
 
-      if (!audit) {
+      const majorAudit = audit?.major;
+
+      if (!majorAudit) {
         console.log(
           `Requirements block not found (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      if (ret.has(audit.title)) {
+      if (ret.has(majorAudit.title)) {
         console.log(
-          `Requirements block already exists for "${audit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      ret.set(
-        audit.title,
-        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, audit),
-      );
+      ret.set(majorAudit.title, [
+        audit?.college
+          ? await this.ap.parseBlock(
+              `${schoolCode}-SCHOOL-${majorCode}-${degreeCode}`,
+              audit?.college,
+            )
+          : undefined,
+        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
+      ]);
 
       console.log(
-        `Requirements block found and parsed for "${audit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        `Requirements block found and parsed for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
     }
     return ret;
@@ -183,13 +193,12 @@ export class Scraper {
    * @param specCode the code associated with a specialization
    * @private
    */
-  private specializationParentCandidates(specCode: string): [string, DegreeWorksProgram][] {
+  private specializationParentCandidates(specCode: string): DegreeWorksProgram[] {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const chemMajor = "Major in Chemistry";
-      const inMap = this.parsedPrograms.get(chemMajor);
-      return inMap ? [[chemMajor, inMap]] : [];
+      const inMap = this.parsedPrograms.get("Major in Chemistry") as MajorProgram;
+      return inMap ? [inMap[1]] : [];
     }
 
     // there seems to be a soft convention that specializations are their major code followed by uppercase letters
@@ -201,7 +210,8 @@ export class Scraper {
       const [, maybeMajorCode] = asSuffixedMajorCode;
       return this.parsedPrograms
         .entries()
-        .filter(([_k, prog]) => prog.code === maybeMajorCode)
+        .filter(([_k, [_school, major]]) => major.code === maybeMajorCode)
+        .map(([_k, [_school, major]]) => major)
         .toArray();
     }
 
@@ -294,7 +304,7 @@ export class Scraper {
       if (newlyResolved && (!specBlock || !foundMajor)) {
         const majorCandidates = this.specializationParentCandidates(specCode);
 
-        for (const [candidateName, candidate] of majorCandidates) {
+        for (const candidate of majorCandidates) {
           if (!candidate.degreeType) throw new Error("Degree type is undefined");
 
           specBlock = await this.dw.getSpecAudit(
@@ -366,9 +376,9 @@ export class Scraper {
     // TODO: optional specs e.g. ACM and chem
 
     this.degreesAwarded = new Map(
-      Array.from(new Set(this.parsedPrograms.entries().map(([, x]) => x.degreeType ?? ""))).map(
-        (x): [string, string] => [x, this.degrees?.get(x) ?? ""],
-      ),
+      Array.from(
+        new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
+      ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
 
     // Post-processing steps.
@@ -378,12 +388,12 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get("Major in Art History") as DegreeWorksProgram;
+    const x = this.parsedPrograms.get("Major in Art History") as MajorProgram;
     const y = this.parsedSpecializations.get("AHGEO")?.[2] as DegreeWorksProgram;
     const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
     if (x && y && z) {
-      x.specs = [];
-      x.requirements = [...x.requirements, ...y.requirements, ...z.requirements];
+      x[1].specs = [];
+      x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
       this.parsedPrograms.set("Major in Art History", x);
