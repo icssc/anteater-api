@@ -312,8 +312,6 @@ export class Scraper {
       }
 
       if (newlyResolved && (!specBlock || !foundMajor)) {
-        console.log(`warning: no major associated with "${specName}" (specCode = ${specCode})`);
-
         // if the convention of specialization codes being one letter appended to a major code is ever broken,
         // we would need to bruteforce to find which major is associated with this spec
       }
