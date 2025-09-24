@@ -145,7 +145,6 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
     const ret = new Map<string, MajorProgram>();
     for (const [schoolCode, majorCode, degreeCode] of degrees) {
-      // TODO: humanities "liberal learnings"
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
@@ -372,8 +371,6 @@ export class Scraper {
         );
       }
     }
-
-    // TODO: optional specs e.g. ACM and chem
 
     this.degreesAwarded = new Map(
       Array.from(
