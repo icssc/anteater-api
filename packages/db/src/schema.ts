@@ -8,6 +8,7 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgEnum,
   pgMaterializedView,
   pgTable,
@@ -623,6 +624,12 @@ export const schoolRequirement = pgTable("school_requirement", {
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
+export const collegeRequirement = pgTable("college_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
+});
+
 export const major = pgTable(
   "major",
   {
@@ -632,9 +639,10 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
+    college: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [index().on(table.degreeId)],
+  (table) => [index().on(table.degreeId), index().on(table.college)],
 );
 
 export const minor = pgTable("minor", {

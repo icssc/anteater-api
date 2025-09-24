@@ -183,8 +183,6 @@ export class Scraper {
       console.log(
         `Requirements block found and parsed for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
-
-      // TODO: handle school requirement block
     }
     return ret;
   }
