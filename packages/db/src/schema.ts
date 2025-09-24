@@ -2,7 +2,6 @@ import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
-  char,
   date,
   decimal,
   index,
@@ -613,7 +612,7 @@ export const degree = pgTable("degree", {
 });
 
 export const schoolRequirement = pgTable("school_requirement", {
-  id: char("id", { length: 2 }).primaryKey(),
+  id: varchar("id").primaryKey(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
