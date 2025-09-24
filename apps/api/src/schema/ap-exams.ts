@@ -52,8 +52,9 @@ export const apExamsRewardSchema = z.object({
     description:
       "The number of units granted as generic elective credit (but not from any course) for this reward",
   }),
-  geCategories: z.enum(geCategories).array().openapi({
-    description: "GE categories granted directly by this reward and not through any course",
+  geGranted: z.record(z.enum(geCategories), z.number().int().nonnegative()).openapi({
+    description:
+      "Courses in GE categories granted directly by this reward and not through any course",
   }),
   coursesGranted: coursesGrantedTreeSchema.openapi({
     description: "The tree describing course credit granted by this reward",

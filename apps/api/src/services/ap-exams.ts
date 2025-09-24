@@ -17,18 +17,27 @@ function buildQuery(query: z.infer<typeof apExamsQuerySchema>) {
   return and(...conds);
 }
 
-const geCategoryToFlag = {
-  "GE-1A": "grantsGE1A",
-  "GE-1B": "grantsGE1B",
-  "GE-2": "grantsGE2",
-  "GE-3": "grantsGE3",
-  "GE-4": "grantsGE4",
-  "GE-5A": "grantsGE5A",
-  "GE-5B": "grantsGE5B",
-  "GE-6": "grantsGE6",
-  "GE-7": "grantsGE7",
-  "GE-8": "grantsGE8",
+// TODO: unify with array in extract layer (data importer)
+const geCategoryToColumn = {
+  "GE-1A": "ge1aCoursesGranted",
+  "GE-1B": "ge1bCoursesGranted",
+  "GE-2": "ge2CoursesGranted",
+  "GE-3": "ge3CoursesGranted",
+  "GE-4": "ge4CoursesGranted",
+  "GE-5A": "ge5aCoursesGranted",
+  "GE-5B": "ge5bCoursesGranted",
+  "GE-6": "ge6CoursesGranted",
+  "GE-7": "ge7CoursesGranted",
+  "GE-8": "ge8CoursesGranted",
 } as const;
+
+function geGrantedFromReward(reward: typeof apExamReward.$inferSelect) {
+  return Object.fromEntries(
+    Object.entries(geCategoryToColumn)
+      .filter(([_, col]) => reward[col] > 0)
+      .map(([cat, col]) => [cat as keyof typeof geCategoryToColumn, reward[col]]),
+  );
+}
 
 function accumulateRows(
   rows: {
@@ -53,9 +62,7 @@ function accumulateRows(
         examObj.rewards.push({
           acceptableScores: scores,
           ...reward,
-          geCategories: Object.entries(geCategoryToFlag)
-            .filter(([_, col]) => reward[col])
-            .map(([cat, _]) => cat as keyof typeof geCategoryToFlag),
+          geGranted: geGrantedFromReward(reward),
         });
       }
       exams.set(exam.id, examObj);
@@ -63,9 +70,7 @@ function accumulateRows(
       exams.get(exam.id)?.rewards.push({
         acceptableScores: scores,
         ...reward,
-        geCategories: Object.entries(geCategoryToFlag)
-          .filter(([_, col]) => reward[col])
-          .map(([cat, _]) => cat),
+        geGranted: geGrantedFromReward(reward),
       });
     }
   }
