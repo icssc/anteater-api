@@ -8,7 +8,7 @@
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "postinstall": "wrangler types"
+    "postinstall": "wrangler types --x-include-runtime"
   },
   "dependencies": {
     "@escape.tech/graphql-armor": "3.1.1",
@@ -27,6 +27,6 @@
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
-    "wrangler": "4.35.0"
+    "wrangler": "3.100.0"
   }
 }

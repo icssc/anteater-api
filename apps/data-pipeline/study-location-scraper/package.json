@@ -7,7 +7,7 @@
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
-    "postinstall": "wrangler types",
+    "postinstall": "wrangler types --x-include-runtime",
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
@@ -18,6 +18,6 @@
   },
   "devDependencies": {
     "domhandler": "5.0.3",
-    "wrangler": "4.35.0"
+    "wrangler": "3.100.0"
   }
 }

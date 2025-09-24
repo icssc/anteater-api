@@ -5,9 +5,6 @@ pre-commit:
       glob: "*.{ts,tsx,cjs}"
       run: pnpm check:biome -- {staged_files}
       stage_fixed: true
-      exclude:
-        - "**/worker-configuration.d.ts"
-        - "**/.wrangler/**"
     check-prettier:
       glob: "*.{json,md,toml,yml,yaml}"
       run: pnpm prettier --write {staged_files}
