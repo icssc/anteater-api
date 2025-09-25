@@ -22,7 +22,7 @@ export const searchQuerySchema = z.object({
   }),
   ge: z.coerce
     .string()
-    .transform((l) => l.split(","))
+    .transform((l) => l.split(",").map((cat) => cat.trim()))
     .pipe(z.enum(inputGECategories).array())
     .optional()
     .openapi({
