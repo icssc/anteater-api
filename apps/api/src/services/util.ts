@@ -65,23 +65,25 @@ export function buildGEQuery(
 }
 
 type WebsocDivisionLikeInput = WebsocServiceInput["division"];
-export function buildDivisionQuery(division: WebsocDivisionLikeInput): Array<SQL | undefined> {
+interface CourseNumericLikeTable {
+  courseNumeric: PgColumn<ColumnBaseConfig<"number", string>>;
+}
+export function buildDivisionQuery(
+  table: CourseNumericLikeTable,
+  division: WebsocDivisionLikeInput,
+): Array<SQL | undefined> {
   const conditions = [];
 
   if (division) {
     switch (division) {
       case "LowerDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 1), lte(websocCourse.courseNumeric, 99)),
-        );
+        conditions.push(and(gte(table.courseNumeric, 1), lte(table.courseNumeric, 99)));
         break;
       case "UpperDiv":
-        conditions.push(
-          and(gte(websocCourse.courseNumeric, 100), lte(websocCourse.courseNumeric, 199)),
-        );
+        conditions.push(and(gte(table.courseNumeric, 100), lte(table.courseNumeric, 199)));
         break;
       case "Graduate":
-        conditions.push(gte(websocCourse.courseNumeric, 200));
+        conditions.push(gte(table.courseNumeric, 200));
         break;
     }
   }

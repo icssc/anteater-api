@@ -66,7 +66,7 @@ export class SearchService {
 
     const courseConditions = [
       or(...geIn.flatMap((ge) => buildGEQuery(course, ge))),
-      ...buildDivisionQuery(input.courseLevel),
+      or(...(input.courseLevel ?? []).map((lvl) => and(...buildDivisionQuery(course, lvl)))),
       ...buildUnitBoundsQuery(course, input.minUnits, input.maxUnits),
     ];
 

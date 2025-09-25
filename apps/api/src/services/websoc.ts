@@ -73,7 +73,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  conditions.push(...buildDivisionQuery(input.division));
+  conditions.push(...buildDivisionQuery(websocCourse, input.division));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }

@@ -16,9 +16,15 @@ export const searchQuerySchema = z.object({
       description: "If searching for courses, they must be from one of these departments",
       example: "BIO SCI,GDIM",
     }),
-  courseLevel: inputCourseLevelSchema.optional().openapi({
-    description: "If searching for courses, they must be at this level",
-  }),
+  courseLevel: z.coerce
+    .string()
+    .transform((l) => l.split(",").map((dept) => dept.trim()))
+    .pipe(inputCourseLevelSchema.array())
+    .optional()
+    .openapi({
+      description: "If searching for courses, they must be at one of these levels",
+      example: "Graduate,UpperDiv",
+    }),
   minUnits: z.coerce.number().optional().openapi({
     description: "If searching for courses, they must grant at least this many units upon passage",
   }),
