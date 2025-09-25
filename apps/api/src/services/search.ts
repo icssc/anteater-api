@@ -6,7 +6,7 @@ import type {
 } from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, asc, desc, eq, or, sql } from "@packages/db/drizzle";
+import { and, asc, desc, inArray, or, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -71,7 +71,7 @@ export class SearchService {
     ];
 
     if (input.department) {
-      courseConditions.push(eq(course.department, input.department));
+      courseConditions.push(inArray(course.department, input.department));
     }
 
     return and(...courseConditions);

@@ -7,10 +7,15 @@ export const searchQuerySchema = z.object({
   take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
   skip: z.coerce.number().default(0),
   resultType: z.union([z.literal("course"), z.literal("instructor")]).optional(),
-  department: z.string().optional().openapi({
-    description: "If searching for courses, they must be from this department",
-    example: "BIO SCI",
-  }),
+  department: z.coerce
+    .string()
+    .transform((l) => l.split(",").map((dept) => dept.trim()))
+    .pipe(z.string().array())
+    .optional()
+    .openapi({
+      description: "If searching for courses, they must be from one of these departments",
+      example: "BIO SCI,GDIM",
+    }),
   courseLevel: inputCourseLevelSchema.optional().openapi({
     description: "If searching for courses, they must be at this level",
   }),
