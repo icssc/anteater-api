@@ -1,5 +1,3 @@
-import type { DegreeWorksProgramId } from "@packages/db/schema";
-
 /**
  * The base type for all `Rule` objects.
  */
@@ -40,7 +38,7 @@ export type RuleIfStmt = {
   requirement: { ifPart: { ruleArray: Rule[] }; elsePart?: { ruleArray: Rule[] } };
 };
 /**
- * A rule that refers to another block (typically a major mandating a specialization or school-wide requirements).
+ * A rule that refers to another block (typically a specialization).
  */
 export type RuleBlock = {
   ruleType: "Block";
@@ -86,10 +84,4 @@ export type DWAuditResponse = DWAuditOKResponse | DWAuditErrorResponse;
 
 export type DWMappingResponse<T extends string> = {
   _embedded: { [P in T]: { key: string; description: string }[] };
-};
-
-// this is the data we cache on a specialization, if it is valid
-export type SpecializationCache = {
-  parent: DegreeWorksProgramId;
-  block: Block;
 };

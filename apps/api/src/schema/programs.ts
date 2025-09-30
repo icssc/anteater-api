@@ -251,15 +251,6 @@ export const majorRequirementsResponseSchema = programRequirementsResponseSchema
   name: programRequirementsResponseSchema.shape.name.openapi({
     example: "Major in Computer Science",
   }),
-  schoolRequirements: z
-    .object({
-      name: z.string().openapi({ description: "Name for this school's requirements" }),
-      requirements: programRequirementsResponseSchema.shape.requirements,
-    })
-    .nullable()
-    .openapi({
-      description: "If present, requirements imposed by the school this major belongs to",
-    }),
 });
 
 export const minorRequirementsResponseSchema = programRequirementsResponseSchema.extend({

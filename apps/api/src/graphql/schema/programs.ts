@@ -60,34 +60,10 @@ type ProgramMarkerRequirement implements ProgramRequirementBase @cacheControl(ma
 
 union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | ProgramGroupRequirement | ProgramMarkerRequirement
 
-interface Program @cacheControl(maxAge: 86400) {
+type Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    requirements: [ProgramRequirement!]!
-}
-
-type SchoolRequirements @cacheControl(maxAge: 86400) {
-    name: String!
-    requirements: [ProgramRequirement!]!
-}
-
-type Major implements Program @cacheControl(maxAge: 86400) {
-    id: String!
-    name: String!
-    requirements: [ProgramRequirement!]!
-    schoolRequirements: SchoolRequirements
-}
-
-type Minor implements Program @cacheControl(maxAge: 86400) {
-    id: String!
-    name: String!
-    requirements: [ProgramRequirement!]!
-}
-
-type Specialization implements Program @cacheControl(maxAge: 86400) {
-    id: String!
-    name: String!
-    requirements: [ProgramRequirement!]!
+    requirements: [ProgramRequirement]!
 }
 
 enum UgradRequirementsBlockId {
@@ -124,9 +100,9 @@ extend type Query {
     majors(query: MajorsQuery): [MajorPreview!]!
     minors(query: MinorsQuery): [MinorPreview!]!
     specializations(query: SpecializationsQuery): [SpecializationPreview!]!
-    major(query: ProgramRequirementsQuery!): Major!
-    minor(query: ProgramRequirementsQuery!): Minor!
-    specialization(query: ProgramRequirementsQuery!): Specialization!
+    major(query: ProgramRequirementsQuery!): Program!
+    minor(query: ProgramRequirementsQuery!): Program!
+    specialization(query: ProgramRequirementsQuery!): Program!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!
 }
 `;

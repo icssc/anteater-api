@@ -9,14 +9,7 @@ import type {
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
-import {
-  collegeRequirement,
-  degree,
-  major,
-  minor,
-  schoolRequirement,
-  specialization,
-} from "@packages/db/schema";
+import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
@@ -104,23 +97,9 @@ export class ProgramsService {
       specialization,
     }[programType];
 
-    const [got] = await (programType !== "major"
-      ? this.db
-          .select({ id: table.id, name: table.name, requirements: table.requirements })
-          .from(table)
-      : this.db
-          .select({
-            id: major.id,
-            name: major.name,
-            requirements: major.requirements,
-            schoolRequirements: {
-              name: collegeRequirement.name,
-              requirements: collegeRequirement.requirements,
-            },
-          })
-          .from(major)
-          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-    )
+    const [got] = await this.db
+      .select({ id: table.id, name: table.name, requirements: table.requirements })
+      .from(table)
       .where(eq(table.id, query.programId))
       .limit(1);
 
