@@ -22,17 +22,19 @@ export class AuditParser {
     ...this.parseBlockId(blockId),
     name: block.title,
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
-    specs: this.parseSpecs(block),
+    // populate later; we cannot determine specializations on the spot
+    specs: [],
   });
 
   lexOrd = new Intl.Collator().compare;
 
-  parseSpecs = (block: Block): string[] =>
-    JSON.stringify(block)
-      .matchAll(AuditParser.specOrOtherMatcher)
-      .map((x) => JSON.parse(`{${x[0]}}`).value)
-      .toArray()
-      .sort();
+  // as of this commit, this field is not provided in any meaningful cases
+  // parseSpecs = (block: Block): string[] =>
+  //   JSON.stringify(block)
+  //     .matchAll(AuditParser.specOrOtherMatcher)
+  //     .map((x) => JSON.parse(`{${x[0]}}`).value)
+  //     .toArray()
+  //     .sort();
 
   flattenIfStmt(ruleArray: Rule[]): Rule[] {
     const ret = [];
