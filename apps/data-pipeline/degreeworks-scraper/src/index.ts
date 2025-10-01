@@ -31,6 +31,7 @@ async function main() {
   } = scraper.get();
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
+  const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
 
   const degreeData = degreesAwarded
     .entries()
@@ -102,6 +103,21 @@ async function main() {
           {
             id: "GE",
             requirements: geRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    if (honorsFourRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC4",
+            requirements: honorsFourRequirementData,
           },
         ])
         .onConflictDoUpdate({

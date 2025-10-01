@@ -1,4 +1,4 @@
-import type { Block, DWAuditResponse, DWMappingResponse } from "$types";
+import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
 import fetch from "cross-fetch";
 
 export class DegreeworksClient {
@@ -44,7 +44,7 @@ export class DegreeworksClient {
       .join("&");
   }
 
-  async getUgradRequirements(): Promise<[Block, Block] | undefined> {
+  async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
     const params = DegreeworksClient.formatQueryParams({
       studentId: this.studentId,
       // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
@@ -73,7 +73,15 @@ export class DegreeworksClient {
       return;
     }
 
-    return [ucRequirements, geRequirements];
+    const honorsFourRequirements = json.blockArray.find(
+      (b) => b.requirementType === "OTHER" && b.requirementValue === "CHP",
+    );
+
+    return {
+      UC: ucRequirements,
+      GE: geRequirements,
+      CHC4: honorsFourRequirements,
+    };
   }
 
   /**
