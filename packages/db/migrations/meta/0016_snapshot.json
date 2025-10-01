@@ -1,5 +1,6 @@
 {
-  "id": "98b24c18-172d-49fc-b11e-9ad85a6ac541",
+
+  "id": "0fa198f4-f7d0-4903-bc32-657abc468695",
   "prevId": "d61c1141-bf8a-41bd-921c-551ec41b8764",
   "version": "7",
   "dialect": "postgresql",
@@ -278,6 +279,44 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.college_requirement": {
+      "name": "college_requirement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "college_requirement_requirements_unique": {
+          "name": "college_requirement_requirements_unique",
+          "nullsNotDistinct": false,
+          "columns": ["requirements"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -898,6 +937,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "college_requirement": {
+          "name": "college_requirement",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "requirements": {
           "name": "requirements",
           "type": "json",
@@ -920,6 +965,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "major_college_requirement_index": {
+          "name": "major_college_requirement_index",
+          "columns": [
+            {
+              "expression": "college_requirement",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -931,51 +991,17 @@
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "major_college_requirement_college_requirement_id_fk": {
+          "name": "major_college_requirement_college_requirement_id_fk",
+          "tableFrom": "major",
+          "tableTo": "college_requirement",
+          "columnsFrom": ["college_requirement"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.map_location": {
-      "name": "map_location",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "latitude": {
-          "name": "latitude",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "image_urls": {
-          "name": "image_urls",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

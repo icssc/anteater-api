@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
     "cross-fetch": "4.0.0",
-    "jwt-decode": "4.0.0"
+    "jwt-decode": "4.0.0",
+    "zod": "4.1.7"
   }
 }

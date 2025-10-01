@@ -9,6 +9,7 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgEnum,
   pgMaterializedView,
   pgTable,
@@ -84,7 +85,7 @@ export type PrerequisiteTree = {
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "MAJOR" | "MINOR" | "SPEC";
+  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
   code: string;
   degreeType?: string;
 };
@@ -99,6 +100,12 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    */
   specs: string[];
 };
+
+/**
+ * (school, major) pair, because school requirements can vary by major
+ * eventually, we may want degree type; e.g. MFA provides some requirements
+ */
+export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
@@ -618,6 +625,12 @@ export const schoolRequirement = pgTable("school_requirement", {
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
+export const collegeRequirement = pgTable("college_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
+});
+
 export const major = pgTable(
   "major",
   {
@@ -627,9 +640,10 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
+    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [index().on(table.degreeId)],
+  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
 );
 
 export const minor = pgTable("minor", {
