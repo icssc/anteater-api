@@ -1,1 +1,0 @@
-ALTER TABLE "school_requirement" ALTER COLUMN "id" SET DATA TYPE varchar;
