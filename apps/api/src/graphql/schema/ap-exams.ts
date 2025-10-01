@@ -3,7 +3,8 @@ type APExamReward @cacheControl(maxAge: 86400) {
     acceptableScores: [Int!]!
     unitsGranted: Int!
     electiveUnitsGranted: Int!
-    geCategories: [String!]!
+    # no record type in graphql
+    geGranted: JSON!
     coursesGranted: JSON!
 }
 
