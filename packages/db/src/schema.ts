@@ -5,6 +5,7 @@ import {
   char,
   date,
   decimal,
+  doublePrecision,
   index,
   integer,
   json,
@@ -720,6 +721,15 @@ export const studyRoomSlot = pgTable(
     uniqueIndex().on(table.studyRoomId, table.start, table.end),
   ],
 );
+
+// Map data
+export const mapLocation = pgTable("map_location", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  latitude: doublePrecision("latitude").notNull(),
+  longitude: doublePrecision("longitude").notNull(),
+  imageURLs: text("image_urls").array().notNull(),
+});
 
 export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),
