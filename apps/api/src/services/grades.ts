@@ -33,8 +33,8 @@ function buildQuery(input: GradesServiceInput) {
   if (input.sectionCode) {
     conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode)));
   }
-  conditions.push(...buildDivisionQuery(input));
-  conditions.push(...buildGEQuery(input));
+  conditions.push(...buildDivisionQuery(websocCourse, input.division));
+  conditions.push(...buildGEQuery(websocCourse, input.ge));
   if (input.excludePNP) {
     conditions.push(
       or(
