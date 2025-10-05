@@ -1,5 +1,5 @@
 {
-  "id": "f7d81356-e22e-4745-9121-32edeb59997f",
+  "id": "2c03a306-abf2-4b8e-b412-c948e659aa5d",
   "prevId": "0fa198f4-f7d0-4903-bc32-657abc468695",
   "version": "7",
   "dialect": "postgresql",
@@ -52,75 +52,75 @@
           "primaryKey": false,
           "notNull": true
         },
-        "ge_1a_courses_granted": {
-          "name": "ge_1a_courses_granted",
-          "type": "integer",
+        "grants_ge_1a": {
+          "name": "grants_ge_1a",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_1b_courses_granted": {
-          "name": "ge_1b_courses_granted",
-          "type": "integer",
+        "grants_ge_1b": {
+          "name": "grants_ge_1b",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_2_courses_granted": {
-          "name": "ge_2_courses_granted",
-          "type": "integer",
+        "grants_ge_2": {
+          "name": "grants_ge_2",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_3_courses_granted": {
-          "name": "ge_3_courses_granted",
-          "type": "integer",
+        "grants_ge_3": {
+          "name": "grants_ge_3",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_4_courses_granted": {
-          "name": "ge_4_courses_granted",
-          "type": "integer",
+        "grants_ge_4": {
+          "name": "grants_ge_4",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_5a_courses_granted": {
-          "name": "ge_5a_courses_granted",
-          "type": "integer",
+        "grants_ge_5a": {
+          "name": "grants_ge_5a",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_5b_courses_granted": {
-          "name": "ge_5b_courses_granted",
-          "type": "integer",
+        "grants_ge_5b": {
+          "name": "grants_ge_5b",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_6_courses_granted": {
-          "name": "ge_6_courses_granted",
-          "type": "integer",
+        "grants_ge_6": {
+          "name": "grants_ge_6",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_7_courses_granted": {
-          "name": "ge_7_courses_granted",
-          "type": "integer",
+        "grants_ge_7": {
+          "name": "grants_ge_7",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
-        "ge_8_courses_granted": {
-          "name": "ge_8_courses_granted",
-          "type": "integer",
+        "grants_ge_8": {
+          "name": "grants_ge_8",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": 0
+          "default": false
         },
         "courses_granted": {
           "name": "courses_granted",
@@ -1149,7 +1149,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(2)",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
