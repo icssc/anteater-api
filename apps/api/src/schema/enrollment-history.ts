@@ -6,13 +6,10 @@ export const enrollmentHistoryQuerySchema = z
   .object({
     year: yearSchema.optional(),
     quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
-    instructorName: z
-      .string()
-      .optional()
-      .openapi({
-        description: "The instructor's last name and first initial",
-        example: "THORNTON, A.",
-      }),
+    instructorName: z.string().optional().openapi({
+      description: "The instructor's last name and first initial",
+      example: "THORNTON, A.",
+    }),
     department: z
       .string()
       .optional()
@@ -26,7 +23,7 @@ export const enrollmentHistoryQuerySchema = z
       .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
       .transform((x) => Number.parseInt(x, 10))
       .optional()
-      .openapi({ description: "The 5-digit section code", example: "12345" }),
+      .openapi({ description: "The 5-digit section code", example: "36120" }),
     sectionType: z
       .enum(websocSectionTypes, { invalid_type_error: "Invalid sectionType provided" })
       .optional(),
