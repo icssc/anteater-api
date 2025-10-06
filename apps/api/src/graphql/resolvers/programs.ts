@@ -5,6 +5,7 @@ import {
   minorRequirementsQuerySchema,
   minorsQuerySchema,
   type programRequirementSchema,
+  sampleProgramsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
@@ -81,6 +82,16 @@ export const programResolvers = {
       const res = await service.getUgradRequirements(parsedArgs);
       if (!res)
         throw new GraphQLError("Undergraduate requirements block not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return res;
+    },
+    samplePrograms: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = sampleProgramsQuerySchema.parse(args?.query);
+      const service = new ProgramsService(db);
+      const res = await service.getSamplePrograms(parsedArgs);
+      if (!res)
+        throw new GraphQLError("No data for a sample program by that name", {
           extensions: { code: "NOT_FOUND" },
         });
       return res;

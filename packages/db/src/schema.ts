@@ -145,6 +145,22 @@ export type APCoursesGrantedTree =
       OR: (APCoursesGrantedTree | string)[];
     };
 
+export type CurriculumTerm = {
+  term: string;
+  courses: string[];
+};
+
+export type SampleProgramEntry = {
+  year: string;
+  curriculum: CurriculumTerm[];
+};
+
+export type SampleProgram = {
+  programName: string;
+  sampleProgram: SampleProgramEntry[];
+  notes: string[];
+};
+
 // Misc. enums
 
 export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
@@ -755,6 +771,12 @@ export const apExamReward = pgTable("ap_exam_reward", {
   grantsGE7: boolean("grants_ge_7").notNull().default(false),
   grantsGE8: boolean("grants_ge_8").notNull().default(false),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
+});
+
+export const sampleProgram = pgTable("sample_program", {
+  programName: varchar("program_name").notNull(),
+  sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
+  programNotes: varchar("program_notes").array().notNull(),
 });
 
 // Materialized views

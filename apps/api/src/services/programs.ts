@@ -3,6 +3,7 @@ import type {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  sampleProgramsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
@@ -14,6 +15,7 @@ import {
   degree,
   major,
   minor,
+  sampleProgram,
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
@@ -142,5 +144,17 @@ export class ProgramsService {
       .limit(1);
 
     return orNull(got);
+  }
+
+  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
+    const results = await this.db
+      .select({
+        programName: sampleProgram.programName,
+        sampleProgram: sampleProgram.sampleProgram,
+        notes: sampleProgram.programNotes,
+      })
+      .from(sampleProgram)
+      .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
+    return results;
   }
 }
