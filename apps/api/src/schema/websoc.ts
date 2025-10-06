@@ -79,9 +79,15 @@ export const websocQuerySchema = z.object({
     .enum(geCategories)
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z.string().optional(),
-  courseTitle: z.string().optional(),
-  courseNumber: courseNumberSchema.optional(),
+  department: z
+    .string()
+    .optional()
+    .openapi({ description: "The department code", example: "I&C SCI" }),
+  courseTitle: z
+    .string()
+    .optional()
+    .openapi({ description: "The course title", example: "PRINCP IN SYS DESGN" }),
+  courseNumber: courseNumberSchema.optional().openapi({ description: "The course number" }),
   sectionCodes: z
     .string()
     .optional()
@@ -115,11 +121,27 @@ export const websocQuerySchema = z.object({
         parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
       }
       return parsedNums;
+    })
+    .openapi({
+      description: "A comma-separated list of section codes or section code ranges",
+      example: "36213,36216-36218",
     }),
-  instructorName: z.string().optional(),
-  days: daysSchema.optional(),
-  building: z.string().optional(),
-  room: z.string().optional(),
+  instructorName: z
+    .string()
+    .optional()
+    .openapi({
+      description: "The instructor's last name and first initial",
+      example: "ALFARO, S.",
+    }),
+  days: daysSchema.optional().openapi({ description: "The days of the week the section meets" }),
+  building: z
+    .string()
+    .optional()
+    .openapi({ description: "The building the section meets in", example: "ALP" }),
+  room: z
+    .string()
+    .optional()
+    .openapi({ description: "The room the section meets in", example: "2300" }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
@@ -265,6 +287,6 @@ export const websocResponseSchema = z.object({
 });
 
 export const websocTermResponseSchema = z.object({
-  shortName: z.string(),
-  longName: z.string(),
+  shortName: z.string().openapi({ description: "The term code", example: "2025 Fall" }),
+  longName: z.string().openapi({ description: "The full term name", example: "2025 Fall Quarter" }),
 });
