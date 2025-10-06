@@ -5,13 +5,10 @@ import { geCategories, yearSchema } from "./lib";
 export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
   quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
-  instructor: z
-    .string()
-    .optional()
-    .openapi({
-      description: "The instructor's last name and first initial",
-      example: "KLEFSTAD, R.",
-    }),
+  instructor: z.string().optional().openapi({
+    description: "The instructor's last name and first initial",
+    example: "KLEFSTAD, R.",
+  }),
   department: z
     .string()
     .optional()
@@ -36,7 +33,7 @@ export const gradesQuerySchema = z.object({
     .string()
     .optional()
     .transform((x) => x === "true")
-    .openapi({ description: "Whether to exclude Pass/No Pass grades", example: "true" }),
+    .openapi({ description: "Whether to exclude Pass/No Pass grading", example: "true" }),
 });
 
 export const rawGradeSchema = z.object({
