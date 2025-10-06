@@ -144,7 +144,7 @@ async function main() {
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).college =
+        (majorObj as typeof major.$inferInsert).collegeRequirement =
           collegeBlockIds[majorObj.collegeBlockIndex];
       }
     }

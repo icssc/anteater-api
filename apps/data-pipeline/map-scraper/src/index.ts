@@ -1,19 +1,7 @@
 import { exit } from "node:process";
 import { database } from "@packages/db";
 import { mapLocation } from "@packages/db/schema";
-
-interface LocationListData {
-  catId: number;
-  lat: number;
-  lng: number;
-  id: string;
-  name: string;
-}
-
-interface LocationDetailData {
-  mediaUrlTypes?: string[];
-  mediaUrls?: string[];
-}
+import { locationDetailSchema, locationListSchema } from "./schema.ts";
 
 interface BuildingLocation {
   name: string;
@@ -22,37 +10,48 @@ interface BuildingLocation {
   imageURLs: string[];
 }
 
-// API key, categories, Map ID values of non-secret constants are hardcoded.
-// Possible other solutions will be applied in the future.
+//non-secret category constants are hardcoded for UCI-specific locations
+const UCI_MAP_ID = "463";
 
 const CATEGORIES: Set<number> = new Set([
   8424, 8309, 8311, 8392, 8405, 44392, 44393, 44394, 44395, 44396, 44397, 44398, 44400, 44401,
   44402, 44538, 44537, 44399, 8396, 11907, 8400, 10486, 11906, 11889, 8310, 8312, 8393, 8394, 8397,
   8398, 8399, 8404, 8407, 8408, 11891, 11892, 11899, 11900, 11902, 21318, 8406, 11908, 11935,
 ]);
-const LOCATIONS_LIST_API =
-  "https://api.concept3d.com/locations?map=463&key=0001085cc708b9cef47080f064612ca5";
 
-const getLocationDetail = (id: string) =>
-  `https://api.concept3d.com/locations/${id}?map=463&key=0001085cc708b9cef47080f064612ca5`;
+//as of this commit, there is not a need to privatize this key
+const CONCEPT_3D_API_KEY = "0001085cc708b9cef47080f064612ca5";
 
-const locationsCatalogue = new Map<string, BuildingLocation>();
-const seenIds = new Set<string>();
+function buildConcept3DUrl(path: string, params: Record<string, string | number>): string {
+  const url = new URL(`https://api.concept3d.com${path}`);
+  url.searchParams.set("map", UCI_MAP_ID);
+  url.searchParams.set("key", CONCEPT_3D_API_KEY);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+  return url.toString();
+}
+
+function locationsListUrl(): string {
+  return buildConcept3DUrl("/locations", {});
+}
+
+function locationDetailUrl(id: string): string {
+  return buildConcept3DUrl(`/locations/${id}`, {});
+}
 
 async function fetchImageUrls(id: string): Promise<string[]> {
   try {
-    const res = await fetch(getLocationDetail(id));
+    const res = await fetch(locationDetailUrl(id));
     if (!res.ok) {
       console.warn(`[detail] ${id} HTTP ${res.status}`);
       return [];
     }
-    const data = (await res.json()) as LocationDetailData;
-    const types = Array.isArray(data.mediaUrlTypes) ? data.mediaUrlTypes : [];
-    const urls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [];
+    const { mediaURLTypes = [], mediaURLs = [] } = locationDetailSchema.parse(await res.json());
 
     const out: string[] = [];
-    for (let i = 0; i < Math.min(types.length, urls.length); i++) {
-      if (types[i] === "image" && typeof urls[i] === "string") out.push(urls[i]);
+    //zod guarantees that mediaURLs is a string[], but we still use Math.min to ignore any trailing entries if the API
+    //returns arrays of differing lengths
+    for (let i = 0; i < Math.min(mediaURLTypes.length, mediaURLs.length); i++) {
+      if (mediaURLTypes[i] === "image") out.push(mediaURLs[i]);
     }
     return out;
   } catch (e) {
@@ -61,23 +60,29 @@ async function fetchImageUrls(id: string): Promise<string[]> {
   }
 }
 
-async function fetchLocations() {
-  const locationsListResponse: Response = await fetch(LOCATIONS_LIST_API);
-  const locations: LocationListData[] = (await locationsListResponse.json()) as LocationListData[];
+async function fetchLocations(): Promise<Map<string, BuildingLocation>> {
+  const locationsCatalogue = new Map<string, BuildingLocation>();
+  const seenIds = new Set<string>();
+
+  const res = await fetch(locationsListUrl());
+  if (!res.ok) throw new Error("HTTP error");
+  const locations = locationListSchema.parse(await res.json());
+
   for (const location of locations) {
-    const id = location.id;
-    if (!CATEGORIES.has(location.catId) || seenIds.has(id)) continue;
+    if (!CATEGORIES.has(location.catId) || seenIds.has(location.id)) continue;
 
-    const imageURLs = await fetchImageUrls(id);
+    const imageURLs = await fetchImageUrls(location.id);
 
-    locationsCatalogue.set(id, {
+    locationsCatalogue.set(location.id, {
       name: location.name,
       lat: location.lat,
       lng: location.lng,
       imageURLs: imageURLs,
     });
-    seenIds.add(id);
+    seenIds.add(location.id);
   }
+
+  return locationsCatalogue;
 }
 
 async function main() {
@@ -86,8 +91,8 @@ async function main() {
   const db = database(url);
 
   console.log("started map scraper");
-  await fetchLocations();
-  console.log("upserting…");
+  const locationsCatalogue = await fetchLocations();
+  console.log("upserting...");
 
   let upserts = 0;
 

@@ -25,12 +25,9 @@ export const mapResponseSchema = z.array(
       description: "The longitude of the selected location",
       example: -117.844887,
     }),
-    imageURLs: z
-      .array(z.string())
-      .nullable()
-      .openapi({
-        description: "Image URLs for the location if available.",
-        example: ["463/art-studio.jpg"],
-      }),
+    imageURLs: z.array(z.string()).openapi({
+      description: "Image URL(s) for the location if available.",
+      example: ["463/art-studio.jpg"],
+    }),
   }),
 );
