@@ -50,43 +50,96 @@ export const batchCoursesQuerySchema = z.object({
 });
 
 export const coursesQuerySchema = z.object({
-  department: z.string().optional(),
-  courseNumber: z.string().optional(),
-  courseNumeric: z.coerce.number().optional(),
-  titleContains: z.string().optional(),
+  department: z
+    .string()
+    .optional()
+    .openapi({ description: "The department code", example: "COMPSCI" }),
+  courseNumber: z.string().optional().openapi({ description: "The course number", example: "161" }),
+  courseNumeric: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The numeric value of the course number", example: 161 }),
+  titleContains: z
+    .string()
+    .optional()
+    .openapi({ description: "A substring to search for in course titles", example: "Algorithms" }),
   courseLevel: z
     .enum(inputCourseLevels, {
       message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
     })
     .optional(),
-  minUnits: z.coerce.number().optional(),
-  maxUnits: z.coerce.number().optional(),
-  descriptionContains: z.string().optional(),
+  minUnits: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The minimum number of units", example: 4 }),
+  maxUnits: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The maximum number of units", example: 4 }),
+  descriptionContains: z
+    .string()
+    .optional()
+    .openapi({
+      description: "A substring to search for in course descriptions",
+      example: "programming",
+    }),
   geCategory: z
     .enum(inputGECategories, {
       message:
         "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
     })
     .optional(),
-  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
-  skip: z.coerce.number().default(0),
+  take: z.coerce
+    .number()
+    .lte(100, "Page size must be less than or equal to 100")
+    .default(100)
+    .openapi({ description: "Number of results to return", example: 100 }),
+  skip: z.coerce
+    .number()
+    .default(0)
+    .openapi({ description: "Number of results to skip", example: 0 }),
 });
 
 export const coursesByCursorQuerySchema = z.object({
-  department: z.string().optional(),
-  courseNumber: z.string().optional(),
-  courseNumeric: z.coerce.number().optional(),
-  titleContains: z.string().optional(),
+  department: z
+    .string()
+    .optional()
+    .openapi({ description: "The department code", example: "COMPSCI" }),
+  courseNumber: z.string().optional().openapi({ description: "The course number", example: "161" }),
+  courseNumeric: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The numeric value of the course number", example: 161 }),
+  titleContains: z
+    .string()
+    .optional()
+    .openapi({ description: "A substring to search for in course titles", example: "Algorithms" }),
   courseLevel: z.enum(inputCourseLevels).optional(),
-  minUnits: z.coerce.number().optional(),
-  maxUnits: z.coerce.number().optional(),
-  descriptionContains: z.string().optional(),
+  minUnits: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The minimum number of units", example: 4 }),
+  maxUnits: z.coerce
+    .number()
+    .optional()
+    .openapi({ description: "The maximum number of units", example: 4 }),
+  descriptionContains: z
+    .string()
+    .optional()
+    .openapi({
+      description: "A substring to search for in course descriptions",
+      example: "programming",
+    }),
   geCategory: z.enum(inputGECategories).optional(),
   cursor: z.string().optional().openapi({
     description:
-      "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
+      "Pagination cursor based on course id. Use the `nextCursor` value from the previous response to fetch the next page",
   }),
-  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
+  take: z.coerce
+    .number()
+    .lte(100, "Page size must be less than or equal to 100")
+    .default(100)
+    .openapi({ description: "Number of results to return", example: 100 }),
 });
 
 export const prerequisiteSchema = z.union([
