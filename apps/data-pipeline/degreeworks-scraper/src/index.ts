@@ -31,6 +31,7 @@ async function main() {
   } = scraper.get();
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
+  const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
 
   const degreeData = degreesAwarded
     .entries()
@@ -110,6 +111,21 @@ async function main() {
         });
     }
 
+    if (honorsFourRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC4",
+            requirements: honorsFourRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
     await tx
       .insert(degree)
       .values(degreeData)
@@ -128,7 +144,7 @@ async function main() {
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).college =
+        (majorObj as typeof major.$inferInsert).collegeRequirement =
           collegeBlockIds[majorObj.collegeBlockIndex];
       }
     }
