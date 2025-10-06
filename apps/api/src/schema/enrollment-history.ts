@@ -9,7 +9,10 @@ export const enrollmentHistoryQuerySchema = z
     instructorName: z
       .string()
       .optional()
-      .openapi({ description: "The instructor's full name", example: "THORNTON, A." }),
+      .openapi({
+        description: "The instructor's last name and first initial",
+        example: "THORNTON, A.",
+      }),
     department: z
       .string()
       .optional()
