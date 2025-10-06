@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Type check
+        run: pnpm check:types
+
       - name: Run database migrations
         working-directory: ./packages/db
         run: pnpm run migrate
