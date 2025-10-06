@@ -1,5 +1,6 @@
 import { exit } from "node:process";
 import { database } from "@packages/db";
+import { inArray } from "@packages/db/drizzle";
 import { mapLocation } from "@packages/db/schema";
 import { locationDetailSchema, locationListSchema } from "./schema.ts";
 
@@ -45,13 +46,13 @@ async function fetchImageUrls(id: string): Promise<string[]> {
       console.warn(`[detail] ${id} HTTP ${res.status}`);
       return [];
     }
-    const { mediaURLTypes = [], mediaURLs = [] } = locationDetailSchema.parse(await res.json());
+    const { mediaUrlTypes = [], mediaUrls = [] } = locationDetailSchema.parse(await res.json());
 
     const out: string[] = [];
     //zod guarantees that mediaURLs is a string[], but we still use Math.min to ignore any trailing entries if the API
     //returns arrays of differing lengths
-    for (let i = 0; i < Math.min(mediaURLTypes.length, mediaURLs.length); i++) {
-      if (mediaURLTypes[i] === "image") out.push(mediaURLs[i]);
+    for (let i = 0; i < Math.min(mediaUrlTypes.length, mediaUrls.length); i++) {
+      if (mediaUrlTypes[i] === "image") out.push(mediaUrls[i]);
     }
     return out;
   } catch (e) {
@@ -90,37 +91,31 @@ async function main() {
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
 
-  console.log("started map scraper");
+  console.log("started map scraper...");
   const locationsCatalogue = await fetchLocations();
   console.log("upserting...");
 
-  let upserts = 0;
+  const rows = Array.from(locationsCatalogue, ([id, d]) => ({
+    id,
+    name: d.name,
+    latitude: d.lat,
+    longitude: d.lng,
+    imageURLs: d.imageURLs,
+  }));
 
+  let upsertedCount = 0;
   await db.transaction(async (tx) => {
-    for (const [id, data] of locationsCatalogue) {
-      await tx
-        .insert(mapLocation)
-        .values({
-          id,
-          name: data.name,
-          latitude: data.lat,
-          longitude: data.lng,
-          imageURLs: data.imageURLs,
-        })
-        .onConflictDoUpdate({
-          target: mapLocation.id,
-          set: {
-            name: data.name,
-            latitude: data.lat,
-            longitude: data.lng,
-            imageURLs: data.imageURLs,
-          },
-        });
-      upserts++;
+    //deleting rows that we're about to replace
+    const ids = rows.map((r) => r.id);
+    if (ids.length > 0) {
+      await tx.delete(mapLocation).where(inArray(mapLocation.id, ids));
+    }
+    if (rows.length > 0) {
+      await tx.insert(mapLocation).values(rows);
+      upsertedCount = rows.length;
     }
   });
-  console.log(`committed upserts = ${upserts}`);
-
+  console.log(`committed ${upsertedCount} upserts.`);
   exit(0);
 }
 
