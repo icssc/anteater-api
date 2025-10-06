@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
+      - name: Check types
         run: pnpm check:types
 
       - name: Deploy API to staging
