@@ -156,6 +156,7 @@ export type SampleProgramEntry = {
 };
 
 export type SampleProgram = {
+  id: string;
   programName: string;
   sampleProgram: SampleProgramEntry[];
   notes: string[];
@@ -774,6 +775,7 @@ export const apExamReward = pgTable("ap_exam_reward", {
 });
 
 export const sampleProgram = pgTable("sample_program", {
+  id: varchar("id").primaryKey().notNull(),
   programName: varchar("program_name").notNull(),
   sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
   programNotes: varchar("program_notes").array().notNull(),

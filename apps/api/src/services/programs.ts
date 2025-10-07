@@ -149,6 +149,7 @@ export class ProgramsService {
   async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
     const results = await this.db
       .select({
+        id: sampleProgram.id,
         programName: sampleProgram.programName,
         sampleProgram: sampleProgram.sampleProgram,
         notes: sampleProgram.programNotes,

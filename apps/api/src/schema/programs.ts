@@ -317,6 +317,10 @@ export const sampleProgramsYearSchema = z.object({
 });
 
 export const sampleProgramsResponseSchemaObject = z.object({
+  id: z.string().openapi({
+    description: "Stable ID for this sample program record",
+    example: "computerscience_bs",
+  }),
   programName: z.string().openapi({
     description: "Program name of this sample program",
     example: "Biochemistry and Molecular Biology, B.S.",

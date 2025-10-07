@@ -670,6 +670,20 @@ type SampleYear = {
   curriculum: string[][];
 };
 
+/**
+ * Extracts a unique ID from the catalogue URL
+ * Example: https://catalogue.uci.edu/.../computerscience_bs/ → "computerscience_bs"
+ */
+function generateProgramId(url: string): string {
+  // Extract the last path segment from the URL
+  const match = url.match(/\/([^/]+)\/?$/);
+  if (!match) {
+    logger.warn(`Could not extract ID from URL: ${url}`);
+    return "";
+  }
+  return match[1];
+}
+
 /*
  * Transforms the original sample program format to have a Fall, Winter, Spring structure
  * @param sampleYears The original sample years data from the scraper
@@ -717,6 +731,7 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
   scrapedPrograms: {
+    id: string;
     programName: string;
     sampleProgram: SampleProgramEntry[];
     notes: string[];
@@ -733,8 +748,8 @@ async function storeSampleProgramsInDB(
     .from(sampleProgram)
     .where(
       inArray(
-        sampleProgram.programName,
-        scrapedPrograms.map((program) => program.programName),
+        sampleProgram.id,
+        scrapedPrograms.map((program) => program.id),
       ),
     );
 
@@ -757,13 +772,14 @@ async function storeSampleProgramsInDB(
   await db.transaction(async (tx) => {
     await tx.delete(sampleProgram).where(
       inArray(
-        sampleProgram.programName,
-        scrapedPrograms.map((program) => program.programName),
+        sampleProgram.id,
+        scrapedPrograms.map((program) => program.id),
       ),
     );
 
     await tx.insert(sampleProgram).values(
       scrapedPrograms.map((program) => ({
+        id: program.id,
         programName: program.programName,
         sampleProgram: program.sampleProgram,
         programNotes: program.notes,
@@ -941,6 +957,7 @@ async function scrapeSamplePrograms(programPath: string) {
   }));
 
   const res = {
+    id: generateProgramId(url),
     programName,
     sampleProgram,
     notes,

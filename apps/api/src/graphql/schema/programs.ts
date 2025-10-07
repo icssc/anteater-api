@@ -111,6 +111,7 @@ type YearPlan @cacheControl(maxAge: 86400){
 }
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
+    id: String!
     programName: String!
     sampleProgram: [YearPlan!]!
     notes: [String!]!
