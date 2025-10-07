@@ -734,7 +734,7 @@ async function storeSampleProgramsInDB(
     id: string;
     programName: string;
     sampleProgram: SampleProgramEntry[];
-    notes: string[];
+    programNotes: string[];
   }[],
 ) {
   if (!scrapedPrograms.length) {
@@ -782,7 +782,7 @@ async function storeSampleProgramsInDB(
         id: program.id,
         programName: program.programName,
         sampleProgram: program.sampleProgram,
-        programNotes: program.notes,
+        programNotes: program.programNotes,
       })),
     );
   });
@@ -792,13 +792,20 @@ async function storeSampleProgramsInDB(
 
 async function scrapeSamplePrograms(programPath: string) {
   const url = `${CATALOGUE_URL}${programPath}`;
+  logger.info(`Scraping ${programPath}...`);
   const html = await fetchWithDelay(url);
   const $ = load(html);
 
   const programName = $("h1.page-title").text().normalize("NFKD").split("(")[0].trim();
+
+  if (!programName) {
+    logger.warn(`Could not extract program name from ${url}`);
+    return null;
+  }
+
   const sampleProgramContainer = $("#sampleprogramtextcontainer");
 
-  if (!sampleProgramContainer.length) return;
+  if (!sampleProgramContainer.length) return null;
 
   const sampleYears: SampleYear[] = [];
   const notes: string[] = [];
@@ -960,8 +967,10 @@ async function scrapeSamplePrograms(programPath: string) {
     id: generateProgramId(url),
     programName,
     sampleProgram,
-    notes,
+    programNotes: notes,
   };
+
+  logger.info(`Successfully scraped ${programName}`);
   return res;
 }
 
@@ -1026,6 +1035,7 @@ async function main() {
   //  await patchH32({ db });
   //  logger.info("Starting sample program scraping...");
   const programs = await collectProgramPathsFromSchools();
+  logger.info(`Found ${programs.length} programs to scrape`);
   const scrapedPrograms = [];
   for (const programPath of programs) {
     try {
