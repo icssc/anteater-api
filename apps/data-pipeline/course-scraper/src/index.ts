@@ -5,7 +5,7 @@ import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
-import { type CurriculumTerm, type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
+import { type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
 import fetch from "cross-fetch";
@@ -695,37 +695,36 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
   const transformedProgram: SampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
-    const yearTerms: CurriculumTerm[] = [
-      { term: "Fall", courses: [] },
-      { term: "Winter", courses: [] },
-      { term: "Spring", courses: [] },
-    ];
+    // Initialize arrays for each term
+    const Fall: string[] = [];
+    const Winter: string[] = [];
+    const Spring: string[] = [];
 
     const curriculum = yearData.curriculum;
 
+    // Parse rows and populate term arrays
     for (const row of curriculum) {
       if (row.length >= 1 && row[0].trim()) {
-        yearTerms[0].courses.push(row[0].trim());
+        Fall.push(row[0].trim());
       }
-
       if (row.length >= 2 && row[1].trim()) {
-        yearTerms[1].courses.push(row[1].trim());
+        Winter.push(row[1].trim());
       }
-
       if (row.length >= 3 && row[2].trim()) {
-        yearTerms[2].courses.push(row[2].trim());
+        Spring.push(row[2].trim());
       }
     }
 
+    // NEW STRUCTURE: Direct properties instead of curriculum array
     transformedProgram.push({
       year: yearData.year,
-      curriculum: yearTerms,
+      Fall,
+      Winter,
+      Spring,
     });
   }
 
-  return {
-    sampleProgram: transformedProgram,
-  };
+  return { sampleProgram: transformedProgram };
 }
 
 async function storeSampleProgramsInDB(

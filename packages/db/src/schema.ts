@@ -145,14 +145,11 @@ export type APCoursesGrantedTree =
       OR: (APCoursesGrantedTree | string)[];
     };
 
-export type CurriculumTerm = {
-  term: string;
-  courses: string[];
-};
-
 export type SampleProgramEntry = {
   year: string;
-  curriculum: CurriculumTerm[];
+  Fall: string[];
+  Winter: string[];
+  Spring: string[];
 };
 
 export type SampleProgram = {
