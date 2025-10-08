@@ -50,6 +50,13 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const sampleProgramsQuerySchema = z.object({
+  programName: z.string().optional().openapi({
+    description: "A program name to query sample programs for",
+    example: "Computer Science, B.S.",
+  }),
+});
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -282,3 +289,70 @@ export const ugradRequirementsResponseSchema = z.object({
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),
 });
+
+// export const sampleProgramTermSchema = z.object({
+//   term: z.string().openapi({
+//     description: "Academic term (e.g., Fall, Winter, Spring)",
+//     example: "Fall",
+//   }),
+//   courses: z.array(z.string()).openapi({
+//     description: "Courses recommended for this academic term",
+//     example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+//   }),
+// });
+
+export const sampleProgramsYearSchema = z.object({
+  year: z.string().openapi({
+    description: "Academic level or year standing",
+    example: "Freshman",
+  }),
+  Fall: z.array(z.string()).openapi({
+    description: "Courses recommended for Fall term",
+    example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+  }),
+  Winter: z.array(z.string()).openapi({
+    description: "Courses recommended for Winter term",
+    example: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+  }),
+  Spring: z.array(z.string()).openapi({
+    description: "Courses recommended for Spring term",
+    example: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+  }),
+});
+
+export const sampleProgramsResponseSchemaObject = z.object({
+  id: z.string().openapi({
+    description: "Stable ID for this sample program record",
+    example: "computerscience_bs",
+  }),
+  programName: z.string().openapi({
+    description: "Program name of this sample program",
+    example: "Biochemistry and Molecular Biology, B.S.",
+  }),
+  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+    description: "Structured list of courses for this program, organized by year and term",
+    example: [
+      {
+        year: "Freshman",
+        Fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+        Winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+        Spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+      },
+      {
+        year: "Sophomore",
+        Fall: ["I&C SCI 45J", "I&C SCI 6D", "MGMT 30A"],
+        Winter: ["COMPSCI 122A", "MGMT 30B", "I&C SCI 6N"],
+        Spring: ["IN4MATX 43", "MGMT 102", "STATS 7 or 8 or 67"],
+      },
+    ],
+  }),
+  notes: z.array(z.string()).openapi({
+    description: "A list of important notes or footnotes related to this sample program.",
+    example: [
+      "Students are advised that this sample program lists the minimum requirements...",
+      "The lower-division writing requirement must be completed by the end of the seventh quarter at UCI.",
+    ],
+  }),
+});
+
+export const sampleProgramsResponseSchema = z.array(sampleProgramsResponseSchemaObject);
