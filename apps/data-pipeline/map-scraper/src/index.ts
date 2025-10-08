@@ -12,7 +12,7 @@ interface BuildingLocation {
 }
 
 // this is UCI's Concept3D map ID, and is needed to scope all location and detail queries on and around campus
-const UCI_MAP_ID = "463";
+const UCI_MAP_ID = "463" as const;
 
 // const CATEGORIES: Set<number> = new Set([
 //   8424, 8309, 8311, 8392, 8405, 44392, 44393, 44394, 44395, 44396, 44397, 44398, 44400, 44401,
@@ -21,7 +21,7 @@ const UCI_MAP_ID = "463";
 // ]);
 
 // this key is provided to browsers by CONCEPT_3D and is meant to be public.
-const CONCEPT_3D_API_KEY = "0001085cc708b9cef47080f064612ca5";
+const CONCEPT_3D_API_KEY = "0001085cc708b9cef47080f064612ca5" as const;
 
 function buildConcept3DUrl(path: string, params: Record<string, string | number>): string {
   const url = new URL(`https://api.concept3d.com${path}`);
