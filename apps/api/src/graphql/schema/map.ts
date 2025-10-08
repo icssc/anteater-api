@@ -5,7 +5,7 @@ type MapPreview @cacheControl(maxAge: 86400) {
     name: String!
     latitude: Float!
     longitude: Float!
-    imageURLs: [String]!
+    imageURLs: [String!]!
 }
 
 input MapQuery {

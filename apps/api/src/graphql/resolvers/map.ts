@@ -9,10 +9,15 @@ export const mapResolvers = {
       const parsedArgs = mapQuerySchema.parse(args?.query);
       const service = new MapService(db);
       const res = await service.getLocations(parsedArgs);
-      if (!res)
-        throw new GraphQLError(`Location id ${parsedArgs.id} not found`, {
-          extensions: { code: "NOT_FOUND" },
-        });
+
+      if (parsedArgs.id != null) {
+        const no_match = res == null || (Array.isArray(res) && res.length === 0);
+        if (no_match) {
+          throw new GraphQLError(`Location id ${parsedArgs.id} not found`, {
+            extensions: { code: "NOT_FOUND" },
+          });
+        }
+      }
       return res;
     },
   },
