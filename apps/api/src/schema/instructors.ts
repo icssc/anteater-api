@@ -17,58 +17,76 @@ export const instructorsQuerySchema = z.object({
   nameContains: z
     .string()
     .optional()
-    .openapi({ description: "A substring to search for in instructor names", example: "Shindler" }),
+    .openapi({
+      description: "A substring to search for in instructor names (not case sensitive)",
+      example: "Shindler",
+    }),
   titleContains: z
     .string()
     .optional()
-    .openapi({ description: "A substring to search for in the title", example: "Associate" }),
-  departmentContains: z
-    .string()
-    .optional()
     .openapi({
-      description: "A substring to search for in the department name",
-      example: "Science",
+      description: "A substring to search for in the title (not case sensitive)",
+      example: "Associate",
     }),
+  departmentContains: z.string().optional().openapi({
+    description: "A substring to search for in the department name (not case sensitive)",
+    example: "Science",
+  }),
   take: z.coerce
     .number()
     .lte(100, "Page size must be less than or equal to 100")
     .default(100)
-    .openapi({ description: "Number of results to return", example: 100 }),
+    .openapi({
+      description:
+        "Number of results to return per page. Use with 'skip' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+      example: 100,
+    }),
   skip: z.coerce
     .number()
     .default(0)
-    .openapi({ description: "Number of results to skip", example: 0 }),
+    .openapi({
+      description:
+        "Number of results to omit before returning results. Use with 'take' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+      example: 0,
+    }),
 });
 
 export const instructorsByCursorQuerySchema = z.object({
   nameContains: z
     .string()
     .optional()
-    .openapi({ description: "A substring to search for in instructor names", example: "Shindler" }),
+    .openapi({
+      description: "A substring to search for in instructor names (not case sensitive)",
+      example: "Shindler",
+    }),
   titleContains: z
     .string()
     .optional()
-    .openapi({ description: "A substring to search for in the title", example: "Associate" }),
-  departmentContains: z
-    .string()
-    .optional()
     .openapi({
-      description: "A substring to search for in the department name",
-      example: "Science",
+      description: "A substring to search for in the title (not case sensitive)",
+      example: "Associate",
     }),
+  departmentContains: z.string().optional().openapi({
+    description: "A substring to search for in the department name (not case sensitive)",
+    example: "Science",
+  }),
   cursor: z
     .string()
     .optional()
     .openapi({
       description:
-        "Pagination cursor based on instructor ucinetid. Use the `nextCursor` value from the previous response to fetch the next page",
+        "Pagination cursor based on professor ucinetid, inclusive of professor set to cursor. Use the `nextCursor` value from previous response to fetch next page",
     })
     .openapi({ example: "mikes" }),
   take: z.coerce
     .number()
     .lte(100, "Page size must be less than or equal to 100")
     .default(100)
-    .openapi({ description: "Number of results to return", example: 100 }),
+    .openapi({
+      description:
+        "Number of results to return per page. Use with 'cursor' for cursor-based pagination",
+      example: 100,
+    }),
 });
 
 export const instructorPreviewSchema = z.object({
