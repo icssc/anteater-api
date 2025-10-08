@@ -7,7 +7,7 @@ export const enrollmentHistoryQuerySchema = z
     year: yearSchema.optional(),
     quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
     instructorName: z.string().optional().openapi({
-      description: "The instructor's last name and first initial",
+      description: "The instructor's name (not case sensitive)",
       example: "THORNTON, A.",
     }),
     department: z

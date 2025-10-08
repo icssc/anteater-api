@@ -6,7 +6,7 @@ export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
   quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
   instructor: z.string().optional().openapi({
-    description: "The instructor's last name and first initial",
+    description: "The instructor's name (not case sensitive)",
     example: "KLEFSTAD, R.",
   }),
   department: z

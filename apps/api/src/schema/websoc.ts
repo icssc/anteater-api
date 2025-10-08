@@ -126,13 +126,10 @@ export const websocQuerySchema = z.object({
       description: "A comma-separated list of section codes or section code ranges",
       example: "36213,36216-36218",
     }),
-  instructorName: z
-    .string()
-    .optional()
-    .openapi({
-      description: "The instructor's last name and first initial",
-      example: "ALFARO, S.",
-    }),
+  instructorName: z.string().optional().openapi({
+    description: "The instructor's name (not case sensitive)",
+    example: "ALFARO, S.",
+  }),
   days: daysSchema.optional().openapi({ description: "The days of the week the section meets" }),
   building: z
     .string()
@@ -287,6 +284,6 @@ export const websocResponseSchema = z.object({
 });
 
 export const websocTermResponseSchema = z.object({
-  shortName: z.string().openapi({ description: "The term code", example: "2025 Fall" }),
-  longName: z.string().openapi({ description: "The full term name", example: "2025 Fall Quarter" }),
+  shortName: z.string().openapi({ example: "2025 Fall" }),
+  longName: z.string().openapi({ example: "2025 Fall Quarter" }),
 });
