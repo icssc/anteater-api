@@ -124,21 +124,21 @@ export const websocQuerySchema = z.object({
     })
     .openapi({
       description: "A comma-separated list of section codes or section code ranges",
-      example: "36213,36216-36218",
+      example: "36210,36216-36218",
     }),
   instructorName: z.string().optional().openapi({
     description: "The instructor's name (not case sensitive)",
-    example: "ALFARO, S.",
+    example: "WONG-MA, J.",
   }),
   days: daysSchema.optional().openapi({ description: "The days of the week the section meets" }),
   building: z
     .string()
     .optional()
-    .openapi({ description: "The building the section meets in", example: "ALP" }),
+    .openapi({ description: "The building the section meets in", example: "PSLH" }),
   room: z
     .string()
     .optional()
-    .openapi({ description: "The room the section meets in", example: "2300" }),
+    .openapi({ description: "The room the section meets in", example: "100" }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
