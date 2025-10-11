@@ -3,7 +3,6 @@ pg_dump \
 --file=packages/db/db.sql.gz \
 --format=p \
 --verbose \
---verbose \
 --compress=gzip:9 \
 --clean \
 --no-owner \

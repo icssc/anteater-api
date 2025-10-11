@@ -6,6 +6,11 @@ type SearchResult @cacheControl(maxAge: 86400) {
     rank: Float!
 }
 
+enum SearchResultType {
+    course,
+    instructor,
+}
+
 type SearchResponse {
     count: Int!
     results: [SearchResult!]!
@@ -15,6 +20,12 @@ input SearchQuery {
     query: String!
     take: Int
     skip: Int
+    resultType: SearchResultType
+    department: String
+    courseLevel: CourseLevel
+    minUnits: Float
+    maxUnits: Float
+    ge: [String!]
 }
 
 extend type Query {

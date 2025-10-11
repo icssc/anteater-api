@@ -1,6 +1,6 @@
 {
-  "id": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
-  "prevId": "2c03a306-abf2-4b8e-b412-c948e659aa5d",
+  "id": "d97ea42d-461f-4f81-8c59-ff2f78bd388b",
+  "prevId": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1001,6 +1001,49 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.map_location": {
+      "name": "map_location",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_urls": {
+          "name": "image_urls",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
