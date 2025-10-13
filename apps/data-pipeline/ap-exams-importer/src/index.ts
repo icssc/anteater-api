@@ -4,6 +4,7 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+
 import apExamData, { geCategories, type geCategory } from "./data.ts";
 
 const geCategoryToColumn = {
@@ -18,7 +19,6 @@ const geCategoryToColumn = {
   "GE-7": "ge7CoursesGranted",
   "GE-8": "ge8CoursesGranted",
 } as const;
-
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
@@ -50,10 +50,30 @@ async function main() {
           .then((rows) => rows[0]);
 
         for (const score of reward.acceptableScores) {
-          await tx.insert(apExamToReward).values({ examId: fullName, score, reward: rewardId });
+          await tx
+            .insert(apExamToReward)
+            .values({ examId: fullName, score, reward: rewardId })
+            // assuming that reward is where the conflict is going to be
+            .onConflictDoUpdate({
+              target: [apExamToReward.examId, apExamToReward.score],
+              set: conflictUpdateSetAllCols(apExamToReward),
+            });
+          // .onConflictDoNothing({target:[apExamToReward.examId, apExamToReward.score]})
         }
       }
     }
+    //remove apExamRewards that don't exist in the junction table(ap_exam_to_reward)
+    //done using correlated subquery.
+
+    await tx.delete(apExamReward).where(
+      notExists(
+        sql`(
+        SELECT 1 
+        FROM ${apExamToReward}
+        WHERE ${apExamToReward.reward} = ${apExamReward.id}
+      )`,
+      ),
+    );
   });
 
   await db.$client.end();
