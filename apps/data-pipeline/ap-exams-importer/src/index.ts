@@ -4,7 +4,7 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-
+import { notExists, sql } from "drizzle-orm";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
 
 const geCategoryToColumn = {
@@ -62,6 +62,16 @@ async function main() {
         }
       }
     }
+
+    //remove apExamRewards that don't exist in the junction table(ap_exam_to_reward)
+    //done using correlated subquery.
+    await tx.delete(apExamReward).where(
+      notExists(
+        sql`(SELECT 1
+          FROM ${apExamToReward}
+          WHERE ${apExamToReward.reward} = ${apExamReward.id})`,
+      ),
+    );
   });
 
   await db.$client.end();
