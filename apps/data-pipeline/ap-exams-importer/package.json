@@ -9,7 +9,6 @@
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
-    "@packages/db": "workspace:*",
-    "drizzle-orm": "0.44.6"
+    "@packages/db": "workspace:*"
   }
 }
