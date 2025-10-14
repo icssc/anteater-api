@@ -16,6 +16,8 @@ export const geCategories = [
   "GE-8",
 ] as const;
 
+export type geCategory = (typeof geCategories)[number];
+
 type APExam = {
   catalogueName?: string;
   rewards: {
@@ -24,8 +26,8 @@ type APExam = {
     unitsGranted: number;
     // units of catch-all elective credit granted not through a course
     electiveUnitsGranted: number;
-    // GEs granted directly and not through a course
-    geGranted: (typeof geCategories)[number][];
+    // GEs granted directly and not through a course; this specifies the number of courses granted
+    geGranted: { [C in geCategory]?: number };
     coursesGranted: APCoursesGrantedTree;
   }[];
 };
@@ -39,7 +41,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -53,7 +55,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["ART HIS 40A"] },
       },
       // Two courses toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A and
@@ -62,7 +64,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["ART HIS 40A", "ART HIS 40B"] },
       },
     ],
@@ -74,7 +76,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -86,7 +88,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -98,7 +100,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -111,7 +113,8 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        // bio courses clear GE 2 anyway, so we can just grant it
+        geGranted: { "GE-2": 1 },
         coursesGranted: { AND: [] },
       },
     ],
@@ -125,17 +128,15 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
-      // CHEM 1A or ENGR 1A, plus 4 units of elective credit. Students pursuing Chemistry or a related field,
-      // and all students with a score of 5, are encouraged to enroll in Honors General Chemistry:
-      // CHEM H2A-CHEM H2B-CHEM H2C
+      // CHEM 1A or ENGR 1A, plus 4 units of elective credit.
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["CHEM 1A", "ENGR 1A"] },
       },
     ],
@@ -147,7 +148,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // CHINESE 1A-CHINESE 1B-CHINESE 1C, CHINESE 2A. Satisfies categories VI and VIII of the UCI GE requirement.
@@ -156,7 +157,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["CHINESE 1A", "CHINESE 1B", "CHINESE 1C", "CHINESE 2A"] },
       },
     ],
@@ -169,7 +170,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -187,7 +188,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["I&C SCI 20"] },
       },
     ],
@@ -200,7 +201,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // ECON 20B or MGMT 4B. May not be used for the School of Social Sciences majors' degree requirements,
@@ -210,7 +211,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["ECON 20B", "MGMT 4B"] },
       },
     ],
@@ -233,7 +234,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["ECON 20A", "MGMT 4A"] },
       },
     ],
@@ -241,28 +242,44 @@ export default {
   "AP English Language and Composition": {
     catalogueName: "AP ENGLISH LANGUAGE",
     rewards: [
-      // WRITING 50 and one course toward category IV of the UCI GE requirement for ENGLISH 10 or ENGLISH 12; may not
-      // replace Literary Journalism major or minor, English major or minor, or School of Humanities requirements
+      // Elective credit only. Fulfills UC Entry Level Writing requirement
+      {
+        acceptableScores: [3],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+      // WRITING 50 and one English course toward category IV of the UCI GE requirement; may not replace
+      // Literary Journalism major or minor, English major or minor, or School of Humanities requirements
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
-        coursesGranted: { AND: ["WRITING 50", { OR: ["ENGLISH 10", "ENGLISH 12"] }] },
+        geGranted: { "GE-4": 1 },
+        coursesGranted: { AND: ["WRITING 50"] },
       },
     ],
   },
   "AP English Literature and Composition": {
     catalogueName: "AP ENGLISH LIT",
     rewards: [
-      // WRITING 50 and one course toward category IV of the UCI GE requirement for ENGLISH 10 or ENGLISH 12; may not
-      // replace Literary Journalism major or minor, English major or minor, or School of Humanities requirements
+      // Elective credit only. Fulfills UC Entry Level Writing requirement
+      {
+        acceptableScores: [3],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+      // WRITING 50 and one English course toward category IV of the UCI GE requirement; may not replace
+      // Literary Journalism major or minor, English major or minor, or School of Humanities requirements
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
-        coursesGranted: { AND: ["WRITING 50", { OR: ["ENGLISH 10", "ENGLISH 12"] }] },
+        geGranted: { "GE-4": 1 },
+        coursesGranted: { AND: ["WRITING 50"] },
       },
     ],
   },
@@ -294,6 +311,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
+        // the three courses below satisfy GE-4 so do not encode here
         geGranted: [],
         coursesGranted: { AND: ["FRENCH 1A", "FRENCH 1B", "FRENCH 1C"] },
       },
@@ -302,7 +320,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: ["6"],
+        geGranted: { "GE-6": 1 },
         coursesGranted: { AND: ["FRENCH 2A", "FRENCH 2B", "FRENCH 2C"] },
       },
     ],
@@ -314,7 +332,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -326,7 +344,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["GERMAN 1A", "GERMAN 1B", "GERMAN 1C"] },
       },
       // GERMAN 2A-GERMAN 2B-GERMAN 2C. Satisfies categories VI and VIII of the UCI GE requirement
@@ -334,7 +352,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: { "GE-6": 1 },
         coursesGranted: { AND: ["GERMAN 2A", "GERMAN 2B", "GERMAN 2C"] },
       },
     ],
@@ -346,7 +364,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // American Institutions and POL SCI 21A credit. May not be used for the School of Social Sciences majors' degree
@@ -356,7 +374,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         // let's just call it this; seems unlikely you'd want this counted as something else and then do a poli sci minor
         // and you'd have to ask an advisor to move it around
         coursesGranted: { AND: ["POL SCI 21A"] },
@@ -370,7 +388,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // POL SCI 51A credit. May not be used for the School of Social Sciences majors' degree requirements, with the
@@ -381,7 +399,7 @@ export default {
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         // same as above
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["POL SCI 51A"] },
       },
     ],
@@ -393,7 +411,7 @@ export default {
         acceptableScores: [3, 4],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // One lower-division course toward the History major or minor (excluding HISTORY 70B), GE category IV, and
@@ -403,7 +421,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: ["4", "8"],
+        geGranted: { "GE-4": 3, "GE-8": 1 },
         coursesGranted: { AND: [] },
       },
     ],
@@ -415,7 +433,7 @@ export default {
         acceptableScores: [3, 4],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // One course toward HISTORY 40A-HISTORY 40B-HISTORY 40C, GE category IV; plus 4 units of elective credit; may
@@ -424,7 +442,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["HISTORY 40A", "HISTORY 40B", "HISTORY 40C"] },
       },
     ],
@@ -436,7 +454,7 @@ export default {
         acceptableScores: [3, 4],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // One course toward HISTORY 21B-HISTORY 21C, GE category IV, and satisfaction of category VIII; plus 4 units of
@@ -445,7 +463,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 8,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["HISTORY 21B", "HISTORY 21C"] },
       },
     ],
@@ -457,7 +475,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["ITALIAN 1A", "ITALIAN 1B", "ITALIAN 1C"] },
       },
       // ITALIAN 2A-ITALIAN 2B-ITALIAN 2C. Satisfies categories VI and VIII of the UCI GE requirement
@@ -465,7 +483,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: { "GE-6": 1 },
         coursesGranted: { AND: ["ITALIAN 2A", "ITALIAN 2B", "ITALIAN 2C"] },
       },
     ],
@@ -477,7 +495,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["JAPANSE 1A", "JAPANSE 1B", "JAPANSE 1C"] },
       },
       // JAPANSE 2A-JAPANSE 2B-JAPANSE 2C. Satisfies categories VI and VIII of the UCI GE requirement
@@ -485,7 +503,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: { "GE-6": 1 },
         coursesGranted: { AND: ["JAPANSE 2A", "JAPANSE 2B", "JAPANSE 2C"] },
       },
     ],
@@ -497,7 +515,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // Satisfies categories VI and VIII of the UCI GE requirement. Course credit toward the Classics major or School
@@ -506,7 +524,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: ["6", "8"],
+        geGranted: { "GE-6": 1, "GE-8": 1 },
         coursesGranted: { AND: [] },
       },
     ],
@@ -519,7 +537,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
     ],
@@ -532,7 +550,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
       // MATH 2A-MATH 2B or MATH 5A-MATH 5B
@@ -540,7 +558,7 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: [{ AND: ["MATH 2A", "MATH 2B"] }, { AND: ["MATH 5A", "MATH 5B"] }] },
       },
     ],
@@ -555,7 +573,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["MATH 2A", "MATH 5A"] },
       },
     ],
@@ -568,7 +586,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -580,7 +598,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -592,7 +610,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 8,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
     ],
@@ -605,7 +623,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // PHYSICS 2
@@ -613,7 +631,7 @@ export default {
         acceptableScores: [4],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["PHYSICS 2"] },
       },
       // PHYSICS 3A
@@ -621,7 +639,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["PHYSICS 3A"] },
       },
     ],
@@ -634,7 +652,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
       // PHYSICS 2
@@ -642,7 +660,7 @@ export default {
         acceptableScores: [4],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["PHYSICS 2"] },
       },
       // PHYSICS 3C
@@ -650,7 +668,7 @@ export default {
         acceptableScores: [5],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["PHYSICS 3C"] },
       },
     ],
@@ -663,16 +681,16 @@ export default {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 4,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: [] },
       },
-      // PSCI 9 or PSYCH 7A
+      // PSCI 9 or COGS 7A
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
-        coursesGranted: { OR: ["PSCI 9", "PSYCH 7A"] },
+        geGranted: {},
+        coursesGranted: { OR: ["PSCI 9", "COGS 7A"] },
       },
     ],
   },
@@ -686,7 +704,7 @@ export default {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["SPANISH 1A", "SPANISH 1B", "SPANISH 1C"] },
       },
       // SPANISH 2A-SPANISH 2B-SPANISH 2C. Satisfies categories VI and VIII of the UCI GE requirement.
@@ -694,19 +712,20 @@ export default {
         acceptableScores: [4, 5],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: ["6"],
+        geGranted: { "GE-6": 1 },
         coursesGranted: { AND: ["SPANISH 2A", "SPANISH 2B", "SPANISH 2C"] },
       },
     ],
   },
   "AP Spanish Literature and Culture": {
+    catalogueName: "AP SPANISH LIT",
     rewards: [
       // SPANISH 1A-SPANISH 1B-SPANISH 1C. Satisfies category VI of the UCI GE requirement
       {
         acceptableScores: [3],
         unitsGranted: 8,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["SPANISH 1A", "SPANISH 1B", "SPANISH 1C"] },
       },
       // SPANISH 3/SPANISH 3H. Satisfies categories VI, VII, and VIII of the UCI GE requirement
@@ -716,7 +735,7 @@ export default {
         electiveUnitsGranted: 0,
         // all three are satisfied given prereq of spanish 1 series
         // spanish 3 and spanish 3h also satisfy different GEs but doing the AP gives you both
-        geGranted: ["6", "7", "8"],
+        geGranted: { "GE-6": 1, "GE-7": 1, "GE-8": 1 },
         coursesGranted: { OR: ["SPANISH 3", "SPANISH 3H"] },
       },
     ],
@@ -729,7 +748,7 @@ export default {
         acceptableScores: [3, 4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
       },
     ],

@@ -1,5 +1,5 @@
 {
-  "id": "3d2cc17f-8a6e-418a-8b6c-243c1a46b80a",
+  "id": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
   "prevId": "2c03a306-abf2-4b8e-b412-c948e659aa5d",
   "version": "7",
   "dialect": "postgresql",
@@ -52,75 +52,75 @@
           "primaryKey": false,
           "notNull": true
         },
-        "grants_ge_1a": {
-          "name": "grants_ge_1a",
-          "type": "boolean",
+        "ge_1a_courses_granted": {
+          "name": "ge_1a_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_1b": {
-          "name": "grants_ge_1b",
-          "type": "boolean",
+        "ge_1b_courses_granted": {
+          "name": "ge_1b_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_2": {
-          "name": "grants_ge_2",
-          "type": "boolean",
+        "ge_2_courses_granted": {
+          "name": "ge_2_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_3": {
-          "name": "grants_ge_3",
-          "type": "boolean",
+        "ge_3_courses_granted": {
+          "name": "ge_3_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_4": {
-          "name": "grants_ge_4",
-          "type": "boolean",
+        "ge_4_courses_granted": {
+          "name": "ge_4_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_5a": {
-          "name": "grants_ge_5a",
-          "type": "boolean",
+        "ge_5a_courses_granted": {
+          "name": "ge_5a_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_5b": {
-          "name": "grants_ge_5b",
-          "type": "boolean",
+        "ge_5b_courses_granted": {
+          "name": "ge_5b_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_6": {
-          "name": "grants_ge_6",
-          "type": "boolean",
+        "ge_6_courses_granted": {
+          "name": "ge_6_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_7": {
-          "name": "grants_ge_7",
-          "type": "boolean",
+        "ge_7_courses_granted": {
+          "name": "ge_7_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
-        "grants_ge_8": {
-          "name": "grants_ge_8",
-          "type": "boolean",
+        "ge_8_courses_granted": {
+          "name": "ge_8_courses_granted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": false
+          "default": 0
         },
         "courses_granted": {
           "name": "courses_granted",
@@ -1136,43 +1136,6 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sample_program": {
-      "name": "sample_program",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "program_name": {
-          "name": "program_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sample_program": {
-          "name": "sample_program",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "program_notes": {
-          "name": "program_notes",
-          "type": "varchar[]",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
