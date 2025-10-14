@@ -14,22 +14,16 @@ export const batchInstructorsQuerySchema = z.object({
 });
 
 export const instructorsQuerySchema = z.object({
-  nameContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in instructor names (not case sensitive)",
-      example: "Shindler",
-    }),
-  titleContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in the title (not case sensitive)",
-      example: "Associate",
-    }),
+  nameContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor names (case-insensitive)",
+    example: "Shindler",
+  }),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in the title (case-insensitive)",
+    example: "Associate",
+  }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the department name (not case sensitive)",
+    description: "A substring to search for in the department name (case-insensitive)",
     example: "Science",
   }),
   take: z.coerce
@@ -38,36 +32,27 @@ export const instructorsQuerySchema = z.object({
     .default(100)
     .openapi({
       description:
-        "Number of results to return per page. Use with 'skip' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+        "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
       example: 100,
     }),
-  skip: z.coerce
-    .number()
-    .default(0)
-    .openapi({
-      description:
-        "Number of results to omit before returning results. Use with 'take' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
-      example: 0,
-    }),
+  skip: z.coerce.number().default(0).openapi({
+    description:
+      "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+    example: 0,
+  }),
 });
 
 export const instructorsByCursorQuerySchema = z.object({
-  nameContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in instructor names (not case sensitive)",
-      example: "Shindler",
-    }),
-  titleContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in the title (not case sensitive)",
-      example: "Associate",
-    }),
+  nameContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor names (case-insensitive)",
+    example: "Shindler",
+  }),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in the title (case-insensitive)",
+    example: "Associate",
+  }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the department name (not case sensitive)",
+    description: "A substring to search for in the department name (case-insensitive)",
     example: "Science",
   }),
   cursor: z
@@ -75,7 +60,7 @@ export const instructorsByCursorQuerySchema = z.object({
     .optional()
     .openapi({
       description:
-        "Pagination cursor based on professor ucinetid, inclusive of professor set to cursor. Use the `nextCursor` value from previous response to fetch next page",
+        "Pagination cursor based on professor UCInetID. Use the `nextCursor` value from previous response to fetch next subset of results",
     })
     .openapi({ example: "mikes" }),
   take: z.coerce
@@ -84,7 +69,7 @@ export const instructorsByCursorQuerySchema = z.object({
     .default(100)
     .openapi({
       description:
-        "Number of results to return per page. Use with 'cursor' for cursor-based pagination",
+        "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
       example: 100,
     }),
 });
