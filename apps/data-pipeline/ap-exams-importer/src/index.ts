@@ -1,10 +1,9 @@
 import { exit } from "node:process";
 
-import { database } from "@packages/db";
+import { database, eq, notExists, sql } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-// import { notExists, sql } from "drizzle-orm";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
 
 const geCategoryToColumn = {
@@ -30,8 +29,14 @@ async function main() {
     for (const [fullName, examData] of Object.entries(apExamData)) {
       await tx
         .insert(apExam)
-        .values({ id: fullName, catalogueName: examData?.catalogueName ?? null })
-        .onConflictDoUpdate({ target: apExam.id, set: conflictUpdateSetAllCols(apExam) });
+        .values({
+          id: fullName,
+          catalogueName: examData?.catalogueName ?? null,
+        })
+        .onConflictDoUpdate({
+          target: apExam.id,
+          set: conflictUpdateSetAllCols(apExam),
+        });
 
       for (const reward of examData.rewards) {
         const geCourses = Object.fromEntries(
@@ -53,25 +58,26 @@ async function main() {
           await tx
             .insert(apExamToReward)
             .values({ examId: fullName, score, reward: rewardId })
-            // assuming that reward is where the conflict is going to be
             .onConflictDoUpdate({
               target: [apExamToReward.examId, apExamToReward.score],
               set: conflictUpdateSetAllCols(apExamToReward),
             });
-          // .onConflictDoNothing({target:[apExamToReward.examId, apExamToReward.score]})
         }
       }
     }
-
-    //remove apExamRewards that don't exist in the junction table(ap_exam_to_reward)
-    //done using correlated subquery.
   });
-  await db.execute(
-    "DELETE FROM ap_exam_reward WHERE NOT EXISTS (SELECT 1\n" +
-      "  FROM ap_exam_to_reward\n" +
-      "  WHERE ap_exam_to_reward.reward = ap_exam_reward.id);",
-  );
-
+  //remove apExamRewards that don't exist in the junction table(ap_exam_to_reward)
+  //done using correlated subquery
+  await db
+    .delete(apExamReward)
+    .where(
+      notExists(
+        db
+          .select({ one: sql`1` })
+          .from(apExamToReward)
+          .where(eq(apExamToReward.reward, apExamReward.id)),
+      ),
+    );
   await db.$client.end();
 
   exit(0);
