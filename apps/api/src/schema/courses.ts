@@ -2,9 +2,13 @@ import { z } from "@hono/zod-openapi";
 import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
 
-const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
+export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
-const inputGECategories = [
+export const inputCourseLevelSchema = z.enum(inputCourseLevels, {
+  message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
+});
+
+export const inputGECategories = [
   "GE-1A",
   "GE-1B",
   "GE-2",
@@ -59,18 +63,11 @@ export const coursesQuerySchema = z.object({
     .number()
     .optional()
     .openapi({ description: "The numeric value of the course number", example: 45 }),
-  titleContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in course titles (not case-sensitive)",
-      example: "C++",
-    }),
-  courseLevel: z
-    .enum(inputCourseLevels, {
-      message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
-    })
-    .optional(),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in course titles (not case-sensitive)",
+    example: "C++",
+  }),
+  courseLevel: inputCourseLevelSchema.optional(),
   minUnits: z.coerce
     .number()
     .optional()
@@ -98,14 +95,11 @@ export const coursesQuerySchema = z.object({
         "Number of results to return per page. Use with 'skip' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
       example: 100,
     }),
-  skip: z.coerce
-    .number()
-    .default(0)
-    .openapi({
-      description:
-        "Number of results to omit before returning results. Use with 'take' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
-      example: 0,
-    }),
+  skip: z.coerce.number().default(0).openapi({
+    description:
+      "Number of results to omit before returning results. Use with 'take' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+    example: 0,
+  }),
 });
 
 export const coursesByCursorQuerySchema = z.object({
@@ -118,13 +112,10 @@ export const coursesByCursorQuerySchema = z.object({
     .number()
     .optional()
     .openapi({ description: "The numeric value of the course number", example: 45 }),
-  titleContains: z
-    .string()
-    .optional()
-    .openapi({
-      description: "A substring to search for in course titles (not case-sensitive)",
-      example: "C++",
-    }),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in course titles (not case-sensitive)",
+    example: "C++",
+  }),
   courseLevel: z.enum(inputCourseLevels).optional(),
   minUnits: z.coerce
     .number()
