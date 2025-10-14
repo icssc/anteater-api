@@ -6,13 +6,17 @@ export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
   quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
   instructor: z.string().optional().openapi({
-    description: "The instructor's name (not case sensitive)",
+    description: "The instructor's name (case-insensitive)",
     example: "KLEFSTAD, R.",
   }),
   department: z
     .string()
     .optional()
-    .openapi({ description: "The department code", example: "I&C SCI" }),
+    .openapi({
+      description:
+        "The department code. Filters results to only include courses offered by the specified department",
+      example: "I&C SCI",
+    }),
   courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
   sectionCode: z
     .string()

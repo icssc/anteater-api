@@ -82,7 +82,11 @@ export const websocQuerySchema = z.object({
   department: z
     .string()
     .optional()
-    .openapi({ description: "The department code", example: "I&C SCI" }),
+    .openapi({
+      description:
+        "The department code. Filters results to only include courses offered by the specified department",
+      example: "I&C SCI",
+    }),
   courseTitle: z
     .string()
     .optional()
@@ -127,7 +131,7 @@ export const websocQuerySchema = z.object({
       example: "36210,36216-36218",
     }),
   instructorName: z.string().optional().openapi({
-    description: "The instructor's name (not case sensitive)",
+    description: "The instructor's name (case-insensitive)",
     example: "WONG-MA, J.",
   }),
   days: daysSchema.optional().openapi({ description: "The days of the week the section meets" }),
