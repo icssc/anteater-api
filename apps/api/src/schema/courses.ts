@@ -54,30 +54,33 @@ export const batchCoursesQuerySchema = z.object({
 });
 
 export const coursesQuerySchema = z.object({
-  department: z
-    .string()
-    .optional()
-    .openapi({ description: "The department code", example: "I&C SCI" }),
+  department: z.string().optional().openapi({
+    description:
+      "The department code. Filters results to only include courses offered by the specified department",
+    example: "I&C SCI",
+  }),
   courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
   courseNumeric: z.coerce
     .number()
     .optional()
     .openapi({ description: "The numeric value of the course number", example: 45 }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course titles (not case-sensitive)",
+    description: "A substring to search for in course titles (case-insensitive)",
     example: "C++",
   }),
   courseLevel: inputCourseLevelSchema.optional(),
-  minUnits: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "Returns courses with at least this number of units", example: 4 }),
-  maxUnits: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "Returns courses with at most this number of units", example: 4 }),
+  minUnits: z.coerce.number().optional().openapi({
+    description:
+      "If provided, only courses with at least this number of units are included in the results",
+    example: 4,
+  }),
+  maxUnits: z.coerce.number().optional().openapi({
+    description:
+      "If provided, only courses with at most this number of units are included in the results",
+    example: 4,
+  }),
   descriptionContains: z.string().optional().openapi({
-    description: "A substring to search for in course descriptions (not case-sensitive)",
+    description: "A substring to search for in course descriptions (case-insensitive)",
     example: "programming",
   }),
   geCategory: z
@@ -92,12 +95,12 @@ export const coursesQuerySchema = z.object({
     .default(100)
     .openapi({
       description:
-        "Number of results to return per page. Use with 'skip' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+        "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
       example: 100,
     }),
   skip: z.coerce.number().default(0).openapi({
     description:
-      "Number of results to omit before returning results. Use with 'take' for pagination: 'skip' specifies how many results to omit before returning 'take' results",
+      "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
     example: 0,
   }),
 });
@@ -106,33 +109,39 @@ export const coursesByCursorQuerySchema = z.object({
   department: z
     .string()
     .optional()
-    .openapi({ description: "The department code", example: "I&C SCI" }),
+    .openapi({
+      description:
+        "The department code. Filters results to only include courses offered by the specified department",
+      example: "I&C SCI",
+    }),
   courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
   courseNumeric: z.coerce
     .number()
     .optional()
     .openapi({ description: "The numeric value of the course number", example: 45 }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course titles (not case-sensitive)",
+    description: "A substring to search for in course titles (case-insensitive)",
     example: "C++",
   }),
   courseLevel: z.enum(inputCourseLevels).optional(),
-  minUnits: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "Returns courses with at least this number of units", example: 4 }),
-  maxUnits: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "Returns courses with at most this number of units", example: 4 }),
+  minUnits: z.coerce.number().optional().openapi({
+    description:
+      "If provided, only courses with at least this number of units are included in the results",
+    example: 4,
+  }),
+  maxUnits: z.coerce.number().optional().openapi({
+    description:
+      "If provided, only courses with at most this number of units are included in the results",
+    example: 4,
+  }),
   descriptionContains: z.string().optional().openapi({
-    description: "A substring to search for in course descriptions (not case-sensitive)",
+    description: "A substring to search for in course descriptions (case-insensitive)",
     example: "programming",
   }),
   geCategory: z.enum(inputGECategories).optional(),
   cursor: z.string().optional().openapi({
     description:
-      "Pagination cursor based on course id, inclusive of course set to cursor. Use the `nextCursor` value from previous response to fetch next page",
+      "Pagination cursor based on course id. Use the `nextCursor` value from previous response to fetch next subset of results",
   }),
   take: z.coerce
     .number()
@@ -140,7 +149,7 @@ export const coursesByCursorQuerySchema = z.object({
     .default(100)
     .openapi({
       description:
-        "Number of results to return per page. Use with 'cursor' for cursor-based pagination",
+        "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
       example: 100,
     }),
 });
