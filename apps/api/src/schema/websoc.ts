@@ -141,8 +141,7 @@ export const websocQuerySchema = z.object({
     example: "PSLH",
   }),
   room: z.string().optional().openapi({
-    description:
-      "Only include sections which have at least one meeting in the specified room number",
+    description: "Only include sections which have at least one meeting in a room with this number",
     example: "100",
   }),
   division: z
