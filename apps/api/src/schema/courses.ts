@@ -69,7 +69,7 @@ export const coursesQuerySchema = z.object({
     example: 45,
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course's title (case-insensitive)",
+    description: "A substring to search for in course title(s) (case-insensitive)",
     example: "C++",
   }),
   courseLevel: inputCourseLevelSchema.optional(),
@@ -84,7 +84,7 @@ export const coursesQuerySchema = z.object({
     example: 4,
   }),
   descriptionContains: z.string().optional().openapi({
-    description: "A substring to search for in course descriptions (case-insensitive)",
+    description: "A substring to search for in course description(s) (case-insensitive)",
     example: "programming",
   }),
   geCategory: z
@@ -114,21 +114,18 @@ export const coursesByCursorQuerySchema = z.object({
     description: "Filters results to only include courses offered by the specified department code",
     example: "I&C SCI",
   }),
-  courseNumber: z
-    .string()
-    .optional()
-    .openapi({
-      description:
-        "Filters results to only include courses exactly matching the specified course number",
-      example: "45C",
-    }),
+  courseNumber: z.string().optional().openapi({
+    description:
+      "Filters results to only include courses exactly matching the specified course number",
+    example: "45C",
+  }),
   courseNumeric: z.coerce.number().optional().openapi({
     description:
       "Filters results to only include courses whose course number's numeric portion exactly matches the specified numeric value",
     example: 45,
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course's title (case-insensitive)",
+    description: "A substring to search for in course title(s) (case-insensitive)",
     example: "C++",
   }),
   courseLevel: z.enum(inputCourseLevels).optional(),
@@ -143,7 +140,7 @@ export const coursesByCursorQuerySchema = z.object({
     example: 4,
   }),
   descriptionContains: z.string().optional().openapi({
-    description: "A substring to search for in course descriptions (case-insensitive)",
+    description: "A substring to search for in course description(s) (case-insensitive)",
     example: "programming",
   }),
   geCategory: z.enum(inputGECategories).optional(),

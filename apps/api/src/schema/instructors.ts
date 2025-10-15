@@ -15,15 +15,15 @@ export const batchInstructorsQuerySchema = z.object({
 
 export const instructorsQuerySchema = z.object({
   nameContains: z.string().optional().openapi({
-    description: "A substring to search for in instructor names (case-insensitive)",
+    description: "A substring to search for in instructor name(s) (case-insensitive)",
     example: "Shindler",
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in the instructor's title (case-insensitive)",
+    description: "A substring to search for in instructor title(s) (case-insensitive)",
     example: "Associate",
   }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the instructor's department name (case-insensitive)",
+    description: "A substring to search for in instructor department name(s) (case-insensitive)",
     example: "Science",
   }),
   take: z.coerce
@@ -44,15 +44,16 @@ export const instructorsQuerySchema = z.object({
 
 export const instructorsByCursorQuerySchema = z.object({
   nameContains: z.string().optional().openapi({
-    description: "A substring to search for in instructor names (case-insensitive)",
+    description: "A substring to search for in instructor name(s) (case-insensitive)",
     example: "Shindler",
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in the instructor's title (case-insensitive)",
+    description: "A substring to search for in the instructor title(s) (case-insensitive)",
     example: "Associate",
   }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the instructor's department name (case-insensitive)",
+    description:
+      "A substring to search for in the instructor department name(s) (case-insensitive)",
     example: "Science",
   }),
   cursor: z
