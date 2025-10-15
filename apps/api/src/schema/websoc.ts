@@ -80,15 +80,15 @@ export const websocQuerySchema = z.object({
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
   department: z.string().optional().openapi({
-    description: "Filters results to only include courses offered by the specified department code",
+    description: "Only include courses offered by the specified department code",
     example: "I&C SCI",
   }),
-  courseTitle: z
-    .string()
-    .optional()
-    .openapi({ description: "The course title", example: "PRINCP IN SYS DESGN" }),
+  courseTitle: z.string().optional().openapi({
+    description: "Only include courses with the specified course title",
+    example: "PRINCP IN SYS DESGN",
+  }),
   courseNumber: courseNumberSchema.optional().openapi({
-    description: "Filters results to only include courses with the specified course number",
+    description: "Only include courses with the specified course number",
   }),
   sectionCodes: z
     .string()
@@ -129,20 +129,19 @@ export const websocQuerySchema = z.object({
       example: "36210,36216-36218",
     }),
   instructorName: z.string().optional().openapi({
-    description:
-      "Filters results to only include courses taught by the specified instructor (case-insensitive)",
+    description: "Only include courses taught by the specified instructor (case-insensitive)",
     example: "WONG-MA, J.",
   }),
   days: daysSchema.optional().openapi({
     description:
-      "Filters results to include sections that meet on any of the specified days of the week",
+      "Only include sections which meet on at least one of the specified days of the week",
   }),
   building: z.string().optional().openapi({
-    description: "Filters results to include sections that meet in the specified building",
+    description: "Only include sections which meet in the specified building",
     example: "PSLH",
   }),
   room: z.string().optional().openapi({
-    description: "Filters results to include sections that meet in the specified room",
+    description: "Only include sections which meet in the specified room",
     example: "100",
   }),
   division: z
