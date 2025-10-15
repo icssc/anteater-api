@@ -89,7 +89,6 @@ export const websocQuerySchema = z.object({
     .openapi({ description: "The course title", example: "PRINCP IN SYS DESGN" }),
   courseNumber: courseNumberSchema.optional().openapi({
     description: "Filters results to only include courses with the specified course number",
-    example: "33",
   }),
   sectionCodes: z
     .string()
