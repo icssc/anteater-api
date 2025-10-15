@@ -55,17 +55,21 @@ export const batchCoursesQuerySchema = z.object({
 
 export const coursesQuerySchema = z.object({
   department: z.string().optional().openapi({
-    description:
-      "The department code. Filters results to only include courses offered by the specified department",
+    description: "Filters results to only include courses offered by the specified department code",
     example: "I&C SCI",
   }),
-  courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
-  courseNumeric: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "The numeric value of the course number", example: 45 }),
+  courseNumber: z.string().optional().openapi({
+    description:
+      "Filters results to only include courses exactly matching the specified course number",
+    example: "45C",
+  }),
+  courseNumeric: z.coerce.number().optional().openapi({
+    description:
+      "Filters results to only include courses whose course number's numeric portion exactly matches the specified numeric value",
+    example: 45,
+  }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course titles (case-insensitive)",
+    description: "A substring to search for in course's title (case-insensitive)",
     example: "C++",
   }),
   courseLevel: inputCourseLevelSchema.optional(),
@@ -106,21 +110,25 @@ export const coursesQuerySchema = z.object({
 });
 
 export const coursesByCursorQuerySchema = z.object({
-  department: z
+  department: z.string().optional().openapi({
+    description: "Filters results to only include courses offered by the specified department code",
+    example: "I&C SCI",
+  }),
+  courseNumber: z
     .string()
     .optional()
     .openapi({
       description:
-        "The department code. Filters results to only include courses offered by the specified department",
-      example: "I&C SCI",
+        "Filters results to only include courses exactly matching the specified course number",
+      example: "45C",
     }),
-  courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
-  courseNumeric: z.coerce
-    .number()
-    .optional()
-    .openapi({ description: "The numeric value of the course number", example: 45 }),
+  courseNumeric: z.coerce.number().optional().openapi({
+    description:
+      "Filters results to only include courses whose course number's numeric portion exactly matches the specified numeric value",
+    example: 45,
+  }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in course titles (case-insensitive)",
+    description: "A substring to search for in course's title (case-insensitive)",
     example: "C++",
   }),
   courseLevel: z.enum(inputCourseLevels).optional(),
@@ -141,7 +149,7 @@ export const coursesByCursorQuerySchema = z.object({
   geCategory: z.enum(inputGECategories).optional(),
   cursor: z.string().optional().openapi({
     description:
-      "Pagination cursor based on course id. Use the `nextCursor` value from previous response to fetch next subset of results",
+      "Pagination cursor based on course id. Use the `nextCursor` value from previous response to fetch next page of results",
   }),
   take: z.coerce
     .number()
