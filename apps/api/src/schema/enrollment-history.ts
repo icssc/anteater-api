@@ -7,23 +7,17 @@ export const enrollmentHistoryQuerySchema = z
     year: yearSchema.optional(),
     quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
     instructorName: z.string().optional().openapi({
-      description:
-        "Filters results to only include courses taught by the specified instructor (case-insensitive)",
+      description: "Only include courses taught by the specified instructor (case-insensitive)",
       example: "THORNTON, A.",
     }),
     department: z.string().optional().openapi({
-      description:
-        "Filters results to only include courses offered by the specified department code",
+      description: "Only include courses offered by the specified department code",
       example: "I&C SCI",
     }),
-    courseNumber: z
-      .string()
-      .optional()
-      .openapi({
-        description:
-          "Filters results to only include courses exactly matching the specified course number",
-        example: "33",
-      }),
+    courseNumber: z.string().optional().openapi({
+      description: "Only include courses exactly matching the specified course number",
+      example: "33",
+    }),
     sectionCode: z
       .string()
       .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
