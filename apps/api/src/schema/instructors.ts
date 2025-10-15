@@ -19,11 +19,11 @@ export const instructorsQuerySchema = z.object({
     example: "Shindler",
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in the title (case-insensitive)",
+    description: "A substring to search for in the instructor's title (case-insensitive)",
     example: "Associate",
   }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the department name (case-insensitive)",
+    description: "A substring to search for in the instructor's department name (case-insensitive)",
     example: "Science",
   }),
   take: z.coerce
@@ -48,11 +48,11 @@ export const instructorsByCursorQuerySchema = z.object({
     example: "Shindler",
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in the title (case-insensitive)",
+    description: "A substring to search for in the instructor's title (case-insensitive)",
     example: "Associate",
   }),
   departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in the department name (case-insensitive)",
+    description: "A substring to search for in the instructor's department name (case-insensitive)",
     example: "Science",
   }),
   cursor: z
@@ -60,7 +60,7 @@ export const instructorsByCursorQuerySchema = z.object({
     .optional()
     .openapi({
       description:
-        "Pagination cursor based on professor UCInetID. Use the `nextCursor` value from previous response to fetch next subset of results",
+        "Pagination cursor based on professor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
     })
     .openapi({ example: "mikes" }),
   take: z.coerce
