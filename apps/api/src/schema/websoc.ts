@@ -79,14 +79,10 @@ export const websocQuerySchema = z.object({
     .enum(geCategories)
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z
-    .string()
-    .optional()
-    .openapi({
-      description:
-        "The department code. Filters results to only include courses offered by the specified department",
-      example: "I&C SCI",
-    }),
+  department: z.string().optional().openapi({
+    description: "Filters results to only include courses offered by the specified department code",
+    example: "I&C SCI",
+  }),
   courseTitle: z
     .string()
     .optional()
@@ -131,18 +127,28 @@ export const websocQuerySchema = z.object({
       example: "36210,36216-36218",
     }),
   instructorName: z.string().optional().openapi({
-    description: "The instructor's name (case-insensitive)",
+    description:
+      "Filters results to only include courses taught by the specified instructor (case-insensitive)",
     example: "WONG-MA, J.",
   }),
-  days: daysSchema.optional().openapi({ description: "The days of the week the section meets" }),
+  days: daysSchema.optional().openapi({
+    description:
+      "Filters results to include sections that meet on any of the specified days of the week",
+  }),
   building: z
     .string()
     .optional()
-    .openapi({ description: "The building the section meets in", example: "PSLH" }),
+    .openapi({
+      description: "Filters results to include sections that meet in the specified building",
+      example: "PSLH",
+    }),
   room: z
     .string()
     .optional()
-    .openapi({ description: "The room the section meets in", example: "100" }),
+    .openapi({
+      description: "Filters results to include sections that meet in the specified room",
+      example: "100",
+    }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
