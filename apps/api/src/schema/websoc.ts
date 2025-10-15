@@ -87,7 +87,10 @@ export const websocQuerySchema = z.object({
     .string()
     .optional()
     .openapi({ description: "The course title", example: "PRINCP IN SYS DESGN" }),
-  courseNumber: courseNumberSchema.optional().openapi({ description: "The course number" }),
+  courseNumber: courseNumberSchema.optional().openapi({
+    description: "Filters results to only include courses with the specified course number",
+    example: "33",
+  }),
   sectionCodes: z
     .string()
     .optional()
@@ -135,20 +138,14 @@ export const websocQuerySchema = z.object({
     description:
       "Filters results to include sections that meet on any of the specified days of the week",
   }),
-  building: z
-    .string()
-    .optional()
-    .openapi({
-      description: "Filters results to include sections that meet in the specified building",
-      example: "PSLH",
-    }),
-  room: z
-    .string()
-    .optional()
-    .openapi({
-      description: "Filters results to include sections that meet in the specified room",
-      example: "100",
-    }),
+  building: z.string().optional().openapi({
+    description: "Filters results to include sections that meet in the specified building",
+    example: "PSLH",
+  }),
+  room: z.string().optional().openapi({
+    description: "Filters results to include sections that meet in the specified room",
+    example: "100",
+  }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
