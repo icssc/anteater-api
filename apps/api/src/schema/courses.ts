@@ -55,17 +55,16 @@ export const batchCoursesQuerySchema = z.object({
 
 export const coursesQuerySchema = z.object({
   department: z.string().optional().openapi({
-    description: "Filters results to only include courses offered by the specified department code",
+    description: "Only include courses offered by the specified department code",
     example: "I&C SCI",
   }),
   courseNumber: z.string().optional().openapi({
-    description:
-      "Filters results to only include courses exactly matching the specified course number",
+    description: "Only include courses exactly matching the specified course number",
     example: "45C",
   }),
   courseNumeric: z.coerce.number().optional().openapi({
     description:
-      "Filters results to only include courses whose course number's numeric portion exactly matches the specified numeric value",
+      "Only include courses whose course number has a leading integer equal to the specified value (e.g., 45 matches 45C, but not 4 or 5C)",
     example: 45,
   }),
   titleContains: z.string().optional().openapi({
@@ -111,17 +110,16 @@ export const coursesQuerySchema = z.object({
 
 export const coursesByCursorQuerySchema = z.object({
   department: z.string().optional().openapi({
-    description: "Filters results to only include courses offered by the specified department code",
+    description: "Only include courses offered by the specified department code",
     example: "I&C SCI",
   }),
   courseNumber: z.string().optional().openapi({
-    description:
-      "Filters results to only include courses exactly matching the specified course number",
+    description: "Only include courses exactly matching the specified course number",
     example: "45C",
   }),
   courseNumeric: z.coerce.number().optional().openapi({
     description:
-      "Filters results to only include courses whose course number's numeric portion exactly matches the specified numeric value",
+      "Only include courses whose course number has a leading integer equal to the specified value (e.g., 45 matches 45C, but not 4 or 5C)",
     example: 45,
   }),
   titleContains: z.string().optional().openapi({
