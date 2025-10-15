@@ -253,6 +253,8 @@ async function scrapeSamplePrograms(programPath: string) {
       const rowData: string[] = [];
       // Collapse repeated whitespace in each cell down to single spaces before storing.
       $tr.find("th, td").each((_k, cell_el) => {
+        // Remove superscript tags before getting text
+        $(cell_el).find("sup").remove();
         rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
       });
 
@@ -284,6 +286,8 @@ async function scrapeSamplePrograms(programPath: string) {
         const rowData: string[] = [];
         // Same whitespace normalization for rows under simplified markup structures.
         $tr.find("td").each((_k, td_el) => {
+          // Remove superscript tags before getting text
+          $(td_el).find("sup").remove();
           rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
         });
 
