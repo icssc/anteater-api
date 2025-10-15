@@ -6,18 +6,22 @@ export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
   quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
   instructor: z.string().optional().openapi({
-    description: "The instructor's name (case-insensitive)",
+    description:
+      "Filters results to only include courses taught by the specified instructor (case-insensitive)",
     example: "KLEFSTAD, R.",
   }),
-  department: z
+  department: z.string().optional().openapi({
+    description: "Filters results to only include courses offered by the specified department code",
+    example: "I&C SCI",
+  }),
+  courseNumber: z
     .string()
     .optional()
     .openapi({
       description:
-        "The department code. Filters results to only include courses offered by the specified department",
-      example: "I&C SCI",
+        "Filters results to only include courses exactly matching the specified course number",
+      example: "45C",
     }),
-  courseNumber: z.string().optional().openapi({ description: "The course number", example: "45C" }),
   sectionCode: z
     .string()
     .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
