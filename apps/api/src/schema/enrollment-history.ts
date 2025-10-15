@@ -6,14 +6,24 @@ export const enrollmentHistoryQuerySchema = z
   .object({
     year: yearSchema.optional(),
     quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
-    instructorName: z.string().optional(),
-    department: z.string().optional(),
-    courseNumber: z.string().optional(),
+    instructorName: z.string().optional().openapi({
+      description: "Only include courses taught by the specified instructor (case-insensitive)",
+      example: "THORNTON, A.",
+    }),
+    department: z.string().optional().openapi({
+      description: "Only include courses offered by the specified department code",
+      example: "I&C SCI",
+    }),
+    courseNumber: z.string().optional().openapi({
+      description: "Only include courses exactly matching the specified course number",
+      example: "33",
+    }),
     sectionCode: z
       .string()
       .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
       .transform((x) => Number.parseInt(x, 10))
-      .optional(),
+      .optional()
+      .openapi({ description: "The 5-digit section code", example: "36120" }),
     sectionType: z
       .enum(websocSectionTypes, { invalid_type_error: "Invalid sectionType provided" })
       .optional(),
