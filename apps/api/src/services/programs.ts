@@ -29,7 +29,7 @@ export class ProgramsService {
         .select({
           id: major.id,
           name: major.name,
-          specializations: sql`array_remove(array_agg(${specialization.id}), NULL)`.as(
+          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${specialization.id}), NULL)`.as(
             "specializations",
           ),
         })
