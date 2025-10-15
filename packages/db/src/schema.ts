@@ -147,9 +147,9 @@ export type APCoursesGrantedTree =
 
 export type SampleProgramEntry = {
   year: string;
-  Fall: string[];
-  Winter: string[];
-  Spring: string[];
+  fall: string[];
+  winter: string[];
+  spring: string[];
 };
 
 export type SampleProgram = {

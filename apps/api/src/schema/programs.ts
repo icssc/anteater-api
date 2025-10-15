@@ -306,15 +306,15 @@ export const sampleProgramsYearSchema = z.object({
     description: "Academic level or year standing",
     example: "Freshman",
   }),
-  Fall: z.array(z.string()).openapi({
+  fall: z.array(z.string()).openapi({
     description: "Courses recommended for Fall term",
     example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
   }),
-  Winter: z.array(z.string()).openapi({
+  winter: z.array(z.string()).openapi({
     description: "Courses recommended for Winter term",
     example: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
   }),
-  Spring: z.array(z.string()).openapi({
+  spring: z.array(z.string()).openapi({
     description: "Courses recommended for Spring term",
     example: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
   }),
@@ -327,22 +327,27 @@ export const sampleProgramsResponseSchemaObject = z.object({
   }),
   programName: z.string().openapi({
     description: "Program name of this sample program",
-    example: "Biochemistry and Molecular Biology, B.S.",
+    example: "Computer Science, B.S.",
   }),
   sampleProgram: z.array(sampleProgramsYearSchema).openapi({
     description: "Structured list of courses for this program, organized by year and term",
     example: [
       {
         year: "Freshman",
-        Fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-        Winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
-        Spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+        fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+        winter: ["I&C SCI 32", "MATH 2B", "WRITING 50", "General Education III"],
+        spring: ["I&C SCI 33", "IN4MATX 43", "I&C SCI 6B", "WRITING 60"],
       },
       {
         year: "Sophomore",
-        Fall: ["I&C SCI 45J", "I&C SCI 6D", "MGMT 30A"],
-        Winter: ["COMPSCI 122A", "MGMT 30B", "I&C SCI 6N"],
-        Spring: ["IN4MATX 43", "MGMT 102", "STATS 7 or 8 or 67"],
+        fall: ["I&C SCI 45C", "I&C SCI 51", "I&C SCI 6D"],
+        winter: ["I&C SCI 46", "I&C SCI 6N", "General Education III"],
+        spring: [
+          "Computer Science Spec./Elective",
+          "Stats 67",
+          "General Education III",
+          "Science Elective",
+        ],
       },
     ],
   }),

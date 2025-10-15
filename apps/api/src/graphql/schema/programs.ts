@@ -102,9 +102,9 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
 
 type YearPlan @cacheControl(maxAge: 86400){
     year: String!
-    Fall: [String!]!
-    Winter: [String!]!
-    Spring: [String!]!
+    fall: [String!]!
+    winter: [String!]!
+    spring: [String!]!
 }
 
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {

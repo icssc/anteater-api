@@ -101,6 +101,7 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
  * Example: https://catalogue.uci.edu/.../computerscience_bs/ → "computerscience_bs"
  */
 function generateProgramId(url: string): string {
+  // Regex pulls the final path segment from the catalogue URL (e.g. /foo/bar/ -> bar).
   const match = url.match(/\/([^/]+)\/?$/);
   if (!match) {
     logger.warn(`Could not extract ID from URL: ${url}`);
@@ -120,29 +121,29 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
   const transformedProgram: SampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
-    const Fall: string[] = [];
-    const Winter: string[] = [];
-    const Spring: string[] = [];
+    const fall: string[] = [];
+    const winter: string[] = [];
+    const spring: string[] = [];
 
     const curriculum = yearData.curriculum;
 
     for (const row of curriculum) {
       if (row.length >= 1 && row[0].trim()) {
-        Fall.push(row[0].trim());
+        fall.push(row[0].trim());
       }
       if (row.length >= 2 && row[1].trim()) {
-        Winter.push(row[1].trim());
+        winter.push(row[1].trim());
       }
       if (row.length >= 3 && row[2].trim()) {
-        Spring.push(row[2].trim());
+        spring.push(row[2].trim());
       }
     }
 
     transformedProgram.push({
       year: yearData.year,
-      Fall,
-      Winter,
-      Spring,
+      fall,
+      winter,
+      spring,
     });
   }
 
@@ -174,8 +175,17 @@ async function storeSampleProgramsInDB(
       ),
     );
 
-  const sortedDbPrograms = sortKeys(dbPrograms, { deep: true });
-  const sortedScrapedPrograms = sortKeys(scrapedPrograms, { deep: true });
+  //   const sortedDbPrograms = sortKeys(dbPrograms, { deep: true });
+  //   const sortedScrapedPrograms = sortKeys(scrapedPrograms, { deep: true });
+  // Sort arrays by ID first, then sort object keys
+  const sortedDbPrograms = sortKeys(
+    dbPrograms.sort((a, b) => a.id.localeCompare(b.id)),
+    { deep: true },
+  );
+  const sortedScrapedPrograms = sortKeys(
+    scrapedPrograms.sort((a, b) => a.id.localeCompare(b.id)),
+    { deep: true },
+  );
 
   const programDiff = diffString(sortedDbPrograms, sortedScrapedPrograms);
   if (!programDiff.length) {
@@ -241,6 +251,7 @@ async function scrapeSamplePrograms(programPath: string) {
       if ($tr.hasClass("plangridterm")) return;
 
       const rowData: string[] = [];
+      // Collapse repeated whitespace in each cell down to single spaces before storing.
       $tr.find("th, td").each((_k, cell_el) => {
         rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
       });
@@ -271,6 +282,7 @@ async function scrapeSamplePrograms(programPath: string) {
         }
       } else if (!$tr.hasClass("plangridterm")) {
         const rowData: string[] = [];
+        // Same whitespace normalization for rows under simplified markup structures.
         $tr.find("td").each((_k, td_el) => {
           rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
         });
@@ -313,7 +325,9 @@ async function scrapeSamplePrograms(programPath: string) {
 
   sampleProgramContainer.find("p").each((_i, p_el) => {
     const pText = $(p_el).text().trim();
+    // Case-insensitive match for paragraphs that start with the "NOTES:" label.
     if (pText.match(/^NOTES\s*:\s*/i)) {
+      // Strip the leading "NOTES:" label so only the actual note text remains.
       const remainingText = pText.replace(/^NOTES\s*:\s*/i, "").trim();
       if (remainingText.length > 0) {
         notes.push(remainingText);
@@ -322,6 +336,7 @@ async function scrapeSamplePrograms(programPath: string) {
       while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
         if (currentElement.is("p")) {
           const paragraphContent = currentElement.text().trim();
+          // Skip any follow-up paragraphs that are themselves just "NOTES:" headings.
           if (paragraphContent.length > 0 && !paragraphContent.match(/^NOTES\s*:\s*/i)) {
             notes.push(paragraphContent);
           }
@@ -350,6 +365,7 @@ async function scrapeSamplePrograms(programPath: string) {
   sampleProgramContainer.find("p").each((_i, p_el) => {
     const pText = $(p_el).text().trim();
     if (
+      // Capture bullet-style notes that start with '*' or numbered superscripts while excluding "NOTES:" headings.
       (pText.startsWith("*") || pText.match(/^<sup>\s*\d+\s*<\/sup>/i)) &&
       !pText.match(/^NOTES\s*:\s*/i)
     ) {
