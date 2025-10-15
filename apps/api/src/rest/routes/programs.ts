@@ -372,11 +372,11 @@ programsRouter.openapi(samplePrograms, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getSamplePrograms(query);
-  if (query?.programName && !res.length) {
+  if (query?.id && !res.length) {
     return c.json(
       {
         ok: false,
-        message: "No data for a sample program by that program major",
+        message: "No data for a sample program by that ID",
       },
       404,
     );

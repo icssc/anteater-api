@@ -155,7 +155,7 @@ export class ProgramsService {
         notes: sampleProgram.programNotes,
       })
       .from(sampleProgram)
-      .where(query.programName ? eq(sampleProgram.programName, query.programName) : undefined);
+      .where(query.id ? eq(sampleProgram.id, query.id) : undefined);
     return results;
   }
 }

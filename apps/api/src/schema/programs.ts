@@ -51,9 +51,9 @@ export const ugradRequirementsQuerySchema = z.object({
 });
 
 export const sampleProgramsQuerySchema = z.object({
-  programName: z.string().optional().openapi({
-    description: "A program name to query sample programs for",
-    example: "Computer Science, B.S.",
+  id: z.string().optional().openapi({
+    description: "Program ID of this sample program",
+    example: "computerscience_bs",
   }),
 });
 

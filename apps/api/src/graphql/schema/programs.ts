@@ -135,7 +135,7 @@ input UgradRequrementsQuery {
 }
 
 input SampleProgramsQuery {
-    programName: String!
+    id: String!
 }
 
 extend type Query {
