@@ -137,11 +137,11 @@ export const websocQuerySchema = z.object({
       "Only include sections which meet on at least one of the specified days of the week",
   }),
   building: z.string().optional().openapi({
-    description: "Only include sections which meet in the specified building",
+    description: "Only include sections which have at least one meeting in the specified building",
     example: "PSLH",
   }),
   room: z.string().optional().openapi({
-    description: "Only include sections which meet in the specified room",
+    description: "Only include sections which meet in the specified room number",
     example: "100",
   }),
   division: z

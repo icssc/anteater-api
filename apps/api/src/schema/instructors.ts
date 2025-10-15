@@ -48,12 +48,11 @@ export const instructorsByCursorQuerySchema = z.object({
     example: "Shindler",
   }),
   titleContains: z.string().optional().openapi({
-    description: "A substring to search for in the instructor title(s) (case-insensitive)",
+    description: "A substring to search for in instructor title(s) (case-insensitive)",
     example: "Associate",
   }),
   departmentContains: z.string().optional().openapi({
-    description:
-      "A substring to search for in the instructor department name(s) (case-insensitive)",
+    description: "A substring to search for in instructor department name(s) (case-insensitive)",
     example: "Science",
   }),
   cursor: z
