@@ -61,7 +61,7 @@ export const instructorsByCursorQuerySchema = z.object({
     .optional()
     .openapi({
       description:
-        "Pagination cursor based on professor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
+        "Pagination cursor based on instructor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
     })
     .openapi({ example: "mikes" }),
   take: z.coerce
