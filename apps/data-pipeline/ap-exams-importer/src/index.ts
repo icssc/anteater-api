@@ -2,6 +2,7 @@ import { exit } from "node:process";
 
 import { database } from "@packages/db";
 
+import { notInArray } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
@@ -66,6 +67,13 @@ async function main() {
       }
     }
   });
+
+  const arr = (await db.select({ reward: apExamToReward.reward }).from(apExamToReward)).map(
+    (row) => row.reward,
+  );
+
+  db.delete(apExamReward).where(notInArray(apExamReward.id, arr));
+
   await db.$client.end();
 
   exit(0);
