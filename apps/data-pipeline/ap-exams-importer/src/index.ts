@@ -1,6 +1,6 @@
 import { exit } from "node:process";
 
-import { database, eq, notExists, sql } from "@packages/db";
+import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
@@ -66,18 +66,6 @@ async function main() {
       }
     }
   });
-  //remove apExamRewards that don't exist in the junction table(ap_exam_to_reward)
-  //done using correlated subquery
-  await db
-    .delete(apExamReward)
-    .where(
-      notExists(
-        db
-          .select({ one: sql`1` })
-          .from(apExamToReward)
-          .where(eq(apExamToReward.reward, apExamReward.id)),
-      ),
-    );
   await db.$client.end();
 
   exit(0);

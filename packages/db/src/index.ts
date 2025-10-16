@@ -1,9 +1,7 @@
-import * as drizzleHelpers from "drizzle-orm";
+import type * as drizzleHelpers from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 export const database = <TSchema extends Record<string, unknown>>(
   url: string,
   params?: drizzleHelpers.DrizzleConfig<TSchema>,
 ) => drizzle({ connection: { url, max: 1 }, ...params });
-
-export const { eq, notExists, sql } = drizzleHelpers;
