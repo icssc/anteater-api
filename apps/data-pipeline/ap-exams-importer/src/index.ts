@@ -19,6 +19,7 @@ const geCategoryToColumn = {
   "GE-7": "ge7CoursesGranted",
   "GE-8": "ge8CoursesGranted",
 } as const;
+
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
