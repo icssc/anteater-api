@@ -2,6 +2,7 @@ import { exit } from "node:process";
 
 import { database } from "@packages/db";
 
+import { eq, notExists } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
@@ -30,8 +31,14 @@ async function main() {
     for (const [fullName, examData] of Object.entries(apExamData)) {
       await tx
         .insert(apExam)
-        .values({ id: fullName, catalogueName: examData?.catalogueName ?? null })
-        .onConflictDoUpdate({ target: apExam.id, set: conflictUpdateSetAllCols(apExam) });
+        .values({
+          id: fullName,
+          catalogueName: examData?.catalogueName ?? null,
+        })
+        .onConflictDoUpdate({
+          target: apExam.id,
+          set: conflictUpdateSetAllCols(apExam),
+        });
 
       for (const reward of examData.rewards) {
         const geCourses = Object.fromEntries(
@@ -50,11 +57,23 @@ async function main() {
           .then((rows) => rows[0]);
 
         for (const score of reward.acceptableScores) {
-          await tx.insert(apExamToReward).values({ examId: fullName, score, reward: rewardId });
+          await tx
+            .insert(apExamToReward)
+            .values({ examId: fullName, score, reward: rewardId })
+            .onConflictDoUpdate({
+              target: [apExamToReward.examId, apExamToReward.score],
+              set: conflictUpdateSetAllCols(apExamToReward),
+            });
         }
       }
     }
   });
+
+  await db
+    .delete(apExamReward)
+    .where(
+      notExists(db.select().from(apExamToReward).where(eq(apExamToReward.reward, apExamReward.id))),
+    );
 
   await db.$client.end();
 
