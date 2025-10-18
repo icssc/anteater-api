@@ -59,6 +59,108 @@ const UCI_MAP_ID = "463" as const;
 // Landscape: Add trees
 // Label: Ecological Preserve
 // Add label: Verano Place
+// Data
+// Clean Up CMS categories.
+// Add labels to cateogry. not on main index
+// Move CoHS Bldg. Label
+// Label: Nursing & Health Sciences Hall
+// Add wall
+// upload new label png to TIFs folder. on drive.
+// Please remove
+// Adjust bike racks
+// Remove solar panels
+// Add stairs
+// Adjust 2nd level of structure
+// remove circle.
+// Add bikeway
+// Remove section of pathway
+// Change to roadway
+// Remove  trees
+// Move level 3 ramp
+// Add stairs
+// Add pathway
+// test
+// test popup
+// Aldrich hall test
+// fix boundary
+// update path
+// Complimentary Art Books
+// Show missing building
+// Add roadway entrance
+// Extend sidewalk
+// Fix building footprints
+// Adjust roadways to match image
+// Show sidewalk
+// Extend pathways
+// Adjust pathway
+// Remove racks
+// Recolor to white pathway & add trees
+// Adjust to align with existing sidewalk
+// Straighten green boundary
+// all gender restroom test
+// html feed test
+// Edit - Aldrich Hall Ramp
+// "Add ""GINSBURG CT"" Street Label"
+// Add green gap
+// New Building: Mesa Court Expansion
+// Fix ramp
+// Add Missing Ramp (Aldrich Hall)
+// Add flagpoles
+
+// the following are stems that never appear in UCI locations.
+// as of October 2025, a clear strategy for eliminating these location entries has not been identified.
+const INVALID_STEMS = [
+  // editor artifacts / workflows
+  "label",
+  "visual",
+  "landscape",
+  "edit",
+  "update",
+  "approved",
+  "approval",
+  "unrequested",
+  "upload",
+  "data",
+  "category",
+  "datafeed",
+  "feed",
+  "test",
+  "popup",
+  "cms",
+
+  // geometry/editor objects
+  "polygon",
+  "polyline",
+  "rectangle",
+  "circle",
+  "polymarker",
+  "marker",
+
+  // work verbs
+  "add",
+  "remove",
+  "delete",
+  "move",
+  "fix",
+  "adjust",
+  "change",
+  "extend",
+  "straighten",
+  "recolor",
+  "show",
+] as const;
+
+// creating a regex for each stem (optional ":" and case insensitivity)
+const INVALID_PATTERNS = INVALID_STEMS.map((s) => new RegExp(String.raw`\b${s}(?:\:)?\b`, "i"));
+
+//normalizes spacing
+const normalize = (s: string | null | undefined) => (s ?? "").trim();
+
+export function isInvalidEntry(name: string | null | undefined): boolean {
+  const n = normalize(name);
+  if (!n) return true;
+  return INVALID_PATTERNS.some((rx) => rx.test(n));
+}
 
 // this key is provided to browsers by CONCEPT_3D and is meant to be public.
 const CONCEPT_3D_API_KEY = "0001085cc708b9cef47080f064612ca5" as const;
@@ -129,7 +231,7 @@ async function fetchLocations(): Promise<Map<string, BuildingLocation>> {
   const locations = locationListSchema.parse(await res.json());
 
   for (const location of locations) {
-    if (seenIds.has(location.id)) continue;
+    if (isInvalidEntry(location.name) || seenIds.has(location.id)) continue;
 
     const { imageURLs, polygon } = await fetchDetail(location.id);
 
