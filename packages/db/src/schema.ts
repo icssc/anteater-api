@@ -4,6 +4,7 @@ import {
   boolean,
   date,
   decimal,
+  doublePrecision,
   index,
   integer,
   json,
@@ -719,6 +720,16 @@ export const studyRoomSlot = pgTable(
     uniqueIndex().on(table.studyRoomId, table.start, table.end),
   ],
 );
+
+export const mapLocation = pgTable("map_location", {
+  id: varchar("id").primaryKey(),
+  catId: varchar("cat_id").notNull(),
+  name: varchar("name").notNull(),
+  latitude: doublePrecision("latitude").notNull(),
+  longitude: doublePrecision("longitude").notNull(),
+  polygon: jsonb("polygon").$type<number[][] | null>(),
+  imageURLs: text("image_urls").array().notNull(),
+});
 
 export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),
