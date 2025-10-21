@@ -290,17 +290,6 @@ export const ugradRequirementsResponseSchema = z.object({
     .openapi({ description: "The requirements in this requirements block" }),
 });
 
-// export const sampleProgramTermSchema = z.object({
-//   term: z.string().openapi({
-//     description: "Academic term (e.g., Fall, Winter, Spring)",
-//     example: "Fall",
-//   }),
-//   courses: z.array(z.string()).openapi({
-//     description: "Courses recommended for this academic term",
-//     example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-//   }),
-// });
-
 export const sampleProgramsYearSchema = z.object({
   year: z.string().openapi({
     description: "Academic level or year standing",

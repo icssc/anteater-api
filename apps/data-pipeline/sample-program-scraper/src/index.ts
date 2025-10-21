@@ -235,45 +235,36 @@ async function scrapeSamplePrograms(programPath: string) {
   }
 
   const sampleProgramContainer = $("#sampleprogramtextcontainer");
-
   if (!sampleProgramContainer.length) return null;
 
-  const sampleYears: SampleYear[] = [];
   const notes: string[] = [];
 
-  const parseTable = (table: Cheerio<AnyNode>, year: string) => {
-    const curriculum: string[][] = [];
+  // Find all sample program tables
+  const allTables = sampleProgramContainer.find("table.sc_plangrid");
+  const tableCount = allTables.length;
 
-    table.find("tr").each((_j, tr_el) => {
-      const $tr = $(tr_el);
+  logger.info(`Found ${tableCount} sample program table(s) for ${programName}`);
+  if (tableCount === 0) return null;
 
-      if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) return;
-      if ($tr.hasClass("plangridterm")) return;
+  // HELPER: Parse a single table and return its data
 
-      const rowData: string[] = [];
-      // Collapse repeated whitespace in each cell down to single spaces before storing.
-      $tr.find("th, td").each((_k, cell_el) => {
-        // Remove superscript tags before getting text
-        $(cell_el).find("sup").remove();
-        rowData.push($(cell_el).text().replace(/\s+/g, " ").trim());
-      });
-
-      if (rowData.some((cell) => cell.length > 0)) {
-        curriculum.push(rowData);
-      }
-    });
-
-    sampleYears.push({ year, curriculum });
-  };
-
-  if (sampleProgramContainer.children("table.sc_plangrid").length > 0) {
+  const parseTable = ($table: Cheerio<AnyNode>): SampleYear[] => {
+    const sampleYears: SampleYear[] = [];
     let currentYear: string | null = null;
     let currentCurriculum: string[][] = [];
 
-    sampleProgramContainer.find("table.sc_plangrid tr").each((_j, tr_el) => {
+    // Strategy 1: Look for year headers INSIDE the table (most common)
+    let foundYearHeader = false;
+    $table.find("tr").each((_j, tr_el) => {
       const $tr = $(tr_el);
 
+      // Skip empty header rows and term rows
+      if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) return;
+      if ($tr.hasClass("plangridterm")) return;
+
+      // Check if this is a year header row
       if ($tr.hasClass("plangridyear")) {
+        foundYearHeader = true;
         const yearText = $tr.find("th").text().trim();
         if (yearText) {
           if (currentYear !== null) {
@@ -282,11 +273,10 @@ async function scrapeSamplePrograms(programPath: string) {
           currentYear = yearText;
           currentCurriculum = [];
         }
-      } else if (!$tr.hasClass("plangridterm")) {
+      } else {
+        // Parse course row
         const rowData: string[] = [];
-        // Same whitespace normalization for rows under simplified markup structures.
         $tr.find("td").each((_k, td_el) => {
-          // Remove superscript tags before getting text
           $(td_el).find("sup").remove();
           rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
         });
@@ -297,21 +287,122 @@ async function scrapeSamplePrograms(programPath: string) {
       }
     });
 
+    // Save final year from inside-table parsing
     if (currentYear !== null) {
       sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
     }
-  } else {
-    sampleProgramContainer.find("h4").each((_i, h4_el) => {
-      const yearTitle = $(h4_el).text().trim();
-      const contentTable = $(h4_el).next("div").find("table.sc_plangrid");
 
-      if (yearTitle && contentTable.length) {
-        logger.debug(`Found H4 "${yearTitle}" with nested table for ${programPath}.`);
-        parseTable(contentTable, yearTitle);
+    // Strategy 2: Year might be OUTSIDE table (Dance programs, etc)
+    if (!foundYearHeader && currentCurriculum.length > 0) {
+      // Look for heading before the table
+      const prevHeading = $table.prevAll("h4, h5, h6, p").first();
+      let yearText = "Year 1"; // Default fallback
+
+      if (prevHeading.length) {
+        const headingText = prevHeading.text().trim();
+        // Extract year from headings like "Sample Program for Freshmen"
+        if (headingText.match(/freshmen|freshman/i)) {
+          yearText = "Freshman";
+        } else if (headingText.match(/sophomore/i)) {
+          yearText = "Sophomore";
+        } else if (headingText.match(/junior/i)) {
+          yearText = "Junior";
+        } else if (headingText.match(/senior/i)) {
+          yearText = "Senior";
+        } else {
+          yearText = headingText;
+        }
       }
-    });
+
+      sampleYears.push({ year: yearText, curriculum: currentCurriculum });
+      logger.info(`Found year outside table: "${yearText}"`);
+    }
+
+    return sampleYears;
+  };
+
+  // CASE 1: Single Table - No Label Needed
+
+  const variations: Array<{
+    label: string;
+    sampleProgram: SampleProgramEntry[];
+  }> = [];
+
+  if (tableCount === 1) {
+    logger.info("Parsing single table (no variations)");
+
+    const sampleYears = parseTable(allTables.first());
+
+    if (sampleYears.length > 0) {
+      const transformedResult = transformToTermStructure(sampleYears);
+      variations.push({
+        label: "", // No label for single table
+        sampleProgram: transformedResult.sampleProgram,
+      });
+    } else {
+      logger.warn("Single table has no data, skipping program");
+      return null;
+    }
   }
 
+  // CASE 2: Multiple Tables - Labels Required
+  else {
+    logger.warn(`${programName} has ${tableCount} variations!`);
+
+    allTables.each((index, tableEl) => {
+      const $table = $(tableEl);
+      let label = "";
+
+      // Get label from element before table
+      const prevP = $table.prev("p");
+      if (prevP.length && prevP.text().trim()) {
+        label = prevP.text().trim();
+      }
+
+      if (!label) {
+        const prevH5 = $table.prevAll("h5").first();
+        if (prevH5.length && prevH5.text().trim()) {
+          label = prevH5.text().trim();
+        }
+      }
+
+      if (!label) {
+        const prevHeading = $table.prevAll("h4, h5, h6").first();
+        if (prevHeading.length && prevHeading.text().trim()) {
+          label = prevHeading.text().trim();
+        }
+      }
+
+      // Clean up label
+      label = label
+        .replace(/^Sample Program\s*[—–-]\s*/i, "")
+        .replace(/^&nbsp;\s*/g, "")
+        .trim();
+
+      logger.info(`Parsing variation ${index + 1}: "${label}"`);
+
+      const sampleYears = parseTable($table);
+
+      if (sampleYears.length > 0) {
+        const transformedResult = transformToTermStructure(sampleYears);
+        variations.push({
+          label,
+          sampleProgram: transformedResult.sampleProgram,
+        });
+      } else {
+        logger.warn(`Variation "${label}" has no data, skipping`);
+      }
+    });
+
+    logger.info("Summary: [${variations.map((v) => v.label).join(", ")}]");
+  }
+
+  if (variations.length === 0) {
+    logger.warn("No valid variations found for ${programName}");
+    return null;
+  }
+
+  // Parse Notes (applies to all variations)
   sampleProgramContainer.find("h6:contains('NOTES')").each((_i, h6_el) => {
     $(h6_el)
       .nextUntil("h1, h2, h3, h4, h5, h6, table")
@@ -329,9 +420,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
   sampleProgramContainer.find("p").each((_i, p_el) => {
     const pText = $(p_el).text().trim();
-    // Case-insensitive match for paragraphs that start with the "NOTES:" label.
     if (pText.match(/^NOTES\s*:\s*/i)) {
-      // Strip the leading "NOTES:" label so only the actual note text remains.
       const remainingText = pText.replace(/^NOTES\s*:\s*/i, "").trim();
       if (remainingText.length > 0) {
         notes.push(remainingText);
@@ -340,7 +429,6 @@ async function scrapeSamplePrograms(programPath: string) {
       while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
         if (currentElement.is("p")) {
           const paragraphContent = currentElement.text().trim();
-          // Skip any follow-up paragraphs that are themselves just "NOTES:" headings.
           if (paragraphContent.length > 0 && !paragraphContent.match(/^NOTES\s*:\s*/i)) {
             notes.push(paragraphContent);
           }
@@ -369,7 +457,6 @@ async function scrapeSamplePrograms(programPath: string) {
   sampleProgramContainer.find("p").each((_i, p_el) => {
     const pText = $(p_el).text().trim();
     if (
-      // Capture bullet-style notes that start with '*' or numbered superscripts while excluding "NOTES:" headings.
       (pText.startsWith("*") || pText.match(/^<sup>\s*\d+\s*<\/sup>/i)) &&
       !pText.match(/^NOTES\s*:\s*/i)
     ) {
@@ -396,21 +483,13 @@ async function scrapeSamplePrograms(programPath: string) {
     });
   }
 
-  if (sampleYears.length === 0) return null;
-
-  const transformedTermsResult = transformToTermStructure(sampleYears);
-
-  const sampleProgram = sampleYears.map((_, i) => ({
-    ...transformedTermsResult.sampleProgram[i],
-  }));
-
+  const majorId = generateProgramId(url);
   const res = {
-    id: generateProgramId(url),
+    majorId,
     programName,
-    sampleProgram,
+    variations,
     programNotes: notes,
   };
-
   logger.info(`Successfully scraped ${programName}`);
   return res;
 }
@@ -434,7 +513,7 @@ async function main() {
     }
   }
   logger.info(`Successfully scraped ${scrapedPrograms.length}/${programs.length} programs`);
-  await storeSampleProgramsInDB(db, scrapedPrograms);
+  //await storeSampleProgramsInDB(db, scrapedPrograms);
   logger.info("All done!");
   exit(0);
 }
