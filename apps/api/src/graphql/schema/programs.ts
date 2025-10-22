@@ -107,11 +107,18 @@ type YearPlan @cacheControl(maxAge: 86400){
     spring: [String!]!
 }
 
+type SampleProgramVariation @cacheControl(maxAge: 86400) {
+    id: String!
+    label: String
+    sampleProgram: [YearPlan!]!
+    notes: [String!]!
+}
+
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
     id: String!
     programName: String!
-    sampleProgram: [YearPlan!]!
     notes: [String!]!
+    variations: [SampleProgramVariation!]!
 }
 
 input ProgramRequirementsQuery {

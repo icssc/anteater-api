@@ -1,5 +1,5 @@
 {
-  "id": "2ff75291-ae9d-463a-bb5f-a5668598272c",
+  "id": "ca45ae21-61b2-45bb-82af-70085da07445",
   "prevId": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
   "version": "7",
   "dialect": "postgresql",
@@ -272,6 +272,38 @@
           "type": "date",
           "primaryKey": false,
           "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.catalog_program": {
+      "name": "catalog_program",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "program_name": {
+          "name": "program_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "program_notes": {
+          "name": "program_notes",
+          "type": "varchar[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "ARRAY[]::VARCHAR[]"
         }
       },
       "indexes": {},
@@ -1143,21 +1175,28 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.sample_program": {
-      "name": "sample_program",
+    "public.sample_program_variation": {
+      "name": "sample_program_variation",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "program_name": {
-          "name": "program_name",
+        "program_id": {
+          "name": "program_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "sample_program": {
           "name": "sample_program",
@@ -1165,15 +1204,26 @@
           "primaryKey": false,
           "notNull": true
         },
-        "program_notes": {
-          "name": "program_notes",
+        "variation_notes": {
+          "name": "variation_notes",
           "type": "varchar[]",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "ARRAY[]::VARCHAR[]"
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "sample_program_variation_program_id_catalog_program_id_fk": {
+          "name": "sample_program_variation_program_id_catalog_program_id_fk",
+          "tableFrom": "sample_program_variation",
+          "tableTo": "catalog_program",
+          "columnsFrom": ["program_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

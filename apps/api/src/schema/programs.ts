@@ -309,6 +309,33 @@ export const sampleProgramsYearSchema = z.object({
   }),
 });
 
+export const sampleProgramVariationSchema = z.object({
+  id: z.string().openapi({
+    description: "Unique ID for this variation",
+    example: "550e8400-e29b-41d4-a716-446655440000",
+  }),
+  label: z.string().optional().openapi({
+    description:
+      "Label describing this variation (empty string for programs with single variation)",
+    example: "General Track",
+  }),
+  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+    description: "Structured list of courses for this variation, organized by year and term",
+    example: [
+      {
+        year: "Freshman",
+        fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+        winter: ["I&C SCI 32", "MATH 2B", "WRITING 50", "General Education III"],
+        spring: ["I&C SCI 33", "IN4MATX 43", "I&C SCI 6B", "WRITING 60"],
+      },
+    ],
+  }),
+  notes: z.array(z.string()).openapi({
+    description: "Variation-specific notes (if any)",
+    example: [],
+  }),
+});
+
 export const sampleProgramsResponseSchemaObject = z.object({
   id: z.string().openapi({
     description: "Stable ID for this sample program record",
@@ -318,33 +345,29 @@ export const sampleProgramsResponseSchemaObject = z.object({
     description: "Program name of this sample program",
     example: "Computer Science, B.S.",
   }),
-  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
-    description: "Structured list of courses for this program, organized by year and term",
-    example: [
-      {
-        year: "Freshman",
-        fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-        winter: ["I&C SCI 32", "MATH 2B", "WRITING 50", "General Education III"],
-        spring: ["I&C SCI 33", "IN4MATX 43", "I&C SCI 6B", "WRITING 60"],
-      },
-      {
-        year: "Sophomore",
-        fall: ["I&C SCI 45C", "I&C SCI 51", "I&C SCI 6D"],
-        winter: ["I&C SCI 46", "I&C SCI 6N", "General Education III"],
-        spring: [
-          "Computer Science Spec./Elective",
-          "Stats 67",
-          "General Education III",
-          "Science Elective",
-        ],
-      },
-    ],
-  }),
   notes: z.array(z.string()).openapi({
-    description: "A list of important notes or footnotes related to this sample program.",
+    description: "Program-level notes that apply to all variations",
     example: [
       "Students are advised that this sample program lists the minimum requirements...",
       "The lower-division writing requirement must be completed by the end of the seventh quarter at UCI.",
+    ],
+  }),
+  variations: z.array(sampleProgramVariationSchema).openapi({
+    description: "Array of program variations. Programs with single variation have empty label.",
+    example: [
+      {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        label: "",
+        sampleProgram: [
+          {
+            year: "Freshman",
+            fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+            winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+            spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+          },
+        ],
+        notes: [],
+      },
     ],
   }),
 });

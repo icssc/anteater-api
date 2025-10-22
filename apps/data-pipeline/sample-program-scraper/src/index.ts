@@ -3,7 +3,11 @@ import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { inArray } from "@packages/db/drizzle";
-import { type SampleProgramEntry, sampleProgram } from "@packages/db/schema";
+import {
+  type SampleProgramEntry,
+  catalogProgram,
+  sampleProgramVariation,
+} from "@packages/db/schema";
 import { sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
 import fetch from "cross-fetch";
@@ -153,9 +157,9 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
   scrapedPrograms: {
-    id: string;
+    majorId: string;
     programName: string;
-    sampleProgram: SampleProgramEntry[];
+    variations: { label?: string; sampleProgram: SampleProgramEntry[] }[];
     programNotes: string[];
   }[],
 ) {
@@ -165,29 +169,68 @@ async function storeSampleProgramsInDB(
   }
 
   logger.info("Fetching sample programs from database...");
-  const dbPrograms = await db
+
+  // Prepare parent table rows (catalog_program)
+  const catalogRows = scrapedPrograms.map((program) => ({
+    id: program.majorId,
+    programName: program.programName,
+    programNotes: program.programNotes,
+  }));
+
+  // Prepare child table rows (sample_program_variation)
+  const variationRows = scrapedPrograms.flatMap((program) =>
+    program.variations.map((variation) => ({
+      programId: program.majorId,
+      label: variation.label || null,
+      sampleProgram: variation.sampleProgram,
+      variationNotes: [],
+    })),
+  );
+
+  // Fetch existing data
+  const existingCatalogPrograms = await db
     .select()
-    .from(sampleProgram)
+    .from(catalogProgram)
     .where(
       inArray(
-        sampleProgram.id,
-        scrapedPrograms.map((program) => program.id),
+        catalogProgram.id,
+        catalogRows.map((r) => r.id),
       ),
     );
 
-  //   const sortedDbPrograms = sortKeys(dbPrograms, { deep: true });
-  //   const sortedScrapedPrograms = sortKeys(scrapedPrograms, { deep: true });
-  // Sort arrays by ID first, then sort object keys
-  const sortedDbPrograms = sortKeys(
-    dbPrograms.sort((a, b) => a.id.localeCompare(b.id)),
-    { deep: true },
-  );
-  const sortedScrapedPrograms = sortKeys(
-    scrapedPrograms.sort((a, b) => a.id.localeCompare(b.id)),
+  const existingVariations = await db
+    .select()
+    .from(sampleProgramVariation)
+    .where(
+      inArray(
+        sampleProgramVariation.programId,
+        catalogRows.map((r) => r.id),
+      ),
+    );
+
+  // Combine into unified structure for comparison
+  const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
+  const scrapedData = { catalogPrograms: catalogRows, variations: variationRows };
+
+  // Sort both structures
+  const sortedDbData = sortKeys(
+    {
+      catalogPrograms: dbData.catalogPrograms.sort((a, b) => a.id.localeCompare(b.id)),
+      variations: dbData.variations.sort((a, b) => a.programId.localeCompare(b.programId)),
+    },
     { deep: true },
   );
 
-  const programDiff = diffString(sortedDbPrograms, sortedScrapedPrograms);
+  const sortedScrapedData = sortKeys(
+    {
+      catalogPrograms: scrapedData.catalogPrograms.sort((a, b) => a.id.localeCompare(b.id)),
+      variations: scrapedData.variations.sort((a, b) => a.programId.localeCompare(b.programId)),
+    },
+    { deep: true },
+  );
+
+  const programDiff = diffString(sortedDbData, sortedScrapedData);
+
   if (!programDiff.length) {
     logger.info("No difference found between database and scraped sample program data.");
     return;
@@ -195,30 +238,29 @@ async function storeSampleProgramsInDB(
 
   console.log("Difference between database and scraped sample program data:");
   console.log(programDiff);
+
   if (!readlineSync.keyInYNStrict("Is this ok")) {
     logger.error("Cancelling sample program update.");
     return;
   }
 
   await db.transaction(async (tx) => {
-    await tx.delete(sampleProgram).where(
+    // Delete old data (CASCADE will handle variations automatically)
+    await tx.delete(catalogProgram).where(
       inArray(
-        sampleProgram.id,
-        scrapedPrograms.map((program) => program.id),
+        catalogProgram.id,
+        catalogRows.map((r) => r.id),
       ),
     );
 
-    await tx.insert(sampleProgram).values(
-      scrapedPrograms.map((program) => ({
-        id: program.id,
-        programName: program.programName,
-        sampleProgram: program.sampleProgram,
-        programNotes: program.programNotes,
-      })),
-    );
+    // Insert parent rows
+    await tx.insert(catalogProgram).values(catalogRows);
+
+    // Insert child rows (variations)
+    await tx.insert(sampleProgramVariation).values(variationRows);
   });
 
-  logger.info(`Successfully stored ${scrapedPrograms.length} sample programs`);
+  logger.info(`Successfully stored ${catalogRows.length} sample programs`);
 }
 
 async function scrapeSamplePrograms(programPath: string) {
@@ -324,7 +366,7 @@ async function scrapeSamplePrograms(programPath: string) {
   // CASE 1: Single Table - No Label Needed
 
   const variations: Array<{
-    label: string;
+    label?: string;
     sampleProgram: SampleProgramEntry[];
   }> = [];
 
@@ -336,7 +378,6 @@ async function scrapeSamplePrograms(programPath: string) {
     if (sampleYears.length > 0) {
       const transformedResult = transformToTermStructure(sampleYears);
       variations.push({
-        label: "", // No label for single table
         sampleProgram: transformedResult.sampleProgram,
       });
     } else {
@@ -386,15 +427,13 @@ async function scrapeSamplePrograms(programPath: string) {
       if (sampleYears.length > 0) {
         const transformedResult = transformToTermStructure(sampleYears);
         variations.push({
-          label,
+          label: label || undefined,
           sampleProgram: transformedResult.sampleProgram,
         });
       } else {
         logger.warn(`Variation "${label}" has no data, skipping`);
       }
     });
-
-    logger.info("Summary: [${variations.map((v) => v.label).join(", ")}]");
   }
 
   if (variations.length === 0) {
@@ -513,7 +552,7 @@ async function main() {
     }
   }
   logger.info(`Successfully scraped ${scrapedPrograms.length}/${programs.length} programs`);
-  //await storeSampleProgramsInDB(db, scrapedPrograms);
+  await storeSampleProgramsInDB(db, scrapedPrograms);
   logger.info("All done!");
   exit(0);
 }

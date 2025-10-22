@@ -152,12 +152,13 @@ export type SampleProgramEntry = {
   spring: string[];
 };
 
-export type SampleProgram = {
-  id: string;
-  programName: string;
-  sampleProgram: SampleProgramEntry[];
-  notes: string[];
-};
+// PARENT TABLE: catalog_program
+// Stores basic program info (one row per program)
+export const catalogProgram = pgTable("catalog_program", {
+  id: varchar("id").primaryKey(),
+  programName: varchar("program_name").notNull(),
+  programNotes: varchar("program_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
+});
 
 // Misc. enums
 
@@ -771,11 +772,16 @@ export const apExamReward = pgTable("ap_exam_reward", {
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
 
-export const sampleProgram = pgTable("sample_program", {
-  id: varchar("id").primaryKey().notNull(),
-  programName: varchar("program_name").notNull(),
+// CHILD TABLE: sample_program_variation
+// Stores each variation's course data (multiple rows per program)
+export const sampleProgramVariation = pgTable("sample_program_variation", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  programId: varchar("program_id")
+    .notNull()
+    .references(() => catalogProgram.id, { onDelete: "cascade" }),
+  label: varchar("label"),
   sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
-  programNotes: varchar("program_notes").array().notNull(),
+  variationNotes: varchar("variation_notes").array().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
 // Materialized views
