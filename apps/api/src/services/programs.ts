@@ -124,11 +124,7 @@ export class ProgramsService {
       .where(eq(table.id, query.programId))
       .limit(1);
 
-    if (!got) {
-      return null;
-    }
-
-    return got;
+    return orNull(got);
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
