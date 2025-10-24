@@ -117,7 +117,6 @@ type SampleProgramVariation @cacheControl(maxAge: 86400) {
 type SampleProgramsRequirements @cacheControl(maxAge: 86400) {
     id: String!
     programName: String!
-    notes: [String!]!
     variations: [SampleProgramVariation!]!
 }
 

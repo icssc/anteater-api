@@ -1,7 +1,6 @@
-CREATE TABLE IF NOT EXISTS "catalog_program" (
+CREATE TABLE IF NOT EXISTS "catalogue_program" (
 	"id" varchar PRIMARY KEY NOT NULL,
-	"program_name" varchar NOT NULL,
-	"program_notes" varchar[] DEFAULT ARRAY[]::VARCHAR[] NOT NULL
+	"program_name" varchar NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "sample_program_variation" (
@@ -13,7 +12,7 @@ CREATE TABLE IF NOT EXISTS "sample_program_variation" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "sample_program_variation" ADD CONSTRAINT "sample_program_variation_program_id_catalog_program_id_fk" FOREIGN KEY ("program_id") REFERENCES "public"."catalog_program"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "sample_program_variation" ADD CONSTRAINT "sample_program_variation_program_id_catalogue_program_id_fk" FOREIGN KEY ("program_id") REFERENCES "public"."catalogue_program"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

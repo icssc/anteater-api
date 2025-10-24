@@ -153,7 +153,6 @@ export class ProgramsService {
       .select({
         id: catalogProgram.id,
         programName: catalogProgram.programName,
-        programNotes: catalogProgram.programNotes,
       })
       .from(catalogProgram)
       .where(query.id ? eq(catalogProgram.id, query.id) : undefined);
@@ -177,7 +176,6 @@ export class ProgramsService {
     return catalogPrograms.map((program) => ({
       id: program.id,
       programName: program.programName,
-      notes: program.programNotes,
       variations: variations
         .filter((v) => v.programId === program.id)
         .map((v) => ({

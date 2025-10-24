@@ -159,8 +159,7 @@ async function storeSampleProgramsInDB(
   scrapedPrograms: {
     majorId: string;
     programName: string;
-    variations: { label?: string; sampleProgram: SampleProgramEntry[] }[];
-    programNotes: string[];
+    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
   }[],
 ) {
   if (!scrapedPrograms.length) {
@@ -174,7 +173,6 @@ async function storeSampleProgramsInDB(
   const catalogRows = scrapedPrograms.map((program) => ({
     id: program.majorId,
     programName: program.programName,
-    programNotes: program.programNotes,
   }));
 
   // Prepare child table rows (sample_program_variation)
@@ -183,7 +181,7 @@ async function storeSampleProgramsInDB(
       programId: program.majorId,
       label: variation.label || null,
       sampleProgram: variation.sampleProgram,
-      variationNotes: [],
+      variationNotes: variation.variationNotes,
     })),
   );
 
@@ -279,8 +277,6 @@ async function scrapeSamplePrograms(programPath: string) {
   const sampleProgramContainer = $("#sampleprogramtextcontainer");
   if (!sampleProgramContainer.length) return null;
 
-  const notes: string[] = [];
-
   // Find all sample program tables
   const allTables = sampleProgramContainer.find("table.sc_plangrid");
   const tableCount = allTables.length;
@@ -338,7 +334,7 @@ async function scrapeSamplePrograms(programPath: string) {
     if (!foundYearHeader && currentCurriculum.length > 0) {
       // Look for heading before the table
       const prevHeading = $table.prevAll("h4, h5, h6, p").first();
-      let yearText = "Year 1"; // Default fallback
+      let yearText = "Freshman"; // Default fallback
 
       if (prevHeading.length) {
         const headingText = prevHeading.text().trim();
@@ -368,17 +364,95 @@ async function scrapeSamplePrograms(programPath: string) {
   const variations: Array<{
     label?: string;
     sampleProgram: SampleProgramEntry[];
+    variationNotes: string[];
   }> = [];
 
   if (tableCount === 1) {
     logger.info("Parsing single table (no variations)");
 
-    const sampleYears = parseTable(allTables.first());
+    const $table = allTables.first();
+    const sampleYears = parseTable($table);
 
     if (sampleYears.length > 0) {
       const transformedResult = transformToTermStructure(sampleYears);
+      // For single-table programs, use comprehensive note parsing
+      const variationNotes: string[] = [];
+
+      // Strategy 1: Look for "NOTES:" heading with paragraphs
+      sampleProgramContainer.find("p").each((_i, p_el) => {
+        const pText = $(p_el).text().trim();
+        if (pText.match(/^NOTES\s*:\s*/i)) {
+          const remainingText = pText.replace(/^NOTES\s*:\s*/i, "").trim();
+          if (remainingText.length > 0) {
+            variationNotes.push(remainingText);
+          }
+          let currentElement = $(p_el).next();
+          while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
+            if (currentElement.is("p")) {
+              const paragraphContent = currentElement.text().trim();
+              if (paragraphContent.length > 0 && !paragraphContent.match(/^NOTES\s*:\s*/i)) {
+                variationNotes.push(paragraphContent);
+              }
+            } else if (currentElement.is("ol")) {
+              currentElement.find("li").each((_k, li_el) => {
+                variationNotes.push($(li_el).text().trim());
+              });
+              break;
+            }
+            currentElement = currentElement.next();
+          }
+        }
+      });
+
+      // Strategy 2: Look for <dl class="sc_footnotes">
+      if (variationNotes.length === 0) {
+        sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
+          $(dl_el)
+            .find("dd")
+            .each((_j, dd_el) => {
+              const noteText = $(dd_el).find("p").text().trim() || $(dd_el).text().trim();
+              if (noteText.length > 0) {
+                variationNotes.push(noteText);
+              }
+            });
+        });
+      }
+
+      // Strategy 3: Look for paragraphs starting with asterisks or numbers
+      if (variationNotes.length === 0) {
+        sampleProgramContainer.find("p").each((_i, p_el) => {
+          const pText = $(p_el).text().trim();
+          if ((pText.startsWith("*") || pText.match(/^\d+\./)) && !pText.match(/^NOTES\s*:\s*/i)) {
+            if (!$(p_el).closest("dl.sc_footnotes").length) {
+              variationNotes.push(pText);
+            }
+          }
+        });
+      }
+
+      // Strategy 4: Look for <ol> after table
+      if (variationNotes.length === 0) {
+        sampleProgramContainer.find("ol").each((_i, ol_el) => {
+          const prevElement = $(ol_el).prev();
+          if (
+            prevElement.is("table") ||
+            prevElement.is("h6") ||
+            (prevElement.is("p") && prevElement.text().toLowerCase().includes("notes"))
+          ) {
+            $(ol_el)
+              .find("li")
+              .each((_j, li_el) => {
+                variationNotes.push($(li_el).text().trim());
+              });
+          }
+        });
+      }
+
+      logger.info(`Found ${variationNotes.length} notes for single variation`);
+
       variations.push({
         sampleProgram: transformedResult.sampleProgram,
+        variationNotes,
       });
     } else {
       logger.warn("Single table has no data, skipping program");
@@ -426,9 +500,31 @@ async function scrapeSamplePrograms(programPath: string) {
 
       if (sampleYears.length > 0) {
         const transformedResult = transformToTermStructure(sampleYears);
+
+        // Parse notes immediately after this table
+        const variationNotes: string[] = [];
+
+        // Find the next <dl class="sc_footnotes"> after this table
+        let nextElement = $table.next();
+        while (nextElement.length && !nextElement.is("table, h1, h2, h3, h4, h5, h6")) {
+          if (nextElement.is("dl.sc_footnotes")) {
+            nextElement.find("dd").each((_i, dd_el) => {
+              const noteText = $(dd_el).find("p").text().trim() || $(dd_el).text().trim();
+              if (noteText.length > 0) {
+                variationNotes.push(noteText);
+              }
+            });
+            break; // Stop after finding footnotes
+          }
+          nextElement = nextElement.next();
+        }
+
+        logger.info(`Found ${variationNotes.length} notes for variation "${label}"`);
+
         variations.push({
           label: label || undefined,
           sampleProgram: transformedResult.sampleProgram,
+          variationNotes,
         });
       } else {
         logger.warn(`Variation "${label}" has no data, skipping`);
@@ -441,93 +537,11 @@ async function scrapeSamplePrograms(programPath: string) {
     return null;
   }
 
-  // Parse Notes (applies to all variations)
-  sampleProgramContainer.find("h6:contains('NOTES')").each((_i, h6_el) => {
-    $(h6_el)
-      .nextUntil("h1, h2, h3, h4, h5, h6, table")
-      .filter("p")
-      .each((_j, p_el) => {
-        notes.push($(p_el).text().trim());
-      });
-    $(h6_el)
-      .next("ol")
-      .find("li")
-      .each((_j, li_el) => {
-        notes.push($(li_el).text().trim());
-      });
-  });
-
-  sampleProgramContainer.find("p").each((_i, p_el) => {
-    const pText = $(p_el).text().trim();
-    if (pText.match(/^NOTES\s*:\s*/i)) {
-      const remainingText = pText.replace(/^NOTES\s*:\s*/i, "").trim();
-      if (remainingText.length > 0) {
-        notes.push(remainingText);
-      }
-      let currentElement = $(p_el).next();
-      while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
-        if (currentElement.is("p")) {
-          const paragraphContent = currentElement.text().trim();
-          if (paragraphContent.length > 0 && !paragraphContent.match(/^NOTES\s*:\s*/i)) {
-            notes.push(paragraphContent);
-          }
-        } else if (currentElement.is("ol")) {
-          currentElement.find("li").each((_k, li_el) => {
-            notes.push($(li_el).text().trim());
-          });
-          break;
-        }
-        currentElement = currentElement.next();
-      }
-    }
-  });
-
-  sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
-    $(dl_el)
-      .find("dd")
-      .each((_j, dd_el) => {
-        const noteText = $(dd_el).find("p").text().trim();
-        if (noteText.length > 0) {
-          notes.push(noteText);
-        }
-      });
-  });
-
-  sampleProgramContainer.find("p").each((_i, p_el) => {
-    const pText = $(p_el).text().trim();
-    if (
-      (pText.startsWith("*") || pText.match(/^<sup>\s*\d+\s*<\/sup>/i)) &&
-      !pText.match(/^NOTES\s*:\s*/i)
-    ) {
-      if (!$(p_el).closest("dl.sc_footnotes").length) {
-        notes.push(pText);
-      }
-    }
-  });
-
-  if (notes.length === 0) {
-    sampleProgramContainer.find("ol").each((_i, ol_el) => {
-      const prevElement = $(ol_el).prev();
-      if (
-        prevElement.is("table") ||
-        prevElement.is("h6") ||
-        (prevElement.is("p") && prevElement.text().toLowerCase().includes("notes"))
-      ) {
-        $(ol_el)
-          .find("li")
-          .each((_j, li_el) => {
-            notes.push($(li_el).text().trim());
-          });
-      }
-    });
-  }
-
   const majorId = generateProgramId(url);
   const res = {
     majorId,
     programName,
     variations,
-    programNotes: notes,
   };
   logger.info(`Successfully scraped ${programName}`);
   return res;

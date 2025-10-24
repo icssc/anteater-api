@@ -154,10 +154,9 @@ export type SampleProgramEntry = {
 
 // PARENT TABLE: catalog_program
 // Stores basic program info (one row per program)
-export const catalogProgram = pgTable("catalog_program", {
+export const catalogProgram = pgTable("catalogue_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
-  programNotes: varchar("program_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
 // Misc. enums

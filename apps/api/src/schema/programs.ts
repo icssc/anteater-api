@@ -345,13 +345,6 @@ export const sampleProgramsResponseSchemaObject = z.object({
     description: "Program name of this sample program",
     example: "Computer Science, B.S.",
   }),
-  notes: z.array(z.string()).openapi({
-    description: "Program-level notes that apply to all variations",
-    example: [
-      "Students are advised that this sample program lists the minimum requirements...",
-      "The lower-division writing requirement must be completed by the end of the seventh quarter at UCI.",
-    ],
-  }),
   variations: z.array(sampleProgramVariationSchema).openapi({
     description: "Array of program variations. Programs with single variation have empty label.",
     example: [
