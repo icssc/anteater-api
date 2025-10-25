@@ -50,6 +50,13 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const sampleProgramsQuerySchema = z.object({
+  id: z.string().optional().openapi({
+    description: "Program ID of this sample program",
+    example: "computerscience_bs",
+  }),
+});
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -282,3 +289,80 @@ export const ugradRequirementsResponseSchema = z.object({
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),
 });
+
+export const sampleProgramsYearSchema = z.object({
+  year: z.string().openapi({
+    description: "Academic level or year standing",
+    example: "Freshman",
+  }),
+  fall: z.array(z.string()).openapi({
+    description: "Courses recommended for Fall term",
+    example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+  }),
+  winter: z.array(z.string()).openapi({
+    description: "Courses recommended for Winter term",
+    example: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+  }),
+  spring: z.array(z.string()).openapi({
+    description: "Courses recommended for Spring term",
+    example: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+  }),
+});
+
+export const sampleProgramVariationSchema = z.object({
+  id: z.string().openapi({
+    description: "Unique ID for this variation",
+    example: "550e8400-e29b-41d4-a716-446655440000",
+  }),
+  label: z.string().optional().openapi({
+    description:
+      "Label describing this variation (empty string for programs with single variation)",
+    example: "General Track",
+  }),
+  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+    description: "Structured list of courses for this variation, organized by year and term",
+    example: [
+      {
+        year: "Freshman",
+        fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+        winter: ["I&C SCI 32", "MATH 2B", "WRITING 50", "General Education III"],
+        spring: ["I&C SCI 33", "IN4MATX 43", "I&C SCI 6B", "WRITING 60"],
+      },
+    ],
+  }),
+  notes: z.array(z.string()).openapi({
+    description: "Variation-specific notes (if any)",
+    example: [],
+  }),
+});
+
+export const sampleProgramsResponseSchemaObject = z.object({
+  id: z.string().openapi({
+    description: "Stable ID for this sample program record",
+    example: "computerscience_bs",
+  }),
+  programName: z.string().openapi({
+    description: "Program name of this sample program",
+    example: "Computer Science, B.S.",
+  }),
+  variations: z.array(sampleProgramVariationSchema).openapi({
+    description: "Array of program variations. Programs with single variation have empty label.",
+    example: [
+      {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        label: "",
+        sampleProgram: [
+          {
+            year: "Freshman",
+            fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+            winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+            spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+          },
+        ],
+        notes: [],
+      },
+    ],
+  }),
+});
+
+export const sampleProgramsResponseSchema = z.array(sampleProgramsResponseSchemaObject);

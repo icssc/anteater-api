@@ -3,17 +3,20 @@ import type {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  sampleProgramsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
+import { eq, inArray, sql } from "@packages/db/drizzle";
 import {
+  catalogProgram,
   collegeRequirement,
   degree,
   major,
   minor,
+  sampleProgramVariation,
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
@@ -138,5 +141,45 @@ export class ProgramsService {
       .limit(1);
 
     return orNull(got);
+  }
+
+  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
+    // Get catalog programs with their variations
+    const catalogPrograms = await this.db
+      .select({
+        id: catalogProgram.id,
+        programName: catalogProgram.programName,
+      })
+      .from(catalogProgram)
+      .where(query.id ? eq(catalogProgram.id, query.id) : undefined);
+
+    // Get all variations for these programs
+    const programIds = catalogPrograms.map((p) => p.id);
+    const variations = programIds.length
+      ? await this.db
+          .select({
+            programId: sampleProgramVariation.programId,
+            variationId: sampleProgramVariation.id,
+            label: sampleProgramVariation.label,
+            sampleProgram: sampleProgramVariation.sampleProgram,
+            variationNotes: sampleProgramVariation.variationNotes,
+          })
+          .from(sampleProgramVariation)
+          .where(inArray(sampleProgramVariation.programId, programIds))
+      : [];
+
+    // Combine them
+    return catalogPrograms.map((program) => ({
+      id: program.id,
+      programName: program.programName,
+      variations: variations
+        .filter((v) => v.programId === program.id)
+        .map((v) => ({
+          id: v.variationId,
+          ...(v.label && { label: v.label }),
+          sampleProgram: v.sampleProgram,
+          notes: v.variationNotes,
+        })),
+    }));
   }
 }

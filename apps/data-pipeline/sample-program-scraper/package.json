@@ -1,0 +1,26 @@
+{
+  "name": "@apps/sample-program-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scraper for sample program data from UCI catalogue",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
+    "cheerio": "1.0.0",
+    "cross-fetch": "4.0.0",
+    "domhandler": "5.0.3",
+    "json-diff": "1.0.6",
+    "readline-sync": "1.4.10",
+    "sort-keys": "5.1.0",
+    "winston": "3.15.0"
+  },
+  "devDependencies": {
+    "@types/json-diff": "1.0.3",
+    "@types/readline-sync": "1.4.8"
+  }
+}
