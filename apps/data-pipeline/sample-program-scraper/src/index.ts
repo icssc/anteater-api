@@ -334,7 +334,7 @@ async function scrapeSamplePrograms(programPath: string) {
     if (!foundYearHeader && currentCurriculum.length > 0) {
       // Look for heading before the table
       const prevHeading = $table.prevAll("h4, h5, h6, p").first();
-      let yearText = "Freshman"; // Default fallback
+      let yearText = "Freshman"; // Default fallback specifically for dance programs
 
       if (prevHeading.length) {
         const headingText = prevHeading.text().trim();
@@ -468,23 +468,39 @@ async function scrapeSamplePrograms(programPath: string) {
       const $table = $(tableEl);
       let label = "";
 
-      // Get label from element before table
+      // Strategy 1: Look for <p> immediately before table
       const prevP = $table.prev("p");
       if (prevP.length && prevP.text().trim()) {
         label = prevP.text().trim();
       }
 
+      // Strategy 2: Look for nearest heading before table
       if (!label) {
-        const prevH5 = $table.prevAll("h5").first();
-        if (prevH5.length && prevH5.text().trim()) {
-          label = prevH5.text().trim();
+        const prevHeading = $table.prevAll("h3, h4, h5, h6").first();
+        if (prevHeading.length && prevHeading.text().trim()) {
+          label = prevHeading.text().trim();
         }
       }
 
+      // Strategy 3: Look for any text in previous sibling elements
       if (!label) {
-        const prevHeading = $table.prevAll("h4, h5, h6").first();
-        if (prevHeading.length && prevHeading.text().trim()) {
-          label = prevHeading.text().trim();
+        let prevElement = $table.prev();
+        while (prevElement.length && !prevElement.is("table")) {
+          const text = prevElement.text().trim();
+          if (text && text.length > 0) {
+            label = text;
+            break;
+          }
+          prevElement = prevElement.prev();
+        }
+      }
+
+      // Strategy 4: If still no label, check the parent div's previous heading
+      if (!label) {
+        const parentDiv = $table.closest("div");
+        const prevHeadingOutside = parentDiv.prevAll("h3, h4, h5").first();
+        if (prevHeadingOutside.length) {
+          label = prevHeadingOutside.text().trim();
         }
       }
 
