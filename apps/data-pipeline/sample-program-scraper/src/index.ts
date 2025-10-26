@@ -244,7 +244,6 @@ async function storeSampleProgramsInDB(
   }
 
   await db.transaction(async (tx) => {
-    // Delete old data (CASCADE will handle variations automatically)
     await tx.delete(catalogProgram).where(
       inArray(
         catalogProgram.id,
@@ -292,7 +291,7 @@ async function scrapeSamplePrograms(programPath: string) {
     let currentYear: AcademicYearType | null = null;
     let currentCurriculum: string[][] = [];
 
-    // Strategy 1: Look for year headers INSIDE the table (most common)
+    // Look for year headers INSIDE the table (most common)
     let foundYearHeader = false;
     $table.find("tr").each((_j, tr_el) => {
       const $tr = $(tr_el);
@@ -331,7 +330,7 @@ async function scrapeSamplePrograms(programPath: string) {
       sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
     }
 
-    // Strategy 2: Year might be OUTSIDE table (Dance programs, etc)
+    // Year might be OUTSIDE table (Dance programs, etc)
     if (!foundYearHeader && currentCurriculum.length > 0) {
       // Look for heading before the table
       const prevHeading = $table.prevAll("h4, h5, h6, p").first();
@@ -379,7 +378,7 @@ async function scrapeSamplePrograms(programPath: string) {
       // For single-table programs, use comprehensive note parsing
       const variationNotes: string[] = [];
 
-      // Strategy 1: Look for "NOTES:" heading with paragraphs
+      // Look for "NOTES:" heading with paragraphs
       sampleProgramContainer.find("p").each((_i, p_el) => {
         const pText = $(p_el).text().trim();
         if (pText.match(/^NOTES\s*:\s*/i)) {
@@ -405,7 +404,7 @@ async function scrapeSamplePrograms(programPath: string) {
         }
       });
 
-      // Strategy 2: Look for <dl class="sc_footnotes">
+      // Look for <dl class="sc_footnotes">
       if (variationNotes.length === 0) {
         sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
           $(dl_el)
@@ -419,7 +418,7 @@ async function scrapeSamplePrograms(programPath: string) {
         });
       }
 
-      // Strategy 3: Look for paragraphs starting with asterisks or numbers
+      // Look for paragraphs starting with asterisks or numbers
       if (variationNotes.length === 0) {
         sampleProgramContainer.find("p").each((_i, p_el) => {
           const pText = $(p_el).text().trim();
@@ -431,7 +430,7 @@ async function scrapeSamplePrograms(programPath: string) {
         });
       }
 
-      // Strategy 4: Look for <ol> after table
+      // Look for <ol> after table
       if (variationNotes.length === 0) {
         sampleProgramContainer.find("ol").each((_i, ol_el) => {
           const prevElement = $(ol_el).prev();
@@ -469,13 +468,13 @@ async function scrapeSamplePrograms(programPath: string) {
       const $table = $(tableEl);
       let label = "";
 
-      // Strategy 1: Look for <p> immediately before table
+      // Look for <p> immediately before table
       const prevP = $table.prev("p");
       if (prevP.length && prevP.text().trim()) {
         label = prevP.text().trim();
       }
 
-      // Strategy 2: Look for nearest heading before table
+      // Look for nearest heading before table
       if (!label) {
         const prevHeading = $table.prevAll("h3, h4, h5, h6").first();
         if (prevHeading.length && prevHeading.text().trim()) {
@@ -483,7 +482,7 @@ async function scrapeSamplePrograms(programPath: string) {
         }
       }
 
-      // Strategy 3: Look for any text in previous sibling elements
+      // Look for any text in previous sibling elements
       if (!label) {
         let prevElement = $table.prev();
         while (prevElement.length && !prevElement.is("table")) {
@@ -496,7 +495,7 @@ async function scrapeSamplePrograms(programPath: string) {
         }
       }
 
-      // Strategy 4: If still no label, check the parent div's previous heading
+      // If still no label, check the parent div's previous heading
       if (!label) {
         const parentDiv = $table.closest("div");
         const prevHeadingOutside = parentDiv.prevAll("h3, h4, h5").first();
