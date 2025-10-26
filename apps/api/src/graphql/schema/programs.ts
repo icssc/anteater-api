@@ -100,8 +100,15 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
+enum AcademicYear {
+    Freshman
+    Sophomore
+    Junior
+    Senior
+}
+
 type YearPlan @cacheControl(maxAge: 86400){
-    year: String!
+    year: AcademicYear!
     fall: [String!]!
     winter: [String!]!
     spring: [String!]!

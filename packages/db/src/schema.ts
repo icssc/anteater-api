@@ -145,8 +145,13 @@ export type APCoursesGrantedTree =
       OR: (APCoursesGrantedTree | string)[];
     };
 
+// Sample Programs Enum
+export const AcademicYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
+export type AcademicYearType = (typeof AcademicYear)[number];
+
+// Sample Program Types
 export type SampleProgramEntry = {
-  year: string;
+  year: AcademicYearType;
   fall: string[];
   winter: string[];
   spring: string[];
@@ -157,6 +162,18 @@ export type SampleProgramEntry = {
 export const catalogProgram = pgTable("catalogue_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
+});
+
+// CHILD TABLE: sample_program_variation
+// Stores each variation's course data (multiple rows per program)
+export const sampleProgramVariation = pgTable("sample_program_variation", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  programId: varchar("program_id")
+    .notNull()
+    .references(() => catalogProgram.id, { onDelete: "cascade" }),
+  label: varchar("label"),
+  sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
+  variationNotes: varchar("variation_notes").array().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
 // Misc. enums
@@ -769,18 +786,6 @@ export const apExamReward = pgTable("ap_exam_reward", {
   ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
-});
-
-// CHILD TABLE: sample_program_variation
-// Stores each variation's course data (multiple rows per program)
-export const sampleProgramVariation = pgTable("sample_program_variation", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  programId: varchar("program_id")
-    .notNull()
-    .references(() => catalogProgram.id, { onDelete: "cascade" }),
-  label: varchar("label"),
-  sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
-  variationNotes: varchar("variation_notes").array().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
 // Materialized views

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { inArray } from "@packages/db/drizzle";
 import {
+  type AcademicYearType,
   type SampleProgramEntry,
   catalogProgram,
   sampleProgramVariation,
@@ -46,7 +47,7 @@ const HEADERS_INIT = {
 };
 
 type SampleYear = {
-  year: string;
+  year: AcademicYearType;
   curriculum: string[][];
 };
 
@@ -100,7 +101,7 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
   return Array.from(new Set(programPaths));
 }
 
-/**
+/*
  * Extracts a unique ID from the catalogue URL
  * Example: https://catalogue.uci.edu/.../computerscience_bs/ → "computerscience_bs"
  */
@@ -288,7 +289,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
   const parseTable = ($table: Cheerio<AnyNode>): SampleYear[] => {
     const sampleYears: SampleYear[] = [];
-    let currentYear: string | null = null;
+    let currentYear: AcademicYearType | null = null;
     let currentCurriculum: string[][] = [];
 
     // Strategy 1: Look for year headers INSIDE the table (most common)
@@ -308,7 +309,7 @@ async function scrapeSamplePrograms(programPath: string) {
           if (currentYear !== null) {
             sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
           }
-          currentYear = yearText;
+          currentYear = yearText as AcademicYearType;
           currentCurriculum = [];
         }
       } else {
@@ -334,7 +335,7 @@ async function scrapeSamplePrograms(programPath: string) {
     if (!foundYearHeader && currentCurriculum.length > 0) {
       // Look for heading before the table
       const prevHeading = $table.prevAll("h4, h5, h6, p").first();
-      let yearText = "Freshman"; // Default fallback specifically for dance programs
+      let yearText: AcademicYearType = "Freshman"; // Default fallback specifically for dance programs
 
       if (prevHeading.length) {
         const headingText = prevHeading.text().trim();
@@ -348,7 +349,7 @@ async function scrapeSamplePrograms(programPath: string) {
         } else if (headingText.match(/senior/i)) {
           yearText = "Senior";
         } else {
-          yearText = headingText;
+          yearText = headingText as AcademicYearType;
         }
       }
 
