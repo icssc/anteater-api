@@ -290,11 +290,11 @@ export const ugradRequirementsResponseSchema = z.object({
     .openapi({ description: "The requirements in this requirements block" }),
 });
 
-export const academicYearEnum = z.enum(["Freshman", "Sophomore", "Junior", "Senior"]);
+export const standingyearEnum = z.enum(["Freshman", "Sophomore", "Junior", "Senior"]);
 
 export const sampleProgramsYearSchema = z.object({
-  year: academicYearEnum.openapi({
-    description: "Academic level or year standing",
+  year: standingyearEnum.openapi({
+    description: "Class standing or year level",
     example: "Freshman",
   }),
   fall: z.array(z.string()).openapi({

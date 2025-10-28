@@ -146,12 +146,12 @@ export type APCoursesGrantedTree =
     };
 
 // Sample Programs Enum
-export const AcademicYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
-export type AcademicYearType = (typeof AcademicYear)[number];
+export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
+export type StandingYearType = (typeof StandingYear)[number];
 
 // Sample Program Types
 export type SampleProgramEntry = {
-  year: AcademicYearType;
+  year: StandingYearType;
   fall: string[];
   winter: string[];
   spring: string[];

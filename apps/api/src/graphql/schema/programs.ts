@@ -100,7 +100,7 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
-enum AcademicYear {
+enum StandingYear {
     Freshman
     Sophomore
     Junior
@@ -108,7 +108,7 @@ enum AcademicYear {
 }
 
 type YearPlan @cacheControl(maxAge: 86400){
-    year: AcademicYear!
+    year: StandingYear!
     fall: [String!]!
     winter: [String!]!
     spring: [String!]!
@@ -148,7 +148,7 @@ input UgradRequrementsQuery {
 }
 
 input SampleProgramsQuery {
-    id: String!
+    id: String
 }
 
 extend type Query {
@@ -159,6 +159,6 @@ extend type Query {
     minor(query: ProgramRequirementsQuery!): Minor!
     specialization(query: ProgramRequirementsQuery!): Specialization!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!
-    samplePrograms(query: SampleProgramsQuery!): [SampleProgramsRequirements!]!
+    samplePrograms(query: SampleProgramsQuery): [SampleProgramsRequirements!]!
 }
 `;
