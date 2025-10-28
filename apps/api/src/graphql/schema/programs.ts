@@ -115,7 +115,6 @@ type YearPlan @cacheControl(maxAge: 86400){
 }
 
 type SampleProgramVariation @cacheControl(maxAge: 86400) {
-    id: String!
     label: String
     sampleProgram: [YearPlan!]!
     notes: [String!]!

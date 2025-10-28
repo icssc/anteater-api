@@ -175,7 +175,6 @@ export class ProgramsService {
       variations: variations
         .filter((v) => v.programId === program.id)
         .map((v) => ({
-          id: v.variationId,
           ...(v.label && { label: v.label }),
           sampleProgram: v.sampleProgram,
           notes: v.variationNotes,
