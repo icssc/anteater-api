@@ -361,6 +361,9 @@ async function scrapeSamplePrograms(programPath: string) {
       const variationNotes: string[] = [];
 
       // Look for "NOTES:" heading with paragraphs
+      // Notes appear in two formats:
+      // 1. Series of <p> tags after "NOTES:" heading
+      // 2. Single <ol> list with <li> items
       sampleProgramContainer.find("p").each((_i, p_el) => {
         const pText = $(p_el).text().trim();
         if (pText.match(/^NOTES\s*:\s*/i)) {
@@ -378,6 +381,7 @@ async function scrapeSamplePrograms(programPath: string) {
                 variationNotes.push(paragraphContent);
               }
             } else if (currentElement.is("ol")) {
+              // If we find an <ol>, all notes are in the list items no need to continue walking through siblings
               currentElement.find("li").each((_k, li_el) => {
                 variationNotes.push($(li_el).text().trim());
               });
@@ -388,7 +392,7 @@ async function scrapeSamplePrograms(programPath: string) {
         }
       });
 
-      // Look for <dl class="sc_footnotes">
+      // This is a second-priority fallback for programs that use a different HTML structure
       if (variationNotes.length === 0) {
         sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
           $(dl_el)
@@ -402,7 +406,7 @@ async function scrapeSamplePrograms(programPath: string) {
         });
       }
 
-      // Look for paragraphs starting with asterisks or numbers
+      // Look for paragraphs starting with asterisks or numbers format notes as standalone paragraphs without explicit "NOTES:" heading
       if (variationNotes.length === 0) {
         sampleProgramContainer.find("p").each((_i, p_el) => {
           const pText = $(p_el).text().trim();
@@ -410,24 +414,6 @@ async function scrapeSamplePrograms(programPath: string) {
             if (!$(p_el).closest("dl.sc_footnotes").length) {
               variationNotes.push(pText);
             }
-          }
-        });
-      }
-
-      // Look for <ol> after table
-      if (variationNotes.length === 0) {
-        sampleProgramContainer.find("ol").each((_i, ol_el) => {
-          const prevElement = $(ol_el).prev();
-          if (
-            prevElement.is("table") ||
-            prevElement.is("h6") ||
-            (prevElement.is("p") && prevElement.text().toLowerCase().includes("notes"))
-          ) {
-            $(ol_el)
-              .find("li")
-              .each((_j, li_el) => {
-                variationNotes.push($(li_el).text().trim());
-              });
           }
         });
       }
