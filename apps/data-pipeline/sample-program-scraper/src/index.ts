@@ -319,6 +319,26 @@ function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): Sampl
   return sampleYears;
 }
 
+function parseFootnotes($: ReturnType<typeof load>, element: Cheerio<AnyNode>): string[] {
+  const notes: string[] = [];
+
+  // Check if the element itself is a dl.sc_footnotes
+  const dlElements = element.is("dl.sc_footnotes") ? element : element.find("dl.sc_footnotes");
+
+  dlElements.each((_i, dl_el) => {
+    $(dl_el)
+      .find("dd")
+      .each((_j, dd_el) => {
+        const noteText = $(dd_el).find("p").text().trim() || $(dd_el).text().trim();
+        if (noteText.length > 0) {
+          notes.push(noteText);
+        }
+      });
+  });
+
+  return notes;
+}
+
 async function scrapeSamplePrograms(programPath: string) {
   const url = `${CATALOGUE_URL}${programPath}`;
   logger.info(`Scraping ${programPath}...`);
@@ -394,16 +414,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
       // This is a second-priority fallback for programs that use a different HTML structure
       if (variationNotes.length === 0) {
-        sampleProgramContainer.find("dl.sc_footnotes").each((_i, dl_el) => {
-          $(dl_el)
-            .find("dd")
-            .each((_j, dd_el) => {
-              const noteText = $(dd_el).find("p").text().trim() || $(dd_el).text().trim();
-              if (noteText.length > 0) {
-                variationNotes.push(noteText);
-              }
-            });
-        });
+        variationNotes.push(...parseFootnotes($, sampleProgramContainer));
       }
 
       // Look for paragraphs starting with asterisks or numbers format notes as standalone paragraphs without explicit "NOTES:" heading
@@ -494,12 +505,7 @@ async function scrapeSamplePrograms(programPath: string) {
         let nextElement = $table.next();
         while (nextElement.length && !nextElement.is("table, h1, h2, h3, h4, h5, h6")) {
           if (nextElement.is("dl.sc_footnotes")) {
-            nextElement.find("dd").each((_i, dd_el) => {
-              const noteText = $(dd_el).find("p").text().trim() || $(dd_el).text().trim();
-              if (noteText.length > 0) {
-                variationNotes.push(noteText);
-              }
-            });
+            variationNotes.push(...parseFootnotes($, nextElement));
             break; // Stop after finding footnotes
           }
           nextElement = nextElement.next();
@@ -519,7 +525,7 @@ async function scrapeSamplePrograms(programPath: string) {
   }
 
   if (variations.length === 0) {
-    logger.warn("No valid variations found for ${programName}");
+    logger.warn(`No valid variations found for ${programName}`);
     return null;
   }
 
@@ -551,7 +557,9 @@ async function main() {
       logger.error(`Error processing ${programPath}:`, error);
     }
   }
-  logger.info(`Successfully scraped ${scrapedPrograms.length}/${programs.length} programs`);
+  logger.info(
+    `Successfully scraped ${scrapedPrograms.length} sample programs out of ${programs.length} total programs`,
+  );
   await storeSampleProgramsInDB(db, scrapedPrograms);
   logger.info("All done!");
   exit(0);
