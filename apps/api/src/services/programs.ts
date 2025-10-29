@@ -9,7 +9,7 @@ import type {
   ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { eq, inArray, sql } from "@packages/db/drizzle";
+import { eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   collegeRequirement,
@@ -144,41 +144,48 @@ export class ProgramsService {
   }
 
   async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
-    // Get catalog programs with their variations
-    const catalogPrograms = await this.db
-      .select({
-        id: catalogProgram.id,
-        programName: catalogProgram.programName,
-      })
-      .from(catalogProgram)
-      .where(query.id ? eq(catalogProgram.id, query.id) : undefined);
+    const programsWithVariations = this.db.$with("programs_with_variations").as(
+      this.db
+        .select({
+          id: catalogProgram.id,
+          programName: catalogProgram.programName,
+          variations: sql`
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'label', ${sampleProgramVariation.label},
+                  'sampleProgram', ${sampleProgramVariation.sampleProgram},
+                  'variationNotes', ${sampleProgramVariation.variationNotes}
+                )
+                ORDER BY ${sampleProgramVariation.id}
+              ) FILTER (WHERE ${sampleProgramVariation.id} IS NOT NULL),
+              '[]'::json
+            )
+          `.as("variations"),
+        })
+        .from(catalogProgram)
+        .leftJoin(sampleProgramVariation, eq(catalogProgram.id, sampleProgramVariation.programId))
+        .where(query.id ? eq(catalogProgram.id, query.id) : undefined)
+        .groupBy(catalogProgram.id),
+    );
 
-    // Get all variations for these programs
-    const programIds = catalogPrograms.map((p) => p.id);
-    const variations = programIds.length
-      ? await this.db
-          .select({
-            programId: sampleProgramVariation.programId,
-            variationId: sampleProgramVariation.id,
-            label: sampleProgramVariation.label,
-            sampleProgram: sampleProgramVariation.sampleProgram,
-            variationNotes: sampleProgramVariation.variationNotes,
-          })
-          .from(sampleProgramVariation)
-          .where(inArray(sampleProgramVariation.programId, programIds))
-      : [];
+    const result = await this.db.with(programsWithVariations).select().from(programsWithVariations);
 
-    // Combine them
-    return catalogPrograms.map((program) => ({
+    // Transform the variations array to match the expected format
+    return result.map((program) => ({
       id: program.id,
       programName: program.programName,
-      variations: variations
-        .filter((v) => v.programId === program.id)
-        .map((v) => ({
-          ...(v.label && { label: v.label }),
-          sampleProgram: v.sampleProgram,
-          notes: v.variationNotes,
-        })),
+      variations: (
+        program.variations as unknown as {
+          label: string | null;
+          sampleProgram: unknown;
+          variationNotes: string[];
+        }[]
+      ).map((v) => ({
+        ...(v.label && { label: v.label }),
+        sampleProgram: v.sampleProgram,
+        notes: v.variationNotes,
+      })),
     }));
   }
 }
