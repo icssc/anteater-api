@@ -157,15 +157,12 @@ export type SampleProgramEntry = {
   spring: string[];
 };
 
-// PARENT TABLE: catalog_program
-// Stores basic program info (one row per program)
+// Sample Programs Tables
 export const catalogProgram = pgTable("catalogue_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
 });
 
-// CHILD TABLE: sample_program_variation
-// Stores each variation's course data (multiple rows per program)
 export const sampleProgramVariation = pgTable("sample_program_variation", {
   id: uuid("id").primaryKey().defaultRandom(),
   programId: varchar("program_id")

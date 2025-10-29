@@ -42,10 +42,6 @@ const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
 const MAX_DELAY_MS = 8_000 as const;
 
-const HEADERS_INIT = {
-  Connection: "keep-alive",
-};
-
 type SampleYear = {
   year: StandingYearType;
   curriculum: string[][];
@@ -55,7 +51,7 @@ async function fetchWithDelay(url: string, delayMs = 1000): Promise<string> {
   try {
     logger.info(`Making request to ${url}`);
     await sleep(delayMs);
-    const res = await fetch(url, { headers: HEADERS_INIT }).then((x) => x.text());
+    const res = await fetch(url, { headers: { Connection: "keep-alive" } }).then((x) => x.text());
     logger.info("Request succeeded");
     return res;
   } catch {
@@ -120,9 +116,7 @@ function generateProgramId(url: string): string {
  * @param sampleYears The original sample years data from the scraper
  * @returns The transformed data with Fall, Winter, Spring structure
  */
-function transformToTermStructure(sampleYears: SampleYear[]): {
-  sampleProgram: SampleProgramEntry[];
-} {
+function transformToTermStructure(sampleYears: SampleYear[]): SampleProgramEntry[] {
   const transformedProgram: SampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
@@ -152,7 +146,7 @@ function transformToTermStructure(sampleYears: SampleYear[]): {
     });
   }
 
-  return { sampleProgram: transformedProgram };
+  return transformedProgram;
 }
 
 async function storeSampleProgramsInDB(
@@ -374,7 +368,7 @@ async function scrapeSamplePrograms(programPath: string) {
     const sampleYears = parseTable($table);
 
     if (sampleYears.length > 0) {
-      const transformedResult = transformToTermStructure(sampleYears);
+      const sampleProgram = transformToTermStructure(sampleYears);
       // For single-table programs, use comprehensive note parsing
       const variationNotes: string[] = [];
 
@@ -451,7 +445,7 @@ async function scrapeSamplePrograms(programPath: string) {
       logger.info(`Found ${variationNotes.length} notes for single variation`);
 
       variations.push({
-        sampleProgram: transformedResult.sampleProgram,
+        sampleProgram: sampleProgram,
         variationNotes,
       });
     } else {
@@ -515,7 +509,7 @@ async function scrapeSamplePrograms(programPath: string) {
       const sampleYears = parseTable($table);
 
       if (sampleYears.length > 0) {
-        const transformedResult = transformToTermStructure(sampleYears);
+        const sampleProgram = transformToTermStructure(sampleYears);
 
         // Parse notes immediately after this table
         const variationNotes: string[] = [];
@@ -539,7 +533,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
         variations.push({
           label: label || undefined,
-          sampleProgram: transformedResult.sampleProgram,
+          sampleProgram,
           variationNotes,
         });
       } else {
