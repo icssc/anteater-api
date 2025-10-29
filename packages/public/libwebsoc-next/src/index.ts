@@ -27,7 +27,7 @@ type BuildingRoomOptions =
     };
 
 type OptionalOptions = {
-  division?: Division;
+  division?: CourseLevel;
   courseNumber?: string;
   courseTitle?: string;
   sectionType?: SectionType;
@@ -91,9 +91,9 @@ export type GE =
   | "GE-8";
 
 /**
- * The division code.
+ * The course level code.
  */
-export type Division = "ANY" | "LowerDiv" | "UpperDiv" | "Graduate";
+export type CourseLevel = "ANY" | "LowerDiv" | "UpperDiv" | "Graduate";
 
 /**
  * The modality of the section.
@@ -383,8 +383,8 @@ function getCodedTerm(term: Term): string {
   }
 }
 
-function getCodedDiv(div: Division): string {
-  switch (div) {
+function getCodedCourseLevel(courseLevel: CourseLevel): string {
+  switch (courseLevel) {
     case "ANY":
       return "all";
     case "LowerDiv":
@@ -438,7 +438,7 @@ export async function request(term: Term, options: WebsocOptions): Promise<Webso
     Breadth: ge,
     Dept: department,
     CourseNum: courseNumber,
-    Division: getCodedDiv(division),
+    Division: getCodedCourseLevel(division),
     CourseCodes: sectionCodes,
     InstrName: instructorName,
     CourseTitle: courseTitle,
