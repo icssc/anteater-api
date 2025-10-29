@@ -38,9 +38,9 @@ const logger = winston.createLogger({
   ],
 });
 
-const CATALOGUE_URL = "https://catalogue.uci.edu";
+const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
-const MAX_DELAY_MS = 8_000;
+const MAX_DELAY_MS = 8_000 as const;
 
 const HEADERS_INIT = {
   Connection: "keep-alive",
@@ -65,8 +65,8 @@ async function fetchWithDelay(url: string, delayMs = 1000): Promise<string> {
   }
 }
 
-async function fetchSchoolsPath(catalogue: string): Promise<string[]> {
-  const schoolsAndPrograms = await fetchWithDelay(`${catalogue}/schoolsandprograms/`);
+async function fetchSchoolsPath(): Promise<string[]> {
+  const schoolsAndPrograms = await fetchWithDelay(`${CATALOGUE_URL}/schoolsandprograms/`);
   const $ = load(schoolsAndPrograms);
 
   const schoolAndProgramPaths: string[] = [];
@@ -80,7 +80,7 @@ async function fetchSchoolsPath(catalogue: string): Promise<string[]> {
 }
 
 async function collectProgramPathsFromSchools(): Promise<string[]> {
-  const schools = await fetchSchoolsPath(CATALOGUE_URL);
+  const schools = await fetchSchoolsPath();
   const programPaths: string[] = [];
 
   for (const schoolPath of schools) {
