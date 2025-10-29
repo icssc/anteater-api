@@ -42,7 +42,9 @@ const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
 const MAX_DELAY_MS = 8_000 as const;
 
-type SampleYear = {
+// Holds raw scraped data from HTML tables before transformation.
+// This is used transformed to SampleProgramEntry via transformToTermStructure().
+type ScrapedSampleYear = {
   year: StandingYearType;
   curriculum: string[][];
 };
@@ -116,7 +118,7 @@ function generateProgramId(url: string): string {
  * @param sampleYears The original sample years data from the scraper
  * @returns The transformed data with Fall, Winter, Spring structure
  */
-function transformToTermStructure(sampleYears: SampleYear[]): SampleProgramEntry[] {
+function transformToTermStructure(sampleYears: ScrapedSampleYear[]): SampleProgramEntry[] {
   const transformedProgram: SampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
@@ -244,8 +246,8 @@ async function storeSampleProgramsInDB(
 }
 
 // HELPER: Parse a single table and return its data
-function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): SampleYear[] {
-  const sampleYears: SampleYear[] = [];
+function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): ScrapedSampleYear[] {
+  const sampleYears: ScrapedSampleYear[] = [];
   let currentYear: StandingYearType | null = null;
   let currentCurriculum: string[][] = [];
 
