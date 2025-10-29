@@ -107,7 +107,7 @@ enum StandingYear {
     Senior
 }
 
-type YearPlan @cacheControl(maxAge: 86400){
+type YearPlan @cacheControl(maxAge: 86400) {
     year: StandingYear!
     fall: [String!]!
     winter: [String!]!

@@ -292,41 +292,38 @@ export const ugradRequirementsResponseSchema = z.object({
 
 export const standingyearEnum = z.enum(["Freshman", "Sophomore", "Junior", "Senior"]);
 
-export const sampleProgramsYearSchema = z.object({
-  year: standingyearEnum.openapi({
-    description: "Class standing or year level",
-    example: "Freshman",
-  }),
-  fall: z.array(z.string()).openapi({
-    description: "Courses recommended for Fall term",
-    example: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-  }),
-  winter: z.array(z.string()).openapi({
-    description: "Courses recommended for Winter term",
-    example: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
-  }),
-  spring: z.array(z.string()).openapi({
-    description: "Courses recommended for Spring term",
-    example: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
-  }),
-});
+export const sampleProgramsYearSchema = z
+  .object({
+    year: standingyearEnum.openapi({
+      description: "Class standing or year level",
+    }),
+    fall: z.array(z.string()).openapi({
+      description: "Courses recommended for Fall term",
+    }),
+    winter: z.array(z.string()).openapi({
+      description: "Courses recommended for Winter term",
+    }),
+    spring: z.array(z.string()).openapi({
+      description: "Courses recommended for Spring term",
+    }),
+  })
+  .openapi({
+    example: {
+      year: "Freshman",
+      fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
+      winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
+      spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+    },
+  });
 
 export const sampleProgramVariationSchema = z.object({
   label: z.string().optional().openapi({
     description:
-      "Label describing this variation (empty string for programs with single variation)",
+      "Label describing this variation of the multiple sample programs available for this program",
     example: "General Track",
   }),
   sampleProgram: z.array(sampleProgramsYearSchema).openapi({
     description: "Structured list of courses for this variation, organized by year and term",
-    example: [
-      {
-        year: "Freshman",
-        fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-        winter: ["I&C SCI 32", "MATH 2B", "WRITING 50", "General Education III"],
-        spring: ["I&C SCI 33", "IN4MATX 43", "I&C SCI 6B", "WRITING 60"],
-      },
-    ],
   }),
   notes: z.array(z.string()).openapi({
     description: "Variation-specific notes (if any)",

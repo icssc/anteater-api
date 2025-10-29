@@ -2,11 +2,12 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { inArray } from "@packages/db/drizzle";
+import { and, eq, inArray } from "@packages/db/drizzle";
 import {
   type SampleProgramEntry,
   type StandingYearType,
   catalogProgram,
+  course,
   sampleProgramVariation,
 } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
@@ -151,6 +152,109 @@ function transformToTermStructure(sampleYears: ScrapedSampleYear[]): SampleProgr
   return transformedProgram;
 }
 
+// Parse course code into department and course number for functionality lookup
+function parseCourseCode(courseCode: string): { dept: string; num: string } | null {
+  // Match pattern: letters/spaces/& followed by numbers and optional letters
+  const match = courseCode.match(/^([A-Z0-9&\s]+?)(\d+[A-Z]*)$/);
+
+  if (!match) return null;
+
+  return {
+    dept: match[1].trim(),
+    num: match[2],
+  };
+}
+
+async function lookupCourseId(
+  db: ReturnType<typeof database>,
+  courseCode: string,
+): Promise<string | null> {
+  try {
+    const parsed = parseCourseCode(courseCode);
+
+    if (!parsed) {
+      return null;
+    }
+
+    const [foundCourse] = await db
+      .select({ id: course.id })
+      .from(course)
+      .where(and(eq(course.department, parsed.dept), eq(course.courseNumber, parsed.num)))
+      .limit(1);
+
+    return foundCourse?.id ?? null;
+  } catch (error) {
+    logger.warn(`Failed to lookup course: ${courseCode}`, error);
+    return null;
+  }
+}
+
+/*
+ * Transforms course code strings to course IDs by looking them up in the database.
+ * Falls back to original string if course not found.
+ */
+async function transformCourseCodesToIds(
+  db: ReturnType<typeof database>,
+  scrapedPrograms: {
+    majorId: string;
+    programName: string;
+    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
+  }[],
+) {
+  logger.info("Transforming course codes to IDs...");
+
+  const transformed = [];
+
+  for (const program of scrapedPrograms) {
+    const transformedVariations = [];
+
+    for (const variation of program.variations) {
+      const transformedSampleProgram = [];
+
+      for (const year of variation.sampleProgram) {
+        // Transform each term's courses in parallel
+        const [fall, winter, spring] = await Promise.all([
+          Promise.all(
+            year.fall.map(async (code) => {
+              const id = await lookupCourseId(db, code);
+              return id ?? code; // Use ID if found, otherwise keep string
+            }),
+          ),
+          Promise.all(
+            year.winter.map(async (code) => {
+              const id = await lookupCourseId(db, code);
+              return id ?? code;
+            }),
+          ),
+          Promise.all(
+            year.spring.map(async (code) => {
+              const id = await lookupCourseId(db, code);
+              return id ?? code;
+            }),
+          ),
+        ]);
+
+        transformedSampleProgram.push({ year: year.year, fall, winter, spring });
+      }
+
+      transformedVariations.push({
+        label: variation.label,
+        sampleProgram: transformedSampleProgram,
+        variationNotes: variation.variationNotes,
+      });
+    }
+
+    transformed.push({
+      majorId: program.majorId,
+      programName: program.programName,
+      variations: transformedVariations,
+    });
+  }
+
+  logger.info("Course code transformation complete");
+  return transformed;
+}
+
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
   scrapedPrograms: {
@@ -164,16 +268,19 @@ async function storeSampleProgramsInDB(
     return;
   }
 
+  // Transform course codes to IDs
+  const transformedPrograms = await transformCourseCodesToIds(db, scrapedPrograms);
+
   logger.info("Fetching sample programs from database...");
 
   // Prepare parent table rows (catalogue_program)
-  const catalogueRows = scrapedPrograms.map((program) => ({
+  const catalogueRows = transformedPrograms.map((program) => ({
     id: program.majorId,
     programName: program.programName,
   }));
 
   // Prepare child table rows (sample_program_variation)
-  const variationRows = scrapedPrograms.flatMap((program) =>
+  const variationRows = transformedPrograms.flatMap((program) =>
     program.variations.map((variation) => ({
       programId: program.majorId,
       label: orNull(variation.label),
@@ -182,10 +289,8 @@ async function storeSampleProgramsInDB(
     })),
   );
 
-  // Extract program IDs for reuse
   const programIds = catalogueRows.map((r) => r.id);
 
-  // Fetch existing data
   const existingCatalogPrograms = await db
     .select()
     .from(catalogProgram)
@@ -235,10 +340,8 @@ async function storeSampleProgramsInDB(
   await db.transaction(async (tx) => {
     await tx.delete(catalogProgram).where(inArray(catalogProgram.id, programIds));
 
-    // Insert parent rows
     await tx.insert(catalogProgram).values(catalogueRows);
 
-    // Insert child rows (variations)
     await tx.insert(sampleProgramVariation).values(variationRows);
   });
 
