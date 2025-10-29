@@ -170,8 +170,8 @@ async function storeSampleProgramsInDB(
 
   logger.info("Fetching sample programs from database...");
 
-  // Prepare parent table rows (catalog_program)
-  const catalogRows = scrapedPrograms.map((program) => ({
+  // Prepare parent table rows (catalogue_program)
+  const catalogueRows = scrapedPrograms.map((program) => ({
     id: program.majorId,
     programName: program.programName,
   }));
@@ -193,7 +193,7 @@ async function storeSampleProgramsInDB(
     .where(
       inArray(
         catalogProgram.id,
-        catalogRows.map((r) => r.id),
+        catalogueRows.map((r) => r.id),
       ),
     );
 
@@ -203,13 +203,13 @@ async function storeSampleProgramsInDB(
     .where(
       inArray(
         sampleProgramVariation.programId,
-        catalogRows.map((r) => r.id),
+        catalogueRows.map((r) => r.id),
       ),
     );
 
   // Combine into unified structure for comparison
   const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
-  const scrapedData = { catalogPrograms: catalogRows, variations: variationRows };
+  const scrapedData = { catalogPrograms: catalogueRows, variations: variationRows };
 
   // Sort both structures
   const sortedDbData = sortKeys(
@@ -247,18 +247,18 @@ async function storeSampleProgramsInDB(
     await tx.delete(catalogProgram).where(
       inArray(
         catalogProgram.id,
-        catalogRows.map((r) => r.id),
+        catalogueRows.map((r) => r.id),
       ),
     );
 
     // Insert parent rows
-    await tx.insert(catalogProgram).values(catalogRows);
+    await tx.insert(catalogProgram).values(catalogueRows);
 
     // Insert child rows (variations)
     await tx.insert(sampleProgramVariation).values(variationRows);
   });
 
-  logger.info(`Successfully stored ${catalogRows.length} sample programs`);
+  logger.info(`Successfully stored ${catalogueRows.length} sample programs`);
 }
 
 async function scrapeSamplePrograms(programPath: string) {
