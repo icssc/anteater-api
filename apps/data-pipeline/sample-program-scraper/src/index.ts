@@ -9,7 +9,7 @@ import {
   catalogProgram,
   sampleProgramVariation,
 } from "@packages/db/schema";
-import { sleep } from "@packages/stdlib";
+import { orNull, sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
 import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
@@ -174,32 +174,25 @@ async function storeSampleProgramsInDB(
   const variationRows = scrapedPrograms.flatMap((program) =>
     program.variations.map((variation) => ({
       programId: program.majorId,
-      label: variation.label || null,
+      label: orNull(variation.label),
       sampleProgram: variation.sampleProgram,
       variationNotes: variation.variationNotes,
     })),
   );
 
+  // Extract program IDs for reuse
+  const programIds = catalogueRows.map((r) => r.id);
+
   // Fetch existing data
   const existingCatalogPrograms = await db
     .select()
     .from(catalogProgram)
-    .where(
-      inArray(
-        catalogProgram.id,
-        catalogueRows.map((r) => r.id),
-      ),
-    );
+    .where(inArray(catalogProgram.id, programIds));
 
   const existingVariations = await db
     .select()
     .from(sampleProgramVariation)
-    .where(
-      inArray(
-        sampleProgramVariation.programId,
-        catalogueRows.map((r) => r.id),
-      ),
-    );
+    .where(inArray(sampleProgramVariation.programId, programIds));
 
   // Combine into unified structure for comparison
   const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
@@ -225,7 +218,7 @@ async function storeSampleProgramsInDB(
   const programDiff = diffString(sortedDbData, sortedScrapedData);
 
   if (!programDiff.length) {
-    logger.info("No difference found between database and scraped sample program data.");
+    logger.info("Database already up to date - no changes needed");
     return;
   }
 
@@ -238,12 +231,7 @@ async function storeSampleProgramsInDB(
   }
 
   await db.transaction(async (tx) => {
-    await tx.delete(catalogProgram).where(
-      inArray(
-        catalogProgram.id,
-        catalogueRows.map((r) => r.id),
-      ),
-    );
+    await tx.delete(catalogProgram).where(inArray(catalogProgram.id, programIds));
 
     // Insert parent rows
     await tx.insert(catalogProgram).values(catalogueRows);
