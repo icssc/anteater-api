@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "sample_program_variation" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"program_id" varchar NOT NULL,
 	"label" varchar,
-	"sample_program" json NOT NULL,
+	"sample_program" jsonb NOT NULL,
 	"variation_notes" varchar[] DEFAULT ARRAY[]::VARCHAR[]
 );
 --> statement-breakpoint

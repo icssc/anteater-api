@@ -1,5 +1,5 @@
 {
-  "id": "e85dee48-1cb9-4445-8200-94ea7f20ea23",
+  "id": "0d335487-459b-40d9-8636-586103ef3dac",
   "prevId": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
   "version": "7",
   "dialect": "postgresql",
@@ -1193,7 +1193,7 @@
         },
         "sample_program": {
           "name": "sample_program",
-          "type": "json",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
