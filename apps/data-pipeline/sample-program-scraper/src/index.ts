@@ -243,6 +243,82 @@ async function storeSampleProgramsInDB(
   logger.info(`Successfully stored ${catalogueRows.length} sample programs`);
 }
 
+// HELPER: Parse a single table and return its data
+function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): SampleYear[] {
+  const sampleYears: SampleYear[] = [];
+  let currentYear: StandingYearType | null = null;
+  let currentCurriculum: string[][] = [];
+
+  // Look for year headers INSIDE the table (most common)
+  let foundYearHeader = false;
+  $table.find("tr").each((_j, tr_el) => {
+    const $tr = $(tr_el);
+
+    // Skip empty header rows and term rows
+    if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) return;
+    if ($tr.hasClass("plangridterm")) return;
+
+    // Check if this is a year header row
+    if ($tr.hasClass("plangridyear")) {
+      foundYearHeader = true;
+      const yearText = $tr.find("th").text().trim();
+      if (yearText) {
+        if (currentYear !== null) {
+          sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
+        }
+        currentYear = yearText as StandingYearType;
+        currentCurriculum = [];
+      }
+    } else {
+      // Parse course row
+      const rowData: string[] = [];
+      $tr.find("td").each((_k, td_el) => {
+        $(td_el).find("sup").remove();
+        rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
+      });
+
+      if (rowData.some((cell) => cell.length > 0)) {
+        currentCurriculum.push(rowData);
+      }
+    }
+  });
+
+  // Save final year from inside-table parsing
+  if (currentYear !== null) {
+    sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
+  }
+
+  // Year might be OUTSIDE table (Dance programs, etc)
+  if (!foundYearHeader && currentCurriculum.length > 0) {
+    // Look for heading before the table
+    const prevHeading = $table.prevAll("h4, h5, h6, p").first();
+    let yearText: StandingYearType = "Freshman"; // Default fallback specifically for dance programs
+
+    if (prevHeading.length) {
+      const headingText = prevHeading.text().trim();
+      // Extract year from headings like "Sample Program for Freshmen"
+      if (headingText.match(/freshmen|freshman/i)) {
+        yearText = "Freshman";
+      } else if (headingText.match(/sophomore/i)) {
+        yearText = "Sophomore";
+      } else if (headingText.match(/junior/i)) {
+        yearText = "Junior";
+      } else if (headingText.match(/senior/i)) {
+        yearText = "Senior";
+      } else {
+        // Fallback to "Freshman" for unrecognized year text
+        logger.warn(`Unrecognized year text: "${headingText}", defaulting to Freshman`);
+        yearText = "Freshman";
+      }
+    }
+
+    sampleYears.push({ year: yearText, curriculum: currentCurriculum });
+    logger.info(`Found year outside table: "${yearText}"`);
+  }
+
+  return sampleYears;
+}
+
 async function scrapeSamplePrograms(programPath: string) {
   const url = `${CATALOGUE_URL}${programPath}`;
   logger.info(`Scraping ${programPath}...`);
@@ -266,83 +342,7 @@ async function scrapeSamplePrograms(programPath: string) {
   logger.info(`Found ${tableCount} sample program table(s) for ${programName}`);
   if (tableCount === 0) return null;
 
-  // HELPER: Parse a single table and return its data
-
-  const parseTable = ($table: Cheerio<AnyNode>): SampleYear[] => {
-    const sampleYears: SampleYear[] = [];
-    let currentYear: StandingYearType | null = null;
-    let currentCurriculum: string[][] = [];
-
-    // Look for year headers INSIDE the table (most common)
-    let foundYearHeader = false;
-    $table.find("tr").each((_j, tr_el) => {
-      const $tr = $(tr_el);
-
-      // Skip empty header rows and term rows
-      if ($tr.hasClass("plangridyear") && !$tr.find("th").text().trim()) return;
-      if ($tr.hasClass("plangridterm")) return;
-
-      // Check if this is a year header row
-      if ($tr.hasClass("plangridyear")) {
-        foundYearHeader = true;
-        const yearText = $tr.find("th").text().trim();
-        if (yearText) {
-          if (currentYear !== null) {
-            sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
-          }
-          currentYear = yearText as StandingYearType;
-          currentCurriculum = [];
-        }
-      } else {
-        // Parse course row
-        const rowData: string[] = [];
-        $tr.find("td").each((_k, td_el) => {
-          $(td_el).find("sup").remove();
-          rowData.push($(td_el).text().replace(/\s+/g, " ").trim());
-        });
-
-        if (rowData.some((cell) => cell.length > 0)) {
-          currentCurriculum.push(rowData);
-        }
-      }
-    });
-
-    // Save final year from inside-table parsing
-    if (currentYear !== null) {
-      sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
-    }
-
-    // Year might be OUTSIDE table (Dance programs, etc)
-    if (!foundYearHeader && currentCurriculum.length > 0) {
-      // Look for heading before the table
-      const prevHeading = $table.prevAll("h4, h5, h6, p").first();
-      let yearText: StandingYearType = "Freshman"; // Default fallback specifically for dance programs
-
-      if (prevHeading.length) {
-        const headingText = prevHeading.text().trim();
-        // Extract year from headings like "Sample Program for Freshmen"
-        if (headingText.match(/freshmen|freshman/i)) {
-          yearText = "Freshman";
-        } else if (headingText.match(/sophomore/i)) {
-          yearText = "Sophomore";
-        } else if (headingText.match(/junior/i)) {
-          yearText = "Junior";
-        } else if (headingText.match(/senior/i)) {
-          yearText = "Senior";
-        } else {
-          yearText = headingText as StandingYearType;
-        }
-      }
-
-      sampleYears.push({ year: yearText, curriculum: currentCurriculum });
-      logger.info(`Found year outside table: "${yearText}"`);
-    }
-
-    return sampleYears;
-  };
-
   // CASE 1: Single Table - No Label Needed
-
   const variations: Array<{
     label?: string;
     sampleProgram: SampleProgramEntry[];
@@ -353,7 +353,7 @@ async function scrapeSamplePrograms(programPath: string) {
     logger.info("Parsing single table (no variations)");
 
     const $table = allTables.first();
-    const sampleYears = parseTable($table);
+    const sampleYears = parseTable($, $table);
 
     if (sampleYears.length > 0) {
       const sampleProgram = transformToTermStructure(sampleYears);
@@ -369,6 +369,8 @@ async function scrapeSamplePrograms(programPath: string) {
             variationNotes.push(remainingText);
           }
           let currentElement = $(p_el).next();
+          // Walk through subsequent elements until we hit a heading or table
+          // This handles cases where notes span multiple <p> tags or <ol> lists
           while (currentElement.length && !currentElement.is("h1, h2, h3, h4, h5, h6, table")) {
             if (currentElement.is("p")) {
               const paragraphContent = currentElement.text().trim();
@@ -494,7 +496,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
       logger.info(`Parsing variation ${index + 1}: "${label}"`);
 
-      const sampleYears = parseTable($table);
+      const sampleYears = parseTable($, $table);
 
       if (sampleYears.length > 0) {
         const sampleProgram = transformToTermStructure(sampleYears);
