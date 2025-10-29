@@ -169,7 +169,7 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
     .notNull()
     .references(() => catalogProgram.id, { onDelete: "cascade" }),
   label: varchar("label"),
-  sampleProgram: json("sample_program").$type<SampleProgramEntry[]>().notNull(),
+  sampleProgram: jsonb("sample_program").$type<SampleProgramEntry[]>().notNull(),
   variationNotes: varchar("variation_notes").array().default(sql`ARRAY[]::VARCHAR[]`),
 });
 

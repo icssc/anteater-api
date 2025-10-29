@@ -92,9 +92,7 @@ const specializationsRoute = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(specializationsResponseSchema),
-        },
+        "application/json": { schema: responseSchema(specializationsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -122,9 +120,7 @@ const majorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(majorRequirementsResponseSchema),
-        },
+        "application/json": { schema: responseSchema(majorRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -154,9 +150,7 @@ const minorRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(minorRequirementsResponseSchema),
-        },
+        "application/json": { schema: responseSchema(minorRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -186,9 +180,7 @@ const specializationRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(specializationRequirementsResponseSchema),
-        },
+        "application/json": { schema: responseSchema(specializationRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
@@ -218,9 +210,7 @@ const ugradRequirements = createRoute({
   responses: {
     200: {
       content: {
-        "application/json": {
-          schema: responseSchema(ugradRequirementsResponseSchema),
-        },
+        "application/json": { schema: responseSchema(ugradRequirementsResponseSchema) },
       },
       description: "Successful operation",
     },
