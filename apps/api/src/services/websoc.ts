@@ -1,7 +1,24 @@
-import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
+import type {
+  websocDepartmentsQuerySchema,
+  websocQuerySchema,
+  websocResponseSchema,
+  websocSectionSchema,
+} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
-import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  gte,
+  ilike,
+  like,
+  lte,
+  ne,
+  or,
+} from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
   websocCourse,
@@ -374,5 +391,38 @@ export class WebsocService {
           .reverse()
           .map(transformTerm),
       );
+  }
+
+  async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
+    const options = [];
+    if (input.sinceYear) {
+      if (input.sinceQuarter) {
+        // if quarter specified, only quarters not later than that one are okay
+        for (const [term, order] of Object.entries(termOrder)) {
+          if (order >= termOrder[input.sinceQuarter]) {
+            options.push(
+              and(
+                eq(websocDepartment.year, input.sinceYear),
+                eq(websocDepartment.quarter, term as Term),
+              ),
+            );
+          }
+        }
+      } else {
+        // if quarter not specified, any quarter that year is okay
+        options.push(eq(websocDepartment.year, input.sinceYear));
+      }
+      // in either case, all years after sinceYear are okay
+      options.push(gt(websocDepartment.year, input.sinceYear));
+    }
+
+    return this.db
+      .selectDistinctOn([websocDepartment.deptCode], {
+        deptCode: websocDepartment.deptCode,
+        deptName: websocDepartment.deptName,
+      })
+      .from(websocDepartment)
+      .where(or(...options))
+      .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
   }
 }
