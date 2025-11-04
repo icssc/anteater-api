@@ -273,7 +273,6 @@ async function storeSampleProgramsInDB(
 
   logger.info("Fetching sample programs from database...");
 
-  // Prepare parent table rows (catalogue_program)
   const catalogueRows = transformedPrograms.map((program) => ({
     id: program.majorId,
     programName: program.programName,
@@ -506,7 +505,7 @@ async function scrapeSamplePrograms(programPath: string) {
                 variationNotes.push(paragraphContent);
               }
             } else if (currentElement.is("ol")) {
-              // If we find an <ol>, all notes are in the list items no need to continue walking through siblings
+              // If we find an <ol>, all notes are in the list items. No need to continue walking through siblings.
               currentElement.find("li").each((_k, li_el) => {
                 variationNotes.push($(li_el).text().trim());
               });

@@ -150,15 +150,15 @@ export class ProgramsService {
         programName: catalogProgram.programName,
         variations: sql`
           COALESCE(
-            json_agg(
-              json_build_object(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
                 'label', ${sampleProgramVariation.label},
-                'sampleProgram', ${sampleProgramVariation.sampleProgram},
+                'courses', ${sampleProgramVariation.sampleProgram},
                 'notes', ${sampleProgramVariation.variationNotes}
               )
               ORDER BY ${sampleProgramVariation.id}
             ) FILTER (WHERE ${sampleProgramVariation.id} IS NOT NULL),
-            '[]'::json
+            '[]'::jsonb
           )
         `.as("variations"),
       })

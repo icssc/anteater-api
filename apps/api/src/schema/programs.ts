@@ -322,7 +322,7 @@ export const sampleProgramVariationSchema = z.object({
       "Label describing this variation of the multiple sample programs available for this program",
     example: "General Track",
   }),
-  sampleProgram: z.array(sampleProgramsYearSchema).openapi({
+  courses: z.array(sampleProgramsYearSchema).openapi({
     description: "Structured list of courses for this variation, organized by year and term",
   }),
   notes: z.array(z.string()).openapi({

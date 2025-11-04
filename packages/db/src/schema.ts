@@ -170,7 +170,7 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
     .references(() => catalogProgram.id, { onDelete: "cascade" }),
   label: varchar("label"),
   sampleProgram: jsonb("sample_program").$type<SampleProgramEntry[]>().notNull(),
-  variationNotes: varchar("variation_notes").array().default(sql`ARRAY[]::VARCHAR[]`),
+  variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
 // Misc. enums
