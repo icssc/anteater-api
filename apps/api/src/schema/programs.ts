@@ -317,7 +317,7 @@ export const sampleProgramsYearSchema = z
   });
 
 export const sampleProgramVariationSchema = z.object({
-  label: z.string().optional().openapi({
+  label: z.string().nullable().openapi({
     description:
       "Label describing this variation of the multiple sample programs available for this program",
     example: "General Track",

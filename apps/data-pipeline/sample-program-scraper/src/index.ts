@@ -102,7 +102,7 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
 
 /*
  * Extracts a unique ID from the catalogue URL
- * Example: https://catalogue.uci.edu/.../computerscience_bs/ → "computerscience_bs"
+ * Example: https://catalogue.uci.edu/.../computerscience_bs/ => "computerscience_bs"
  */
 function generateProgramId(url: string): string {
   // Regex pulls the final path segment from the catalogue URL (e.g. /foo/bar/ -> bar).
