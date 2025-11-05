@@ -112,8 +112,8 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
 
 /**
  * Represents the possible statuses for library scraping based on operating hours
- * - "active": Library location is open — perform scrape every 15 minutes
- * - "idle": Library is closed — perform scrape every 60 minutes
+ * - "active": Library location is open - perform scrape every 15 minutes
+ * - "idle": Library is closed - perform scrape every 60 minutes
  * - "skip": Library is unknown or not applicable for scraping - do not scrape
  */
 type ScrapeStatus = "active" | "idle" | "skip";
@@ -176,13 +176,13 @@ export async function doScrape(db: ReturnType<typeof database>) {
     const scrapeStatus = getScrapeStatus(libraryCode);
 
     if (scrapeStatus === "skip") {
-      console.error(`Skipping ${meta.libraryName} — unknown library code.`);
+      console.error(`Skipping ${meta.libraryName} - unknown library code.`);
       continue;
     }
 
     // Scrape hourly within the first 15 minutes while library is closed
     if (scrapeStatus === "idle" && currentMinute >= 15) {
-      console.log(`Skipping ${meta.libraryName} (idle) — scraping only on the hour.`);
+      console.log(`Skipping ${meta.libraryName} (idle) - scraping only on the hour.`);
       continue;
     }
 
