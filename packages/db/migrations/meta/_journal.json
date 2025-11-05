@@ -117,8 +117,22 @@
     {
       "idx": 16,
       "version": "7",
-      "when": 1748815531014,
-      "tag": "0016_library_traffic",
+      "when": 1758749260179,
+      "tag": "0016_college_requirements",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1759333296289,
+      "tag": "0017_widen_school_requirement_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1759701404638,
+      "tag": "0018_ap_exam_ge_course_count",
       "breakpoints": true
     }
   ]

@@ -20,14 +20,14 @@ function buildQuery(input: LarcSessionServiceInput) {
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
   }
-  conditions.push(...buildMultiCourseNumberQuery(input));
+  conditions.push(...buildMultiCourseNumberQuery(input.courseNumber));
   if (input.instructorName) {
     conditions.push(ilike(larcSection.instructor, `${input.instructorName}%`));
   }
   if (input.building) {
     conditions.push(eq(larcSection.building, input.building.toUpperCase()));
   }
-  conditions.push(...buildDaysOfWeekQuery(larcSection, input));
+  conditions.push(...buildDaysOfWeekQuery(larcSection, input.days));
   if (input.startTime) {
     conditions.push(gte(larcSection.startTime, input.startTime));
   }

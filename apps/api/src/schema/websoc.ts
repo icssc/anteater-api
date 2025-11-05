@@ -79,9 +79,17 @@ export const websocQuerySchema = z.object({
     .enum(geCategories)
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
-  department: z.string().optional(),
-  courseTitle: z.string().optional(),
-  courseNumber: courseNumberSchema.optional(),
+  department: z.string().optional().openapi({
+    description: "Only include courses offered by the specified department code",
+    example: "I&C SCI",
+  }),
+  courseTitle: z.string().optional().openapi({
+    description: "Only include courses with the specified course title",
+    example: "PRINCP IN SYS DESGN",
+  }),
+  courseNumber: courseNumberSchema.optional().openapi({
+    description: "Only include courses with the specified course number",
+  }),
   sectionCodes: z
     .string()
     .optional()
@@ -115,11 +123,27 @@ export const websocQuerySchema = z.object({
         parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
       }
       return parsedNums;
+    })
+    .openapi({
+      description: "A comma-separated list of section codes or section code ranges",
+      example: "36210,36216-36218",
     }),
-  instructorName: z.string().optional(),
-  days: daysSchema.optional(),
-  building: z.string().optional(),
-  room: z.string().optional(),
+  instructorName: z.string().optional().openapi({
+    description: "Only include courses taught by the specified instructor (case-insensitive)",
+    example: "WONG-MA, J.",
+  }),
+  days: daysSchema.optional().openapi({
+    description:
+      "Only include sections which meet on at least one of the specified days of the week",
+  }),
+  building: z.string().optional().openapi({
+    description: "Only include sections which have at least one meeting in the specified building",
+    example: "PSLH",
+  }),
+  room: z.string().optional().openapi({
+    description: "Only include sections which have at least one meeting in a room with this number",
+    example: "100",
+  }),
   division: z
     .enum(courseLevels)
     .or(z.literal("ANY"))
@@ -265,6 +289,6 @@ export const websocResponseSchema = z.object({
 });
 
 export const websocTermResponseSchema = z.object({
-  shortName: z.string(),
-  longName: z.string(),
+  shortName: z.string().openapi({ example: "2025 Fall" }),
+  longName: z.string().openapi({ example: "2025 Fall Quarter" }),
 });

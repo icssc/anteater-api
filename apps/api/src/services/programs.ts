@@ -9,7 +9,14 @@ import type {
 } from "$schema";
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
-import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import {
+  collegeRequirement,
+  degree,
+  major,
+  minor,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
@@ -22,7 +29,7 @@ export class ProgramsService {
         .select({
           id: major.id,
           name: major.name,
-          specializations: sql`array_remove(array_agg(${specialization.id}), NULL)`.as(
+          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${specialization.id}), NULL)`.as(
             "specializations",
           ),
         })
@@ -97,17 +104,27 @@ export class ProgramsService {
       specialization,
     }[programType];
 
-    const [got] = await this.db
-      .select({ id: table.id, name: table.name, requirements: table.requirements })
-      .from(table)
+    const [got] = await (programType !== "major"
+      ? this.db
+          .select({ id: table.id, name: table.name, requirements: table.requirements })
+          .from(table)
+      : this.db
+          .select({
+            id: major.id,
+            name: major.name,
+            requirements: major.requirements,
+            schoolRequirements: {
+              name: collegeRequirement.name,
+              requirements: collegeRequirement.requirements,
+            },
+          })
+          .from(major)
+          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
+    )
       .where(eq(table.id, query.programId))
       .limit(1);
 
-    if (!got) {
-      return null;
-    }
-
-    return got;
+    return orNull(got);
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {

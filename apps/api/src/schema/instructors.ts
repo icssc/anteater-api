@@ -14,22 +14,64 @@ export const batchInstructorsQuerySchema = z.object({
 });
 
 export const instructorsQuerySchema = z.object({
-  nameContains: z.string().optional(),
-  titleContains: z.string().optional(),
-  departmentContains: z.string().optional(),
-  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
-  skip: z.coerce.number().default(0),
+  nameContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor name(s) (case-insensitive)",
+    example: "Shindler",
+  }),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor title(s) (case-insensitive)",
+    example: "Associate",
+  }),
+  departmentContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor department name(s) (case-insensitive)",
+    example: "Science",
+  }),
+  take: z.coerce
+    .number()
+    .lte(100, "Page size must be less than or equal to 100")
+    .default(100)
+    .openapi({
+      description:
+        "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+      example: 100,
+    }),
+  skip: z.coerce.number().default(0).openapi({
+    description:
+      "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+    example: 0,
+  }),
 });
 
 export const instructorsByCursorQuerySchema = z.object({
-  nameContains: z.string().optional(),
-  titleContains: z.string().optional(),
-  departmentContains: z.string().optional(),
-  cursor: z.string().optional().openapi({
-    description:
-      "Pagination cursor. Use the `nextCursor` value from the previous response to fetch the next page",
+  nameContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor name(s) (case-insensitive)",
+    example: "Shindler",
   }),
-  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
+  titleContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor title(s) (case-insensitive)",
+    example: "Associate",
+  }),
+  departmentContains: z.string().optional().openapi({
+    description: "A substring to search for in instructor department name(s) (case-insensitive)",
+    example: "Science",
+  }),
+  cursor: z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "Pagination cursor based on instructor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
+    })
+    .openapi({ example: "mikes" }),
+  take: z.coerce
+    .number()
+    .lte(100, "Page size must be less than or equal to 100")
+    .default(100)
+    .openapi({
+      description:
+        "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
+      example: 100,
+    }),
 });
 
 export const instructorPreviewSchema = z.object({

@@ -2,12 +2,12 @@ import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
   boolean,
-  char,
   date,
   decimal,
   index,
   integer,
   json,
+  jsonb,
   pgEnum,
   pgMaterializedView,
   pgTable,
@@ -84,7 +84,7 @@ export type PrerequisiteTree = {
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "MAJOR" | "MINOR" | "SPEC";
+  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
   code: string;
   degreeType?: string;
 };
@@ -99,6 +99,12 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    */
   specs: string[];
 };
+
+/**
+ * (school, major) pair, because school requirements can vary by major
+ * eventually, we may want degree type; e.g. MFA provides some requirements
+ */
+export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
@@ -614,8 +620,14 @@ export const degree = pgTable("degree", {
 });
 
 export const schoolRequirement = pgTable("school_requirement", {
-  id: char("id", { length: 2 }).primaryKey(),
+  id: varchar("id").primaryKey(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+});
+
+export const collegeRequirement = pgTable("college_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
 });
 
 export const major = pgTable(
@@ -627,9 +639,10 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
+    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [index().on(table.degreeId)],
+  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
 );
 
 export const minor = pgTable("minor", {
@@ -732,16 +745,16 @@ export const apExamReward = pgTable("ap_exam_reward", {
   id: uuid("id").primaryKey().defaultRandom(),
   unitsGranted: integer("units_granted").notNull(),
   electiveUnitsGranted: integer("elective_units_granted").notNull(),
-  grantsGE1A: boolean("grants_ge_1a").notNull().default(false),
-  grantsGE1B: boolean("grants_ge_1b").notNull().default(false),
-  grantsGE2: boolean("grants_ge_2").notNull().default(false),
-  grantsGE3: boolean("grants_ge_3").notNull().default(false),
-  grantsGE4: boolean("grants_ge_4").notNull().default(false),
-  grantsGE5A: boolean("grants_ge_5a").notNull().default(false),
-  grantsGE5B: boolean("grants_ge_5b").notNull().default(false),
-  grantsGE6: boolean("grants_ge_6").notNull().default(false),
-  grantsGE7: boolean("grants_ge_7").notNull().default(false),
-  grantsGE8: boolean("grants_ge_8").notNull().default(false),
+  ge1aCoursesGranted: integer("ge_1a_courses_granted").notNull().default(0),
+  ge1bCoursesGranted: integer("ge_1b_courses_granted").notNull().default(0),
+  ge2CoursesGranted: integer("ge_2_courses_granted").notNull().default(0),
+  ge3CoursesGranted: integer("ge_3_courses_granted").notNull().default(0),
+  ge4CoursesGranted: integer("ge_4_courses_granted").notNull().default(0),
+  ge5aCoursesGranted: integer("ge_5a_courses_granted").notNull().default(0),
+  ge5bCoursesGranted: integer("ge_5b_courses_granted").notNull().default(0),
+  ge6CoursesGranted: integer("ge_6_courses_granted").notNull().default(0),
+  ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
+  ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
 
