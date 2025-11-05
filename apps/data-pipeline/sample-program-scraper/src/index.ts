@@ -556,13 +556,18 @@ async function scrapeSamplePrograms(programPath: string) {
       // Look for <p> immediately before table
       const prevP = $table.prev("p");
       if (prevP.length && prevP.text().trim()) {
-        label = prevP.text().trim();
+        const pText = prevP.text().trim();
+        // Exclude generic instructional paragraphs for (Chemistry, BS)
+        if (!pText.match(/^Items in parentheses are recommended choices or alternatives/i)) {
+          label = pText;
+        }
       }
 
       // Look for nearest heading before table
       if (!label) {
         const prevHeading = $table.prevAll("h3, h4, h5, h6").first();
         if (prevHeading.length && prevHeading.text().trim()) {
+          prevHeading.find("sup").remove();
           label = prevHeading.text().trim();
         }
       }
