@@ -157,6 +157,13 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
   return "skip";
 }
 
+// Map human-readable library name to internal library code used by getScrapeStatus
+const libraryCodeMap = {
+  "Langson Library": "LL",
+  "Science Library": "SL",
+  "Gateway Study Center": "LGSC",
+} as const;
+
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
   const locationMeta = await collectLocationMeta();
@@ -165,12 +172,6 @@ export async function doScrape(db: ReturnType<typeof database>) {
   const currentMinute = currentTime.getMinutes();
 
   for (const [id, meta] of Object.entries(locationMeta)) {
-    const libraryCodeMap = {
-      "Langson Library": "LL",
-      "Science Library": "SL",
-      "Gateway Study Center": "LGSC",
-    } as const;
-
     const libraryCode = libraryCodeMap[meta.libraryName as keyof typeof libraryCodeMap];
     const scrapeStatus = getScrapeStatus(libraryCode);
 
