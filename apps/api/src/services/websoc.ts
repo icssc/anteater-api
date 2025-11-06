@@ -412,6 +412,7 @@ export class WebsocService {
           }
         }
       }
+
       options.push(gt(websocDepartment.year, input.sinceYear));
     }
 
