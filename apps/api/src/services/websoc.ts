@@ -5,7 +5,7 @@ import type {
   websocSectionSchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import type { SQL } from "@packages/db/drizzle";
+import type { SQL, SQLWrapper } from "@packages/db/drizzle";
 import {
   and,
   desc,
@@ -394,7 +394,8 @@ export class WebsocService {
   }
 
   async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
-    const options = [];
+    const options = [] as (SQLWrapper | undefined)[];
+
     if (input.sinceYear) {
       if (!input.sinceQuarter) {
         options.push(eq(websocDepartment.year, input.sinceYear));
