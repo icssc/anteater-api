@@ -404,7 +404,7 @@ export class WebsocService {
             options.push(
               and(
                 eq(websocDepartment.year, input.sinceYear),
-                // cast is safe because this was schema validated already
+                // cast is safe because term comes from a statically known object
                 eq(websocDepartment.quarter, term as Term),
               ),
             );
