@@ -27,9 +27,9 @@ export const sampleProgramsYearSchema = z
   .openapi({
     example: {
       year: "Freshman",
-      fall: ["I&C SCI 31", "MATH 2A", "WRITING 40"],
-      winter: ["I&C SCI 32", "MATH 2B", "WRITING 50"],
-      spring: ["I&C SCI 33", "IN4MATX 43", "WRITING 60"],
+      fall: ["I&CSCI31", "MATH2A", "WRITING40"],
+      winter: ["I&CSCI32", "MATH2B", "WRITING50", "General Education III"],
+      spring: ["I&CSCI33", "IN4MATX43", "I&CSCI6B", "WRITING60"],
     },
   });
 
@@ -40,7 +40,8 @@ export const sampleProgramVariationSchema = z.object({
     example: "General",
   }),
   courses: z.array(sampleProgramsYearSchema).openapi({
-    description: "Structured list of courses for this variation, organized by year and term",
+    description:
+      "Structured list of courses for this variation, organized by year and term. Course IDs areare included wherever possible, based on best available mapping.",
   }),
   notes: z.array(z.string()).openapi({
     description: "Variation-specific notes (if any)",

@@ -18,7 +18,8 @@ const sampleProgramsRoute = createRoute({
   tags: ["Catalogue"],
   method: "get",
   path: "/sample-programs",
-  description: "List all available sample programs in UCI's current catalogue.",
+  description:
+    "List all available sample programs in UCI's current catalogue. Course IDs are matched on a best-effort basis, so some rows may not be a courseID.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
     200: {
