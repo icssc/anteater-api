@@ -396,8 +396,9 @@ export class WebsocService {
   async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
     const options = [];
     if (input.sinceYear) {
-      if (input.sinceQuarter) {
-        // if quarter specified, only quarters not later than that one are okay
+      if (!input.sinceQuarter) {
+        options.push(eq(websocDepartment.year, input.sinceYear));
+      } else {
         for (const [term, order] of Object.entries(termOrder)) {
           if (order >= termOrder[input.sinceQuarter]) {
             options.push(
@@ -409,11 +410,7 @@ export class WebsocService {
             );
           }
         }
-      } else {
-        // if quarter not specified, any quarter that year is okay
-        options.push(eq(websocDepartment.year, input.sinceYear));
       }
-      // in either case, all years after sinceYear are okay
       options.push(gt(websocDepartment.year, input.sinceYear));
     }
 
