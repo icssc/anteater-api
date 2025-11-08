@@ -1,9 +1,4 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-import { z } from "zod";
-
-const { AWS_ACM_CERTIFICATE_ARN, CLOUDFLARE_DNS_ZONE_ID } = z
-  .object({ AWS_ACM_CERTIFICATE_ARN: z.string(), CLOUDFLARE_DNS_ZONE_ID: z.string() })
-  .parse(process.env);
 
 export default $config({
   app() {
@@ -11,15 +6,15 @@ export default $config({
       name: "key-manager",
       removal: "remove",
       home: "aws",
-      providers: { cloudflare: "5.43.0" },
+      providers: { cloudflare: "6.10.0" },
     };
   },
   async run() {
+    const secret = new sst.Secret("CLOUDFLARE_DNS_ZONE_ID");
     new sst.aws.Nextjs("key-manager", {
       domain: {
         name: "dashboard.anteaterapi.com",
-        cert: AWS_ACM_CERTIFICATE_ARN,
-        dns: sst.cloudflare.dns({ zone: CLOUDFLARE_DNS_ZONE_ID }),
+        dns: sst.cloudflare.dns({ zone: secret }),
       },
     });
   },
