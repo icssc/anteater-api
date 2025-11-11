@@ -35,8 +35,8 @@ import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 import {
+  buildCourseLevelQuery,
   buildDaysOfWeekQuery,
-  buildDivisionQuery,
   buildGEQuery,
   buildMultiCourseNumberQuery,
 } from "./util.ts";
@@ -90,7 +90,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  conditions.push(...buildDivisionQuery(websocCourse, input.division));
+  conditions.push(...buildCourseLevelQuery(websocCourse, input.division));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }
