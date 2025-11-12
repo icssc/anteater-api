@@ -1,25 +1,13 @@
 import { z } from "@hono/zod-openapi";
 import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
+import { inputGECategories } from "./lib";
 
 export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
 export const inputCourseLevelSchema = z.enum(inputCourseLevels, {
   message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
 });
-
-export const inputGECategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
 
 export const outputCourseLevels = [
   "Lower Division (1-99)",

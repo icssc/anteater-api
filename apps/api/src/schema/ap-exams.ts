@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import type { APCoursesGrantedTree } from "@packages/db/schema";
 
-import { geCategories } from "./lib";
+import { inputGECategories } from "./lib";
 
 export const apExamsQuerySchema = z.object({
   fullName: z.string().optional().openapi({
@@ -52,7 +52,7 @@ export const apExamsRewardSchema = z.object({
     description:
       "The number of units granted as generic elective credit (but not from any course) for this reward",
   }),
-  geGranted: z.record(z.enum(geCategories), z.number().int().nonnegative()).openapi({
+  geGranted: z.record(z.enum(inputGECategories), z.number().int().nonnegative()).openapi({
     description:
       "Courses in GE categories granted directly by this reward and not through any course",
   }),
