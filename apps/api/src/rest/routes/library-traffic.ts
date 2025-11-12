@@ -18,7 +18,7 @@ const libraryTrafficRoute = createRoute({
   method: "get",
   path: "/",
   request: { query: libraryTrafficQuerySchema },
-  description: "Retrieves the latest traffic data for all floors or a specific floor.",
+  description: "Retrieves the latest library occupancy metrics for specific library locations",
   responses: {
     200: {
       content: {

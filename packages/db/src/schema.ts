@@ -776,7 +776,7 @@ export const libraryTrafficHistory = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     locationId: integer("location_id")
-      .references(() => libraryTraffic.id)
+      .references(() => libraryTraffic.id, { onDelete: "cascade" })
       .notNull(),
     trafficCount: integer("traffic_count").notNull(),
     trafficPercentage: real("traffic_percentage").notNull(),
