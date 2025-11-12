@@ -1,20 +1,28 @@
 import type { database } from "@packages/db";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
+import { z } from "zod";
 
-type RawRespOK = {
-  message: "OK";
-  data: {
-    id: number;
-    name: string;
-    count: number;
-    percentage: number;
-    timestamp: string;
-  };
-};
+const rawRespOKSchema = z.object({
+  message: z.literal("OK"),
+  data: z.object({
+    id: z.number(),
+    name: z.string(),
+    count: z.number(),
+    percentage: z.number(),
+    timestamp: z.string(),
+  }),
+});
 
-type RawRespErr = { error: string };
+const rawRespSchema = z.union([
+  rawRespOKSchema,
+  z.object({ error: z.string() }),
+  z.object({ message: z.string() }),
+]);
+
+type RawRespOK = z.infer<typeof rawRespOKSchema>;
 
 export interface LocationMeta {
   id: string;
@@ -100,9 +108,27 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
     const intermediateJson = JSON.parse(responseText);
     const parsedResponse =
       typeof intermediateJson === "string" ? JSON.parse(intermediateJson) : intermediateJson;
-    if (parsedResponse.data && typeof parsedResponse.data === "object")
-      return (parsedResponse as RawRespOK).data;
-    console.warn(`ID ${id} responded with error: ${(parsedResponse as RawRespErr).error}`);
+
+    const validatedResponse = rawRespSchema.safeParse(parsedResponse);
+    if (!validatedResponse.success) {
+      console.error(`ID ${id} returned invalid response structure:`, validatedResponse.error);
+      return null;
+    }
+
+    const response = validatedResponse.data;
+
+    if ("data" in response) {
+      return response.data;
+    }
+
+    if ("message" in response) {
+      // Informational message (e.g., realtime data unavailable)
+      console.warn(`ID ${id}: ${response.message}`);
+    }
+
+    if ("error" in response) {
+      console.error(`ID ${id} responded with error:`, response.error);
+    }
   } catch (err) {
     console.error(`Unexpected error while fetching ID ${id}:`, err);
     throw err;
@@ -189,6 +215,8 @@ export async function doScrape(db: ReturnType<typeof database>) {
     const locationData = await fetchLocation(id);
     if (!locationData) continue;
 
+    const timestamp = new Date(locationData.timestamp);
+
     console.log(
       `[${meta.libraryName.padEnd(20)}] "${meta.locationLabel}": ` +
         `count=${locationData.count}, pct=${locationData.percentage}`,
@@ -204,18 +232,12 @@ export async function doScrape(db: ReturnType<typeof database>) {
           locationName: meta.locationLabel,
           trafficCount: locationData.count,
           trafficPercentage: locationData.percentage,
-          timestamp: new Date(locationData.timestamp),
+          timestamp: timestamp,
         },
       ])
       .onConflictDoUpdate({
         target: [libraryTraffic.id],
-        set: {
-          libraryName: meta.libraryName,
-          locationName: meta.locationLabel,
-          trafficCount: locationData.count,
-          trafficPercentage: locationData.percentage,
-          timestamp: new Date(locationData.timestamp),
-        },
+        set: conflictUpdateSetAllCols(libraryTraffic),
       });
 
     // Accumulate historical data in library traffic history table
@@ -224,7 +246,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
         locationId: locationData.id,
         trafficCount: locationData.count,
         trafficPercentage: locationData.percentage,
-        timestamp: new Date(locationData.timestamp),
+        timestamp: timestamp,
       },
     ]);
   }
