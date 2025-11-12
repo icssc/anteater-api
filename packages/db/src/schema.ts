@@ -149,12 +149,16 @@ export type APCoursesGrantedTree =
 export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 export type StandingYearType = (typeof StandingYear)[number];
 
+export type CourseEntry =
+  | { type: "courseId"; value: string } // Found in course table - can be linked
+  | { type: "string"; value: string }; // Not found in course table - display as-is
+
 // Sample Program Types
 export type SampleProgramEntry = {
   year: StandingYearType;
-  fall: string[];
-  winter: string[];
-  spring: string[];
+  fall: CourseEntry[];
+  winter: CourseEntry[];
+  spring: CourseEntry[];
 };
 
 // Sample Programs Tables

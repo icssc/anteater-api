@@ -50,6 +50,14 @@ type ScrapedSampleYear = {
   curriculum: string[][];
 };
 
+// Intermediate type - after structure transform but before course validation
+type UnvalidatedSampleProgramEntry = {
+  year: StandingYearType;
+  fall: string[];
+  winter: string[];
+  spring: string[];
+};
+
 async function fetchWithDelay(url: string, delayMs = 1000): Promise<string> {
   try {
     logger.info(`Making request to ${url}`);
@@ -119,8 +127,10 @@ function generateProgramId(url: string): string {
  * @param sampleYears The original sample years data from the scraper
  * @returns The transformed data with Fall, Winter, Spring structure
  */
-function transformToTermStructure(sampleYears: ScrapedSampleYear[]): SampleProgramEntry[] {
-  const transformedProgram: SampleProgramEntry[] = [];
+function transformToTermStructure(
+  sampleYears: ScrapedSampleYear[],
+): UnvalidatedSampleProgramEntry[] {
+  const transformedProgram: UnvalidatedSampleProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
     const fall: string[] = [];
@@ -198,18 +208,36 @@ async function transformCourseCodesToIds(
   scrapedPrograms: {
     majorId: string;
     programName: string;
-    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
+    variations: {
+      label?: string;
+      sampleProgram: UnvalidatedSampleProgramEntry[];
+      variationNotes: string[];
+    }[];
   }[],
-) {
+): Promise<
+  {
+    majorId: string;
+    programName: string;
+    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
+  }[]
+> {
   logger.info("Transforming course codes to IDs...");
 
-  const transformed = [];
+  const transformed: {
+    majorId: string;
+    programName: string;
+    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
+  }[] = [];
 
   for (const program of scrapedPrograms) {
-    const transformedVariations = [];
+    const transformedVariations: {
+      label?: string;
+      sampleProgram: SampleProgramEntry[];
+      variationNotes: string[];
+    }[] = [];
 
     for (const variation of program.variations) {
-      const transformedSampleProgram = [];
+      const transformedSampleProgram: SampleProgramEntry[] = [];
 
       for (const year of variation.sampleProgram) {
         // Transform each term's courses in parallel
@@ -217,19 +245,25 @@ async function transformCourseCodesToIds(
           Promise.all(
             year.fall.map(async (code) => {
               const id = await lookupCourseId(db, code);
-              return id ?? code; // Use ID if found, otherwise keep string
+              return id
+                ? { type: "courseId" as const, value: id }
+                : { type: "string" as const, value: code };
             }),
           ),
           Promise.all(
             year.winter.map(async (code) => {
               const id = await lookupCourseId(db, code);
-              return id ?? code;
+              return id
+                ? { type: "courseId" as const, value: id }
+                : { type: "string" as const, value: code };
             }),
           ),
           Promise.all(
             year.spring.map(async (code) => {
               const id = await lookupCourseId(db, code);
-              return id ?? code;
+              return id
+                ? { type: "courseId" as const, value: id }
+                : { type: "string" as const, value: code };
             }),
           ),
         ]);
@@ -260,7 +294,11 @@ async function storeSampleProgramsInDB(
   scrapedPrograms: {
     majorId: string;
     programName: string;
-    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
+    variations: {
+      label?: string;
+      sampleProgram: UnvalidatedSampleProgramEntry[];
+      variationNotes: string[];
+    }[];
   }[],
 ) {
   if (!scrapedPrograms.length) {
@@ -469,7 +507,7 @@ async function scrapeSamplePrograms(programPath: string) {
   // CASE 1: Single Table - No Label Needed
   const variations: Array<{
     label?: string;
-    sampleProgram: SampleProgramEntry[];
+    sampleProgram: UnvalidatedSampleProgramEntry[];
     variationNotes: string[];
   }> = [];
 

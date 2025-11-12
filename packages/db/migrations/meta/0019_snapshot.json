@@ -1,5 +1,5 @@
 {
-  "id": "0d335487-459b-40d9-8636-586103ef3dac",
+  "id": "f927d2d3-018d-487e-bc01-59c6fac31d53",
   "prevId": "32f64e28-1f2f-4fc1-966b-e6862bcfd264",
   "version": "7",
   "dialect": "postgresql",
@@ -1201,7 +1201,7 @@
           "name": "variation_notes",
           "type": "varchar[]",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "ARRAY[]::VARCHAR[]"
         }
       },

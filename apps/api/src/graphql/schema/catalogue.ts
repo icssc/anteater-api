@@ -6,11 +6,21 @@ enum StandingYear {
     Senior
 }
 
+enum CourseEntryType {
+    courseId
+    string
+}
+
+type CourseEntry @cacheControl(maxAge: 86400) {
+    type: CourseEntryType!
+    value: String!
+}
+
 type YearPlan @cacheControl(maxAge: 86400) {
     year: StandingYear!
-    fall: [String!]!
-    winter: [String!]!
-    spring: [String!]!
+    fall: [CourseEntry!]!
+    winter: [CourseEntry!]!
+    spring: [CourseEntry!]!
 }
 
 type SampleProgramVariation @cacheControl(maxAge: 86400) {

@@ -9,27 +9,62 @@ export const sampleProgramsQuerySchema = z.object({
 
 export const standingyearEnum = z.enum(["Freshman", "Sophomore", "Junior", "Senior"]);
 
+export const courseEntrySchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("courseId"),
+    value: z.string().openapi({
+      description: "Course ID that was validated and found in the database",
+      example: "I&CSCI31",
+    }),
+  }),
+  z.object({
+    type: z.literal("string"),
+    value: z.string().openapi({
+      description:
+        "Original text that could not be validated as a course (e.g., general education requirements)",
+      example: "General Education III",
+    }),
+  }),
+]);
+
 export const sampleProgramsYearSchema = z
   .object({
     year: standingyearEnum.openapi({
       description: "Class standing or year level",
     }),
-    fall: z.array(z.string()).openapi({
-      description: "Courses recommended for Fall term",
+    fall: z.array(courseEntrySchema).openapi({
+      description:
+        "Courses recommended for Fall term. Each entry is either a validated course ID or descriptive text.",
     }),
-    winter: z.array(z.string()).openapi({
-      description: "Courses recommended for Winter term",
+    winter: z.array(courseEntrySchema).openapi({
+      description:
+        "Courses recommended for Winter term. Each entry is either a validated course ID or descriptive text.",
     }),
-    spring: z.array(z.string()).openapi({
-      description: "Courses recommended for Spring term",
+    spring: z.array(courseEntrySchema).openapi({
+      description:
+        "Courses recommended for Spring term. Each entry is either a validated course ID or descriptive text.",
     }),
   })
   .openapi({
     example: {
       year: "Freshman",
-      fall: ["I&CSCI31", "MATH2A", "WRITING40"],
-      winter: ["I&CSCI32", "MATH2B", "WRITING50", "General Education III"],
-      spring: ["I&CSCI33", "IN4MATX43", "I&CSCI6B", "WRITING60"],
+      fall: [
+        { type: "courseId", value: "I&CSCI31" },
+        { type: "courseId", value: "MATH2A" },
+        { type: "courseId", value: "WRITING40" },
+      ],
+      winter: [
+        { type: "courseId", value: "I&CSCI32" },
+        { type: "courseId", value: "MATH2B" },
+        { type: "courseId", value: "WRITING50" },
+        { type: "string", value: "General Education III" },
+      ],
+      spring: [
+        { type: "courseId", value: "I&CSCI33" },
+        { type: "courseId", value: "IN4MATX43" },
+        { type: "courseId", value: "I&CSCI6B" },
+        { type: "courseId", value: "WRITING60" },
+      ],
     },
   });
 
@@ -41,7 +76,7 @@ export const sampleProgramVariationSchema = z.object({
   }),
   courses: z.array(sampleProgramsYearSchema).openapi({
     description:
-      "Structured list of courses for this variation, organized by year and term. Course IDs areare included wherever possible, based on best available mapping.",
+      "Structured list of courses for this variation, organized by year and term. Each course entry indicates whether it was validated as a course ID or kept as descriptive text.",
   }),
   notes: z.array(z.string()).openapi({
     description: "Variation-specific notes (if any)",

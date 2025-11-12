@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "sample_program_variation" (
 	"program_id" varchar NOT NULL,
 	"label" varchar,
 	"sample_program" jsonb NOT NULL,
-	"variation_notes" varchar[] DEFAULT ARRAY[]::VARCHAR[]
+	"variation_notes" varchar[] DEFAULT ARRAY[]::VARCHAR[] NOT NULL
 );
 --> statement-breakpoint
 DO $$ BEGIN
