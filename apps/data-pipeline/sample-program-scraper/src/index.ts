@@ -109,8 +109,8 @@ async function collectProgramPathsFromSchools(): Promise<string[]> {
 }
 
 /*
- * Extracts a unique ID from the catalogue URL
- * Example: https://catalogue.uci.edu/.../computerscience_bs/ => "computerscience_bs"
+  Extracts a unique ID from the catalogue URL
+  Example: https://catalogue.uci.edu/.../computerscience_bs/ => "computerscience_bs"
  */
 function generateProgramId(url: string): string {
   // Regex pulls the final path segment from the catalogue URL (e.g. /foo/bar/ -> bar).
@@ -123,10 +123,10 @@ function generateProgramId(url: string): string {
 }
 
 /*
- * Transforms the original sample program format to have a Fall, Winter, Spring structure
- * @param sampleYears The original sample years data from the scraper
- * @returns The transformed data with Fall, Winter, Spring structure
- */
+  Transforms the original sample program format to have a Fall, Winter, Spring structure
+  @param sampleYears The original sample years data from the scraper
+  @returns The transformed data with Fall, Winter, Spring structure
+*/
 function transformToTermStructure(
   sampleYears: ScrapedSampleYear[],
 ): UnvalidatedSampleProgramEntry[] {
@@ -200,8 +200,8 @@ async function lookupCourseId(
 }
 
 /*
- * Transforms course code strings to course IDs by looking them up in the database.
- * Falls back to original string if course not found.
+  Transforms course code strings to course IDs by looking them up in the database.
+  Falls back to original string if course not found.
  */
 async function transformCourseCodesToIds(
   db: ReturnType<typeof database>,
