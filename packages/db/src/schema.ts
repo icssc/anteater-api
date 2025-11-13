@@ -149,9 +149,8 @@ export type APCoursesGrantedTree =
 export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 export type StandingYearType = (typeof StandingYear)[number];
 
-export type CourseEntry =
-  | { type: "courseId"; value: string } // Found in course table - can be linked
-  | { type: "unknown"; value: string }; // Not found in course table - display as-is
+// Course Validation Entry Types
+export type CourseEntry = { type: "courseId"; value: string } | { type: "unknown"; value: string };
 
 // Sample Program Types
 export type SampleProgramEntry = {
