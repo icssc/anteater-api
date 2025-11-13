@@ -11,4 +11,4 @@ export * from "./search";
 export * from "./study-rooms";
 export * from "./websoc";
 export * from "./week";
-export { geCategories } from "./lib";
+export { inputGECategories } from "./lib";
