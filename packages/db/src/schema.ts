@@ -420,8 +420,10 @@ export const websocLocation = pgTable(
 );
 
 export const websocInstructor = pgTable("websoc_instructor", {
-  name: varchar("name").primaryKey(),
+  identifier: varchar("identifier").primaryKey(),
+  name: varchar("name").notNull(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  department: varchar("department"),
 });
 
 export const websocSectionToInstructor = pgTable(

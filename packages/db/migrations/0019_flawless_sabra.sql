@@ -1,0 +1,1 @@
+ALTER TABLE "websoc_instructor" ADD COLUMN "department" varchar;

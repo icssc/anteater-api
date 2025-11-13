@@ -6,6 +6,7 @@ node_modules
 
 # debug
 .pnpm-debug.log*
+*.session.sql
 
 # env
 .env*

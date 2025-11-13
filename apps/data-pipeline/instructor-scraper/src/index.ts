@@ -37,6 +37,8 @@ const HEADERS_INIT = {
   "Content-Type": "application/x-www-form-urlencoded",
 };
 
+const FILTER_KEYWORDS = ["professor", "lecturer", "faculty"];
+
 const MAX_DELAY_MS = 8_000;
 
 const INSTRUCTOR_MAX_SURNAME_LENGTH = 14;
@@ -111,13 +113,16 @@ const nameFilterFor =
       .toLowerCase()
       .split(" ")
       .map((x) => x.trim());
+
     const firstInitialsChunks = normalizedFirstInitials.split(" ").map((x) => x.trim());
     const lastNameChunks = normalizedLastName.split(" ").map((x) => x.trim());
     const firstInitialsCondition = nameChunks
       .slice(0, firstInitialsChunks.length)
       .every((x, i) => x.startsWith(firstInitialsChunks[i]));
+
     const chunkLength =
       nameChunks.length - (lastNameChunks.length - 1) - firstInitialsChunks.length;
+
     const lastNameCondition =
       lastNameChunks.length === 1
         ? nameChunks
@@ -142,8 +147,10 @@ const nameFilterFor =
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
+
   const db = database(url);
   logger.info("instructor-scraper starting");
+
   const names = await db
     .select({ name: websocInstructor.name })
     .from(websocInstructor)
@@ -157,119 +164,146 @@ async function main() {
         isNull(instructorToWebsocInstructor.instructorUcinetid),
       ),
     )
-    .then((rows) => rows.map(({ name }) => name).filter((x) => x !== "STAFF"));
+    .then((rows) =>
+      rows
+        .map(({ name }) => {
+          return name;
+        })
+        .filter((x) => x !== "STAFF"),
+    );
+
   logger.info(`Found ${names.length} WebSoc instructors without associated instructors`);
+
   const shortNamesToUcinetids = new Map<string, Array<string | null>>();
   const ucinetidToInstructorObject = new Map<string, typeof instructor.$inferInsert>();
+
   for (const name of names) {
     const normalizedName = name.toLowerCase().replaceAll(/, ?/g, " ").trim();
     const fullyNormalizedName = normalizedName.replaceAll(/\./g, " ").trim();
     const indexOfLastSpace = normalizedName.lastIndexOf(" ");
+
     const normalizedLastName =
       indexOfLastSpace === -1
         ? normalizedName
         : normalizedName.slice(0, normalizedName.lastIndexOf(" ")).replaceAll(/\./g, " ").trim();
+
     const normalizedFirstInitials =
       indexOfLastSpace === -1
         ? ""
         : normalizedName.slice(normalizedName.lastIndexOf(" ")).replaceAll(/\./g, " ").trim();
+
     logger.info(`Fetching directory for instructor with WebSoc name '${name}'`);
+
     logger.info(
       `(fully normalized name = '${fullyNormalizedName}', normalized last name = '${normalizedLastName}', normalized first initial(s) = '${normalizedFirstInitials}')`,
     );
+
     const initRes = await fetchDirectoryWithDelay(fullyNormalizedName).then((x) =>
       x
         .map(([_, entry]) => entry)
         .filter(nameFilterFor(normalizedLastName, normalizedFirstInitials)),
     );
+
     if (initRes.length === 0) {
       logger.warn("Did not find any entries for this instructor.");
       logger.warn("Assigning this instructor a null UCInetID.");
+
       if (shortNamesToUcinetids.has(name)) {
         shortNamesToUcinetids.get(name)?.push(null);
       } else {
         shortNamesToUcinetids.set(name, [null]);
       }
+
       continue;
     }
+
     if (initRes.length === 1) {
       logger.info("Found exactly one entry for this instructor.");
+
       const instructor = transformDirectoryEntry(initRes[0]);
+
       if (instructor.ucinetid === "student") {
         logger.warn("This instructor appears to be a student.");
         logger.warn("Mapping this instructor to the UCInetID 'student'.");
       }
+
       if (shortNamesToUcinetids.has(name)) {
         shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
       } else {
         shortNamesToUcinetids.set(name, [instructor.ucinetid]);
       }
+
       ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
       continue;
     }
+
     logger.warn("Found multiple entries for this instructor; attempting to narrow search.");
-    logger.info("Fetching directory with 'professor' appended to normalized name.");
-    const profRes = await fetchDirectoryWithDelay(`${fullyNormalizedName} professor`).then((x) =>
-      x
-        .map(([_, entry]) => entry)
-        .filter(({ Title }) => Title.match(/[Pp]rofessor/))
-        .filter(nameFilterFor(normalizedLastName, normalizedFirstInitials)),
-    );
-    if (profRes.length === 1) {
-      logger.info("Found exactly one entry for this instructor based on the professor filter.");
-      const instructor = transformDirectoryEntry(profRes[0]);
-      if (instructor.ucinetid === "student") {
-        logger.warn("This instructor appears to be a student.");
-        logger.warn("Mapping this instructor to the UCInetID 'student'.");
-      }
-      if (shortNamesToUcinetids.has(name)) {
-        shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
-      } else {
-        shortNamesToUcinetids.set(name, [instructor.ucinetid]);
-      }
-      ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
-      continue;
-    }
-    if (profRes.length === 0) {
-      logger.warn("Did not find any entries when narrowing for 'professor'.");
-    } else {
-      logger.warn(
-        "Still found multiple entries for this instructor when narrowing for 'professor'.",
+
+    let isolatedInstructor = false;
+
+    for (const keyword of FILTER_KEYWORDS) {
+      logger.info(
+        `Fetching directory with '${keyword}' appended to normalized name (Exact Directory Search: ${fullyNormalizedName} ${keyword}).`,
       );
-    }
-    logger.info("Fetching directory with 'lecturer' appended to normalized name.");
-    const lectRes = await fetchDirectoryWithDelay(`${fullyNormalizedName} lecturer`).then((x) =>
-      x
-        .map(([_, entry]) => entry)
-        .filter(({ Title }) => Title.match(/[Ll]ecturer/))
-        .filter(nameFilterFor(normalizedLastName, normalizedFirstInitials)),
-    );
-    if (lectRes.length === 0) {
-      logger.warn("Did not find any entries when narrowing for 'lecturer'.");
-    }
-    if (lectRes.length === 1) {
-      logger.info("Found exactly one entry for this instructor based on the lecturer filter.");
-      const instructor = transformDirectoryEntry(lectRes[0]);
-      if (instructor.ucinetid === "student") {
-        logger.warn("This instructor appears to be a student.");
-        logger.warn("Mapping this instructor to the UCInetID 'student'.");
+
+      const filterRes = await fetchDirectoryWithDelay(`${fullyNormalizedName} ${keyword}`).then(
+        (x) =>
+          x
+            .map(([_, entry]) => entry)
+            .filter(({ Title }) => {
+              return (
+                Title.includes(keyword.substring(0, 1).toUpperCase() + keyword.substring(1)) ||
+                Title.includes(keyword.substring(0, 1).toLocaleLowerCase() + keyword.substring(1))
+              );
+            })
+            .filter(nameFilterFor(normalizedLastName, normalizedFirstInitials)),
+      );
+
+      if (filterRes.length === 1) {
+        logger.info(`Found exactly one entry for this instructor based on the ${keyword} filter.`);
+
+        const instructor = transformDirectoryEntry(filterRes[0]);
+
+        if (instructor.ucinetid === "student") {
+          logger.warn("This instructor appears to be a student.");
+          logger.warn("Mapping this instructor to the UCInetID 'student'.");
+        }
+
+        if (shortNamesToUcinetids.has(name)) {
+          shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
+        } else {
+          shortNamesToUcinetids.set(name, [instructor.ucinetid]);
+        }
+
+        ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
+        isolatedInstructor = true;
+
+        break;
       }
-      if (shortNamesToUcinetids.has(name)) {
-        shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
+
+      if (filterRes.length === 0) {
+        logger.warn(`Did not find any entries when narrowing for '${keyword}'.`);
       } else {
-        shortNamesToUcinetids.set(name, [instructor.ucinetid]);
+        logger.warn(
+          `Still found multiple entries for this instructor when narrowing for '${keyword}'.`,
+        );
       }
-      ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
+    }
+
+    if (isolatedInstructor) {
       continue;
     }
+
     logger.error(`Cannot find a unique match for instructor with WebSoc name '${name}'.`);
     logger.error("Assigning this instructor a null UCInetID.");
+
     if (shortNamesToUcinetids.has(name)) {
       shortNamesToUcinetids.get(name)?.push(null);
     } else {
       shortNamesToUcinetids.set(name, [null]);
     }
   }
+
   await db.transaction(async (tx) => {
     await tx
       .insert(instructor)

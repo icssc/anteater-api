@@ -50,6 +50,11 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
+/**
+ * Separates faculty names and their departments during processing
+ */
+const DEPT_DELIMITER = "&|*";
+
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
@@ -512,14 +517,27 @@ const doChunkUpsert = async (
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
           dept.courses.flatMap((course) =>
-            course.sections.flatMap((section) =>
-              Array.from(
+            course.sections.flatMap((section) => {
+              return Array.from(
                 intersectAll(
-                  new Set(course.sections[0].instructors),
-                  ...course.sections.slice(1).map((section) => new Set(section.instructors)),
+                  new Set(
+                    course.sections[0].instructors.map(
+                      (ins) => `${ins}${DEPT_DELIMITER}${dept.deptName}${DEPT_DELIMITER}`,
+                    ),
+                  ),
+                  ...course.sections
+                    .slice(1)
+                    .map(
+                      (section) =>
+                        new Set(
+                          section.instructors.map(
+                            (ins) => `${ins}${DEPT_DELIMITER}${dept.deptName}${DEPT_DELIMITER}`,
+                          ),
+                        ),
+                    ),
                 ),
-              ).map((instructor) => [section.sectionCode, instructor]),
-            ),
+              ).map((instructor) => [section.sectionCode, instructor]);
+            }),
           ),
         ),
       )
@@ -530,18 +548,39 @@ const doChunkUpsert = async (
         }
         return acc.set(sectionCode, [instructor]);
       }, new Map<string, string[]>());
+
+    // pray that two people with the same last name and first initial don't work in the same department
     const instructorsToInsert = Array.from(new Set(sectionsToInstructors.values())).flatMap(
-      (names) => names.map((name) => ({ name, updatedAt })),
+      (names) =>
+        names.map((name) => ({
+          identifier: name,
+          name: name.substring(0, name.indexOf(DEPT_DELIMITER)),
+          department: name.substring(
+            name.indexOf(DEPT_DELIMITER) + DEPT_DELIMITER.length,
+            name.lastIndexOf(DEPT_DELIMITER),
+          ),
+          updatedAt,
+        })),
     );
+
     if (instructorsToInsert.length) {
-      await tx.insert(websocInstructor).values(instructorsToInsert).onConflictDoNothing();
+      await tx
+        .insert(websocInstructor)
+        .values(instructorsToInsert)
+        .onConflictDoUpdate({
+          target: [websocInstructor.identifier],
+          set: conflictUpdateSetAllCols(websocSection),
+        });
     }
+
     await tx.delete(websocSectionToInstructor).where(
       inArray(
         websocSectionToInstructor.sectionId,
         sectionsToInstructors
           .keys()
-          .map((key) => sections.get(key))
+          .map((key) => {
+            return sections.get(key);
+          })
           .filter(notNull)
           .toArray(),
       ),
@@ -551,7 +590,12 @@ const doChunkUpsert = async (
       .flatMap(([k, names]) =>
         names.map((instructorName) => {
           const sectionId = sections.get(k);
-          return sectionId ? { sectionId, instructorName } : undefined;
+          return sectionId
+            ? {
+                sectionId,
+                instructorName: instructorName.substring(0, instructorName.indexOf(DEPT_DELIMITER)),
+              }
+            : undefined;
         }),
       )
       .filter(notNull)
