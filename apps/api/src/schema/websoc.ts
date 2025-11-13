@@ -296,11 +296,12 @@ export const websocTermResponseSchema = z.object({
 export const websocDepartmentsQuerySchema = z
   .object({
     sinceYear: yearSchema.optional().openapi({
-      description: "If provided, departments must have appeared at least once not before this year",
+      description:
+        "If provided, filter to departments which have appeared at least once during or after this year",
     }),
     sinceQuarter: z.enum(terms).optional().openapi({
       description:
-        "If provided with `sinceYear`, departments must appear at least once not before this quarter in that year",
+        "If provided with `sinceYear`, departments must have appeared during or after this quarter in that year",
     }),
   })
   .refine(
