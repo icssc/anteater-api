@@ -18,8 +18,7 @@ const sampleProgramsRoute = createRoute({
   tags: ["Catalogue"],
   method: "get",
   path: "/sample-programs",
-  description:
-    "List all available sample programs in UCI's current catalogue. Course IDs are matched on a best-effort basis, so some rows may not be a courseID.",
+  description: "List all available sample programs in UCI's current catalogue.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
     200: {
@@ -50,17 +49,15 @@ catalogueRouter.openapi(sampleProgramsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new ProgramsService(database(c.env.DB.connectionString));
   const res = await service.getSamplePrograms(query);
-
-  if (query?.id && !res.length) {
+  if (query?.id && res.length === 0) {
     return c.json(
       {
         ok: false,
-        message: "No data for a sample program by that ID",
+        message: `Sample program '${query.id}' not found`,
       },
       404,
     );
   }
-
   return c.json({ ok: true, data: sampleProgramsResponseSchema.parse(res) }, 200);
 });
 

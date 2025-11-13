@@ -7,7 +7,9 @@ export const sampleProgramsQuerySchema = z.object({
   }),
 });
 
-export const standingyearEnum = z.enum(["Freshman", "Sophomore", "Junior", "Senior"]);
+const STANDING_YEARS = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
+
+export const standingyearEnum = z.enum(STANDING_YEARS);
 
 export const courseEntrySchema = z.discriminatedUnion("type", [
   z.object({

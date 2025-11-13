@@ -9,10 +9,11 @@ export const catalogueResolvers = {
       const parsedArgs = sampleProgramsQuerySchema.parse(args?.query);
       const service = new ProgramsService(db);
       const res = await service.getSamplePrograms(parsedArgs);
-      if (!res)
-        throw new GraphQLError("No data for a sample program by that ID", {
+      if (parsedArgs?.id && res.length === 0) {
+        throw new GraphQLError(`Sample program '${parsedArgs.id}' not found`, {
           extensions: { code: "NOT_FOUND" },
         });
+      }
       return res;
     },
   },
