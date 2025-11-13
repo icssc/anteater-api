@@ -15,15 +15,14 @@ export const courseEntrySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("courseId"),
     value: z.string().openapi({
-      description: "Course ID that was validated and found in the database",
+      description: "A string known to be a valid course ID",
       example: "I&CSCI31",
     }),
   }),
   z.object({
     type: z.literal("unknown"),
     value: z.string().openapi({
-      description:
-        "Original text that could not be validated as a course (e.g., general education requirements)",
+      description: "Text that could not be validated (e.g., general education requirements)",
       example: "General Education III",
     }),
   }),
@@ -34,18 +33,9 @@ export const sampleProgramsYearSchema = z
     year: standingyearEnum.openapi({
       description: "Class standing or year level",
     }),
-    fall: z.array(courseEntrySchema).openapi({
-      description:
-        "Courses recommended for Fall term. Each entry is either a validated course ID or descriptive text.",
-    }),
-    winter: z.array(courseEntrySchema).openapi({
-      description:
-        "Courses recommended for Winter term. Each entry is either a validated course ID or descriptive text.",
-    }),
-    spring: z.array(courseEntrySchema).openapi({
-      description:
-        "Courses recommended for Spring term. Each entry is either a validated course ID or descriptive text.",
-    }),
+    fall: z.array(courseEntrySchema),
+    winter: z.array(courseEntrySchema),
+    spring: z.array(courseEntrySchema),
   })
   .openapi({
     example: {
@@ -72,14 +62,10 @@ export const sampleProgramsYearSchema = z
 
 export const sampleProgramVariationSchema = z.object({
   label: z.string().nullable().openapi({
-    description:
-      "Label describing this variation of the multiple sample programs available for this program",
+    description: "Label describing this program variation",
     example: "General",
   }),
-  courses: z.array(sampleProgramsYearSchema).openapi({
-    description:
-      "Structured list of courses for this variation, organized by year and term. Each course entry indicates whether it was validated as a course ID or kept as descriptive text.",
-  }),
+  courses: z.array(sampleProgramsYearSchema),
   notes: z.array(z.string()).openapi({
     description: "Variation-specific notes (if any)",
     example: [
@@ -99,9 +85,7 @@ export const sampleProgramsResponseSchemaObject = z.object({
     description: "Program name of this sample program",
     example: "Computer Science, B.S.",
   }),
-  variations: z.array(sampleProgramVariationSchema).openapi({
-    description: "Array of program variations. Programs with single variation have empty label.",
-  }),
+  variations: z.array(sampleProgramVariationSchema),
 });
 
 export const sampleProgramsResponseSchema = z.array(sampleProgramsResponseSchemaObject);
