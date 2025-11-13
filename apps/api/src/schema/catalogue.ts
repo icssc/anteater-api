@@ -18,7 +18,7 @@ export const courseEntrySchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
-    type: z.literal("string"),
+    type: z.literal("unknown"),
     value: z.string().openapi({
       description:
         "Original text that could not be validated as a course (e.g., general education requirements)",
@@ -57,7 +57,7 @@ export const sampleProgramsYearSchema = z
         { type: "courseId", value: "I&CSCI32" },
         { type: "courseId", value: "MATH2B" },
         { type: "courseId", value: "WRITING50" },
-        { type: "string", value: "General Education III" },
+        { type: "unknown", value: "General Education III" },
       ],
       spring: [
         { type: "courseId", value: "I&CSCI33" },

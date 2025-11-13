@@ -151,7 +151,7 @@ export type StandingYearType = (typeof StandingYear)[number];
 
 export type CourseEntry =
   | { type: "courseId"; value: string } // Found in course table - can be linked
-  | { type: "string"; value: string }; // Not found in course table - display as-is
+  | { type: "unknown"; value: string }; // Not found in course table - display as-is
 
 // Sample Program Types
 export type SampleProgramEntry = {

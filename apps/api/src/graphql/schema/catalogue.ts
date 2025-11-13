@@ -8,7 +8,7 @@ enum StandingYear {
 
 enum CourseEntryType {
     courseId
-    string
+    unknown
 }
 
 type CourseEntry @cacheControl(maxAge: 86400) {

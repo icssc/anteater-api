@@ -247,7 +247,7 @@ async function transformCourseCodesToIds(
               const id = await lookupCourseId(db, code);
               return id
                 ? { type: "courseId" as const, value: id }
-                : { type: "string" as const, value: code };
+                : { type: "unknown" as const, value: code };
             }),
           ),
           Promise.all(
@@ -255,7 +255,7 @@ async function transformCourseCodesToIds(
               const id = await lookupCourseId(db, code);
               return id
                 ? { type: "courseId" as const, value: id }
-                : { type: "string" as const, value: code };
+                : { type: "unknown" as const, value: code };
             }),
           ),
           Promise.all(
@@ -263,7 +263,7 @@ async function transformCourseCodesToIds(
               const id = await lookupCourseId(db, code);
               return id
                 ? { type: "courseId" as const, value: id }
-                : { type: "string" as const, value: code };
+                : { type: "unknown" as const, value: code };
             }),
           ),
         ]);
