@@ -311,7 +311,7 @@ export const websocDepartmentsQuerySchema = z
 
 export const websocDepartmentsResponseSchema = z
   .object({
-    deptCode: z.string(),
-    deptName: z.string(),
+    deptCode: z.string().openapi({ example: "BIO SCI" }),
+    deptName: z.string().openapi({ example: "Biological Sciences" }),
   })
   .array();
