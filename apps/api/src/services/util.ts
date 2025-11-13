@@ -64,18 +64,18 @@ export function buildGEQuery(
   return conditions;
 }
 
-type WebsocDivisionLikeInput = WebsocServiceInput["division"];
+type WebsocCourseLevelLikeInput = WebsocServiceInput["division"];
 interface CourseNumericLikeTable {
   courseNumeric: PgColumn<ColumnBaseConfig<"number", string>>;
 }
-export function buildDivisionQuery(
+export function buildCourseLevelQuery(
   table: CourseNumericLikeTable,
-  division: WebsocDivisionLikeInput,
+  courseLevel: WebsocCourseLevelLikeInput,
 ): Array<SQL | undefined> {
   const conditions = [];
 
-  if (division) {
-    switch (division) {
+  if (courseLevel) {
+    switch (courseLevel) {
       case "LowerDiv":
         conditions.push(and(gte(table.courseNumeric, 1), lte(table.courseNumeric, 99)));
         break;
