@@ -23,6 +23,18 @@ import type { z } from "zod";
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
+  private async isSpecializationsOptional(
+    majorId: string,
+    specializations: string[],
+  ): Promise<boolean> {
+    const isOptional = specializations.length === 0;
+    console.log(
+      `📊 ${majorId} -> specializations: [${specializations.join(", ")}] -> specializationsOptional: ${isOptional}`,
+    );
+
+    return isOptional;
+  }
+
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
@@ -38,7 +50,7 @@ export class ProgramsService {
         .groupBy(major.id),
     );
 
-    return this.db
+    const results = await this.db
       .with(majorSpecialization)
       .select({
         id: majorSpecialization.id,
@@ -51,6 +63,18 @@ export class ProgramsService {
       .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
       .innerJoin(major, eq(majorSpecialization.id, major.id))
       .innerJoin(degree, eq(major.degreeId, degree.id));
+
+    const resultsWithOptionality = await Promise.all(
+      results.map(async (result) => ({
+        ...result,
+        specializationsOptional: await this.isSpecializationsOptional(
+          result.id,
+          result.specializations,
+        ),
+      })),
+    );
+
+    return resultsWithOptionality;
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {

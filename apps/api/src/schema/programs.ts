@@ -200,6 +200,10 @@ export const majorsResponseSchema = z.array(
         "BS-201I",
       ],
     }),
+    specializationsOptional: z.boolean().optional().openapi({
+      description: "Whether specializations are optional for this major",
+      example: false,
+    }),
   }),
 );
 
