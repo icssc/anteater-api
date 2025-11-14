@@ -303,10 +303,16 @@ export const websocDepartmentsQuerySchema = z
       description:
         "If provided with `sinceYear`, departments must have appeared during or after this quarter in that year",
     }),
+    untilYear: yearSchema.optional(),
+    untilQuarter: z.enum(terms).optional(),
   })
   .refine(
     ({ sinceYear, sinceQuarter }) => !sinceQuarter || sinceYear,
     "sinceQuarter cannot be provided without sinceYear",
+  )
+  .refine(
+    ({ untilYear, untilQuarter }) => !untilQuarter || untilYear,
+    "untilQuarter cannot be provided without untilYear",
   );
 
 export const websocDepartmentsResponseSchema = z
