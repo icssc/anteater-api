@@ -22,8 +22,8 @@ export const courseEntrySchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("unknown"),
     value: z.string().openapi({
-      description: "Text that could not be validated (e.g., general education requirements)",
-      example: "General Education III",
+      description: "Text that could not be validated",
+      example: "Elective",
     }),
   }),
 ]);

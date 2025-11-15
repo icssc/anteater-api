@@ -18,7 +18,7 @@ const sampleProgramsRoute = createRoute({
   tags: ["Catalogue"],
   method: "get",
   path: "/sample-programs",
-  description: "List all available sample programs in UCI's current catalogue.",
+  description: "List sample programs in UCI's current catalogue.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
     200: {
