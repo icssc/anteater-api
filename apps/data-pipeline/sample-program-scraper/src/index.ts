@@ -43,16 +43,26 @@ const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
 const MAX_DELAY_MS = 8_000 as const;
 
+// Represents a single variation within a program (before validation)
+type ScrapedProgramVariation = {
+  label?: string;
+  sampleProgram: UnvalidatedSampleProgramEntry[];
+  variationNotes: string[];
+};
+
 // Represents a program as scraped from the HTML, before course validation.
 // Contains unvalidated course strings that may or may not be valid course IDs.
 type ScrapedProgram = {
   majorId: string;
   programName: string;
-  variations: {
-    label?: string;
-    sampleProgram: UnvalidatedSampleProgramEntry[];
-    variationNotes: string[];
-  }[];
+  variations: ScrapedProgramVariation[];
+};
+
+// Represents a single variation within a program (after validation)
+type ProgramVariation = {
+  label?: string;
+  sampleProgram: SampleProgramEntry[];
+  variationNotes: string[];
 };
 
 // Represents a program after course code validation and transformation.
@@ -60,11 +70,7 @@ type ScrapedProgram = {
 type TransformedProgram = {
   majorId: string;
   programName: string;
-  variations: {
-    label?: string;
-    sampleProgram: SampleProgramEntry[];
-    variationNotes: string[];
-  }[];
+  variations: ProgramVariation[];
 };
 
 // Holds raw scraped data from HTML tables before transformation.
@@ -224,9 +230,21 @@ async function lookupCourseId(
 }
 
 /*
+  Validates a single course code and returns a discriminated union.
+  Returns courseId type if found in database, unknown type otherwise.
+*/
+async function validateCourseCode(
+  db: ReturnType<typeof database>,
+  code: string,
+): Promise<{ type: "courseId"; value: string } | { type: "unknown"; value: string }> {
+  const id = await lookupCourseId(db, code);
+  return id ? { type: "courseId" as const, value: id } : { type: "unknown" as const, value: code };
+}
+
+/*
   Transforms course code strings to course IDs by looking them up in the database.
   Falls back to original string if course not found.
- */
+*/
 async function transformCourseCodesToIds(
   db: ReturnType<typeof database>,
   scrapedPrograms: ScrapedProgram[],
@@ -236,7 +254,7 @@ async function transformCourseCodesToIds(
   const transformed: TransformedProgram[] = [];
 
   for (const program of scrapedPrograms) {
-    const transformedVariations: TransformedProgram["variations"] = [];
+    const transformedVariations: ProgramVariation[] = [];
 
     for (const variation of program.variations) {
       const transformedSampleProgram: SampleProgramEntry[] = [];
@@ -244,30 +262,9 @@ async function transformCourseCodesToIds(
       for (const year of variation.sampleProgram) {
         // Transform each term's courses in parallel
         const [fall, winter, spring] = await Promise.all([
-          Promise.all(
-            year.fall.map(async (code) => {
-              const id = await lookupCourseId(db, code);
-              return id
-                ? { type: "courseId" as const, value: id }
-                : { type: "unknown" as const, value: code };
-            }),
-          ),
-          Promise.all(
-            year.winter.map(async (code) => {
-              const id = await lookupCourseId(db, code);
-              return id
-                ? { type: "courseId" as const, value: id }
-                : { type: "unknown" as const, value: code };
-            }),
-          ),
-          Promise.all(
-            year.spring.map(async (code) => {
-              const id = await lookupCourseId(db, code);
-              return id
-                ? { type: "courseId" as const, value: id }
-                : { type: "unknown" as const, value: code };
-            }),
-          ),
+          Promise.all(year.fall.map((code) => validateCourseCode(db, code))),
+          Promise.all(year.winter.map((code) => validateCourseCode(db, code))),
+          Promise.all(year.spring.map((code) => validateCourseCode(db, code))),
         ]);
 
         transformedSampleProgram.push({ year: year.year, fall, winter, spring });
@@ -300,7 +297,6 @@ async function storeSampleProgramsInDB(
     return;
   }
 
-  // Transform course codes to IDs
   const transformedPrograms = await transformCourseCodesToIds(db, scrapedPrograms);
 
   logger.info("Fetching sample programs from database...");
@@ -310,7 +306,6 @@ async function storeSampleProgramsInDB(
     programName: program.programName,
   }));
 
-  // Prepare child table rows (sample_program_variation)
   const variationRows = transformedPrograms.flatMap((program) =>
     program.variations.map((variation) => ({
       programId: program.majorId,
@@ -332,11 +327,9 @@ async function storeSampleProgramsInDB(
     .from(sampleProgramVariation)
     .where(inArray(sampleProgramVariation.programId, programIds));
 
-  // Combine into unified structure for comparison
   const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
   const scrapedData = { catalogPrograms: catalogueRows, variations: variationRows };
 
-  // Sort both structures
   const sortedDbData = sortKeys(
     {
       catalogPrograms: dbData.catalogPrograms.sort((a, b) => a.id.localeCompare(b.id)),
@@ -379,7 +372,11 @@ async function storeSampleProgramsInDB(
   logger.info(`Successfully stored ${catalogueRows.length} sample programs`);
 }
 
-// HELPER: Parse a single table and return its data
+/*
+  Parses a single sample program table from the HTML.
+  Extracts year headers and course data organized by term (Fall/Winter/Spring).
+  @returns Array of ScrapedSampleYear objects containing year and curriculum data
+*/
 function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): ScrapedSampleYear[] {
   const sampleYears: ScrapedSampleYear[] = [];
   let currentYear: StandingYearType | null = null;
@@ -499,11 +496,7 @@ async function scrapeSamplePrograms(programPath: string) {
   if (tableCount === 0) return null;
 
   // CASE 1: Single Table - No Label Needed
-  const variations: Array<{
-    label?: string;
-    sampleProgram: UnvalidatedSampleProgramEntry[];
-    variationNotes: string[];
-  }> = [];
+  const variations: ScrapedProgramVariation[] = [];
 
   if (tableCount === 1) {
     logger.info("Parsing single table (no variations)");
