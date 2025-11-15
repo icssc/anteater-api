@@ -9,7 +9,7 @@ export const sampleProgramsQuerySchema = z.object({
 
 const STANDING_YEARS = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 
-export const standingyearEnum = z.enum(STANDING_YEARS);
+export const standingYearSchema = z.enum(STANDING_YEARS);
 
 export const courseEntrySchema = z.discriminatedUnion("type", [
   z.object({
@@ -30,7 +30,7 @@ export const courseEntrySchema = z.discriminatedUnion("type", [
 
 export const sampleProgramsYearSchema = z
   .object({
-    year: standingyearEnum.openapi({
+    year: standingYearSchema.openapi({
       description: "Class standing or year level",
     }),
     fall: z.array(courseEntrySchema),
@@ -76,7 +76,7 @@ export const sampleProgramVariationSchema = z.object({
   }),
 });
 
-export const sampleProgramsResponseSchemaObject = z.object({
+export const sampleProgramSchema = z.object({
   id: z.string().openapi({
     description: "Stable ID for this sample program record",
     example: "computerscience_bs",
@@ -88,4 +88,4 @@ export const sampleProgramsResponseSchemaObject = z.object({
   variations: z.array(sampleProgramVariationSchema),
 });
 
-export const sampleProgramsResponseSchema = z.array(sampleProgramsResponseSchemaObject);
+export const sampleProgramsResponseSchema = z.array(sampleProgramSchema);

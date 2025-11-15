@@ -43,6 +43,30 @@ const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
 const MAX_DELAY_MS = 8_000 as const;
 
+// Represents a program as scraped from the HTML, before course validation.
+// Contains unvalidated course strings that may or may not be valid course IDs.
+type ScrapedProgram = {
+  majorId: string;
+  programName: string;
+  variations: {
+    label?: string;
+    sampleProgram: UnvalidatedSampleProgramEntry[];
+    variationNotes: string[];
+  }[];
+};
+
+// Represents a program after course code validation and transformation.
+// Course entries are discriminated unions indicating whether they were validated as course IDs.
+type TransformedProgram = {
+  majorId: string;
+  programName: string;
+  variations: {
+    label?: string;
+    sampleProgram: SampleProgramEntry[];
+    variationNotes: string[];
+  }[];
+};
+
 // Holds raw scraped data from HTML tables before transformation.
 // This is used transformed to SampleProgramEntry via transformToTermStructure().
 type ScrapedSampleYear = {
@@ -205,36 +229,14 @@ async function lookupCourseId(
  */
 async function transformCourseCodesToIds(
   db: ReturnType<typeof database>,
-  scrapedPrograms: {
-    majorId: string;
-    programName: string;
-    variations: {
-      label?: string;
-      sampleProgram: UnvalidatedSampleProgramEntry[];
-      variationNotes: string[];
-    }[];
-  }[],
-): Promise<
-  {
-    majorId: string;
-    programName: string;
-    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
-  }[]
-> {
+  scrapedPrograms: ScrapedProgram[],
+): Promise<TransformedProgram[]> {
   logger.info("Transforming course codes to IDs...");
 
-  const transformed: {
-    majorId: string;
-    programName: string;
-    variations: { label?: string; sampleProgram: SampleProgramEntry[]; variationNotes: string[] }[];
-  }[] = [];
+  const transformed: TransformedProgram[] = [];
 
   for (const program of scrapedPrograms) {
-    const transformedVariations: {
-      label?: string;
-      sampleProgram: SampleProgramEntry[];
-      variationNotes: string[];
-    }[] = [];
+    const transformedVariations: TransformedProgram["variations"] = [];
 
     for (const variation of program.variations) {
       const transformedSampleProgram: SampleProgramEntry[] = [];
@@ -291,15 +293,7 @@ async function transformCourseCodesToIds(
 
 async function storeSampleProgramsInDB(
   db: ReturnType<typeof database>,
-  scrapedPrograms: {
-    majorId: string;
-    programName: string;
-    variations: {
-      label?: string;
-      sampleProgram: UnvalidatedSampleProgramEntry[];
-      variationNotes: string[];
-    }[];
-  }[],
+  scrapedPrograms: ScrapedProgram[],
 ) {
   if (!scrapedPrograms.length) {
     logger.info("No sample programs to store.");
