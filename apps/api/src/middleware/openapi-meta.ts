@@ -39,6 +39,11 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
         "Course data, such as department, school, instructors, and previous sections. Sourced from the UCI Course Catalog and WebSoc.",
     },
     {
+      name: "Programs",
+      description:
+        "Program data regarding currently available majors, minors, and specializations, as well as their respective requirements. Sourced from the UCI General Catalog and WebSoc.",
+    },
+    {
       name: "Enrollment History",
       description: "Historical enrollment data for UCI. Sourced from WebSoc.",
     },
@@ -51,6 +56,11 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
       name: "LARC",
       description:
         "Present and past LARC (https://larc.uci.edu/) sections. Sourced from LARC's enrollment site (https://enroll.larc.uci.edu/).",
+    },
+    {
+      name: "Study Rooms",
+      description:
+        "Study room data, such as location, directions, capacity, and availability. Sourced from UCI Libraries' reservation site (https://spaces.lib.uci.edu/).",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     { name: "Other" },
