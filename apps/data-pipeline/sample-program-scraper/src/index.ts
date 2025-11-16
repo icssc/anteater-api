@@ -43,6 +43,11 @@ const CATALOGUE_URL = "https://catalogue.uci.edu" as const;
 
 const MAX_DELAY_MS = 8_000 as const;
 
+// Result of validating a course code against the database
+type CourseValidationResult =
+  | { type: "courseId"; value: string }
+  | { type: "unknown"; value: string };
+
 // Represents a single variation within a program (before validation)
 type ScrapedProgramVariation = {
   label?: string;
@@ -230,13 +235,13 @@ async function lookupCourseId(
 }
 
 /*
-  Validates a single course code and returns a discriminated union.
+  Tries to interpret a course string and returns a discriminated union.
   Returns courseId type if found in database, unknown type otherwise.
 */
-async function validateCourseCode(
+async function interpretCourseString(
   db: ReturnType<typeof database>,
   code: string,
-): Promise<{ type: "courseId"; value: string } | { type: "unknown"; value: string }> {
+): Promise<CourseValidationResult> {
   const id = await lookupCourseId(db, code);
   return id ? { type: "courseId" as const, value: id } : { type: "unknown" as const, value: code };
 }
@@ -262,9 +267,9 @@ async function transformCourseCodesToIds(
       for (const year of variation.sampleProgram) {
         // Transform each term's courses in parallel
         const [fall, winter, spring] = await Promise.all([
-          Promise.all(year.fall.map((code) => validateCourseCode(db, code))),
-          Promise.all(year.winter.map((code) => validateCourseCode(db, code))),
-          Promise.all(year.spring.map((code) => validateCourseCode(db, code))),
+          Promise.all(year.fall.map((code) => interpretCourseString(db, code))),
+          Promise.all(year.winter.map((code) => interpretCourseString(db, code))),
+          Promise.all(year.spring.map((code) => interpretCourseString(db, code))),
         ]);
 
         transformedSampleProgram.push({ year: year.year, fall, winter, spring });
