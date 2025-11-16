@@ -121,6 +121,8 @@ input WebsocQuery {
 input WebsocDepartmentsQuery {
     sinceYear: String
     sinceTerm: Term
+    untilYear: String
+    untilTerm: Term
 }
 
 extend type Query {

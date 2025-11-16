@@ -15,6 +15,7 @@ import {
   gte,
   ilike,
   like,
+  lt,
   lte,
   ne,
   or,
@@ -394,15 +395,16 @@ export class WebsocService {
   }
 
   async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
-    const options = [] as (SQLWrapper | undefined)[];
+    const sinceOptions = [] as (SQLWrapper | undefined)[];
+    const untilOptions = [] as (SQLWrapper | undefined)[];
 
     if (input.sinceYear) {
       if (!input.sinceQuarter) {
-        options.push(eq(websocDepartment.year, input.sinceYear));
+        sinceOptions.push(eq(websocDepartment.year, input.sinceYear));
       } else {
         for (const [term, order] of Object.entries(termOrder)) {
           if (order >= termOrder[input.sinceQuarter]) {
-            options.push(
+            sinceOptions.push(
               and(
                 eq(websocDepartment.year, input.sinceYear),
                 // cast is safe because term comes from a statically known object
@@ -412,17 +414,33 @@ export class WebsocService {
           }
         }
       }
-
-      options.push(gt(websocDepartment.year, input.sinceYear));
+      sinceOptions.push(gt(websocDepartment.year, input.sinceYear));
     }
 
+    if (input.untilYear) {
+      if (!input.untilQuarter) {
+        untilOptions.push(eq(websocDepartment.year, input.untilYear));
+      } else {
+        for (const [term, order] of Object.entries(termOrder)) {
+          if (order <= termOrder[input.untilQuarter]) {
+            untilOptions.push(
+              and(
+                eq(websocDepartment.year, input.untilYear),
+                eq(websocDepartment.quarter, term as Term),
+              ),
+            );
+          }
+        }
+      }
+      untilOptions.push(lt(websocDepartment.year, input.untilYear));
+    }
     return this.db
       .selectDistinctOn([websocDepartment.deptCode], {
         deptCode: websocDepartment.deptCode,
         deptName: websocDepartment.deptName,
       })
       .from(websocDepartment)
-      .where(or(...options))
+      .where(and(or(...sinceOptions), or(...untilOptions)))
       .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
   }
 }
