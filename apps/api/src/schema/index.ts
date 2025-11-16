@@ -1,6 +1,7 @@
 export * from "./ap-exams";
 export * from "./base";
 export * from "./calendar";
+export * from "./catalogue";
 export * from "./courses";
 export * from "./enrollment-history";
 export * from "./grades";
