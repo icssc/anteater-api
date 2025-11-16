@@ -3,6 +3,7 @@ import type {
   majorsQuerySchema,
   minorRequirementsQuerySchema,
   minorsQuerySchema,
+  sampleProgramsQuerySchema,
   specializationRequirementsQuerySchema,
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
@@ -10,10 +11,12 @@ import type {
 import type { database } from "@packages/db";
 import { eq, sql } from "@packages/db/drizzle";
 import {
+  catalogProgram,
   collegeRequirement,
   degree,
   major,
   minor,
+  sampleProgramVariation,
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
@@ -138,5 +141,30 @@ export class ProgramsService {
       .limit(1);
 
     return orNull(got);
+  }
+
+  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
+    return await this.db
+      .select({
+        id: catalogProgram.id,
+        programName: catalogProgram.programName,
+        variations: sql`
+          COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'label', ${sampleProgramVariation.label},
+                'courses', ${sampleProgramVariation.sampleProgram},
+                'notes', ${sampleProgramVariation.variationNotes}
+              )
+              ORDER BY ${sampleProgramVariation.id}
+            ) FILTER (WHERE ${sampleProgramVariation.id} IS NOT NULL),
+            '[]'::jsonb
+          )
+        `.as("variations"),
+      })
+      .from(catalogProgram)
+      .leftJoin(sampleProgramVariation, eq(catalogProgram.id, sampleProgramVariation.programId))
+      .where(query.id ? eq(catalogProgram.id, query.id) : undefined)
+      .groupBy(catalogProgram.id);
   }
 }
