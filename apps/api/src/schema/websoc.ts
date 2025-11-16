@@ -303,8 +303,14 @@ export const websocDepartmentsQuerySchema = z
       description:
         "If provided with `sinceYear`, departments must have appeared during or after this quarter in that year",
     }),
-    untilYear: yearSchema.optional(),
-    untilQuarter: z.enum(terms).optional(),
+    untilYear: yearSchema.optional().openapi({
+      description:
+        "If provided, filter to departments which have appeared at least once before or during this year",
+    }),
+    untilQuarter: z.enum(terms).optional().openapi({
+      description:
+        "If provided with `untilYear`, departments must have appeared before or during this quarter in that year",
+    }),
   })
   .refine(
     ({ sinceYear, sinceQuarter }) => !sinceQuarter || sinceYear,
