@@ -16,10 +16,11 @@ CREATE TABLE IF NOT EXISTS "library_traffic_history" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "library_traffic_history" ADD CONSTRAINT "library_traffic_history_location_id_library_traffic_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."library_traffic"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "library_traffic_history" ADD CONSTRAINT "library_traffic_history_location_id_library_traffic_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."library_traffic"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "library_traffic_location_name_index" ON "library_traffic" USING btree ("location_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "library_traffic_library_name_index" ON "library_traffic" USING btree ("library_name");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "library_traffic_location_name_index" ON "library_traffic" USING btree ("location_name");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "library_traffic_history_location_id_timestamp_index" ON "library_traffic_history" USING btree ("location_id","timestamp");
