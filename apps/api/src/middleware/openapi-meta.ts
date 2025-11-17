@@ -40,8 +40,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     },
     {
       name: "Programs",
-      description:
-        "Program data regarding currently available majors, minors, and specializations, as well as their respective requirements. Sourced from the UCI General Catalog and WebSoc.",
+      description: "Program data on majors, minors, and specializations and their requirements",
     },
     {
       name: "Enrollment History",
@@ -60,7 +59,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Study Rooms",
       description:
-        "Study room data, such as location, directions, capacity, and availability. Sourced from UCI Libraries' reservation site (https://spaces.lib.uci.edu/).",
+        "Study room data. Sourced from UCI Libraries' reservation site (https://spaces.lib.uci.edu/).",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     { name: "Other" },
