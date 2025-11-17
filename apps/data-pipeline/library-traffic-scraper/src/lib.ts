@@ -39,6 +39,13 @@ function parseArray(src: string): string[] {
     .filter(Boolean);
 }
 
+// Map floor code to human-readable library name
+function codeToLibrary(code: string): string {
+  if (code.includes("GSC")) return "Gateway Study Center";
+  if (code.includes("-SL-")) return "Science Library";
+  return "Langson Library";
+}
+
 // Build map of location metadata by ID from the UCI Libraries website
 async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
@@ -46,6 +53,8 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
   );
   const $ = load(html);
 
+  // Find the <script> tag containing the location metadata arrays
+  // Example: <script>let locationIds = ['245', '677', ...]; let floors = ['-GSC-2', '-SL-3', ...];</script>
   const scriptText = $("script")
     .toArray()
     .map((el) => $(el).html() ?? "")
@@ -53,38 +62,42 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
 
   if (!scriptText) throw new Error("Could not find <script> containing locationIds");
 
+  // Extract the content of the locationIds array from the script
+  // Regex captures everything between [ and ], e.g., "'245', '677', '205'"
   const locMatch = scriptText.match(/let\s+locationIds\s*=\s*\[([\s\S]*?)]/);
+  // Extract the content of the floors array from the script
+  // Regex captures everything between [ and ], e.g., "'-GSC-2', '-SL-3', '1'"
   const floorMatch = scriptText.match(/let\s+floors\s*=\s*\[([\s\S]*?)]/);
   if (!locMatch || !floorMatch) throw new Error("Unable to capture locationIds or floors array");
 
   // Extract parallel arrays:
   // - locationIds: unique Occuspace IDs for each location (i.e. ['245', '677', '205'])
-  // - floors: corresponding internal DOM codes for each location's container (i.e. ['-GSC-2', '-SL-3', '1'])
+  // - floorCodes: corresponding internal DOM codes for each location's container (i.e. ['-GSC-2', '-SL-3', '1'])
   const locationIds = parseArray(locMatch[1]);
   const floorCodes = parseArray(floorMatch[1]);
 
+  // These arrays must have matching lengths because each location ID corresponds to exactly one floor code
+  // If lengths differ, the HTML structure changed or the regex extraction failed, and we should fail loudly
   if (locationIds.length !== floorCodes.length)
-    throw new Error("locationIds and floors arrays are different lengths");
-
-  const codeToLibrary = (code: string): string => {
-    if (code.includes("GSC")) return "Gateway Study Center";
-    if (code.includes("-SL-")) return "Science Library"; // SL prefix in list
-    return "Langson Library"; // fallback
-  };
+    throw new Error("locationIds and floorCodes arrays are different lengths");
 
   const locationMeta: Record<string, LocationMeta> = {};
 
   locationIds.forEach((id, idx) => {
     const floorCode = floorCodes[idx];
+    // Locate the DOM container for this location using the floor code
     const locationSelection = $(`#leftSide${floorCode}`);
 
+    // Extract library name from card title (e.g., "Langson Library", "Science Library")
     const libraryLabel = locationSelection.find("h2.card-title").first().text().trim();
+    // Extract sub-location label if present (e.g., floor/section name)
     const subLocationLabel = locationSelection
       .find("span.subLocation")
       .first()
       .text()
       .trim()
       .replace(/\s+/g, " ");
+    // Combine labels: use "Library - SubLocation" format if sub-location exists
     const fullLocationLabel = subLocationLabel
       ? `${libraryLabel} - ${subLocationLabel}`
       : libraryLabel || "Unknown";
@@ -106,8 +119,7 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
     // Double-encoded JSON: double parse required
     const responseText = await fetch(url).then((r) => r.text());
     const intermediateJson = JSON.parse(responseText);
-    const parsedResponse =
-      typeof intermediateJson === "string" ? JSON.parse(intermediateJson) : intermediateJson;
+    const parsedResponse = JSON.parse(intermediateJson);
 
     const validatedResponse = rawRespSchema.safeParse(parsedResponse);
     if (!validatedResponse.success) {
@@ -168,14 +180,14 @@ export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
 
   // Libraries Gateway Study Center (LGSC)
   if (library === "LGSC") {
-    // Mon–Thu: Open from 8am until 3am the next day
-    if (day >= 1 && day <= 4 && (hour >= 8 || hour < 3)) return "active";
+    // Mon–Thu: Open from 8am until 1am the next day
+    if ((day >= 1 && day <= 4 && hour >= 8) || (day >= 2 && day <= 5 && hour < 1)) return "active";
     // Fri: Open from 8am to 9pm
     if (day === 5 && hour >= 8 && hour < 21) return "active";
     // Sat: Open from 5pm to 9pm
     if (day === 6 && hour >= 17 && hour < 21) return "active";
-    // Sun: Open from 5pm to 3am the next day
-    if (day === 0 && (hour >= 17 || hour < 3)) return "active";
+    // Sun: Open from 5pm to 1am the next day
+    if ((day === 0 && hour >= 17) || (day === 1 && hour < 1)) return "active";
 
     // Outside of above hours, the library is closed
     return "idle";
