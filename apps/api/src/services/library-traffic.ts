@@ -10,14 +10,14 @@ export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   getLibraryTraffic(input: LibraryTrafficServiceInput) {
-    const queryParams = [];
+    const conds = [];
 
     if (input.libraryName) {
-      queryParams.push(eq(libraryTraffic.libraryName, input.libraryName));
+      conds.push(eq(libraryTraffic.libraryName, input.libraryName));
     }
 
     if (input.locationName) {
-      queryParams.push(eq(libraryTraffic.locationName, input.locationName));
+      conds.push(eq(libraryTraffic.locationName, input.locationName));
     }
 
     return this.db
@@ -30,6 +30,6 @@ export class LibraryTrafficService {
         timestamp: libraryTraffic.timestamp,
       })
       .from(libraryTraffic)
-      .where(queryParams.length ? and(...queryParams) : undefined);
+      .where(conds.length ? and(...conds) : undefined);
   }
 }
