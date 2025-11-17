@@ -1,10 +1,10 @@
 export const libraryTrafficSchema = `#graphql
-type LibraryTraffic {
+type LibraryTraffic @cacheControl(maxAge: 900) {
   id: Int!
   libraryName: String!
   locationName: String!
   trafficCount: Int!
-  trafficPercentage: Float! 
+  trafficPercentage: Float!
   timestamp: String!
 }
 
