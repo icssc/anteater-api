@@ -1,3 +1,4 @@
+import { catalogueSchema } from "$graphql/schema/catalogue.ts";
 import { programsSchema } from "$graphql/schema/programs.ts";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 import { apExamsSchema } from "./ap-exams";
@@ -44,6 +45,7 @@ export const typeDefs = mergeTypeDefs([
   larcSchema,
   libraryTrafficSchema,
   programsSchema,
+  catalogueSchema,
   searchSchema,
   websocSchema,
   weekSchema,

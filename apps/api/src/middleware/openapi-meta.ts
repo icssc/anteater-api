@@ -54,6 +54,10 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     {
+      name: "Catalogue",
+      description: "Data sourced from the UCI Catalogue (https://catalogue.uci.edu).",
+    },
+    {
       name: "Library Traffic",
       description:
         "Library traffic data for the UCI Libraries. Data is sourced from the UCI Libraries site (https://www.lib.uci.edu/).",
