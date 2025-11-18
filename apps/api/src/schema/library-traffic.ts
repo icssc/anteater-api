@@ -33,7 +33,7 @@ export const libraryTrafficEntrySchema = z.object({
   }),
   trafficPercentage: z.coerce.number().openapi({
     example: 0.33,
-    description: "Occupancy as a fraction of total capacity (0 to 1)",
+    description: "Occupancy as a fraction of stated capacity (0 to 1, or >1 if over-occupied)",
   }),
   timestamp: z.coerce
     .date()
