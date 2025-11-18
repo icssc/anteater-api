@@ -12,7 +12,7 @@ import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import type { CoursesService } from "./courses";
 import type { InstructorsService } from "./instructors";
-import { buildDivisionQuery, buildGEQuery, buildUnitBoundsQuery } from "./util.ts";
+import { buildCourseLevelQuery, buildGEQuery, buildUnitBoundsQuery } from "./util.ts";
 
 const COURSES_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${course.id}, '')), 'A') ||
@@ -66,7 +66,7 @@ export class SearchService {
 
     const courseConditions = [
       or(...geIn.flatMap((ge) => buildGEQuery(course, ge))),
-      or(...(input.courseLevel ?? []).map((lvl) => and(...buildDivisionQuery(course, lvl)))),
+      or(...(input.courseLevel ?? []).map((lvl) => and(...buildCourseLevelQuery(course, lvl)))),
       ...buildUnitBoundsQuery(course, input.minUnits, input.maxUnits),
     ];
 

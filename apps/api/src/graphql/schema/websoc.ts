@@ -91,6 +91,11 @@ type WebsocTerm @cacheControl(maxAge: 300) {
     longName: String!
 }
 
+type WebsocDepartmentPreview @cacheControl(maxAge: 300) {
+    deptCode: String!
+    deptName: String!
+}
+
 input WebsocQuery {
     year: String!
     quarter: Term!
@@ -113,8 +118,14 @@ input WebsocQuery {
     includeRelatedCourses: Boolean
 }
 
+input WebsocDepartmentsQuery {
+    sinceYear: String
+    sinceTerm: Term
+}
+
 extend type Query {
     websoc(query: WebsocQuery!): WebsocResponse!
     terms: [WebsocTerm!]!
+    websocDepartments(query: WebsocDepartmentsQuery!): [WebsocDepartmentPreview!]!
 }
 `;

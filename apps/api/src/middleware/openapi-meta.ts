@@ -53,6 +53,10 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
         "Present and past LARC (https://larc.uci.edu/) sections. Sourced from LARC's enrollment site (https://enroll.larc.uci.edu/).",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
+    {
+      name: "Catalogue",
+      description: "Data sourced from the UCI Catalogue (https://catalogue.uci.edu).",
+    },
     { name: "Other" },
   ],
 };

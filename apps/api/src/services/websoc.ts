@@ -1,7 +1,24 @@
-import type { websocQuerySchema, websocResponseSchema, websocSectionSchema } from "$schema";
+import type {
+  websocDepartmentsQuerySchema,
+  websocQuerySchema,
+  websocResponseSchema,
+  websocSectionSchema,
+} from "$schema";
 import type { database } from "@packages/db";
-import type { SQL } from "@packages/db/drizzle";
-import { and, eq, getTableColumns, gt, gte, ilike, like, lte, ne, or } from "@packages/db/drizzle";
+import type { SQL, SQLWrapper } from "@packages/db/drizzle";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  gte,
+  ilike,
+  like,
+  lte,
+  ne,
+  or,
+} from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
   websocCourse,
@@ -18,8 +35,8 @@ import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 import {
+  buildCourseLevelQuery,
   buildDaysOfWeekQuery,
-  buildDivisionQuery,
   buildGEQuery,
   buildMultiCourseNumberQuery,
 } from "./util.ts";
@@ -73,7 +90,7 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.room) {
     conditions.push(eq(websocLocation.room, input.room.toUpperCase()));
   }
-  conditions.push(...buildDivisionQuery(websocCourse, input.division));
+  conditions.push(...buildCourseLevelQuery(websocCourse, input.division));
   if (input.sectionType) {
     conditions.push(eq(websocSection.sectionType, input.sectionType));
   }
@@ -374,5 +391,38 @@ export class WebsocService {
           .reverse()
           .map(transformTerm),
       );
+  }
+
+  async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
+    const options = [] as (SQLWrapper | undefined)[];
+
+    if (input.sinceYear) {
+      if (!input.sinceQuarter) {
+        options.push(eq(websocDepartment.year, input.sinceYear));
+      } else {
+        for (const [term, order] of Object.entries(termOrder)) {
+          if (order >= termOrder[input.sinceQuarter]) {
+            options.push(
+              and(
+                eq(websocDepartment.year, input.sinceYear),
+                // cast is safe because term comes from a statically known object
+                eq(websocDepartment.quarter, term as Term),
+              ),
+            );
+          }
+        }
+      }
+
+      options.push(gt(websocDepartment.year, input.sinceYear));
+    }
+
+    return this.db
+      .selectDistinctOn([websocDepartment.deptCode], {
+        deptCode: websocDepartment.deptCode,
+        deptName: websocDepartment.deptName,
+      })
+      .from(websocDepartment)
+      .where(or(...options))
+      .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
   }
 }

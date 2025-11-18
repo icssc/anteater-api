@@ -9,7 +9,7 @@ import {
 } from "@packages/db/schema";
 import type { z } from "zod";
 
-import { buildDivisionQuery, buildGEQuery } from "./util.ts";
+import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
@@ -33,7 +33,7 @@ function buildQuery(input: GradesServiceInput) {
   if (input.sectionCode) {
     conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode)));
   }
-  conditions.push(...buildDivisionQuery(websocCourse, input.division));
+  conditions.push(...buildCourseLevelQuery(websocCourse, input.division));
   conditions.push(...buildGEQuery(websocCourse, input.ge));
   if (input.excludePNP) {
     conditions.push(
