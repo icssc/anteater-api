@@ -6,15 +6,14 @@ export default $config({
       name: "key-manager",
       removal: "remove",
       home: "aws",
-      providers: { cloudflare: "6.10.0" },
+      providers: { cloudflare: "6.2.0" },
     };
   },
   async run() {
-    const secret = new sst.Secret("CLOUDFLARE_DNS_ZONE_ID");
     new sst.aws.Nextjs("key-manager", {
       domain: {
         name: "dashboard.anteaterapi.com",
-        dns: sst.cloudflare.dns({ zone: secret }),
+        dns: sst.cloudflare.dns(), // note that we don't need the zone here, since cloudflare can identify it for us
       },
     });
   },
