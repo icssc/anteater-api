@@ -97,7 +97,6 @@ async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
       .text()
       .trim()
       .replace(/\s+/g, " ");
-    // Combine labels: use "Library - SubLocation" format if sub-location exists
     const fullLocationLabel = subLocationLabel
       ? `${libraryLabel} - ${subLocationLabel}`
       : libraryLabel || "Unknown";
@@ -117,9 +116,10 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   const url = `https://www.lib.uci.edu/sites/all/scripts/occuspace.php?id=${id}`;
   try {
     // Double-encoded JSON: double parse required
-    const responseText = await fetch(url).then((r) => r.text());
-    const intermediateJson = JSON.parse(responseText);
-    const parsedResponse = JSON.parse(intermediateJson);
+    const parsedResponse = await fetch(url)
+      .then((r) => r.text())
+      .then(JSON.parse)
+      .then(JSON.parse);
 
     const validatedResponse = rawRespSchema.safeParse(parsedResponse);
     if (!validatedResponse.success) {
