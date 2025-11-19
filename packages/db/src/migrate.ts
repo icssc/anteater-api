@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { dirname, join } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
