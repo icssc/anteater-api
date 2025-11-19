@@ -799,7 +799,7 @@ export const libraryTraffic = pgTable(
     trafficPercentage: real("traffic_percentage").notNull(),
     timestamp: timestamp("timestamp").notNull(),
   },
-  (table) => [index().on(table.libraryName, table.locationName)],
+  (table) => [index().on(table.libraryName), index().on(table.locationName)],
 );
 
 export const libraryTrafficHistory = pgTable(

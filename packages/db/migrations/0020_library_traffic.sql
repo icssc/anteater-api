@@ -22,5 +22,5 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "library_traffic_library_name_index" ON "library_traffic" USING btree ("library_name");--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "library_traffic_location_name_index" ON "library_traffic" USING btree ("location_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "library_traffic_location_name_index" ON "library_traffic" USING btree ("location_name");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "library_traffic_history_location_id_timestamp_index" ON "library_traffic_history" USING btree ("location_id","timestamp");
