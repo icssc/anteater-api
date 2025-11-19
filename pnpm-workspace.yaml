@@ -1,7 +1,17 @@
 packages:
-  - "apps/*"
+  - apps/*
   - "!apps/data-pipeline"
-  - "apps/data-pipeline/*"
-  - "packages/*"
+  - apps/data-pipeline/*
+  - packages/*
   - "!packages/public"
-  - "packages/public/*"
+  - packages/public/*
+
+minimumReleaseAge: 1440
+
+onlyBuiltDependencies:
+  - "@apollo/protobufjs"
+  - "@biomejs/biome"
+  - esbuild
+  - lefthook
+  - sharp
+  - workerd

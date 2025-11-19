@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
-import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
+import {
+  course,
+  courseView,
+  prerequisite,
+  websocDepartment,
+  websocSchool,
+} from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
@@ -688,6 +694,8 @@ async function main() {
   }
   logger.info("Running I&C SCI 32A/H32 shim...");
   await patchH32({ db });
+  await db.refreshMaterializedView(courseView);
+
   logger.info("All done!");
   exit(0);
 }
