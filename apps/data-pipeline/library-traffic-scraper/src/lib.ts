@@ -117,9 +117,8 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   try {
     // Double-encoded JSON: double parse required
     const parsedResponse = await fetch(url)
-      .then((r) => r.text())
-      .then(JSON.parse)
-      .then(JSON.parse);
+      .then((r) => r.json())
+      .then((obj) => JSON.parse(obj as string));
 
     const validatedResponse = rawRespSchema.safeParse(parsedResponse);
     if (!validatedResponse.success) {
