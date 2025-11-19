@@ -59,7 +59,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Study Rooms",
       description:
-        "Data sourced from UCI Libraries' reservation site (https://spaces.lib.uci.edu/).",
+        "Data sourced from the UCI Libraries reservation site (https://spaces.lib.uci.edu/).",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     { name: "Other" },
