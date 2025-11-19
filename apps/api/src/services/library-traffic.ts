@@ -30,6 +30,6 @@ export class LibraryTrafficService {
         timestamp: libraryTraffic.timestamp,
       })
       .from(libraryTraffic)
-      .where(conds.length ? and(...conds) : undefined);
+      .where(and(...conds));
   }
 }
