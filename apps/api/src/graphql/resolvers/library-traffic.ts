@@ -7,7 +7,7 @@ export const libraryTrafficResolvers = {
   Query: {
     libraryTraffic: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new LibraryTrafficService(db);
-      const input = libraryTrafficQuerySchema.parse(args.query);
+      const input = libraryTrafficQuerySchema.parse(args.query ?? {});
       const res = await service.getLibraryTraffic(input);
 
       if (res.length === 0) {
