@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
-import { courseSchema, inputCourseLevelSchema, inputGECategories } from "./courses.ts";
+import { courseSchema, inputCourseLevelSchema } from "./courses.ts";
 import { instructorSchema } from "./instructors.ts";
+import { inputGECategories } from "./lib";
 
 export const searchQuerySchema = z.object({
   query: z.string({ message: "Parameter 'query' is required" }),
