@@ -33,6 +33,7 @@ type Course @cacheControl(maxAge: 86400) {
     geList: [String!]!
     geText: String!
     terms: [String!]!
+    aliases: [String!]!
 }
 
 type CoursesByCursor {
