@@ -148,6 +148,13 @@
       "when": 1763585463895,
       "tag": "0020_library_traffic",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1763879117856,
+      "tag": "0021_course_aliases",
+      "breakpoints": true
     }
   ]
 }

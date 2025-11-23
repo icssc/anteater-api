@@ -254,4 +254,5 @@ export const courseSchema = z.object({
   geList: z.enum(outputGECategories).array(),
   geText: z.string(),
   terms: z.string().array(),
+  aliases: z.string().array(),
 });

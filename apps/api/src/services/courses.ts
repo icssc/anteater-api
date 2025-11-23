@@ -52,6 +52,7 @@ type RawCourse = typeof course.$inferSelect & {
   prerequisites: unknown;
   dependencies: unknown;
   instructors: unknown;
+  aliases: unknown;
   terms: string[];
 };
 
@@ -59,6 +60,7 @@ const transformCourse = ({
   prerequisites,
   dependencies,
   instructors,
+  aliases,
   ...course
 }: RawCourse): CoursesServiceOutput => ({
   ...course,
@@ -69,6 +71,7 @@ const transformCourse = ({
   maxUnits: Number.parseFloat(course.maxUnits),
   courseLevel: mapCourseLevel(course.courseLevel),
   geList: courseToGEList(course),
+  aliases: aliases as string[],
 });
 
 function buildQuery(input: CoursesServiceInput | CoursesByCursorServiceInput) {

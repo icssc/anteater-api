@@ -15,5 +15,8 @@ node_modules
 .idea/
 .vscode/
 
+# SQL connection extension for VS Code
+**.session.sql
+
 # wrangler
 .wrangler/
