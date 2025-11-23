@@ -292,3 +292,38 @@ export const websocTermResponseSchema = z.object({
   shortName: z.string().openapi({ example: "2025 Fall" }),
   longName: z.string().openapi({ example: "2025 Fall Quarter" }),
 });
+
+export const websocDepartmentsQuerySchema = z
+  .object({
+    sinceYear: yearSchema.optional().openapi({
+      description:
+        "If provided, filter to departments which have appeared at least once during or after this year",
+    }),
+    sinceQuarter: z.enum(terms).optional().openapi({
+      description:
+        "If provided with `sinceYear`, departments must have appeared during or after this quarter in that year",
+    }),
+    untilYear: yearSchema.optional().openapi({
+      description:
+        "If provided, filter to departments which have appeared at least once before or during this year",
+    }),
+    untilQuarter: z.enum(terms).optional().openapi({
+      description:
+        "If provided with `untilYear`, departments must have appeared before or during this quarter in that year",
+    }),
+  })
+  .refine(
+    ({ sinceYear, sinceQuarter }) => !sinceQuarter || sinceYear,
+    "sinceQuarter cannot be provided without sinceYear",
+  )
+  .refine(
+    ({ untilYear, untilQuarter }) => !untilQuarter || untilYear,
+    "untilQuarter cannot be provided without untilYear",
+  );
+
+export const websocDepartmentsResponseSchema = z
+  .object({
+    deptCode: z.string().openapi({ example: "BIO SCI" }),
+    deptName: z.string().openapi({ example: "Biological Sciences" }),
+  })
+  .array();

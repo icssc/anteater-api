@@ -1,0 +1,266 @@
+import type { database } from "@packages/db";
+import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { load } from "cheerio";
+import fetch from "cross-fetch";
+import { z } from "zod";
+
+const rawRespOKSchema = z.object({
+  message: z.literal("OK"),
+  data: z.object({
+    id: z.number(),
+    name: z.string(),
+    count: z.number(),
+    percentage: z.number(),
+    timestamp: z.string(),
+  }),
+});
+
+const rawRespSchema = z.union([
+  rawRespOKSchema,
+  z.object({ error: z.string() }),
+  z.object({ message: z.string() }),
+]);
+
+type RawRespOK = z.infer<typeof rawRespOKSchema>;
+
+export interface LocationMeta {
+  id: string;
+  libraryName: string;
+  locationLabel: string;
+  floorCode: string;
+}
+
+// Helper to sanitize and split raw JS array text content from HTML
+function parseArray(src: string): string[] {
+  return src
+    .split(/[,\n]/)
+    .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+    .filter(Boolean);
+}
+
+// Map floor code to human-readable library name
+function codeToLibrary(code: string): string {
+  if (code.includes("GSC")) return "Gateway Study Center";
+  if (code.includes("-SL-")) return "Science Library";
+  return "Langson Library";
+}
+
+// Build map of location metadata by ID from the UCI Libraries website
+async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
+  const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
+    r.text(),
+  );
+  const $ = load(html);
+
+  // Find the <script> tag containing the location metadata arrays
+  // Example: <script>let locationIds = ['245', '677', ...]; let floors = ['-GSC-2', '-SL-3', ...];</script>
+  const scriptText = $("script")
+    .toArray()
+    .map((el) => $(el).html() ?? "")
+    .find((txt) => /let\s+locationIds\s*=\s*\[/s.test(txt));
+
+  if (!scriptText) throw new Error("Could not find <script> containing locationIds");
+
+  // Extract the content of the locationIds array from the script
+  // Regex captures everything between [ and ], e.g., "'245', '677', '205'"
+  const locMatch = scriptText.match(/let\s+locationIds\s*=\s*\[([\s\S]*?)]/);
+  // Extract the content of the floors array from the script
+  // Regex captures everything between [ and ], e.g., "'-GSC-2', '-SL-3', '1'"
+  const floorMatch = scriptText.match(/let\s+floors\s*=\s*\[([\s\S]*?)]/);
+  if (!locMatch || !floorMatch) throw new Error("Unable to capture locationIds or floors array");
+
+  // Extract parallel arrays:
+  // - locationIds: unique Occuspace IDs for each location (i.e. ['245', '677', '205'])
+  // - floorCodes: corresponding internal DOM codes for each location's container (i.e. ['-GSC-2', '-SL-3', '1'])
+  const locationIds = parseArray(locMatch[1]);
+  const floorCodes = parseArray(floorMatch[1]);
+
+  // These arrays must have matching lengths because each location ID corresponds to exactly one floor code
+  // If lengths differ, the HTML structure changed or the regex extraction failed, and we should fail loudly
+  if (locationIds.length !== floorCodes.length)
+    throw new Error("locationIds and floorCodes arrays are different lengths");
+
+  const locationMeta: Record<string, LocationMeta> = {};
+
+  locationIds.forEach((id, idx) => {
+    const floorCode = floorCodes[idx];
+    // Locate the DOM container for this location using the floor code
+    const locationSelection = $(`#leftSide${floorCode}`);
+
+    // Extract library name from card title (e.g., "Langson Library", "Science Library")
+    const libraryLabel = locationSelection.find("h2.card-title").first().text().trim();
+    // Extract sub-location label if present (e.g., floor/section name)
+    const subLocationLabel = locationSelection
+      .find("span.subLocation")
+      .first()
+      .text()
+      .trim()
+      .replace(/\s+/g, " ");
+    const fullLocationLabel = subLocationLabel
+      ? `${libraryLabel} - ${subLocationLabel}`
+      : libraryLabel || "Unknown";
+
+    locationMeta[id] = {
+      id,
+      floorCode: floorCode,
+      libraryName: codeToLibrary(floorCode),
+      locationLabel: fullLocationLabel,
+    };
+  });
+
+  return locationMeta;
+}
+
+async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
+  const url = `https://www.lib.uci.edu/sites/all/scripts/occuspace.php?id=${id}`;
+  try {
+    // Double-encoded JSON: double parse required
+    const parsedResponse = await fetch(url)
+      .then((r) => r.json())
+      .then((obj) => JSON.parse(obj as string));
+
+    const validatedResponse = rawRespSchema.safeParse(parsedResponse);
+    if (!validatedResponse.success) {
+      console.error(`ID ${id} returned invalid response structure:`, validatedResponse.error);
+      return null;
+    }
+
+    const response = validatedResponse.data;
+
+    if ("data" in response) {
+      return response.data;
+    }
+
+    if ("message" in response) {
+      // Informational message (e.g., realtime data unavailable)
+      console.warn(`ID ${id}: ${response.message}`);
+    }
+
+    if ("error" in response) {
+      console.error(`ID ${id} responded with error:`, response.error);
+    }
+  } catch (err) {
+    console.error(`Unexpected error while fetching ID ${id}:`, err);
+    throw err;
+  }
+  return null;
+}
+
+/**
+ * Represents the possible statuses for library scraping based on operating hours
+ * - "active": Library location is open - perform scrape every 15 minutes
+ * - "idle": Library is closed - perform scrape every 60 minutes
+ * - "skip": Library is unknown or not applicable for scraping - do not scrape
+ */
+type ScrapeStatus = "active" | "idle" | "skip";
+
+export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
+  const pacificTime = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
+  );
+  const hour = pacificTime.getHours();
+  const day = pacificTime.getDay();
+
+  // Langson Library (LL) and Science Library (SL) - same operating hours
+  if (library === "LL" || library === "SL") {
+    // Mon–Thu: Open from 8am to 11pm
+    if (day >= 1 && day <= 4 && hour >= 8 && hour < 23) return "active";
+    // Fri: Open from 8am to 6pm
+    if (day === 5 && hour >= 8 && hour < 18) return "active";
+    // Sat: Open from 1pm to 5pm
+    if (day === 6 && hour >= 13 && hour < 17) return "active";
+    // Sun: Open from 1pm to 9pm
+    if (day === 0 && hour >= 13 && hour < 21) return "active";
+
+    // Outside of above hours, the library is closed
+    return "idle";
+  }
+
+  // Libraries Gateway Study Center (LGSC)
+  if (library === "LGSC") {
+    // Mon–Thu: Open from 8am until 1am the next day
+    if ((day >= 1 && day <= 4 && hour >= 8) || (day >= 2 && day <= 5 && hour < 1)) return "active";
+    // Fri: Open from 8am to 9pm
+    if (day === 5 && hour >= 8 && hour < 21) return "active";
+    // Sat: Open from 5pm to 9pm
+    if (day === 6 && hour >= 17 && hour < 21) return "active";
+    // Sun: Open from 5pm to 1am the next day
+    if ((day === 0 && hour >= 17) || (day === 1 && hour < 1)) return "active";
+
+    // Outside of above hours, the library is closed
+    return "idle";
+  }
+  return "skip";
+}
+
+// Map human-readable library name to internal library code used by getScrapeStatus
+const libraryCodeMap = {
+  "Langson Library": "LL",
+  "Science Library": "SL",
+  "Gateway Study Center": "LGSC",
+} as const;
+
+export async function doScrape(db: ReturnType<typeof database>) {
+  console.log("Starting library traffic scrape.");
+  const locationMeta = await collectLocationMeta();
+
+  const currentTime = new Date();
+  const currentMinute = currentTime.getMinutes();
+
+  for (const [id, meta] of Object.entries(locationMeta)) {
+    const libraryCode = libraryCodeMap[meta.libraryName as keyof typeof libraryCodeMap];
+    const scrapeStatus = getScrapeStatus(libraryCode);
+
+    if (scrapeStatus === "skip") {
+      console.error(`Skipping ${meta.libraryName} - unknown library code.`);
+      continue;
+    }
+
+    // Scrape hourly within the first 15 minutes while library is closed
+    if (scrapeStatus === "idle" && currentMinute >= 15) {
+      console.log(`Skipping ${meta.libraryName} (idle) - scraping only on the hour.`);
+      continue;
+    }
+
+    const locationData = await fetchLocation(id);
+    if (!locationData) continue;
+
+    const timestamp = new Date(locationData.timestamp);
+
+    console.log(
+      `[${meta.libraryName.padEnd(20)}] "${meta.locationLabel}": ` +
+        `count=${locationData.count}, pct=${locationData.percentage}`,
+    );
+
+    // Upsert current snapshot in main library traffic table
+    await db
+      .insert(libraryTraffic)
+      .values([
+        {
+          id: locationData.id,
+          libraryName: meta.libraryName,
+          locationName: meta.locationLabel,
+          trafficCount: locationData.count,
+          trafficPercentage: locationData.percentage,
+          timestamp: timestamp,
+        },
+      ])
+      .onConflictDoUpdate({
+        target: [libraryTraffic.id],
+        set: conflictUpdateSetAllCols(libraryTraffic),
+      });
+
+    // Accumulate historical data in library traffic history table
+    await db.insert(libraryTrafficHistory).values([
+      {
+        locationId: locationData.id,
+        trafficCount: locationData.count,
+        trafficPercentage: locationData.percentage,
+        timestamp: timestamp,
+      },
+    ]);
+  }
+
+  console.log("Library traffic scrape complete.");
+}
