@@ -829,6 +829,16 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
           END
         ), ARRAY[]::JSONB[]), NULL)
         `.as("instructors"),
+      aliases: sql`
+        ARRAY_REMOVE(COALESCE(
+          (
+            SELECT ARRAY_AGG("alternate_course"."id")
+            FROM ${course} "alternate_course"
+            WHERE
+              REPLACE("alternate_course"."description", ' ', '') = REPLACE(${course.description}, ' ', '')
+              AND "alternate_course"."id" != ${course.id}
+          ),
+        ARRAY[]::TEXT[]), NULL)`.as("aliases"),
     })
     .from(course)
     .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
