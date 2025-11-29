@@ -13,6 +13,6 @@
     "@packages/stdlib": "workspace:*",
     "cross-fetch": "4.0.0",
     "jwt-decode": "4.0.0",
-    "zod": "4.1.7"
+    "zod": "4.1.13"
   }
 }
