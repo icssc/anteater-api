@@ -370,8 +370,8 @@ importers:
         specifier: 1.7.2
         version: 1.7.2
       '@hookform/resolvers':
-        specifier: 3.9.1
-        version: 3.9.1(react-hook-form@7.53.2(react@18.3.1))
+        specifier: 5.2.2
+        version: 5.2.2(react-hook-form@7.53.2(react@18.3.1))
       '@paralleldrive/cuid2':
         specifier: 2.2.2
         version: 2.2.2
@@ -434,7 +434,7 @@ importers:
         version: 7.53.2(react@18.3.1)
       sst:
         specifier: 3.3.22
-        version: 3.3.22(hono@4.6.8)
+        version: 3.3.22(hono@4.10.3)
       tailwind-merge:
         specifier: 2.5.4
         version: 2.5.4
@@ -442,8 +442,8 @@ importers:
         specifier: 1.0.7
         version: 1.0.7(tailwindcss@3.4.15)
       zod:
-        specifier: 3.23.8
-        version: 3.23.8
+        specifier: 4.1.7
+        version: 4.1.7
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -1602,10 +1602,10 @@ packages:
       hono: '>=3.9.0'
       zod: ^3.19.1
 
-  '@hookform/resolvers@3.9.1':
-    resolution: {integrity: sha512-ud2HqmGBM0P0IABqoskKWI6PEf6ZDDBZkFqe2Vnl+mTHCEHzr3ISjjZyCwTjC/qpL25JC9aIDkloQejvMeq0ug==}
+  '@hookform/resolvers@5.2.2':
+    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
     peerDependencies:
-      react-hook-form: ^7.0.0
+      react-hook-form: ^7.55.0
 
   '@icssc/libwebsoc-next@1.1.1':
     resolution: {integrity: sha512-mQyfYBwqznKJ6GWIO8BUflD/0VMQZM1kH9WIRfaB++HhvVTCjqdjTwvnWSWcrC8eygZwPZgZdBeHVci4l48YIg==}
@@ -2435,6 +2435,9 @@ packages:
     resolution: {integrity: sha512-gfJB/e9Rq/vjsiWlNwBkaIAZVb9v5guHQB5uVoVFcU0gdAuXni0KVxFxl3gGTu2zhBdB+DkixjyPcNzpqwksmA==}
     engines: {node: '>=18'}
 
+  '@standard-schema/utils@0.3.0':
+    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
 
@@ -2525,8 +2528,8 @@ packages:
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
 
-  '@unhead/schema@1.11.10':
-    resolution: {integrity: sha512-lXh7cm5XtFaw3gc+ZVXTSfIHXiBpAywbjtEiOsz5TR4GxOjj2rtfOAl4C3Difk1yupP6L2otYmOZdn/i8EXSJg==}
+  '@unhead/schema@1.11.20':
+    resolution: {integrity: sha512-0zWykKAaJdm+/Y7yi/Yds20PrUK7XabLe9c3IRcjnwYmSWY6z0Cr19VIs3ozCj8P+GhR+/TI2mwtGlueCEYouA==}
 
   '@whatwg-node/events@0.1.2':
     resolution: {integrity: sha512-ApcWxkrs1WmEMS2CaLLFUEem/49erT3sxIVjpzU5f6zmVcnijtDSrhoK2zVobOIikZJdH63jdAXOrvjf6eOUNQ==}
@@ -3319,6 +3322,10 @@ packages:
     resolution: {integrity: sha512-7RWU2HZvxPtfBrvjXKDiQ3F6ZH8k49JhxVkHquUz5UZKjauj5PrP29MvISykThtfpy4mGG6kqxFBHW1ed9wwnA==}
     peerDependencies:
       hono: ^4.1.1
+
+  hono@4.10.3:
+    resolution: {integrity: sha512-2LOYWUbnhdxdL8MNbNg9XZig6k+cZXm5IjHn2Aviv7honhBMOHb+jxrKIeJRZJRmn+htUCKhaicxwXuUDlchRA==}
+    engines: {node: '>=16.9.0'}
 
   hono@4.6.8:
     resolution: {integrity: sha512-f+2Ec9JAzabT61pglDiLJcF/DjiSefZkjCn9bzm1cYLGkD5ExJ3Jnv93ax9h0bn7UPLHF81KktoyjdQfWI2n1Q==}
@@ -5346,8 +5353,9 @@ snapshots:
       hono: 4.6.8
       zod: 3.23.8
 
-  '@hookform/resolvers@3.9.1(react-hook-form@7.53.2(react@18.3.1))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.53.2(react@18.3.1))':
     dependencies:
+      '@standard-schema/utils': 0.3.0
       react-hook-form: 7.53.2(react@18.3.1)
 
   '@icssc/libwebsoc-next@1.1.1':
@@ -6046,7 +6054,9 @@ snapshots:
   '@scalar/types@0.0.18':
     dependencies:
       '@scalar/openapi-types': 0.1.4
-      '@unhead/schema': 1.11.10
+      '@unhead/schema': 1.11.20
+
+  '@standard-schema/utils@0.3.0': {}
 
   '@swc/counter@0.1.3': {}
 
@@ -6163,7 +6173,7 @@ snapshots:
 
   '@types/triple-beam@1.3.5': {}
 
-  '@unhead/schema@1.11.10':
+  '@unhead/schema@1.11.20':
     dependencies:
       hookable: 5.5.3
       zhead: 2.2.4
@@ -6201,7 +6211,7 @@ snapshots:
 
   acorn-walk@8.3.4:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.15.0
 
   acorn@8.14.0: {}
 
@@ -7076,6 +7086,9 @@ snapshots:
     dependencies:
       hono: 4.6.8
 
+  hono@4.10.3:
+    optional: true
+
   hono@4.6.8: {}
 
   hookable@5.5.3: {}
@@ -7897,13 +7910,13 @@ snapshots:
   sst-linux-x86@3.3.22:
     optional: true
 
-  sst@3.3.22(hono@4.6.8):
+  sst@3.3.22(hono@4.10.3):
     dependencies:
       aws4fetch: 1.0.20
       jose: 5.2.3
       openid-client: 5.6.4
     optionalDependencies:
-      hono: 4.6.8
+      hono: 4.10.3
       sst-darwin-arm64: 3.3.22
       sst-darwin-x64: 3.3.22
       sst-linux-arm64: 3.3.22
