@@ -86,7 +86,7 @@ export const studyRoomsQuerySchema = z.object({
   dates: z.coerce
     .string()
     .transform((l) => l.split(","))
-    .pipe(z.coerce.date().array())
+    .pipe(z.coerce.date<string>().array())
     .optional()
     .openapi({
       description:

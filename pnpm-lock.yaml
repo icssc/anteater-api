@@ -52,7 +52,7 @@ importers:
         version: 0.2.1(@cloudflare/workers-types@4.20241230.0)(hono@4.6.8)
       '@hono/zod-openapi':
         specifier: 0.16.4
-        version: 0.16.4(hono@4.6.8)(zod@3.23.8)
+        version: 0.16.4(hono@4.6.8)(zod@4.1.7)
       '@packages/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -75,8 +75,8 @@ importers:
         specifier: 0.4.0
         version: 0.4.0(hono@4.6.8)
       zod:
-        specifier: 3.23.8
-        version: 3.23.8
+        specifier: 4.1.7
+        version: 4.1.7
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -4689,10 +4689,10 @@ snapshots:
   '@apollo/utils.withrequired@2.0.1':
     optional: true
 
-  '@asteasolutions/zod-to-openapi@7.2.0(zod@3.23.8)':
+  '@asteasolutions/zod-to-openapi@7.2.0(zod@4.1.7)':
     dependencies:
       openapi3-ts: 4.4.0
-      zod: 3.23.8
+      zod: 4.1.7
 
   '@auth/core@0.37.2':
     dependencies:
@@ -5341,17 +5341,17 @@ snapshots:
       '@cloudflare/workers-types': 4.20241230.0
       hono: 4.6.8
 
-  '@hono/zod-openapi@0.16.4(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-openapi@0.16.4(hono@4.6.8)(zod@4.1.7)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 7.2.0(zod@3.23.8)
-      '@hono/zod-validator': 0.3.0(hono@4.6.8)(zod@3.23.8)
+      '@asteasolutions/zod-to-openapi': 7.2.0(zod@4.1.7)
+      '@hono/zod-validator': 0.3.0(hono@4.6.8)(zod@4.1.7)
       hono: 4.6.8
-      zod: 3.23.8
+      zod: 4.1.7
 
-  '@hono/zod-validator@0.3.0(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-validator@0.3.0(hono@4.6.8)(zod@4.1.7)':
     dependencies:
       hono: 4.6.8
-      zod: 3.23.8
+      zod: 4.1.7
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.53.2(react@18.3.1))':
     dependencies:

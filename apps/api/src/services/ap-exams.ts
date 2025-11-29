@@ -32,11 +32,12 @@ const geCategoryToColumn = {
 } as const;
 
 function geGrantedFromReward(reward: typeof apExamReward.$inferSelect) {
+  // cast is safe because we knew the types going into this
   return Object.fromEntries(
     Object.entries(geCategoryToColumn)
       .filter(([_, col]) => reward[col] > 0)
       .map(([cat, col]) => [cat as keyof typeof geCategoryToColumn, reward[col]]),
-  );
+  ) as Record<keyof typeof geCategoryToColumn, number>;
 }
 
 function accumulateRows(

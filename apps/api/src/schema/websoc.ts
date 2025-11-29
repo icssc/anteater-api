@@ -74,7 +74,10 @@ const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)
 
 export const websocQuerySchema = z.object({
   year: yearSchema,
-  quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }),
+  quarter: z.enum(terms, {
+    error: (issue) =>
+      issue.input === undefined ? "Parameter 'quarter' is required" : "Invalid parameter 'quarter'",
+  }),
   ge: z
     .enum(geCategories)
     .optional()

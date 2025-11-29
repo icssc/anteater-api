@@ -23,7 +23,7 @@
     "graphql-yoga": "5.8.0",
     "hono": "4.6.8",
     "hono-rate-limiter": "0.4.0",
-    "zod": "3.23.8"
+    "zod": "4.1.7"
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
