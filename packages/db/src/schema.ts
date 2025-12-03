@@ -127,7 +127,10 @@ export type DegreeWorksMarkerRequirement = {
   requirementType: "Marker";
 };
 
-export type DegreeWorksRequirementBase = { label: string };
+export type DegreeWorksRequirementBase = {
+  label: string;
+  requirementId: string;
+};
 
 export type DegreeWorksRequirement = DegreeWorksRequirementBase &
   (
