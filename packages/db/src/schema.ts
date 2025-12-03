@@ -11,6 +11,7 @@ import {
   pgEnum,
   pgMaterializedView,
   pgTable,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -144,6 +145,37 @@ export type APCoursesGrantedTree =
   | {
       OR: (APCoursesGrantedTree | string)[];
     };
+
+// Sample Programs Enum
+export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
+export type StandingYearType = (typeof StandingYear)[number];
+
+// Course Validation Entry Types
+export type CourseEntry = { type: "courseId"; value: string } | { type: "unknown"; value: string };
+
+// Sample Program Types
+export type SampleProgramEntry = {
+  year: StandingYearType;
+  fall: CourseEntry[];
+  winter: CourseEntry[];
+  spring: CourseEntry[];
+};
+
+// Sample Programs Tables
+export const catalogProgram = pgTable("catalogue_program", {
+  id: varchar("id").primaryKey(),
+  programName: varchar("program_name").notNull(),
+});
+
+export const sampleProgramVariation = pgTable("sample_program_variation", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  programId: varchar("program_id")
+    .notNull()
+    .references(() => catalogProgram.id, { onDelete: "cascade" }),
+  label: varchar("label"),
+  sampleProgram: jsonb("sample_program").$type<SampleProgramEntry[]>().notNull(),
+  variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
+});
 
 // Misc. enums
 
@@ -756,6 +788,33 @@ export const apExamReward = pgTable("ap_exam_reward", {
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
+
+export const libraryTraffic = pgTable(
+  "library_traffic",
+  {
+    id: integer("id").primaryKey(),
+    libraryName: varchar("library_name").notNull(),
+    locationName: varchar("location_name").notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
+  },
+  (table) => [index().on(table.libraryName), index().on(table.locationName)],
+);
+
+export const libraryTrafficHistory = pgTable(
+  "library_traffic_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    locationId: integer("location_id")
+      .references(() => libraryTraffic.id, { onDelete: "cascade" })
+      .notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
 
 // Materialized views
 

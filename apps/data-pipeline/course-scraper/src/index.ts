@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
-import { course, prerequisite, websocDepartment, websocSchool } from "@packages/db/schema";
+import {
+  course,
+  courseView,
+  prerequisite,
+  websocDepartment,
+  websocSchool,
+} from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
@@ -339,34 +345,34 @@ function generateGEs(rawCourse: string[]) {
   };
   if (!maybeGEText?.startsWith("(")) return res;
   res.geText = maybeGEText;
-  if (res.geText.match(/I[Aa]/)) {
+  if (res.geText.match(/\bI[Aa]\b/)) {
     res.isGE1A = true;
   }
-  if (res.geText.match(/I[Bb]/)) {
+  if (res.geText.match(/\bI[Bb]\b/)) {
     res.isGE1B = true;
   }
-  if (res.geText.match(/[( ]II[) ]/)) {
+  if (res.geText.match(/\bII\b/)) {
     res.isGE2 = true;
   }
-  if (res.geText.match(/[( ]III[) ]/)) {
+  if (res.geText.match(/\bIII\b/)) {
     res.isGE3 = true;
   }
-  if (res.geText.match(/IV/)) {
+  if (res.geText.match(/\bIV\b/)) {
     res.isGE4 = true;
   }
-  if (res.geText.match(/V\.?[Aa]/)) {
+  if (res.geText.match(/\bV\.?[Aa]\b/)) {
     res.isGE5A = true;
   }
-  if (res.geText.match(/V\.?[Bb]/)) {
+  if (res.geText.match(/\bV\.?[Bb]\b/)) {
     res.isGE5B = true;
   }
-  if (res.geText.match(/[( ]VI[) ]/)) {
+  if (res.geText.match(/\bVI\b/)) {
     res.isGE6 = true;
   }
-  if (res.geText.match(/[( ](VII)[) ]/)) {
+  if (res.geText.match(/\bVII\b/)) {
     res.isGE7 = true;
   }
-  if (res.geText.match(/VIII/)) {
+  if (res.geText.match(/\bVIII\b/)) {
     res.isGE8 = true;
   }
   return res;
@@ -688,6 +694,8 @@ async function main() {
   }
   logger.info("Running I&C SCI 32A/H32 shim...");
   await patchH32({ db });
+  await db.refreshMaterializedView(courseView);
+
   logger.info("All done!");
   exit(0);
 }
