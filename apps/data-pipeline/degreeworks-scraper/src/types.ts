@@ -5,7 +5,10 @@ import type { DegreeWorksProgram } from "@packages/db/schema";
  */
 export type RuleBase = {
   label: string;
-  labelTag?: string;
+  labelTag: string;
+  ruleType: string;
+  ruleId: string;
+  nodeId: string;
   ifElsePart?: "IfPart" | "ElsePart";
   proxyAdvice?: {
     textList: string[];

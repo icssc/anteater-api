@@ -1,3 +1,4 @@
+import { createHash } from "node:domain";
 import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
@@ -100,6 +101,15 @@ export class AuditParser {
       .from(course)
       .where(eq(course.id, `${department}${courseNumber}`))
       .limit(1);
+  }
+
+  generateRequirementId(rule: Rule): string {
+    const uniqueString = [rule.label, rule.labelTag, rule.ruleType, rule.ruleId, rule.nodeId].join(
+      "_",
+    );
+    const requirementId = createHash("md5").update(uniqueString).digest("hex");
+
+    return requirementId;
   }
 
   /**
@@ -234,6 +244,7 @@ export class AuditParser {
           if (rule.requirement.classesBegin) {
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
+              requirementId: this.generateRequirementId(rule),
               requirementType: "Course",
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
@@ -241,6 +252,7 @@ export class AuditParser {
           } else if (rule.requirement.creditsBegin) {
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
+              requirementId: this.generateRequirementId(rule),
               requirementType: "Unit",
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
@@ -251,6 +263,7 @@ export class AuditParser {
         case "Group": {
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
+            requirementId: this.generateRequirementId(rule),
             requirementType: "Group",
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
             requirements: await this.ruleArrayToRequirements(rule.ruleArray),
@@ -263,6 +276,7 @@ export class AuditParser {
             if (rules.length > 1) {
               ret.push({
                 label: "Select 1 of the following",
+                requirementId: this.generateRequirementId(rule),
                 requirementType: "Group",
                 requirementCount: 1,
                 requirements: await this.ruleArrayToRequirements(rules),
@@ -277,6 +291,7 @@ export class AuditParser {
         case "Incomplete":
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
+            requirementId: this.generateRequirementId(rule),
             requirementType: "Marker",
           });
           break;
@@ -284,6 +299,7 @@ export class AuditParser {
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
+            requirementId: this.generateRequirementId(rule),
             requirementType: "Group",
             requirementCount: Object.keys(requirements).length,
             requirements,
