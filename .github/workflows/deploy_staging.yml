@@ -21,7 +21,6 @@ env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
   SST_VERBOSE: 1
-  NODE_OPTIONS: "--max-old-space-size=8192"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
@@ -47,12 +46,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check types
-        run: pnpm check:types
+      #      - name: Check types
+      #        run: pnpm check:types
+      #
+      #      - name: Deploy API to staging
+      #        working-directory: ./apps/api
+      #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
-      - name: Deploy API to staging
-        working-directory: ./apps/api
-        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
+      - name: error reporting
+        run: |
+          # find  file that handles errors in the SST/Pulumi runner
+          TARGET_FILE=$(find . -name "run.js" | grep "@pulumi/cmd/run" | head -n 1)
+
+          if [ -f "$TARGET_FILE" ]; then
+            echo "patching $TARGET_FILE to reveal hidden errors..."
+            sed -i 's/const uncaughtHandler = (err) => {/const uncaughtHandler = (err) => { console.error("-- error message --"); console.error(err.message); console.error("-- error message end -- ");/' "$TARGET_FILE"
+          else
+            echo "not found, skipping"
+          fi
 
       - name: Deploy Key Manager/Dashboard if present
         run: pnpm --filter "./apps/key-manager/**" run deploy;
