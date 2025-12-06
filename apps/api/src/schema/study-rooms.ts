@@ -3,11 +3,11 @@ import { timeRangeSchema } from "./lib";
 
 export const slotSchema = z.object({
   studyRoomId: z.string(),
-  start: z.string().datetime({ offset: true }).openapi({
+  start: z.iso.datetime({ offset: true }).openapi({
     description: "The start time of this slot",
     example: "2021-01-06T08:00:00-08:00",
   }),
-  end: z.string().datetime({ offset: true }).openapi({
+  end: z.iso.datetime({ offset: true }).openapi({
     description: "The end time of this slot",
     example: "2021-01-06T08:30:00-08:00",
   }),
