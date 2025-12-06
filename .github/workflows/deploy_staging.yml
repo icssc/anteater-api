@@ -69,7 +69,7 @@ jobs:
           run: |
           echo "running deploy directly.."
           set +e
-          npx dotenv -- sst deploy --stage production
+          pnpm deploy
           status=$?
           echo "sst exit code: $status"
           exit $status
