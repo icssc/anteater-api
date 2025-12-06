@@ -6,9 +6,10 @@ import type { DegreeWorksProgram } from "@packages/db/schema";
 export type RuleBase = {
   label: string;
   labelTag: string;
-  ruleType: string;
   ruleId: string;
+  ruleType: string;
   nodeId: string;
+  nodeType: string;
   ifElsePart?: "IfPart" | "ElsePart";
   proxyAdvice?: {
     textList: string[];
