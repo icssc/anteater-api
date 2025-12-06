@@ -65,4 +65,17 @@ jobs:
         run: node -v
 
       - name: Deploy Key Manager/Dashboard if present
-        run: pnpm --filter "./apps/key-manager/**" run deploy;
+        run: |
+          echo "=== ENV CHECK ==="
+          echo "AUTH_SECRET set?                   $([ -z "$AUTH_SECRET" ] && echo NO || echo YES)"
+          echo "AUTH_TRUST_HOST set?               $([ -z "$AUTH_TRUST_HOST" ] && echo NO || echo YES)"
+          echo "USERS_DB_URL set?                  $([ -z "$USERS_DB_URL" ] && echo NO || echo YES)"
+          echo "CLOUDFLARE_KV_NAMESPACE_ID set?    $([ -z "$CLOUDFLARE_KV_NAMESPACE_ID" ] && echo NO || echo YES)"
+          echo "CLOUDFLARE_DEFAULT_ACCOUNT_ID set? $([ -z "$CLOUDFLARE_DEFAULT_ACCOUNT_ID" ] && echo NO || echo YES)"
+          echo "CLOUDFLARE_ACCOUNT_ID set?         $([ -z "$CLOUDFLARE_ACCOUNT_ID" ] && echo NO || echo YES)"
+          echo "CLOUDFLARE_API_TOKEN set?          $([ -z "$CLOUDFLARE_API_TOKEN" ] && echo NO || echo YES)"
+          echo "AWS_ACCESS_KEY_ID set?             $([ -z "$AWS_ACCESS_KEY_ID" ] && echo NO || echo YES)"
+          echo "AWS_SECRET_ACCESS_KEY set?         $([ -z "$AWS_SECRET_ACCESS_KEY" ] && echo NO || echo YES)"
+          echo "AWS_REGION set?                    $([ -z "$AWS_REGION" ] && echo NO || echo YES)"
+
+          pnpm --filter "./apps/key-manager/**" run deploy;
