@@ -20,10 +20,18 @@ concurrency:
 env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-  SST_VERBOSE: 1
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
+  AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+  AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
+  USERS_DB_URL: ${{ secrets.USERS_DB_URL }}
+  CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
+  CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+
+  SST_DEBUG: "*"
+  PULUMI_LOG_LEVEL: "DEBUG"
+  PULUMI_DEBUG_COMMANDS: "true"
 
 jobs:
   deploy_staging:
@@ -46,24 +54,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      #      - name: Check types
-      #        run: pnpm check:types
-      #
-      #      - name: Deploy API to staging
-      #        working-directory: ./apps/api
-      #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
+      - name: Check types
+        run: pnpm check:types
 
-      - name: error reporting
-        run: |
-          # find  file that handles errors in the SST/Pulumi runner
-          TARGET_FILE=$(find . -name "run.js" | grep "@pulumi/cmd/run" | head -n 1)
+      - name: Deploy API to staging
+        working-directory: ./apps/api
+        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
-          if [ -f "$TARGET_FILE" ]; then
-            echo "patching $TARGET_FILE to reveal hidden errors..."
-            sed -i 's/const uncaughtHandler = (err) => {/const uncaughtHandler = (err) => { console.error("-- error message --"); console.error(err.message); console.error("-- error message end -- ");/' "$TARGET_FILE"
-          else
-            echo "not found, skipping"
-          fi
+      - name: Show node version
+        run: node -v
 
       - name: Deploy Key Manager/Dashboard if present
         run: pnpm --filter "./apps/key-manager/**" run deploy;
