@@ -68,8 +68,9 @@ const daysTransform = (days: string | undefined, ctx: z.RefinementCtx) => {
   const parsedDays: Array<(typeof normalizedDays)[number]> = [];
   for (const day of days.split(",").map((day) => day.trim())) {
     if (!isValidDay(day)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: day,
+        code: "custom",
         message: `'${day}' is not a valid day of the week. Valid days of the week are ${allDays.join(", ")}.`,
       });
       return z.NEVER;

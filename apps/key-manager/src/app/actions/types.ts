@@ -15,7 +15,8 @@ export const createKeySchema = z
 export const createRefinedKeySchema = createKeySchema.superRefine((data, ctx) => {
   if (data._type === "publishable") {
     if (!data.origins || data.origins.length === 0) {
-      ctx.addIssue({
+      ctx.issues.push({
+        input: data.origins,
         code: "custom",
         message: "At least one origin is required for publishable keys",
         path: ["origins"],
@@ -24,14 +25,16 @@ export const createRefinedKeySchema = createKeySchema.superRefine((data, ctx) =>
       const urlsSet = new Set();
       data.origins.forEach((origin, index) => {
         if (!origin.url.startsWith("http://") && !origin.url.startsWith("https://")) {
-          ctx.addIssue({
+          ctx.issues.push({
+            input: origin.url,
             code: "custom",
             message: "Origin URL must use http:// or https://",
             path: ["origins", index, "url"],
           });
         } else {
           if (urlsSet.has(origin.url)) {
-            ctx.addIssue({
+            ctx.issues.push({
+              input: origin.url,
               code: "custom",
               message: "Duplicate origins are not allowed",
               path: ["origins", index, "url"],

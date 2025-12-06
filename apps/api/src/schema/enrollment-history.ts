@@ -25,7 +25,7 @@ export const enrollmentHistoryQuerySchema = z
     }),
     sectionCode: z
       .string()
-      .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
+      .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
       .transform((x) => Number.parseInt(x, 10))
       .optional()
       .openapi({ description: "The 5-digit section code", example: "36120" }),

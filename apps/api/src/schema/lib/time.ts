@@ -21,9 +21,10 @@ const transformTime = (time: string, ctx: z.RefinementCtx): Date => {
   const match = time.match(TIME_REGEX);
 
   if (!match) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid time format: ${time}`,
+    ctx.issues.push({
+      input: time,
+      code: "custom",
+      error: `Invalid time format: ${time}`,
     });
     return z.NEVER;
   }
@@ -40,9 +41,10 @@ const transformTime = (time: string, ctx: z.RefinementCtx): Date => {
   }
 
   if (minute >= 60 || hour >= 24) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid time: ${time}`,
+    ctx.issues.push({
+      input: time,
+      code: "custom",
+      error: `Invalid time: ${time}`,
     });
     return z.NEVER;
   }
