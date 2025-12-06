@@ -16,7 +16,7 @@ export const createRefinedKeySchema = createKeySchema.superRefine((data, ctx) =>
   if (data._type === "publishable") {
     if (!data.origins || data.origins.length === 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "At least one origin is required for publishable keys",
         path: ["origins"],
       });
@@ -25,14 +25,14 @@ export const createRefinedKeySchema = createKeySchema.superRefine((data, ctx) =>
       data.origins.forEach((origin, index) => {
         if (!origin.url.startsWith("http://") && !origin.url.startsWith("https://")) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Origin URL must use http:// or https://",
             path: ["origins", index, "url"],
           });
         } else {
           if (urlsSet.has(origin.url)) {
             ctx.addIssue({
-              code: z.ZodIssueCode.custom,
+              code: "custom",
               message: "Duplicate origins are not allowed",
               path: ["origins", index, "url"],
             });

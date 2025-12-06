@@ -14,7 +14,7 @@
     "@packages/db": "workspace:*",
     "cheerio": "1.0.0",
     "cross-fetch": "4.0.0",
-    "zod": "4.1.7"
+    "zod": "4.1.13"
   },
   "devDependencies": {
     "wrangler": "3.100.0"

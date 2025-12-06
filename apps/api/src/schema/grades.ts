@@ -4,7 +4,7 @@ import { geCategories, yearSchema } from "./lib";
 
 export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
-  quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
+  quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
   instructor: z.string().optional().openapi({
     description: "Only include courses taught by the specified instructor (case-insensitive)",
     example: "KLEFSTAD, R.",
