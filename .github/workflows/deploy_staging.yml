@@ -66,10 +66,9 @@ jobs:
 
       - name: Deploy Key Manager/Dashboard if present
         run: |
-          run: |
           echo "running deploy directly.."
           set +e
-          pnpm deploy
+          pnpm --filter "./apps/key-manager/**" run deploy
           status=$?
           echo "sst exit code: $status"
           exit $status
