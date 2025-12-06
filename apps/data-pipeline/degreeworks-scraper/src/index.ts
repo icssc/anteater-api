@@ -136,7 +136,7 @@ async function main() {
       .insert(collegeRequirement)
       .values(collegeBlocks)
       .onConflictDoUpdate({
-        target: collegeRequirement.requirements,
+        target: collegeRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(collegeRequirement),
       })
       .returning({ id: collegeRequirement.id })

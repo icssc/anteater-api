@@ -100,11 +100,31 @@ export class AuditParser {
       .limit(1);
   }
 
-  generateRequirementId(rule: Rule): string {
-    const uniqueString = [rule.label, rule.labelTag, rule.ruleType, rule.ruleId, rule.nodeId].join(
-      "_",
-    );
-    const requirementId = createHash("md5").update(uniqueString).digest("hex");
+  requirementIdMap = new Map<string, string>();
+  generateRequirementId(rule: Rule, downstreamIdentifier = ""): string {
+    const requirementObjectStr = JSON.stringify({
+      label: rule.label,
+      labelTag: rule.labelTag,
+      ruleType: rule.ruleType,
+      ruleId: rule.ruleId,
+      nodeId: rule.nodeId,
+      downstreamIdentifier,
+    });
+
+    const requirementId = createHash("md5")
+      .update(requirementObjectStr)
+      .digest("base64")
+      .slice(0, 10)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+
+    if (
+      this.requirementIdMap.has(requirementId) &&
+      this.requirementIdMap.get(requirementId) !== requirementObjectStr
+    ) {
+      console.log("Collision detected between two requirementIds");
+    }
+    this.requirementIdMap.set(requirementId, requirementObjectStr);
 
     return requirementId;
   }
@@ -220,6 +240,8 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
+            const downstreamIdentifier = courses.join("_");
+            const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
               requirementId: this.generateRequirementId(rule),
@@ -228,9 +250,11 @@ export class AuditParser {
               courses,
             });
           } else if (rule.requirement.creditsBegin) {
+            const downstreamIdentifier = courses.join("_");
+            const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementId: this.generateRequirementId(rule),
+              requirementId,
               requirementType: "Unit",
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
@@ -239,12 +263,15 @@ export class AuditParser {
           break;
         }
         case "Group": {
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementId: this.generateRequirementId(rule),
+            requirementId,
             requirementType: "Group",
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements: await this.ruleArrayToRequirements(rule.ruleArray),
+            requirements,
           });
           break;
         }
@@ -252,12 +279,15 @@ export class AuditParser {
           const rules = this.flattenIfStmt([rule]);
           if (!rules.some((x) => x.ruleType === "Block")) {
             if (rules.length > 1) {
+              const requirements = await this.ruleArrayToRequirements(rules);
+              const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
+              const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
               ret.push({
                 label: "Select 1 of the following",
-                requirementId: this.generateRequirementId(rule),
+                requirementId,
                 requirementType: "Group",
                 requirementCount: 1,
-                requirements: await this.ruleArrayToRequirements(rules),
+                requirements,
               });
             } else if (rules.length === 1) {
               ret.push(...(await this.ruleArrayToRequirements(rules)));
@@ -266,18 +296,23 @@ export class AuditParser {
           break;
         }
         case "Complete":
-        case "Incomplete":
+        case "Incomplete": {
+          const downstreamIdentifier = "Marker";
+          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementId: this.generateRequirementId(rule),
+            requirementId,
             requirementType: "Marker",
           });
           break;
+        }
         case "Subset": {
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementId: this.generateRequirementId(rule),
+            requirementId,
             requirementType: "Group",
             requirementCount: Object.keys(requirements).length,
             requirements,

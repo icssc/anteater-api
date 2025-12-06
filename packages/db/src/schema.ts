@@ -1,6 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   decimal,
@@ -21,7 +22,6 @@ import {
 import { aliasedTable } from "./drizzle.ts";
 
 // Types
-
 export type HourMinute = { hour: number; minute: number };
 
 export type TBAWebsocSectionMeeting = { timeIsTBA: true };
@@ -662,7 +662,10 @@ export const schoolRequirement = pgTable("school_requirement", {
 export const collegeRequirement = pgTable("college_requirement", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  requirementsHash: bigint("requirements_hash", { mode: "bigint" })
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
+    .unique(),
 });
 
 export const major = pgTable(
