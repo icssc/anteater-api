@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { courseLevels, terms } from "@packages/db/schema";
-import { geCategories, yearSchema } from "./lib";
+import { inputGECategories, yearSchema } from "./lib";
 
 export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
@@ -28,7 +28,7 @@ export const gradesQuerySchema = z.object({
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
   ge: z
-    .enum(geCategories)
+    .enum(inputGECategories)
     .optional()
     .or(z.literal("ANY"))
     .transform((x) => (x === "ANY" ? undefined : x)),
@@ -49,7 +49,7 @@ export const rawGradeSchema = z.object({
   department: z.string(),
   courseNumber: z.string(),
   courseNumeric: z.number(),
-  geCategories: z.enum(geCategories).array(),
+  geCategories: z.enum(inputGECategories).array(),
   instructors: z.string().array(),
   gradeACount: z.number(),
   gradeBCount: z.number(),
@@ -78,7 +78,7 @@ export const aggregateGradesSchema = z.object({
       department: z.string(),
       courseNumber: z.string(),
       courseNumeric: z.number(),
-      geCategories: z.enum(geCategories).array(),
+      geCategories: z.enum(inputGECategories).array(),
       instructors: z.string().array(),
     })
     .array(),
