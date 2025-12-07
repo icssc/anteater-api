@@ -5,7 +5,8 @@
   "scripts": {
     "build": "next build",
     "check:types": "tsc -p './tsconfig.json' -noEmit",
-    "deploy": "dotenv -- sst deploy --stage production",
+    "deploy": "sst deploy --stage production",
+    "deploy:local": "dotenv -- sst deploy --stage production",
     "dev": "next dev --turbopack",
     "migrate": "tsx src/db/migrate.ts"
   },

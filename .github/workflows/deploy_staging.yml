@@ -20,6 +20,18 @@ concurrency:
 env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+  AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
+  USERS_DB_URL: ${{ secrets.USERS_DB_URL }}
+  CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
+  CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+
+  SST_DEBUG: "*"
+  PULUMI_LOG_LEVEL: "DEBUG"
+  PULUMI_DEBUG_COMMANDS: "true"
 
 jobs:
   deploy_staging:
@@ -48,3 +60,15 @@ jobs:
       - name: Deploy API to staging
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
+
+      - name: Show node version
+        run: node -v
+
+      - name: Deploy Key Manager/Dashboard if present
+        run: |
+          echo "running deploy directly.."
+          set +e
+          pnpm --filter "./apps/key-manager/**" run deploy
+          status=$?
+          echo "sst exit code: $status"
+          exit $status
