@@ -153,7 +153,7 @@
       "idx": 21,
       "version": "7",
       "when": 1764803015973,
-      "tag": "0021_rename-section-id-to-meeting-id",
+      "tag": "0021_rename_section_id_to_meeting_id",
       "breakpoints": true
     }
   ]
