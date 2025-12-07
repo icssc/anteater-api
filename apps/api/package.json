@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@escape.tech/graphql-armor": "3.1.1",
-    "@graphql-tools/merge": "9.0.8",
+    "@graphql-tools/merge": "9.1.6",
     "@graphql-yoga/plugin-response-cache": "3.10.0",
     "@hono-rate-limiter/cloudflare": "0.2.1",
     "@hono/zod-openapi": "1.1.5",
