@@ -442,7 +442,7 @@ export const websocSectionMeetingToLocation = pgTable(
   "websoc_section_meeting_to_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    meetingId: uuid("section_id")
+    meetingId: uuid("meeting_id")
       .references(() => websocSectionMeeting.id, { onDelete: "cascade" })
       .notNull(),
     locationId: uuid("location_id")
