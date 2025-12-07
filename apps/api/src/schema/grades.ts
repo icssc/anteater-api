@@ -19,7 +19,7 @@ export const gradesQuerySchema = z.object({
   }),
   sectionCode: z
     .string()
-    .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
+    .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
     .optional()
     .openapi({ description: "The 5-digit section code", example: "35630" }),
   division: z
