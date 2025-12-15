@@ -113,10 +113,8 @@ export class AuditParser {
 
     const requirementId = createHash("md5")
       .update(requirementObjectStr)
-      .digest("base64")
-      .slice(0, 10)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
+      .digest("base64url")
+      .slice(0, 10);
 
     if (
       this.requirementIdMap.has(requirementId) &&
@@ -297,7 +295,7 @@ export class AuditParser {
         }
         case "Complete":
         case "Incomplete": {
-          const downstreamIdentifier = "Marker";
+          const downstreamIdentifier = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),

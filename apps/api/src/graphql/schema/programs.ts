@@ -30,10 +30,12 @@ type SpecializationPreview implements ProgramPreview @cacheControl(maxAge: 86400
 
 interface ProgramRequirementBase {
     label: String!
+    requirementId: String!
 }
 
 type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
+    requirementId: String!
     requirementType: String!
     courseCount: Int!
     courses: [String!]!
@@ -41,6 +43,7 @@ type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(ma
 
 type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
+    requirementId: String!
     requirementType: String!
     unitCount: Int!
     courses: [String!]!
@@ -48,6 +51,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
+    requirementId: String!
     requirementType: String!
     requirementCount: Int!
     # circular
@@ -56,6 +60,7 @@ type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(max
 
 type ProgramMarkerRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
+    requirementId: String!
 }
 
 union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | ProgramGroupRequirement | ProgramMarkerRequirement
