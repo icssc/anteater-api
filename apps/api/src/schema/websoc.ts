@@ -74,7 +74,10 @@ const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)
 
 export const websocQuerySchema = z.object({
   year: yearSchema,
-  quarter: z.enum(terms, { required_error: "Parameter 'quarter' is required" }),
+  quarter: z.enum(terms, {
+    error: (issue) =>
+      issue.input === undefined ? "Parameter 'quarter' is required" : "Invalid parameter 'quarter'",
+  }),
   ge: z
     .enum(geCategories)
     .optional()
@@ -100,9 +103,10 @@ export const websocQuerySchema = z.object({
         if (code.includes("-")) {
           const [lower, upper] = code.split("-");
           if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `'${code}' is not a valid section code range. A valid section code range consists of valid section codes, which are base-10 integers.`,
+            ctx.issues.push({
+              input: code,
+              code: "custom",
+              error: `'${code}' is not a valid section code range. A valid section code range consists of valid section codes, which are base-10 integers.`,
             });
             return z.NEVER;
           }
@@ -114,9 +118,10 @@ export const websocQuerySchema = z.object({
           continue;
         }
         if (!isBaseTenInt(code)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `'${code}' is not a valid section code. A valid section code is a base-10 integer.`,
+          ctx.issues.push({
+            input: code,
+            code: "custom",
+            error: `'${code}' is not a valid section code. A valid section code is a base-10 integer.`,
           });
           return z.NEVER;
         }
@@ -169,9 +174,10 @@ export const websocQuerySchema = z.object({
       const parsedCodes: Array<(typeof restrictionCodes)[number]> = [];
       for (const code of codes.split(",").map((code) => code.trim())) {
         if (!isValidRestrictionCode(code)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `'${code}' is not a valid restriction code. Valid restriction codes are ${restrictionCodes.join(", ")}.`,
+          ctx.issues.push({
+            input: code,
+            code: "custom",
+            error: `'${code}' is not a valid restriction code. Valid restriction codes are ${restrictionCodes.join(", ")}.`,
           });
           return z.NEVER;
         }

@@ -10,20 +10,20 @@ export const weekQuerySchema = z
     month: z.coerce
       .number()
       .refine((x) => 1 <= x && x <= 12, {
-        message: "Parameter 'month' must be an integer between 1 and 12",
+        error: "Parameter 'month' must be an integer between 1 and 12",
       })
       .openapi({ example: 9 })
       .optional(),
     day: z.coerce
       .number()
       .refine((x) => 1 <= x && x <= 31, {
-        message: "Parameter 'day' must be an integer between 1 and 31",
+        error: "Parameter 'day' must be an integer between 1 and 31",
       })
       .openapi({ example: 30 })
       .optional(),
   })
   .refine(({ year, month, day }) => (year && month && day) || (!year && !month && !day), {
-    message: "If one parameter is provided, all parameters must be provided.",
+    error: "If one parameter is provided, all parameters must be provided.",
   })
   .refine(
     ({ year, month, day }) =>
@@ -31,7 +31,7 @@ export const weekQuerySchema = z
         ? (month === 2 ? (isLeap(year) ? day < 30 : day < 29) : true) &&
           (shortMonths.includes(month) ? day < 31 : true)
         : true,
-    { message: "The day provided is not valid for the month provided" },
+    { error: "The day provided is not valid for the month provided" },
   )
   .openapi({
     description: "The date for which to fetch data. If not provided, will fetch data for today.",

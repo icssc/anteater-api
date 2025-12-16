@@ -1,5 +1,5 @@
 {
-  "id": "15329ef4-cbf4-4e35-881f-32777f8634f4",
+  "id": "8eaf8313-2eea-40d0-ae45-f7d8b643b8eb",
   "prevId": "c2a8d2a9-b9a0-427a-8deb-8473ac7f6323",
   "version": "7",
   "dialect": "postgresql",
@@ -2871,7 +2871,7 @@
           "primaryKey": false,
           "notNull": true,
           "generated": {
-            "as": "\"websoc_section\".\"section_comment\" LIKE '%***  CANCELLED  ***%' OR \"websoc_section\".\"section_comment\" LIKE '%***  CANCELED  ***%'",
+            "as": "\"websoc_section\".\"section_comment\" LIKE '*** CANCELLED ***%'",
             "type": "stored"
           }
         },
@@ -3356,8 +3356,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "section_id": {
-          "name": "section_id",
+        "meeting_id": {
+          "name": "meeting_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -3370,11 +3370,11 @@
         }
       },
       "indexes": {
-        "websoc_section_meeting_to_location_section_id_index": {
-          "name": "websoc_section_meeting_to_location_section_id_index",
+        "websoc_section_meeting_to_location_meeting_id_index": {
+          "name": "websoc_section_meeting_to_location_meeting_id_index",
           "columns": [
             {
-              "expression": "section_id",
+              "expression": "meeting_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3400,11 +3400,11 @@
           "method": "btree",
           "with": {}
         },
-        "websoc_section_meeting_to_location_section_id_location_id_index": {
-          "name": "websoc_section_meeting_to_location_section_id_location_id_index",
+        "websoc_section_meeting_to_location_meeting_id_location_id_index": {
+          "name": "websoc_section_meeting_to_location_meeting_id_location_id_index",
           "columns": [
             {
-              "expression": "section_id",
+              "expression": "meeting_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3423,11 +3423,11 @@
         }
       },
       "foreignKeys": {
-        "websoc_section_meeting_to_location_section_id_websoc_section_meeting_id_fk": {
-          "name": "websoc_section_meeting_to_location_section_id_websoc_section_meeting_id_fk",
+        "websoc_section_meeting_to_location_meeting_id_websoc_section_meeting_id_fk": {
+          "name": "websoc_section_meeting_to_location_meeting_id_websoc_section_meeting_id_fk",
           "tableFrom": "websoc_section_meeting_to_location",
           "tableTo": "websoc_section_meeting",
-          "columnsFrom": ["section_id"],
+          "columnsFrom": ["meeting_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
