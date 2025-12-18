@@ -44,6 +44,7 @@ type WebsocSection @cacheControl(maxAge: 300) {
     sectionComment: String!
     numNewOnlyReserved: String!
     numCurrentlyEnrolled: WebsocSectionCurrentlyEnrolled!
+    isCancelled: Boolean!
     updatedAt: String!
 }
 
