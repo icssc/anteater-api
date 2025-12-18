@@ -1,2 +1,0 @@
-ALTER TABLE "websoc_section" drop column "is_cancelled";--> statement-breakpoint
-ALTER TABLE "websoc_section" ADD COLUMN "is_cancelled" boolean GENERATED ALWAYS AS ("websoc_section"."section_comment" LIKE '%***  CANCELLED  ***%' OR "websoc_section"."section_comment" LIKE '%***  CANCELED  ***%') STORED NOT NULL;

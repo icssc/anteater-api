@@ -370,8 +370,7 @@ export const websocSection = pgTable(
     isCancelled: boolean("is_cancelled")
       .notNull()
       .generatedAlwaysAs(
-        (): SQL =>
-          sql`${websocSection.sectionComment} LIKE \'%***  CANCELLED  ***%\' OR ${websocSection.sectionComment} LIKE \'%***  CANCELED  ***%\'`,
+        (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
       ),
     webURL: text("web_url").notNull().default(""),
   },
