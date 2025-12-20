@@ -9,7 +9,6 @@ export type RuleBase = {
   ruleId: string;
   ruleType: string;
   nodeId: string;
-  nodeType: string;
 };
 /**
  * A group of `numberOfRules` rules,

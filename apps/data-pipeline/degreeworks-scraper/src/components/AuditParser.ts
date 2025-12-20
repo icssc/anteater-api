@@ -14,6 +14,7 @@ export class AuditParser {
   private static readonly electiveMatcher = /ELECTIVE @+/;
   private static readonly wildcardMatcher = /\w@/;
   private static readonly rangeMatcher = /-\w+/;
+  private requirementIdMap = new Map<string, string>();
 
   constructor(private readonly db: ReturnType<typeof database>) {
     console.log("[AuditParser.new] AuditParser initialized");
@@ -100,15 +101,14 @@ export class AuditParser {
       .limit(1);
   }
 
-  requirementIdMap = new Map<string, string>();
-  generateRequirementId(rule: Rule, downstreamIdentifier = ""): string {
+  generateRequirementId(rule: Rule, childRequirementBlockIdentifier: string): string {
     const requirementObjectStr = JSON.stringify({
       label: rule.label,
       labelTag: rule.labelTag,
       ruleType: rule.ruleType,
       ruleId: rule.ruleId,
       nodeId: rule.nodeId,
-      downstreamIdentifier,
+      childRequirementBlockIdentifier,
     });
 
     const requirementId = createHash("md5")
@@ -116,11 +116,11 @@ export class AuditParser {
       .digest("base64url")
       .slice(0, 10);
 
-    if (
-      this.requirementIdMap.has(requirementId) &&
-      this.requirementIdMap.get(requirementId) !== requirementObjectStr
-    ) {
-      console.log("Collision detected between two requirementIds");
+    const existingRequirementObjectStr = this.requirementIdMap.has(requirementId)
+      ? this.requirementIdMap.get(requirementId)
+      : null;
+    if (existingRequirementObjectStr && existingRequirementObjectStr !== requirementObjectStr) {
+      console.error("Collision detected between two requirementIds");
     }
     this.requirementIdMap.set(requirementId, requirementObjectStr);
 
@@ -238,18 +238,18 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
-            const downstreamIdentifier = courses.join("_");
-            const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+            const childRequirementBlockIdentifier = courses.join("_");
+            const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementId: this.generateRequirementId(rule),
+              requirementId: this.generateRequirementId(rule, childRequirementBlockIdentifier),
               requirementType: "Course",
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
           } else if (rule.requirement.creditsBegin) {
-            const downstreamIdentifier = courses.join("_");
-            const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+            const childRequirementBlockIdentifier = courses.join("_");
+            const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
             ret.push({
               label: AuditParser.suppressLabelPolymorphism(rule.label),
               requirementId,
@@ -262,8 +262,10 @@ export class AuditParser {
         }
         case "Group": {
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
-          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+          const childRequirementBlockIdentifier = requirements
+            .map((req) => req.requirementId)
+            .join("_");
+          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
             requirementId,
@@ -278,8 +280,13 @@ export class AuditParser {
           if (!rules.some((x) => x.ruleType === "Block")) {
             if (rules.length > 1) {
               const requirements = await this.ruleArrayToRequirements(rules);
-              const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
-              const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+              const childRequirementBlockIdentifier = requirements
+                .map((req) => req.requirementId)
+                .join("_");
+              const requirementId = this.generateRequirementId(
+                rule,
+                childRequirementBlockIdentifier,
+              );
               ret.push({
                 label: "Select 1 of the following",
                 requirementId,
@@ -295,10 +302,11 @@ export class AuditParser {
         }
         case "Complete":
         case "Incomplete": {
-          const downstreamIdentifier = AuditParser.suppressLabelPolymorphism(rule.label);
-          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const childRequirementBlockIdentifier = label;
+          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
+            label,
             requirementId,
             requirementType: "Marker",
           });
@@ -306,8 +314,10 @@ export class AuditParser {
         }
         case "Subset": {
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          const downstreamIdentifier = requirements.map((req) => req.requirementId).join("_");
-          const requirementId = this.generateRequirementId(rule, downstreamIdentifier);
+          const childRequirementBlockIdentifier = requirements
+            .map((req) => req.requirementId)
+            .join("_");
+          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
           ret.push({
             label: AuditParser.suppressLabelPolymorphism(rule.label),
             requirementId,
