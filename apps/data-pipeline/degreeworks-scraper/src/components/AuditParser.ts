@@ -1,4 +1,4 @@
-import type { Block, Rule } from "$types";
+import type { Block, Rule, withClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
@@ -108,7 +108,22 @@ export class AuditParser {
   private static suppressLabelPolymorphism(label: string) {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
-
+  parseWithClauseOperator(operatorLike: string) {
+    switch (operatorLike) {
+      case "<":
+        return (x: string, valueList: string[]) => x < valueList[0];
+      case ">":
+        return (x: string, valueList: string[]) => x > valueList[0];
+      case "=":
+        return (x: string, valueList: string[]) => x === valueList[0];
+      case "<=":
+        return (x: string, valueList: string[]) => x <= valueList[0];
+      case ">=":
+        return (x: string, valueList: string[]) => x >= valueList[0];
+      default:
+        return () => true;
+    }
+  }
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
@@ -117,14 +132,47 @@ export class AuditParser {
         case "Noncourse":
           break;
         case "Course": {
-          const includedCourses = rule.requirement.courseArray.map(
-            (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
+          // const includedCourses = rule.requirement.courseArray.map(
+          //   (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
+          // ); //Included courses could be mapped to a withArray
+
+          // const toInclude = new Map(
+          //   await Promise.all(includedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
+          //     x.flat().map((y) => [y.id, y]),
+          //   ),
+          // );
+          //
+          const includedCourses: [string, withClause[]][] = rule.requirement.courseArray.map(
+            (x) => [
+              `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
+              x.withArray ? x.withArray : [],
+            ],
           );
-          const toInclude = new Map(
-            await Promise.all(includedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
-              x.flat().map((y) => [y.id, y]),
+          const toInclude = await Promise.all(
+            includedCourses.map(([x, withArray]) =>
+              Promise.all([this.normalizeCourseId.bind(this)(x), withArray]),
             ),
+          ).then((x) =>
+            x
+              .flatMap(([classes, withArray]) => {
+                for (const withClause of withArray) {
+                  switch (withClause.code) {
+                    case "DWCREDITS":
+                      classes = classes.filter((c) =>
+                        this.parseWithClauseOperator(withClause.operator)(
+                          c.minUnits,
+                          withClause.valueList,
+                        ),
+                      );
+                      break;
+                  }
+                }
+                return classes;
+              })
+              .map((y) => [y.id, y]),
           );
+
+          //
           const excludedCourses =
             rule.requirement.except?.courseArray.map(
               (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
