@@ -1,0 +1,14 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": [
+      "node",
+      "./worker-configuration.d.ts",
+      "./.wrangler/types/runtime.d.ts"
+    ],
+    "paths": {
+      "$lib": ["./src/lib.ts"]
+    }
+  }
+}
