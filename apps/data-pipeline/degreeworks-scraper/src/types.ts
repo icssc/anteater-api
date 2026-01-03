@@ -21,13 +21,20 @@ export type Course = {
   discipline: string;
   number: string;
   numberEnd?: string;
-  withArray: withClause[];
+  withArray?: withClause[];
 };
 /**
  * a specification for course range for unit req, etc.
  */
 export type withClause = {
-  code: "DWCREDITS" | "DWLOCATION" | "DWTERM"; // may be more unsure what codes other than DWCREDITS does
+  code:
+    | "DWCREDITS"
+    | "DWCREDIT"
+    | "DWLOCATION"
+    | "DWTERM"
+    | "DWTITLE"
+    | "DWGRADETYPE"
+    | "DWPASSFAIL";
   operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
   valueList: string[];
 };

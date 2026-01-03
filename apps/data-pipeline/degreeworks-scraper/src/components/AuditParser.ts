@@ -108,21 +108,52 @@ export class AuditParser {
   private static suppressLabelPolymorphism(label: string) {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
-  parseWithClauseOperator(operatorLike: string) {
+  parseUnitRestrictionOperator(operatorLike: string) {
+    // for > and >= operations, we use a loose interpretation for variable unit courses
+    // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
+    // be taken for 3 or 4 units and meet the withClause requirement
+    // for < and <= which appear to be only in exception lists, we use a strict interpretation
+    // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
+    // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
     switch (operatorLike) {
       case "<":
-        return (x: string, valueList: string[]) => x < valueList[0];
-      case ">":
-        return (x: string, valueList: string[]) => x > valueList[0];
-      case "=":
-        return (x: string, valueList: string[]) => x === valueList[0];
+        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+          maxUnit < Number.parseInt(valueList[0], 10);
       case "<=":
-        return (x: string, valueList: string[]) => x <= valueList[0];
+        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+          maxUnit <= Number.parseInt(valueList[0], 10);
+      case "=":
+        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+          minUnit <= Number.parseInt(valueList[0], 10) &&
+          Number.parseInt(valueList[0], 10) <= maxUnit;
+      case ">":
+        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+          maxUnit > Number.parseInt(valueList[0], 10);
       case ">=":
-        return (x: string, valueList: string[]) => x >= valueList[0];
+        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+          maxUnit >= Number.parseInt(valueList[0], 10);
       default:
-        return () => true;
+        return () => false;
     }
+  }
+  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: withClause[]) {
+    let filteredClasses = structuredClone(classes);
+    for (const withClause of withArray) {
+      switch (withClause.code) {
+        case "DWCREDIT":
+        case "DWCREDITS":
+          filteredClasses = filteredClasses.filter((c) =>
+            this.parseUnitRestrictionOperator(withClause.operator)(
+              Number.parseInt(c.minUnits, 10),
+              Number.parseInt(c.maxUnits, 10),
+              withClause.valueList,
+            ),
+          );
+          break;
+        // There may be more withArray Codes that can be applied here to filter out courses
+      }
+    }
+    return filteredClasses;
   }
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
@@ -132,54 +163,40 @@ export class AuditParser {
         case "Noncourse":
           break;
         case "Course": {
-          // const includedCourses = rule.requirement.courseArray.map(
-          //   (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
-          // ); //Included courses could be mapped to a withArray
-
-          // const toInclude = new Map(
-          //   await Promise.all(includedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
-          //     x.flat().map((y) => [y.id, y]),
-          //   ),
-          // );
-          //
           const includedCourses: [string, withClause[]][] = rule.requirement.courseArray.map(
             (x) => [
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
             ],
           );
-          const toInclude = await Promise.all(
+          const toInclude: [string, typeof course.$inferSelect][] = await Promise.all(
             includedCourses.map(([x, withArray]) =>
-              Promise.all([this.normalizeCourseId.bind(this)(x), withArray]),
+              this.normalizeCourseId
+                .bind(this)(x)
+                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], withClause[]]),
             ),
           ).then((x) =>
             x
-              .flatMap(([classes, withArray]) => {
-                for (const withClause of withArray) {
-                  switch (withClause.code) {
-                    case "DWCREDITS":
-                      classes = classes.filter((c) =>
-                        this.parseWithClauseOperator(withClause.operator)(
-                          c.minUnits,
-                          withClause.valueList,
-                        ),
-                      );
-                      break;
-                  }
-                }
-                return classes;
-              })
+              .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
               .map((y) => [y.id, y]),
           );
 
-          //
-          const excludedCourses =
-            rule.requirement.except?.courseArray.map(
-              (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
-            ) ?? [];
+          const excludedCourses: [string, withClause[]][] =
+            rule.requirement.except?.courseArray.map((x) => [
+              `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
+              x.withArray ? x.withArray : [],
+            ]) ?? [];
           const toExclude = new Set<string>(
-            await Promise.all(excludedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
-              x.flat().map((y) => y.id),
+            await Promise.all(
+              excludedCourses.map(([x, withArray]) =>
+                this.normalizeCourseId
+                  .bind(this)(x)
+                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], withClause[]]),
+              ),
+            ).then((x) =>
+              x
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .map((y) => y.id),
             ),
           );
           const courses = Array.from(toInclude)
