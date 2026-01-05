@@ -5,10 +5,6 @@ import type { DegreeWorksProgramId } from "@packages/db/schema";
  */
 export type RuleBase = {
   label: string;
-  labelTag: string;
-  ruleId: string;
-  ruleType: string;
-  nodeId: string;
 };
 /**
  * A group of `numberOfRules` rules,
