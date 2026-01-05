@@ -101,14 +101,10 @@ export class AuditParser {
       .limit(1);
   }
 
-  generateRequirementId(rule: Rule, childRequirementBlockIdentifier: string): string {
+  generateRequirementId(requirementType: string, contentsSalt: string): string {
     const requirementObjectStr = JSON.stringify({
-      label: rule.label,
-      labelTag: rule.labelTag,
-      ruleType: rule.ruleType,
-      ruleId: rule.ruleId,
-      nodeId: rule.nodeId,
-      childRequirementBlockIdentifier,
+      requirementType,
+      contentsSalt,
     });
 
     const requirementId = createHash("md5")
@@ -238,22 +234,26 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
-            const childRequirementBlockIdentifier = courses.join("_");
-            const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Course";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementId: this.generateRequirementId(rule, childRequirementBlockIdentifier),
-              requirementType: "Course",
+              label,
+              requirementId,
+              requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
           } else if (rule.requirement.creditsBegin) {
-            const childRequirementBlockIdentifier = courses.join("_");
-            const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Unit";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
+              label,
               requirementId,
-              requirementType: "Unit",
+              requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
             });
@@ -261,15 +261,15 @@ export class AuditParser {
           break;
         }
         case "Group": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          const childRequirementBlockIdentifier = requirements
-            .map((req) => req.requirementId)
-            .join("_");
-          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
+            label,
             requirementId,
-            requirementType: "Group",
+            requirementType,
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
             requirements,
           });
@@ -279,18 +279,15 @@ export class AuditParser {
           const rules = this.flattenIfStmt([rule]);
           if (!rules.some((x) => x.ruleType === "Block")) {
             if (rules.length > 1) {
+              const label = "Select 1 of the following";
+              const requirementType = "Group";
               const requirements = await this.ruleArrayToRequirements(rules);
-              const childRequirementBlockIdentifier = requirements
-                .map((req) => req.requirementId)
-                .join("_");
-              const requirementId = this.generateRequirementId(
-                rule,
-                childRequirementBlockIdentifier,
-              );
+              const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+              const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
-                label: "Select 1 of the following",
+                label,
                 requirementId,
-                requirementType: "Group",
+                requirementType,
                 requirementCount: 1,
                 requirements,
               });
@@ -303,25 +300,26 @@ export class AuditParser {
         case "Complete":
         case "Incomplete": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
-          const childRequirementBlockIdentifier = label;
-          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
+          const requirementType = "Marker";
+          const contentsSalt = label;
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
             label,
             requirementId,
-            requirementType: "Marker",
+            requirementType,
           });
           break;
         }
         case "Subset": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          const childRequirementBlockIdentifier = requirements
-            .map((req) => req.requirementId)
-            .join("_");
-          const requirementId = this.generateRequirementId(rule, childRequirementBlockIdentifier);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
+            label,
             requirementId,
-            requirementType: "Group",
+            requirementType,
             requirementCount: Object.keys(requirements).length,
             requirements,
           });
