@@ -1,4 +1,4 @@
-import type { Block, Rule, withClause } from "$types";
+import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
@@ -136,7 +136,7 @@ export class AuditParser {
         return () => false;
     }
   }
-  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: withClause[]) {
+  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
     let filteredClasses = structuredClone(classes);
     for (const withClause of withArray) {
       switch (withClause.code) {
@@ -151,6 +151,7 @@ export class AuditParser {
           );
           break;
         // There may be more withArray Codes that can be applied here to filter out courses
+        // see https://github.com/icssc/anteater-api/pull/286
       }
     }
     return filteredClasses;
@@ -163,7 +164,7 @@ export class AuditParser {
         case "Noncourse":
           break;
         case "Course": {
-          const includedCourses: [string, withClause[]][] = rule.requirement.courseArray.map(
+          const includedCourses: [string, WithClause[]][] = rule.requirement.courseArray.map(
             (x) => [
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
@@ -173,7 +174,7 @@ export class AuditParser {
             includedCourses.map(([x, withArray]) =>
               this.normalizeCourseId
                 .bind(this)(x)
-                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], withClause[]]),
+                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
             ),
           ).then((x) =>
             x
@@ -181,7 +182,7 @@ export class AuditParser {
               .map((y) => [y.id, y]),
           );
 
-          const excludedCourses: [string, withClause[]][] =
+          const excludedCourses: [string, WithClause[]][] =
             rule.requirement.except?.courseArray.map((x) => [
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
@@ -191,7 +192,7 @@ export class AuditParser {
               excludedCourses.map(([x, withArray]) =>
                 this.normalizeCourseId
                   .bind(this)(x)
-                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], withClause[]]),
+                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
               ),
             ).then((x) =>
               x

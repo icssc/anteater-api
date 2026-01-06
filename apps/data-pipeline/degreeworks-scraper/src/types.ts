@@ -21,12 +21,12 @@ export type Course = {
   discipline: string;
   number: string;
   numberEnd?: string;
-  withArray?: withClause[];
+  withArray?: WithClause[];
 };
 /**
  * a specification for course range for unit req, etc.
  */
-export type withClause = {
+export type WithClause = {
   code:
     | "DWCREDITS"
     | "DWCREDIT"
