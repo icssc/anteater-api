@@ -67,4 +67,4 @@ jobs:
       - name: Deploy Key Manager/Dashboard if present
         run: |
           set -euxo pipefail
-          pnpm --filter "./apps/key-manager/**" run deploy -- --verbose --print-logs
+          pnpm --filter "./apps/key-manager/**" run deploy --verbose --print-logs
