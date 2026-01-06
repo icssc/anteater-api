@@ -66,9 +66,5 @@ jobs:
 
       - name: Deploy Key Manager/Dashboard if present
         run: |
-          echo "running deploy directly.."
-          set +e
-          pnpm --filter "./apps/key-manager/**" run deploy
-          status=$?
-          echo "sst exit code: $status"
-          exit $status
+          set -euxo pipefail
+          pnpm --filter "./apps/key-manager/**" run deploy -- --verbose --print-logs
