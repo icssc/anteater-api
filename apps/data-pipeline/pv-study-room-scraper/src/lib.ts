@@ -1,38 +1,9 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import type { database } from "@packages/db";
 import type { studyLocation, studyRoom } from "@packages/db/schema";
-
-/**
- * Temporary helper function to make HTTP requests using curl becuase my cross-fetch is timing out in China crying emoji
- * Remove when back in US - replace with native fetch() or cross-fetch.
- * Pls don't remove until then. However, you should try using cross-fetch so we know if it's actually a china issue or a cross-fetch issue (praying its not)
- */
-const execFileAsync = promisify(execFile);
-async function curlPost(url: string, body: object): Promise<unknown> {
-  try {
-    // might take a while to time out just wait
-    const { stdout } = await execFileAsync("curl", [
-      "-X",
-      "POST",
-      url,
-      "-H",
-      "Content-Type: application/json",
-      "-d",
-      JSON.stringify(body),
-      "--connect-timeout",
-      "30",
-      "--max-time",
-      "120",
-      "-s",
-    ]);
-
-    return JSON.parse(stdout);
-  } catch (error) {}
-}
+import fetch from "cross-fetch";
 
 // Types
-// maybe switch to Zod later because Dante mentioned that
+// Consider switching to Zod because Dante mentioned that
 type BookingsService = {
   serviceId: string;
   title: string;
@@ -81,7 +52,7 @@ const STUDY_LOCATION_ID = "pv1";
 const STUDY_LOCATION_NAME = "Plaza Verde";
 const SLOT_INTERVAL_MINUTES = 15;
 
-// does its name
+// Generates valid slots from an availability window given its duration
 function generateSlotsFromAvailableWindow(
   studyRoomId: string,
   start: Date,
@@ -109,7 +80,7 @@ function generateSlotsFromAvailableWindow(
   return slots;
 }
 
-// each service has "availibility slots/items". Find the ones marked AVAILABLE and generate the slots
+// Each service has "availability slots/items". Find the ones marked AVAILABLE and generate the slots
 function processAvailabilityItems(
   studyRoomId: string,
   availabilityItems: AvailabilityItem[],
@@ -145,10 +116,8 @@ function processAvailabilityItems(
   return slots;
 }
 
-// fetch services data so we know the staffId's that map to each room
 async function fetchServices(): Promise<BookingsService[]> {
-  // temporarily uses curl because it works for me in China. hopefully can switch to fetch later
-  const data = (await curlPost(SERVICES_URL, {
+  const payload = {
     queryOptions: {
       filter: {
         or: {
@@ -171,9 +140,23 @@ async function fetchServices(): Promise<BookingsService[]> {
         },
       },
     },
-  })) as { service?: BookingsService[] };
+  };
 
-  return data.service || [];
+  const res = await fetch(SERVICES_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`SERVICES_URL failed: ${res.status} ${res.statusText}`);
+  }
+
+  const data = (await res.json()) as { service?: BookingsService[] };
+  return data.service ?? [];
 }
 
 // given an array of staffIds, fetch the schedule within the given date
@@ -192,12 +175,20 @@ async function fetchStaffAvailability(
     };
   };
 
-  // temporarily uses curl
-  const data = await curlPost(AVAILABILITY_URL, {
-    staffIds,
+  const payload = {
+    staffIds: staffIds,
     startDateTime: formatDateForAPI(startDate),
     endDateTime: formatDateForAPI(endDate),
-  });
+  };
+
+  const data = await fetch(AVAILABILITY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then((res): Promise<StaffAvailability[]> => res.json());
 
   const response = data as { staffAvailabilityResponse: StaffAvailability[] };
 
@@ -230,7 +221,7 @@ async function scrapePlazaVerde(): Promise<{
   rooms: Array<typeof studyRoom.$inferInsert>;
   slots: Slot[];
 }> {
-  // note: maybe theres some way to cache the service data so we can skip this part
+  // note: maybe there's some way to cache the service data so we can skip this part
   const services = await fetchServices();
 
   // this is our list of 51 services
@@ -238,10 +229,11 @@ async function scrapePlazaVerde(): Promise<{
   // this is our list of 17 rooms to fetch availability with
   const allStaffIds = [...new Set(allStaffIdsWithDupes)];
 
-  // look for next week of data. maybe we should do less at a time
+  // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
   const endDate = new Date();
-  endDate.setDate(endDate.getDate() + 7);
+  endDate.setDate(endDate.getDate() + 2);
+  endDate.setHours(0, 0, 0, 0);
 
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
 
@@ -269,7 +261,7 @@ async function scrapePlazaVerde(): Promise<{
 
     const durationMinutes = parseISO8601Duration(service.defaultDuration);
 
-    // iterate through service.staffMemberIds, although its usually an array with 1 element
+    // iterate through service.staffMemberIds, although it's usually an array with 1 element
     for (const staffId of service.staffMemberIds) {
       const availabilityItems = availabilityMap.get(staffId);
       if (availabilityItems) {
@@ -298,7 +290,7 @@ async function scrapePlazaVerde(): Promise<{
   console.log("Scraping Summary: ");
   console.log(`Total rooms: ${rooms.length}`);
   console.log(
-    `Total slots: ${slots.length} (It's a lot because we are searching for 51 rooms, 7 days, 15 min intervals)`,
+    `Total slots: ${slots.length} (It's a lot because we are searching for 51 rooms, 2 days, 15 min intervals)`,
   );
   console.log(
     `Available slots: ${slots.filter((s) => s.isAvailable).length} (should be all of them because we aren't adding unavailable slots)`,
