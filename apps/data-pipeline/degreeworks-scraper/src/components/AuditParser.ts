@@ -109,7 +109,9 @@ export class AuditParser {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
 
-  parseUnitRestrictionOperator(operatorLike: string) {
+  parseUnitRestrictionOperator(
+    operatorLike: string,
+  ): (minUnit: number, maxUnit: number, valueList: string[]) => boolean {
     // for > and >= operations, we use a loose interpretation for variable unit courses
     // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
     // be taken for 3 or 4 units and meet the withClause requirement
@@ -118,21 +120,17 @@ export class AuditParser {
     // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
     switch (operatorLike) {
       case "<":
-        return (minUnit: number, maxUnit: number, valueList: string[]) =>
-          maxUnit < Number.parseInt(valueList[0], 10);
+        return (minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
       case "<=":
-        return (minUnit: number, maxUnit: number, valueList: string[]) =>
-          maxUnit <= Number.parseInt(valueList[0], 10);
+        return (minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
       case "=":
-        return (minUnit: number, maxUnit: number, valueList: string[]) =>
+        return (minUnit, maxUnit, valueList) =>
           minUnit <= Number.parseInt(valueList[0], 10) &&
           Number.parseInt(valueList[0], 10) <= maxUnit;
       case ">":
-        return (minUnit: number, maxUnit: number, valueList: string[]) =>
-          maxUnit > Number.parseInt(valueList[0], 10);
+        return (minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
       case ">=":
-        return (minUnit: number, maxUnit: number, valueList: string[]) =>
-          maxUnit >= Number.parseInt(valueList[0], 10);
+        return (minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
       default:
         return () => false;
     }
