@@ -108,6 +108,7 @@ export class AuditParser {
   private static suppressLabelPolymorphism(label: string) {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
+
   parseUnitRestrictionOperator(operatorLike: string) {
     // for > and >= operations, we use a loose interpretation for variable unit courses
     // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
@@ -136,6 +137,7 @@ export class AuditParser {
         return () => false;
     }
   }
+
   filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
     let filteredClasses = structuredClone(classes);
     for (const withClause of withArray) {
@@ -156,6 +158,7 @@ export class AuditParser {
     }
     return filteredClasses;
   }
+
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
