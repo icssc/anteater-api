@@ -261,7 +261,7 @@ export const websocSectionSchema = z.object({
   }),
   isCancelled: z.boolean().openapi({
     description:
-      "Whether the section has been cancelled, independent of and superseding the status field. Imputed by searching the comment field of a section for a 'cancelled' indication.",
+      "Whether the section has been cancelled, independent of and superseding the status field. Imputed by searching the comment field of a section for a 'cancelled' or 'canceled' indication.",
   }),
   updatedAt: z.coerce.date(),
   webURL: z.string(),
