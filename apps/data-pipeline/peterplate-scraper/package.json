@@ -1,0 +1,16 @@
+{
+  "name": "@apps/peterplate-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json --noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "axios": "^1.13.2",
+    "winston": "3.15.0",
+    "zod": "^4.1.13"
+  }
+}
