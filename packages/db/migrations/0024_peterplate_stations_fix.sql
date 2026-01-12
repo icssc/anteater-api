@@ -1,0 +1,1 @@
+ALTER TABLE "station" DROP COLUMN IF EXISTS "restaurant_id";

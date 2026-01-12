@@ -822,9 +822,9 @@ export const libraryTrafficHistory = pgTable(
 export const station = pgTable("station", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
-  restaurantId: varchar("restaurant_id").notNull(),
-  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  // restaurantId: varchar("restaurant_id").notNull(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }), //.notNull()
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }), //.notNull()
 });
 
 // Materialized views

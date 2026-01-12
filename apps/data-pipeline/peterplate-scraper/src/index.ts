@@ -1,19 +1,15 @@
-import { getLocationInformation } from "./lib";
+import { exit } from "node:process";
+import { database } from "@packages/db";
+import { scrapeStations } from "./lib";
 
-//test scraper code
 async function main() {
-  try {
-    console.log("Starting dining scraper test...");
+  const url = process.env.DB_URL;
+  if (!url) throw new Error("DB_URL not found");
 
-    const result = await getLocationInformation("brandywine", "ASC");
+  const db = database(url);
 
-    console.log("Scraper succeeded");
-    console.dir(result, { depth: null });
-  } catch (err) {
-    console.error("Scraper failed");
-    console.error(err);
-    process.exit(1);
-  }
+  await scrapeStations(db, "brandywine");
+  exit(0);
 }
 
-main();
+main().then();
