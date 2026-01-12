@@ -189,7 +189,7 @@ async function fetchStaffAvailability(
       Accept: "application/json",
     },
     body: JSON.stringify(payload),
-  }).then((res): Promise<StaffAvailability[]> => res.json());
+  }).then((res) => res.json());
 
   const response = data as { staffAvailabilityResponse: StaffAvailability[] };
 
@@ -254,7 +254,7 @@ async function scrapePlazaVerde(): Promise<{
       name: service.title,
       capacity: null,
       location: STUDY_LOCATION_NAME,
-      description: service.description || null,
+      description: service.description || "",
       directions: "",
       techEnhanced: null,
       studyLocationId: STUDY_LOCATION_ID,
