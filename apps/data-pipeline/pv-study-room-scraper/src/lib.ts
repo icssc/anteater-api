@@ -1,5 +1,7 @@
 import type { database } from "@packages/db";
-import type { studyLocation, studyRoom } from "@packages/db/schema";
+import { lt, sql } from "@packages/db/drizzle";
+import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import fetch from "cross-fetch";
 
 // Types
@@ -73,7 +75,6 @@ function generateSlotsFromAvailableWindow(
       end: slotEnd,
       isAvailable: true,
     });
-
     currentStart = new Date(currentStart.getTime() + SLOT_INTERVAL_MINUTES * 60 * 1000);
   }
 
@@ -254,7 +255,7 @@ async function scrapePlazaVerde(): Promise<{
       capacity: null,
       location: STUDY_LOCATION_NAME,
       description: service.description || null,
-      directions: null,
+      directions: "",
       techEnhanced: null,
       studyLocationId: STUDY_LOCATION_ID,
     });
@@ -345,7 +346,6 @@ export async function doScrape(db: ReturnType<typeof database>) {
   const { location, rooms, slots } = await scrapePlazaVerde();
 
   // uncomment this when ready to insert to database:
-  /*
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
 
@@ -375,5 +375,4 @@ export async function doScrape(db: ReturnType<typeof database>) {
 
     await tx.delete(studyRoomSlot).where(lt(studyRoomSlot.end, new Date()));
   });
-  */
 }

@@ -725,7 +725,7 @@ export const studyRoom = pgTable(
     name: varchar("name").notNull(),
     capacity: integer("capacity"),
     location: varchar("location").notNull(),
-    description: varchar("description"),
+    description: varchar("description").notNull(),
     directions: varchar("directions"),
     techEnhanced: boolean("tech_enhanced"),
     studyLocationId: varchar("study_location_id")
