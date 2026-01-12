@@ -817,6 +817,16 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
+// PeterPlate Schemas (In Development)
+
+export const station = pgTable("station", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  restaurantId: varchar("restaurant_id").notNull(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {
