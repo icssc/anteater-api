@@ -7,7 +7,7 @@ main = "src/handler.ts"
 minify = true
 
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/10 * * * *"]
 
 [observability]
 enabled = true

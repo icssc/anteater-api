@@ -32,7 +32,7 @@ export const studyRoomSchema = z.object({
     description: "A human-readable name for this room",
     example: "Science 471",
   }),
-  capacity: z.number().int().optional().openapi({
+  capacity: z.number().int().nullable().openapi({
     description: "The stated capacity in persons of this room",
     example: 4,
   }),
@@ -48,7 +48,7 @@ export const studyRoomSchema = z.object({
     description: "Additional data about this room, specifically for directions to the room",
     example: "Located on the main level of Gateway Study Center.",
   }),
-  techEnhanced: z.boolean().optional().openapi({
+  techEnhanced: z.boolean().nullable().openapi({
     description:
       "Whether this room is tech enhanced, typically indicating the presence of an external monitor, AC outlets, and/or a PC.",
     example: true,
