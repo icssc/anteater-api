@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@packages/db": "workspace:*",
-    "@packages/stdlib": "workspace:*",
     "cross-fetch": "4.0.0"
   },
   "devDependencies": {
