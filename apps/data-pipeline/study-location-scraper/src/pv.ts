@@ -345,7 +345,6 @@ async function scrapePlazaVerde(): Promise<{
 export async function doScrape(db: ReturnType<typeof database>) {
   const { location, rooms, slots } = await scrapePlazaVerde();
 
-  // uncomment this when ready to insert to database:
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
 
