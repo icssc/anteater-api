@@ -148,6 +148,13 @@
       "when": 1762904125098,
       "tag": "0020_damp_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1766088418349,
+      "tag": "0022_fix_websoc_is_cancelled",
+      "breakpoints": true
     }
   ]
 }
