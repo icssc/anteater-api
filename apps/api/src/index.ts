@@ -15,6 +15,7 @@ import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -36,7 +37,7 @@ app.use("/reference", referenceOgTagInjector(ogTitle)).get(
 app.onError((err, c) =>
   c.json<ErrorSchema>(
     { ok: false, message: err.message.replaceAll(/"/g, "'") },
-    { status: "getResponse" in err ? err.getResponse().status : 500 },
+    "getResponse" in err ? (err.getResponse().status as ContentfulStatusCode) : 500,
   ),
 );
 app.notFound((c) =>
