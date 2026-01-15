@@ -155,6 +155,13 @@
       "when": 1764803015973,
       "tag": "0021_rename_section_id_to_meeting_id",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1768458364289,
+      "tag": "0022_pv_nullable_capacity_tech_enhanced",
+      "breakpoints": true
     }
   ]
 }
