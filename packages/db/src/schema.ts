@@ -370,7 +370,8 @@ export const websocSection = pgTable(
     isCancelled: boolean("is_cancelled")
       .notNull()
       .generatedAlwaysAs(
-        (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
+        (): SQL =>
+          sql`${websocSection.sectionComment} LIKE \'%***  CANCELLED  ***%\' OR ${websocSection.sectionComment} LIKE \'%***  CANCELED  ***%\'`,
       ),
     webURL: text("web_url").notNull().default(""),
   },
@@ -442,7 +443,7 @@ export const websocSectionMeetingToLocation = pgTable(
   "websoc_section_meeting_to_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    meetingId: uuid("section_id")
+    meetingId: uuid("meeting_id")
       .references(() => websocSectionMeeting.id, { onDelete: "cascade" })
       .notNull(),
     locationId: uuid("location_id")

@@ -26,9 +26,10 @@ const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) =
     if (num.includes("-")) {
       const [lower, upper] = num.split("-");
       if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `'${num}' is not a valid course number range. The lower and upper bounds of a course number range must both be base-10 integers.`,
+        ctx.issues.push({
+          input: num,
+          code: "custom",
+          error: `'${num}' is not a valid course number range. The lower and upper bounds of a course number range must both be base-10 integers.`,
         });
         return z.NEVER;
       }
