@@ -31,7 +31,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys 
   const keyTypeToIcon = (keyType: string) => {
     const className = "size-4";
 
-    let icon: React.ReactElement | null;
+    let icon: React.JSX.Element | null;
 
     switch (keyType) {
       case "publishable":

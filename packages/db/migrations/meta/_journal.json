@@ -148,6 +148,20 @@
       "when": 1763585463895,
       "tag": "0020_library_traffic",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1764803015973,
+      "tag": "0021_rename_section_id_to_meeting_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1766088418349,
+      "tag": "0022_fix_websoc_is_cancelled",
+      "breakpoints": true
     }
   ]
 }
