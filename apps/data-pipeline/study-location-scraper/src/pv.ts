@@ -53,6 +53,7 @@ const AVAILABILITY_URL = `${BOOKINGS_BASE_URL}/GetStaffAvailability`;
 const STUDY_LOCATION_ID = "pv1";
 const STUDY_LOCATION_NAME = "Plaza Verde";
 const SLOT_INTERVAL_MINUTES = 15;
+const DAYS_TO_FETCH = 2;
 
 // Generates valid slots from an availability window given its duration
 function generateSlotsFromAvailableWindow(
@@ -152,12 +153,33 @@ async function fetchServices(): Promise<BookingsService[]> {
     body: JSON.stringify(payload),
   });
 
-  if (!res.ok) {
-    throw new Error(`SERVICES_URL failed: ${res.status} ${res.statusText}`);
-  }
-
   const data = (await res.json()) as { service?: BookingsService[] };
   return data.service ?? [];
+}
+
+// used in fetchStaffAvailability
+function formatDateForAPI(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return {
+    dateTime: `${year}-${month}-${day}T00:00:00`,
+    timeZone: "Pacific Standard Time",
+  };
+}
+
+/**
+ * The duration of each staffId is stored inside each service in ISO8601 format (1hr, 2hr, 3hr)
+ * we need to do this when we process the 51 services (iterate across 17 rooms * 3 durations = 51 services)
+ */
+function parseISO8601Duration(duration: string): number {
+  const hoursMatch = duration.match(/(\d+)H/);
+  const minutesMatch = duration.match(/(\d+)M/);
+
+  const hours = hoursMatch ? Number.parseInt(hoursMatch[1], 10) : 0;
+  const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
+
+  return hours * 60 + minutes;
 }
 
 // given an array of staffIds, fetch the schedule within the given date
@@ -166,18 +188,8 @@ async function fetchStaffAvailability(
   startDate: Date,
   endDate: Date,
 ): Promise<StaffAvailability[]> {
-  const formatDateForAPI = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return {
-      dateTime: `${year}-${month}-${day}T00:00:00`,
-      timeZone: "Pacific Standard Time",
-    };
-  };
-
   const payload = {
-    staffIds: staffIds,
+    staffIds,
     startDateTime: formatDateForAPI(startDate),
     endDateTime: formatDateForAPI(endDate),
   };
@@ -193,27 +205,7 @@ async function fetchStaffAvailability(
 
   const response = data as { staffAvailabilityResponse: StaffAvailability[] };
 
-  if (!response.staffAvailabilityResponse || !Array.isArray(response.staffAvailabilityResponse)) {
-    console.error("Invalid availability response:", data);
-    throw new Error("Invalid availability response: missing staffAvailabilityResponse array");
-  }
-
   return response.staffAvailabilityResponse;
-}
-
-/**
- * Parses ISO 8601 duration format to minutes
- * The duration of each staffId is stored inside each service in ISO8601 format (1hr, 2hr, 3hr)
- * we need to do this when we process the 51 services (iterate across 17 rooms * 3 durations = 51 services)
- */
-function parseISO8601Duration(duration: string): number {
-  const hoursMatch = duration.match(/(\d+)H/);
-  const minutesMatch = duration.match(/(\d+)M/);
-
-  const hours = hoursMatch ? Number.parseInt(hoursMatch[1], 10) : 0;
-  const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
-
-  return hours * 60 + minutes;
 }
 
 // bulk of the processing logic
@@ -233,7 +225,7 @@ async function scrapePlazaVerde(): Promise<{
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
   const endDate = new Date();
-  endDate.setDate(endDate.getDate() + 2);
+  endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
   endDate.setHours(0, 0, 0, 0);
 
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
@@ -254,7 +246,7 @@ async function scrapePlazaVerde(): Promise<{
       name: service.title,
       capacity: null,
       location: STUDY_LOCATION_NAME,
-      description: service.description || "",
+      description: service.description ?? "",
       directions: "",
       techEnhanced: null,
       studyLocationId: STUDY_LOCATION_ID,
@@ -331,10 +323,6 @@ async function scrapePlazaVerde(): Promise<{
       );
     });
   });
-
-  console.log(
-    "\nOnce data looks correct, uncomment and test the database transactions in doScrape()",
-  );
 
   return { location, rooms, slots };
 }
