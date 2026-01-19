@@ -170,7 +170,6 @@ function formatDateForAPI(date: Date) {
 
 /**
  * The duration of each staffId is stored inside each service in ISO8601 format (1hr, 2hr, 3hr)
- * we need to do this when we process the 51 services (iterate across 17 rooms * 3 durations = 51 services)
  */
 function parseISO8601Duration(duration: string): number {
   const hoursMatch = duration.match(/(\d+)H/);
@@ -211,16 +210,14 @@ async function fetchStaffAvailability(
 // bulk of the processing logic
 async function scrapePlazaVerde(): Promise<{
   location: typeof studyLocation.$inferInsert;
-  rooms: Array<typeof studyRoom.$inferInsert>;
+  rooms: (typeof studyRoom.$inferInsert)[];
   slots: Slot[];
 }> {
   // note: maybe there's some way to cache the service data so we can skip this part
   const services = await fetchServices();
 
-  // this is our list of 51 services
-  const allStaffIdsWithDupes = services.flatMap((service) => service.staffMemberIds);
   // this is our list of 17 rooms to fetch availability with
-  const allStaffIds = [...new Set(allStaffIdsWithDupes)];
+  const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
@@ -230,25 +227,24 @@ async function scrapePlazaVerde(): Promise<{
 
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
 
-  // have a map of rooms : its availability items
   const availabilityMap = new Map<string, AvailabilityItem[]>();
   for (const availability of availabilities) {
     availabilityMap.set(availability.staffId, availability.availabilityItems);
   }
 
-  const rooms: Array<typeof studyRoom.$inferInsert> = [];
+  const rooms: (typeof studyRoom.$inferInsert)[] = [];
   const slots: Slot[] = [];
 
   for (const service of services) {
-    // push room data for each service. technically we don't need to be updating all the room data every few min so if this is a big deal, we should change
+    // push room data for each service
     rooms.push({
       id: service.serviceId,
       name: service.title,
-      capacity: null,
+      capacity: 0, // TODO: change back to null
       location: STUDY_LOCATION_NAME,
       description: service.description ?? "",
       directions: "",
-      techEnhanced: null,
+      techEnhanced: false, // TODO: change back to null
       studyLocationId: STUDY_LOCATION_ID,
     });
 
@@ -275,7 +271,6 @@ async function scrapePlazaVerde(): Promise<{
   };
 
   // testing logs
-  console.log(`Total staff IDs (with duplicates): ${allStaffIdsWithDupes.length}`);
   console.log(`Unique staff IDs: ${allStaffIds.length}`);
   console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()}\n`);
 
