@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -65,9 +65,14 @@ jobs:
         working-directory: ./apps/key-manager
         run: pnpm exec sst refresh --stage production --verbose --print-logs 2>&1 | tee sst-refresh.log
 
+      - name: AWS identity
+        run: aws sts get-caller-identity
+
       - name: Deploy Key Manager
         working-directory: ./apps/key-manager
-        run: pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
+        run: |
+          set -euo pipefail
+          pnpm run deploy --verbose 2>&1 | tee sst-deploy.log
 
       - name: upload sst deploy log
         if: always()
