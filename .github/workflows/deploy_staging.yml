@@ -29,10 +29,6 @@ env:
   CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
   CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
 
-  SST_DEBUG: "*"
-  PULUMI_LOG_LEVEL: "DEBUG"
-  PULUMI_DEBUG_COMMANDS: "true"
-
 jobs:
   deploy_staging:
     name: Deploy API to staging
@@ -70,13 +66,32 @@ jobs:
 
       - name: Deploy Key Manager
         working-directory: ./apps/key-manager
+        env:
+          SST_DEBUG: "*"
+          PULUMI_LOG_LEVEL: "debug"
+          PULUMI_DEBUG_COMMANDS: "true"
         run: |
           set -euo pipefail
-          pnpm run deploy --verbose 2>&1 | tee sst-deploy.log
+          pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
 
-      - name: upload sst deploy log
+      - name: upload sst refresh log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sst-deploy-log
-          path: apps/key-manager/sst-deploy.log
+          name: sst-refresh-log
+          path: apps/key-manager/sst-refresh.log
+
+      - name: pulumi logs
+        if: always()
+        run: |
+          set -euxo pipefail
+          ls -la ~/.pulumi/logs || true
+          mkdir -p pulumi-logs
+          cp -R ~/.pulumi/logs/* pulumi-logs/ || true
+
+      - name: upload pulumi logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumi-logs
+          path: pulumi-logs
