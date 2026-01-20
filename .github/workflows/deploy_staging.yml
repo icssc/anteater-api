@@ -61,26 +61,10 @@ jobs:
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
-      - name: Show node version
-        run: node -v
-
-      - name: verify aws
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-        run: aws sts get-caller-identity
-
-      - name: Check System Resources
-        run: |
-          echo "disk"
-          df -h
-          echo "memory"
-          free -m
+      - name: Refresh SST
+        working-directory: ./apps/key-manager
+        run: pnpm run refresh --verbose
 
       - name: Deploy Key Manager/Dashboard if present
-        env:
-          SST_PRINT_LOGS: "1"
-        run: |
-          set -euxo pipefail
-          pnpm --filter "./apps/key-manager/**" run deploy --verbose
+        working-directory: ./apps/key-manager
+        run: pnpm run deploy --verbose 2>&1 | tee sst-deploy.log
