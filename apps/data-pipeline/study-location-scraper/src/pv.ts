@@ -65,9 +65,12 @@ function generateSlotsFromAvailableWindow(
   const slots: Slot[] = [];
 
   const lastStartTime = new Date(end.getTime() - durationMinutes * 60 * 1000);
-  let currentStart = new Date(start);
 
-  while (currentStart <= lastStartTime) {
+  for (
+    let currentStart = new Date(start);
+    currentStart <= lastStartTime;
+    currentStart.setTime(currentStart.getTime() + SLOT_INTERVAL_MINUTES * 60 * 1000)
+  ) {
     const slotEnd = new Date(currentStart.getTime() + durationMinutes * 60 * 1000);
 
     slots.push({
@@ -76,7 +79,6 @@ function generateSlotsFromAvailableWindow(
       end: slotEnd,
       isAvailable: true,
     });
-    currentStart = new Date(currentStart.getTime() + SLOT_INTERVAL_MINUTES * 60 * 1000);
   }
 
   return slots;
@@ -103,16 +105,6 @@ function processAvailabilityItems(
       );
       slots.push(...availableSlots);
     }
-
-    // Decide if the following data is needed or if we just delete
-    // else if (item.status === "BOOKINGSAVAILABILITYSTATUS_BUSY") {
-    //   slots.push({
-    //     studyRoomId,
-    //     start,
-    //     end,
-    //     isAvailable: false,
-    //   });
-    // }
   }
 
   return slots;
@@ -221,7 +213,8 @@ async function scrapePlazaVerde(): Promise<{
 
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
-  const endDate = new Date();
+  startDate.setHours(startDate.getHours());
+  const endDate = new Date(startDate.getTime());
   endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
   endDate.setHours(0, 0, 0, 0);
 
@@ -271,53 +264,9 @@ async function scrapePlazaVerde(): Promise<{
   };
 
   // testing logs
-  console.log(`Unique staff IDs: ${allStaffIds.length}`);
-  console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()}\n`);
-
-  console.log(`Fetched availability for ${availabilities.length} staff members\n`);
-  console.log("Scraping Summary: ");
+  console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
   console.log(`Total rooms: ${rooms.length}`);
-  console.log(
-    `Total slots: ${slots.length} (It's a lot because we are searching for 51 rooms, 2 days, 15 min intervals)`,
-  );
-  console.log(
-    `Available slots: ${slots.filter((s) => s.isAvailable).length} (should be all of them because we aren't adding unavailable slots)`,
-  );
-
-  console.log("\nSample Room (printing 3 from every service): ");
-  if (rooms.length > 0) {
-    console.log(JSON.stringify(rooms[0], null, 2));
-  }
-
-  const formatSlotTime = (date: Date) =>
-    date.toLocaleString("en-US", {
-      timeZone: "America/Los_Angeles",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  console.log("\nSample Slots (first 3 per service):");
-  services.forEach((service, idx) => {
-    const durationMinutes = parseISO8601Duration(service.defaultDuration);
-    const durationHours = durationMinutes / 60;
-
-    const serviceSlots = slots.filter((slot) => slot.studyRoomId === service.serviceId).slice(0, 3);
-
-    console.log(`${idx + 1}. ${service.title} (${service.serviceId}) — ${durationHours} hours`);
-
-    if (serviceSlots.length === 0) {
-      console.log("  No slots found for this service.");
-      return;
-    }
-
-    serviceSlots.forEach((slot, i) => {
-      console.log(
-        `  ${i + 1}. ${slot.isAvailable ? "AVAILABLE" : "BUSY"}: ${formatSlotTime(slot.start)} - ${formatSlotTime(slot.end)}`,
-      );
-    });
-  });
+  console.log(`Available slots: ${slots.filter((s) => s.isAvailable).length}`);
 
   return { location, rooms, slots };
 }
@@ -325,7 +274,7 @@ async function scrapePlazaVerde(): Promise<{
 /**
  * main entry point. call scrape and insert to db
  */
-export async function doScrape(db: ReturnType<typeof database>) {
+export async function doPVScrape(db: ReturnType<typeof database>) {
   const { location, rooms, slots } = await scrapePlazaVerde();
 
   await db.transaction(async (tx) => {
