@@ -56,13 +56,12 @@ jobs:
       #      - name: Deploy API to staging
       #        working-directory: ./apps/api
       #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
+      - name: try unlocking sst
+        run: pnpm sst unlock --stage production
 
       - name: Refresh SST
         working-directory: ./apps/key-manager
         run: pnpm exec sst refresh --stage production --verbose --print-logs 2>&1 | tee sst-refresh.log
-
-      - name: AWS identity
-        run: aws sts get-caller-identity
 
       - name: Deploy Key Manager
         working-directory: ./apps/key-manager
@@ -74,24 +73,9 @@ jobs:
           set -euo pipefail
           pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
 
-      - name: upload sst refresh log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sst-refresh-log
-          path: apps/key-manager/sst-refresh.log
-
-      - name: pulumi logs
-        if: always()
-        run: |
-          set -euxo pipefail
-          ls -la ~/.pulumi/logs || true
-          mkdir -p pulumi-logs
-          cp -R ~/.pulumi/logs/* pulumi-logs/ || true
-
-      - name: upload pulumi logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pulumi-logs
-          path: pulumi-logs
+#      - name: upload sst refresh log
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: sst-refresh-log
+#          path: apps/key-manager/sst-refresh.log
