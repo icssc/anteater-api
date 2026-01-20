@@ -8,7 +8,8 @@
     "deploy": "sst deploy --stage production",
     "deploy:local": "dotenv -- sst deploy --stage production",
     "dev": "next dev --turbopack",
-    "migrate": "tsx src/db/migrate.ts"
+    "migrate": "tsx src/db/migrate.ts",
+    "refresh": "sst refresh --stage production"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "1.7.2",
