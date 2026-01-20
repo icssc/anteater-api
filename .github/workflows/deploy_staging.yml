@@ -57,6 +57,7 @@ jobs:
       #        working-directory: ./apps/api
       #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
       - name: try unlocking sst
+        working-directory: ./apps/key-manager
         run: pnpm exec sst unlock --stage production
 
       - name: Refresh SST
