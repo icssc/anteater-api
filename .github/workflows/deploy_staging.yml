@@ -63,11 +63,11 @@ jobs:
 
       - name: Refresh SST
         working-directory: ./apps/key-manager
-        run: pnpm run refresh --verbose
+        run: pnpm exec sst refresh --stage production --verbose --print-logs 2>&1 | tee sst-refresh.log
 
-      - name: Deploy Key Manager/Dashboard if present
+      - name: Deploy Key Manager
         working-directory: ./apps/key-manager
-        run: pnpm run deploy --verbose 2>&1 | tee sst-deploy.log
+        run: pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
 
       - name: upload sst deploy log
         if: always()
