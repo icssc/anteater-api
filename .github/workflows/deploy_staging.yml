@@ -56,7 +56,10 @@ jobs:
           SST_DEBUG: "*"
           PULUMI_LOG_LEVEL: "debug"
           PULUMI_DEBUG_COMMANDS: "true"
-        run: pnpm exec sst deploy --stage production
+        run: |
+          set -euo pipefail
+          pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
+
 #      - name: upload sst refresh log
 #        if: always()
 #        uses: actions/upload-artifact@v4
