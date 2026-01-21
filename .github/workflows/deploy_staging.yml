@@ -41,15 +41,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node + pnpm
+      - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-and-pnpm
 
-      - name: Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Prefer SST bundled Pulumi
         run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
 
-      - name: Deploy (SST)
+      - name: Deploy API to staging
         working-directory: ./apps/key-manager
         run: pnpm exec sst deploy --stage production
