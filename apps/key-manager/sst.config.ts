@@ -6,10 +6,6 @@ export default $config({
       name: "key-manager",
       removal: "remove",
       home: "aws",
-      providers: {
-        cloudflare: "6.2.0",
-        aws: "6.66.2",
-      },
     };
   },
   async run() {
