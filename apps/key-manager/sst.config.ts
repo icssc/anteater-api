@@ -6,18 +6,24 @@ export default $config({
       name: "key-manager",
       removal: "remove",
       home: "aws",
-      providers: {
-        cloudflare: "6.2.0",
-        aws: "6.66.2",
-        random: "4.16.6",
-      },
     };
   },
   async run() {
     new sst.aws.Nextjs("key-manager", {
       domain: {
         name: "dashboard.anteaterapi.com",
-        dns: sst.cloudflare.dns(), // note that we don't need the zone here, since cloudflare can identify it for us
+        dns: sst.cloudflare.dns(),
+      },
+      environment: {
+        USERS_DB_URL: process.env.USERS_DB_URL,
+        CLOUDFLARE_KV_NAMESPACE_ID: process.env.CLOUDFLARE_KV_NAMESPACE_ID,
+        CLOUDFLARE_DEFAULT_ACCOUNT_ID: process.env.CLOUDFLARE_DEFAULT_ACCOUNT_ID,
+        CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
+        AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+        AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+        AUTH_SECRET: process.env.AUTH_SECRET,
+        AUTH_TRUST_HOST: "true",
+        AUTH_URL: "https://dashboard.anteaterapi.com",
       },
     });
   },
