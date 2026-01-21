@@ -52,8 +52,4 @@ jobs:
 
       - name: Deploy (SST)
         working-directory: ./apps/key-manager
-        env:
-          SST_DEBUG: "*"
-        run: |
-          set -euo pipefail
-          pnpm exec sst deploy --stage production --verbose --print-logs
+        run: pnpm exec sst deploy --stage production
