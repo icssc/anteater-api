@@ -88,36 +88,3 @@ export async function getLocationInformation(
     schedules: parsedSchedules,
   };
 }
-
-import type { database } from "@packages/db";
-import { station } from "@packages/db/schema";
-
-export async function scrapeStations(db: ReturnType<typeof database>) {
-  try {
-    const LocationInfo = await getLocationInformation("brandywine", "ASC");
-
-    for (const [stationId, stationName] of Object.entries(LocationInfo.stationsInfo)) {
-      try {
-        await db
-          .insert(station)
-          .values({
-            id: stationId,
-            name: stationName,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: station.id,
-            set: {
-              name: stationName,
-              updatedAt: new Date(),
-            },
-          });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-}

@@ -819,13 +819,76 @@ export const libraryTrafficHistory = pgTable(
 
 // PeterPlate Schemas (In Development)
 
-export const station = pgTable("station", {
-  id: varchar("id").primaryKey(),
-  name: varchar("name").notNull(),
-  // restaurantId: varchar("restaurant_id").notNull(),
-  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }), //.notNull()
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }), //.notNull()
+export const restaurantIdEnum = pgEnum("restaurant_id_enum", ["3056", "3314"]);
+export const restaurantNameEnum = pgEnum("restaurant_name_enum", ["anteatery", "brandywine"]);
+
+export const restaurantIds = restaurantIdEnum.enumValues;
+export const restaurantNames = restaurantNameEnum.enumValues;
+
+export type RestaurantId = (typeof restaurantIds)[number];
+export type RestaurantName = (typeof restaurantNames)[number];
+
+export const getRestaurantId = (name: RestaurantName) =>
+  name === restaurantNames[0] ? restaurantIds[0] : restaurantIds[1];
+export const getRestaurantNameById = (id: RestaurantId) =>
+  id === restaurantIds[0] ? restaurantNames[0] : restaurantNames[1];
+
+export const createdAt = timestamp("created_at").defaultNow().notNull();
+export const updatedAt = timestamp("updated_at").$onUpdate(() => new Date());
+export const metadataColumns = { createdAt, updatedAt };
+
+export const restaurants = pgTable("restaurants", {
+  id: restaurantIdEnum("id").primaryKey(),
+  name: restaurantNameEnum("name").notNull(),
+  ...metadataColumns,
 });
+
+export type InsertRestaurant = typeof restaurants.$inferInsert;
+export type SelectRestaurant = typeof restaurants.$inferSelect;
+
+export const stations = pgTable("stations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  restaurantId: restaurantIdEnum("restaurant_id")
+    .notNull()
+    .references(() => restaurants.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+  ...metadataColumns,
+});
+
+export type InsertStation = typeof stations.$inferInsert;
+export type SelectStation = typeof stations.$inferSelect;
+
+import { primaryKey, time } from "drizzle-orm/pg-core";
+
+export const periods = pgTable(
+  "periods",
+  {
+    id: text("id").notNull(),
+    date: date("date").notNull(),
+    restaurantId: restaurantIdEnum("restaurant_id")
+      .notNull()
+      .references(() => restaurants.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    startTime: time("start").notNull(),
+    endTime: time("end").notNull(),
+    name: text("name").notNull(),
+    ...metadataColumns,
+  },
+  (table) => ({
+    pk: primaryKey({
+      columns: [table.id, table.date, table.restaurantId],
+    }),
+  }),
+);
+
+/** A meal period, e.g. breakfast. */
+export type InsertPeriod = typeof periods.$inferInsert;
+export type SelectPeriod = typeof periods.$inferSelect;
 
 // Materialized views
 
