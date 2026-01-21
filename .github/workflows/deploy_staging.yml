@@ -62,6 +62,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sst-pulumi-pnpm-
 
+      - name: SST install (warm platform + providers)
+        working-directory: ./apps/key-manager
+        env:
+          SST_DEBUG: "*"
+        run: |
+          set -euo pipefail
+
+          # Warm SST binary/bootstrap
+          pnpm exec sst version
+
+          # Warm platform install & provider deps by forcing config evaluation.
+          # "refresh" is a good non-destructive way to make SST install its platform deps.
+          pnpm exec sst refresh --stage production --verbose --print-logs 2>&1 | tee sst-refresh.log
+
       - name: Deploy Key Manager
         working-directory: ./apps/key-manager
         env:
@@ -72,9 +86,13 @@ jobs:
           set -euo pipefail
           pnpm exec sst deploy --stage production --verbose --print-logs 2>&1 | tee sst-deploy.log
 
-#      - name: upload sst refresh log
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: sst-refresh-log
-#          path: apps/key-manager/sst-refresh.log
+      - name: Upload SST/Pulumi logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: key-manager-deploy-logs
+          path: |
+            apps/key-manager/sst-refresh.log
+            apps/key-manager/sst-deploy.log
+            ~/.pulumi/logs
+            apps/key-manager/.sst
