@@ -154,8 +154,10 @@ function formatDateForAPI(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
   return {
-    dateTime: `${year}-${month}-${day}T00:00:00`,
+    dateTime: `${year}-${month}-${day}T${hour}:${minute}:00`,
     timeZone: "Pacific Standard Time",
   };
 }
@@ -184,7 +186,7 @@ async function fetchStaffAvailability(
     startDateTime: formatDateForAPI(startDate),
     endDateTime: formatDateForAPI(endDate),
   };
-
+  console.log(payload);
   const data = await fetch(AVAILABILITY_URL, {
     method: "POST",
     headers: {
@@ -213,11 +215,16 @@ async function scrapePlazaVerde(): Promise<{
 
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
-  startDate.setHours(startDate.getHours());
+  // This offset ensures that our interval starts on an interval that PV uses (every 15 minutes)
+  const timeOffset =
+    (SLOT_INTERVAL_MINUTES - (startDate.getMinutes() % SLOT_INTERVAL_MINUTES)) * 60 * 1000;
+  startDate.setTime(startDate.getTime() + timeOffset);
+
   const endDate = new Date(startDate.getTime());
   endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
   endDate.setHours(0, 0, 0, 0);
 
+  console.log(`We are going from ${startDate} to ${endDate}`);
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
 
   const availabilityMap = new Map<string, AvailabilityItem[]>();
@@ -233,11 +240,11 @@ async function scrapePlazaVerde(): Promise<{
     rooms.push({
       id: service.serviceId,
       name: service.title,
-      capacity: 0, // TODO: change back to null
+      capacity: null,
       location: STUDY_LOCATION_NAME,
       description: service.description ?? "",
       directions: "",
-      techEnhanced: false, // TODO: change back to null
+      techEnhanced: null,
       studyLocationId: STUDY_LOCATION_ID,
     });
 
@@ -247,6 +254,7 @@ async function scrapePlazaVerde(): Promise<{
     for (const staffId of service.staffMemberIds) {
       const availabilityItems = availabilityMap.get(staffId);
       if (availabilityItems) {
+        // console.log(availabilityItems);
         const roomSlots = processAvailabilityItems(
           service.serviceId,
           availabilityItems,
@@ -267,7 +275,6 @@ async function scrapePlazaVerde(): Promise<{
   console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
   console.log(`Total rooms: ${rooms.length}`);
   console.log(`Available slots: ${slots.filter((s) => s.isAvailable).length}`);
-
   return { location, rooms, slots };
 }
 
