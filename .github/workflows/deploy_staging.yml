@@ -47,6 +47,9 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Prefer SST bundled Pulumi
+        run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
+
       - name: Deploy (SST)
         working-directory: ./apps/key-manager
         env:
