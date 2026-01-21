@@ -51,6 +51,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache SST + Pulumi + pnpm
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.config/sst
+            ~/.pulumi
+            ~/.pnpm-store
+          key: ${{ runner.os }}-sst-pulumi-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-sst-pulumi-pnpm-
+
       - name: Deploy Key Manager
         working-directory: ./apps/key-manager
         env:
