@@ -12,7 +12,10 @@ export default $config({
     new sst.aws.Nextjs("key-manager", {
       domain: {
         name: "dashboard.anteaterapi.com",
-        dns: sst.cloudflare.dns(), // note that we don't need the zone here, since cloudflare can identify it for us
+        dns: sst.cloudflare.dns(),
+      },
+      environment: {
+        USERS_DB_URL: process.env.USERS_DB_URL,
       },
     });
   },
