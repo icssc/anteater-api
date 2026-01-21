@@ -16,6 +16,8 @@ export default $config({
       },
       environment: {
         USERS_DB_URL: process.env.USERS_DB_URL,
+        CLOUDFLARE_KV_NAMESPACE_ID: process.env.CLOUDFLARE_KV_NAMESPACE_ID,
+        CLOUDFLARE_DEFAULT_ACCOUNT_ID: process.env.CLOUDFLARE_DEFAULT_ACCOUNT_ID,
       },
     });
   },
