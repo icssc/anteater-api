@@ -8,8 +8,6 @@ export default $config({
       home: "aws",
       providers: {
         cloudflare: "6.2.0",
-        aws: "6.66.2",
-        random: "4.16.6",
       },
     };
   },
