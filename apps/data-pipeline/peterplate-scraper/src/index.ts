@@ -1,9 +1,10 @@
 import { exit } from "node:process";
 import { database } from "@packages/db";
+import { upsertMenu } from "./helpers/menus";
 import { getCurrentSchedule, upsertPeriods } from "./helpers/periods";
 import { upsertAllRestaurants } from "./helpers/restaurants";
 import { upsertAllStations } from "./helpers/stations";
-import { getLocationInformation } from "./lib";
+import { getLocationInformation } from "./parse";
 
 async function main() {
   const url = process.env.DB_URL;
@@ -27,6 +28,20 @@ async function main() {
   );
   await upsertPeriods(db, "3056", dateString, dayOfWeek, brandywinePeriods);
 
+  const brandywineMenuResult = await Promise.allSettled(
+    brandywinePeriods.map(async (period) => {
+      const menuIdHash = `$"3056"|${dateString}|${period.id}`;
+
+      await upsertMenu(db, {
+        id: menuIdHash,
+        periodId: period.id.toString(),
+        date: dateString,
+        price: "???", // Peterplate's NOTE: Not sure if this was ever provided in the API..
+        restaurantId: "3056",
+      });
+    }),
+  );
+
   const anteateryInfo = await getLocationInformation("the-anteatery", "ASC");
   await upsertAllStations(db, "3314", anteateryInfo.stationsInfo);
 
@@ -35,6 +50,20 @@ async function main() {
     (period) => period.openHours[dayOfWeek] && period.closeHours[dayOfWeek],
   );
   await upsertPeriods(db, "3314", dateString, dayOfWeek, anteateryPeriods);
+
+  const anteateryMenuResult = await Promise.allSettled(
+    anteateryPeriods.map(async (period) => {
+      const menuIdHash = `"3314" |${dateString}|${period.id}`;
+
+      await upsertMenu(db, {
+        id: menuIdHash,
+        periodId: period.id.toString(),
+        date: dateString,
+        price: "???", // Peterplate's NOTE: Not sure if this was ever provided in the API..
+        restaurantId: "3314",
+      });
+    }),
+  );
 
   exit(0);
 }
