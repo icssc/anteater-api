@@ -3,38 +3,51 @@ import { lt, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import fetch from "cross-fetch";
+import { z } from "zod";
 
-// Types
-// Consider switching to Zod because Dante mentioned that
-type BookingsService = {
-  serviceId: string;
-  title: string;
-  description: string;
-  defaultDuration: string;
-  staffMemberIds: string[];
-};
+// Schemas
+const bookingsServiceSchema = z.object({
+  serviceId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  defaultDuration: z.string(),
+  staffMemberIds: z.string().array(),
+});
 
-type AvailabilityStatus =
-  | "BOOKINGSAVAILABILITYSTATUS_AVAILABLE"
-  | "BOOKINGSAVAILABILITYSTATUS_BUSY"
-  | "BOOKINGSAVAILABILITYSTATUS_OUT_OF_OFFICE";
+const availabilityStatusSchema = z.enum([
+  "BOOKINGSAVAILABILITYSTATUS_AVAILABLE",
+  "BOOKINGSAVAILABILITYSTATUS_BUSY",
+  "BOOKINGSAVAILABILITYSTATUS_OUT_OF_OFFICE",
+]);
 
-type BookingsDateTime = {
-  dateTime: string;
-  timeZone: string;
-};
+const bookingsDateTimeSchema = z.object({
+  dateTime: z.string(),
+  timeZone: z.string(),
+});
 
-type AvailabilityItem = {
-  status: AvailabilityStatus;
-  startDateTime: BookingsDateTime;
-  endDateTime: BookingsDateTime;
-  serviceId: string;
-};
+const availabilityItemSchema = z.object({
+  status: availabilityStatusSchema,
+  startDateTime: bookingsDateTimeSchema,
+  endDateTime: bookingsDateTimeSchema,
+  serviceId: z.string(),
+});
 
-type StaffAvailability = {
-  staffId: string;
-  availabilityItems: AvailabilityItem[];
-};
+const staffAvailabilitySchema = z.object({
+  staffId: z.string(),
+  availabilityItems: availabilityItemSchema.array(),
+});
+
+const servicesResponseSchema = z.object({
+  service: bookingsServiceSchema.array().optional(),
+});
+
+const staffAvailabilityResponseSchema = z.object({
+  staffAvailabilityResponse: staffAvailabilitySchema.array(),
+});
+
+type BookingsService = z.infer<typeof bookingsServiceSchema>;
+type AvailabilityItem = z.infer<typeof availabilityItemSchema>;
+type StaffAvailability = z.infer<typeof staffAvailabilitySchema>;
 
 type Slot = {
   studyRoomId: string;
@@ -148,7 +161,7 @@ async function fetchServices(): Promise<BookingsService[]> {
     body: JSON.stringify(payload),
   });
 
-  const data = (await res.json()) as { service?: BookingsService[] };
+  const data = servicesResponseSchema.parse(await res.json());
   return data.service ?? [];
 }
 
@@ -207,7 +220,7 @@ async function fetchStaffAvailability(
     body: JSON.stringify(payload),
   }).then((res) => res.json());
 
-  const response = data as { staffAvailabilityResponse: StaffAvailability[] };
+  const response = staffAvailabilityResponseSchema.parse(data);
 
   return response.staffAvailabilityResponse;
 }
