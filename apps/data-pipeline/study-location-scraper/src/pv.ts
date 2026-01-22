@@ -151,13 +151,20 @@ async function fetchServices(): Promise<BookingsService[]> {
 
 // used in fetchStaffAvailability
 function formatDateForAPI(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23", // avoid midnight being 24:00
+    timeZone: "America/Los_Angeles",
+  });
+
+  const p = Object.fromEntries(formatter.formatToParts(date).map((x) => [x.type, x.value]));
+
   return {
-    dateTime: `${year}-${month}-${day}T${hour}:${minute}:00`,
+    dateTime: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:00`,
     timeZone: "Pacific Standard Time",
   };
 }
