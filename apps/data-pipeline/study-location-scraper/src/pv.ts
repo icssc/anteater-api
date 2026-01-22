@@ -93,8 +93,11 @@ function processAvailabilityItems(
   const slots: Slot[] = [];
 
   for (const item of availabilityItems) {
-    const start = new Date(item.startDateTime.dateTime);
-    const end = new Date(item.endDateTime.dateTime);
+    // convert from API response timezone (which is PST) to UTC.
+    const startOffset = item.startDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1] ?? "-08:00";
+    const endOffset = item.endDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1] ?? "-08:00";
+    const start = new Date(`${item.startDateTime.dateTime}${startOffset}`);
+    const end = new Date(`${item.endDateTime.dateTime}${endOffset}`);
 
     if (item.status === "BOOKINGSAVAILABILITYSTATUS_AVAILABLE") {
       const availableSlots = generateSlotsFromAvailableWindow(
@@ -170,7 +173,8 @@ function formatDateForAPI(date: Date) {
 }
 
 /**
- * The duration of each staffId is stored inside each service in ISO8601 format (1hr, 2hr, 3hr)
+ * The duration of each staffId is stored inside each service in ISO 8601 duration format (e.g., PT1H, PT2H, PT3H).
+ * Returns the duration in minutes.
  */
 function parseISO8601Duration(duration: string): number {
   const hoursMatch = duration.match(/(\d+)H/);
@@ -220,6 +224,7 @@ async function scrapePlazaVerde(): Promise<{
   // this is our list of 17 rooms to fetch availability with
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
+  // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
   // This offset ensures that our interval starts on an interval that PV uses (every 15 minutes)
@@ -229,7 +234,6 @@ async function scrapePlazaVerde(): Promise<{
 
   const endDate = new Date(startDate.getTime());
   endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
-  endDate.setHours(0, 0, 0, 0);
 
   console.log(`We are going from ${startDate} to ${endDate}`);
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
