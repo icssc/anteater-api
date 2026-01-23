@@ -4,6 +4,7 @@ import {
   boolean,
   date,
   decimal,
+  foreignKey,
   index,
   integer,
   json,
@@ -889,6 +890,35 @@ export const periods = pgTable(
 /** A meal period, e.g. breakfast. */
 export type InsertPeriod = typeof periods.$inferInsert;
 export type SelectPeriod = typeof periods.$inferSelect;
+
+export const menus = pgTable(
+  "menus",
+  {
+    id: text("id").primaryKey(),
+    periodId: text("period_id").notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    restaurantId: restaurantIdEnum("restaurant_id")
+      .notNull()
+      .references(() => restaurants.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    price: text("price").notNull(),
+    ...metadataColumns,
+  },
+  (table) => ({
+    periodFk: foreignKey({
+      columns: [table.periodId, table.date, table.restaurantId],
+      foreignColumns: [periods.id, periods.date, periods.restaurantId],
+    })
+      .onDelete("restrict")
+      .onUpdate("cascade"),
+  }),
+);
+
+/** A restaurant menu for a given date and period. */
+export type InsertMenu = typeof menus.$inferInsert;
+export type SelectMenu = typeof menus.$inferSelect;
 
 // Materialized views
 
