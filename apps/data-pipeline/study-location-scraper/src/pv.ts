@@ -38,7 +38,7 @@ const staffAvailabilitySchema = z.object({
 });
 
 const servicesResponseSchema = z.object({
-  service: bookingsServiceSchema.array().optional(),
+  service: bookingsServiceSchema.array(),
 });
 
 const staffAvailabilityResponseSchema = z.object({
