@@ -5,7 +5,13 @@ import { doPVScrape } from "./pv";
 export default {
   async scheduled(_, env) {
     const db = database(env.DB.connectionString);
-    await Promise.allSettled([doLibraryScrape(db), doPVScrape(db)]);
+    const results = await Promise.allSettled([doLibraryScrape(db), doPVScrape(db)]);
+    const names = ["Library", "PV"];
+    results.forEach((r, i) => {
+      if (r.status === "rejected") {
+        console.error(`${names[i]} scrape failed:`, r.reason);
+      }
+    });
     await db.$client.end();
   },
 } satisfies ExportedHandler<Env>;
