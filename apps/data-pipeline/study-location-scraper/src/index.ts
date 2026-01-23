@@ -14,7 +14,7 @@ async function main() {
       console.error(`${names[i]} scrape failed:`, r.reason);
     }
   });
-  exit(0);
+  exit(results.some((r) => r.status === "rejected") ? 1 : 0);
 }
 
 main().then();

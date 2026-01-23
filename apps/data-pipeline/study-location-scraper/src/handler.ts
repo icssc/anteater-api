@@ -13,5 +13,8 @@ export default {
       }
     });
     await db.$client.end();
+    if (results.some((r) => r.status === "rejected")) {
+      throw new Error("One or more scrapes failed");
+    }
   },
 } satisfies ExportedHandler<Env>;
