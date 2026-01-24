@@ -240,10 +240,7 @@ async function scrapePlazaVerde(): Promise<{
   // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
-  // This offset ensures that our interval starts on an interval that PV uses (every 15 minutes)
-  const timeOffset =
-    (SLOT_INTERVAL_MINUTES - (startDate.getMinutes() % SLOT_INTERVAL_MINUTES)) * 60 * 1000;
-  startDate.setTime(startDate.getTime() + timeOffset);
+  startDate.setTime(startDate.getTime() - startDate.getTime() % (SLOT_INTERVAL_MINUTES * 60 * 1000));
 
   const endDate = new Date(startDate.getTime());
   endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
