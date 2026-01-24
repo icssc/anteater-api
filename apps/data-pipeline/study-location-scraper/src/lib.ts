@@ -237,7 +237,7 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
   return locations;
 }
 
-export async function doScrape(db: ReturnType<typeof database>) {
+export async function doLibraryScrape(db: ReturnType<typeof database>) {
   const locations = await scrapeStudyLocations();
   const locationRows = locations.map(({ id, name }) => ({ id, name }));
   const roomRows = locations.flatMap(({ id: studyLocationId, rooms }) =>

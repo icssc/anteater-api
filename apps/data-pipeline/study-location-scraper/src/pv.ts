@@ -80,7 +80,7 @@ function generateSlotsFromAvailableWindow(
   const lastStartTime = new Date(end.getTime() - durationMinutes * 60 * 1000);
 
   for (
-    let currentStart = new Date(start);
+    let currentStart = new Date(start.getTime());
     currentStart <= lastStartTime;
     currentStart.setTime(currentStart.getTime() + SLOT_INTERVAL_MINUTES * 60 * 1000)
   ) {
@@ -88,7 +88,7 @@ function generateSlotsFromAvailableWindow(
 
     slots.push({
       studyRoomId,
-      start: new Date(currentStart),
+      start: new Date(currentStart.getTime()),
       end: slotEnd,
       isAvailable: true,
     });
@@ -106,9 +106,9 @@ function processAvailabilityItems(
   const slots: Slot[] = [];
 
   for (const item of availabilityItems) {
-    // convert from API response timezone (which is PST) to UTC.
-    const startOffset = item.startDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1] ?? "-08:00";
-    const endOffset = item.endDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1] ?? "-08:00";
+    // Parse the UTC offset from the API response timezone
+    const startOffset = item.startDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1];
+    const endOffset = item.endDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1];
     const start = new Date(`${item.startDateTime.dateTime}${startOffset}`);
     const end = new Date(`${item.endDateTime.dateTime}${endOffset}`);
 
@@ -162,10 +162,9 @@ async function fetchServices(): Promise<BookingsService[]> {
   });
 
   const data = servicesResponseSchema.parse(await res.json());
-  return data.service ?? [];
+  return data.service;
 }
 
-// used in fetchStaffAvailability
 function formatDateForAPI(date: Date) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -234,7 +233,7 @@ async function scrapePlazaVerde(): Promise<{
   // note: maybe there's some way to cache the service data so we can skip this part
   const services = await fetchServices();
 
-  // this is our list of 17 rooms to fetch availability with
+  // unique list of room/staff IDs to fetch availability for
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
   // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
@@ -243,7 +242,7 @@ async function scrapePlazaVerde(): Promise<{
   startDate.setTime(startDate.getTime() - startDate.getTime() % (SLOT_INTERVAL_MINUTES * 60 * 1000));
 
   const endDate = new Date(startDate.getTime());
-  endDate.setDate(endDate.getDate() + DAYS_TO_FETCH);
+  endDate.setUTCDate(endDate.getUTCDate() + DAYS_TO_FETCH);
 
   console.log(`We are going from ${startDate} to ${endDate}`);
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);

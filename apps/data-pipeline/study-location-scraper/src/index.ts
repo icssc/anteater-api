@@ -1,5 +1,5 @@
 import { exit } from "node:process";
-import { doScrape as doLibraryScrape } from "$lib";
+import { doLibraryScrape } from "$lib";
 import { database } from "@packages/db";
 import { doPVScrape } from "./pv";
 
