@@ -180,6 +180,9 @@ function formatDateForAPI(date: Date) {
 
   return {
     dateTime: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:00`,
+    // note: it looks microsoft timezone automatically switches between PST and PDT.
+    // there is not separate PDT timezone (and the API will not accept it)
+    // if this ends up not being true, we can fix it
     timeZone: "Pacific Standard Time",
   };
 }
@@ -239,7 +242,9 @@ async function scrapePlazaVerde(): Promise<{
   // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
-  startDate.setTime(startDate.getTime() - startDate.getTime() % (SLOT_INTERVAL_MINUTES * 60 * 1000));
+  startDate.setTime(
+    startDate.getTime() - (startDate.getTime() % (SLOT_INTERVAL_MINUTES * 60 * 1000)),
+  );
 
   const endDate = new Date(startDate.getTime());
   endDate.setUTCDate(endDate.getUTCDate() + DAYS_TO_FETCH);
