@@ -241,7 +241,7 @@ async function scrapePlazaVerde(): Promise<{
   // note: maybe there's some way to cache the service data so we can skip this part
   const services = await fetchServices();
 
-  // unique list of room/staff IDs to fetch availability for
+  // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
   // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
