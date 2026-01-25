@@ -1,5 +1,5 @@
 {
-  "id": "b67554a2-ae98-4701-be14-94db0575b4a2",
+  "id": "169622b6-bb25-46af-9384-cb3825533964",
   "prevId": "8eaf8313-2eea-40d0-ae45-f7d8b643b8eb",
   "version": "7",
   "dialect": "postgresql",
@@ -1513,7 +1513,7 @@
           "name": "capacity",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "location": {
           "name": "location",
@@ -1537,7 +1537,7 @@
           "name": "tech_enhanced",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "study_location_id": {
           "name": "study_location_id",
@@ -2871,7 +2871,7 @@
           "primaryKey": false,
           "notNull": true,
           "generated": {
-            "as": "\"websoc_section\".\"section_comment\" LIKE '*** CANCELLED ***%'",
+            "as": "\"websoc_section\".\"section_comment\" LIKE '%***  CANCELLED  ***%' OR \"websoc_section\".\"section_comment\" LIKE '%***  CANCELED  ***%'",
             "type": "stored"
           }
         },
