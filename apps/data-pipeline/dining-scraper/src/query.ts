@@ -1,4 +1,10 @@
-export async function queryAdobeECommerce(query: string, variables: object): Promise<unknown> {
+import type z from "zod";
+
+export async function queryAdobeECommerce<Schema extends z.Schema>(
+  query: string,
+  variables: object,
+  schema: Schema,
+): Promise<z.infer<Schema> | null> {
   const response = await fetch(
     `https://api.elevate-dxp.com/api/mesh/c087f756-cc72-4649-a36f-3a41b700c519/graphql?query=${encodeURIComponent(query)}&variables=${encodeURIComponent(JSON.stringify(variables))}`,
     {
@@ -24,5 +30,5 @@ export async function queryAdobeECommerce(query: string, variables: object): Pro
     return null;
   }
 
-  return await response.json();
+  return schema.parse(await response.json());
 }

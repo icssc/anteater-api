@@ -68,13 +68,20 @@ query getLocation(
 export async function fetchLocation(
   variables: FetchLocationVariables,
 ): Promise<DiningHallInformation> {
-  const response = await queryAdobeECommerce(fetchLocationQuery, variables);
+  const queried = await queryAdobeECommerce(
+    fetchLocationQuery,
+    variables,
+    fetchLocationResponseSchema,
+  );
+  if (queried === null) {
+    throw Error(
+      `Could not fetchLocation with key ${variables.locationUrlKey} and sort direction ${variables.sortOrder}`,
+    );
+  }
 
-  const parsedData = fetchLocationResponseSchema.parse(response);
-
-  const getLocation = parsedData.data.getLocation;
-  const commerceMealPeriods = parsedData.data.Commerce_mealPeriods;
-  const commerceAttributesList = parsedData.data.Commerce_attributesList;
+  const getLocation = queried.data.getLocation;
+  const commerceMealPeriods = queried.data.Commerce_mealPeriods;
+  const commerceAttributesList = queried.data.Commerce_attributesList;
   const schedules = getLocation.aemAttributes.hoursOfOperation.schedule;
 
   // Get all of the schedules

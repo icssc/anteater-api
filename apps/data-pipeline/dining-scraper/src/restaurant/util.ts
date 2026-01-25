@@ -1,5 +1,4 @@
 import type { diningDish, diningNutritionInfo } from "@packages/db/schema";
-import type z from "zod";
 import { queryAdobeECommerce } from "../query.ts";
 import {
   type GetLocationRecipesResponse,
@@ -315,11 +314,19 @@ export async function getAdobeEcommerceMenuWeekView(
     viewType: "WEEKLY",
   } as GetLocationRecipesVariables;
 
-  const res = await queryAdobeECommerce(getLocationRecipesQuery, getLocationRecipesVariables);
+  const queried = await queryAdobeECommerce(
+    getLocationRecipesQuery,
+    getLocationRecipesVariables,
+    getLocationRecipesSchema,
+  );
+  if (queried === null) {
+    throw new Error(
+      `Could not getAdobeEcommerceMenuWeekView for date ${date}, restaurant name ${restaurantName}, period ID ${periodId}`,
+    );
+  }
 
-  const parsedData: z.infer<typeof getLocationRecipesSchema> = getLocationRecipesSchema.parse(res);
-  const products = parsedData.data.getLocationRecipes.products;
-  const locationRecipesMap = parsedData.data.getLocationRecipes.locationRecipesMap;
+  const products = queried.data.getLocationRecipes.products;
+  const locationRecipesMap = queried.data.getLocationRecipes.locationRecipesMap;
 
   if (products == null || locationRecipesMap == null) return null;
 
