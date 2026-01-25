@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { updateRestaurant } from "./restaurant";
+import { updateRestaurant } from "./update-restaurant.ts";
 
 export async function doScrape(db: ReturnType<typeof database>) {
   // eventJob
