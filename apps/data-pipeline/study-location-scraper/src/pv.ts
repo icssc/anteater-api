@@ -217,7 +217,7 @@ async function fetchStaffAvailability(
     startDateTime: formatDateForAPI(startDate, "start"),
     endDateTime: formatDateForAPI(endDate, "end"),
   };
-  console.log(payload);
+
   const data = await fetch(AVAILABILITY_URL, {
     method: "POST",
     headers: {
@@ -280,7 +280,6 @@ async function scrapePlazaVerde(): Promise<{
     for (const staffId of service.staffMemberIds) {
       const availabilityItems = availabilityMap.get(staffId);
       if (availabilityItems) {
-        // console.log(availabilityItems);
         const roomSlots = processAvailabilityItems(
           service.serviceId,
           availabilityItems,
@@ -297,10 +296,6 @@ async function scrapePlazaVerde(): Promise<{
     name: STUDY_LOCATION_NAME,
   };
 
-  // testing logs
-  console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()} [UTC]`);
-  console.log(`Total rooms: ${rooms.length}`);
-  console.log(`Available slots: ${slots.filter((s) => s.isAvailable).length}`);
   return { location, rooms, slots };
 }
 
