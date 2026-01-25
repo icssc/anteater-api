@@ -133,7 +133,7 @@ export async function fetchLocation(
  * @param date the date for which to upsert the menu
  * @param restaurantName the restaurant to upsert the menu for ("brandywine", "anteatery")
  */
-export async function upsertMenusForWeek(
+export async function updateRestaurant(
   db: ReturnType<typeof database>,
   date: Date,
   restaurantName: RestaurantName,

@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { upsertMenusForWeek } from "./restaurant";
+import { updateRestaurant } from "./restaurant";
 
 export async function doScrape(db: ReturnType<typeof database>) {
   // eventJob
@@ -8,8 +8,8 @@ export async function doScrape(db: ReturnType<typeof database>) {
 
   console.log("[weekly] Starting Brandywine and Anteatery Menu jobs...");
   await Promise.all([
-    upsertMenusForWeek(db, today, "brandywine"),
-    upsertMenusForWeek(db, today, "anteatery"),
+    updateRestaurant(db, today, "brandywine"),
+    updateRestaurant(db, today, "anteatery"),
   ]);
   console.log("[weekly] Finished Brandywine and Anteatery Menu jobs.");
 }
