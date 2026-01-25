@@ -130,16 +130,16 @@ export async function fetchLocation(
  * Upserts the menu for the week starting at `date` for a restaurant, up until
  * the next Sunday.
  * @param db the Drizzle database instance
- * @param date the date for which to upsert the menu
+ * @param today will update using menus from this date to the next sunday, inclusive
  * @param restaurantName the restaurant to upsert the menu for ("brandywine", "anteatery")
  */
 export async function updateRestaurant(
   db: ReturnType<typeof database>,
-  date: Date,
+  today: Date,
   restaurantName: RestaurantName,
 ): Promise<void> {
   const restaurantId = restaurantIdFor(restaurantName);
-  const dayOfWeek = date.getDay();
+  const todayDayOfWeek = today.getDay();
 
   const updatedAt = new Date();
 
@@ -179,12 +179,12 @@ export async function updateRestaurant(
       set: conflictUpdateSetAllCols(diningStation),
     });
 
-  const upsertedDates: Date[] = [date];
-  const daysUntilNextSunday = (7 - dayOfWeek) % 7 || 7;
+  const datesToFetch: Date[] = [today];
+  const daysUntilNextSunday = (7 - todayDayOfWeek) % 7 || 7;
   for (let i = 0; i <= daysUntilNextSunday; ++i) {
-    const nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + i);
-    upsertedDates.push(nextDate);
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + i);
+    datesToFetch.push(nextDate);
   }
 
   // Keep a set of all relevant meal periods (ones that were relevant throughout
@@ -194,15 +194,15 @@ export async function updateRestaurant(
   const dayPeriodMap = new Map<string, Set<number>>();
 
   await Promise.all(
-    upsertedDates.map(async (examinedDate) => {
-      const examinedDayOfWeek = examinedDate.getDay();
-      const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, examinedDate);
-      const dateString = format(examinedDate, "yyyy-MM-dd");
+    datesToFetch.map(async (dateToFetch) => {
+      const dayOfWeekToFetch = dateToFetch.getDay();
+      const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, dateToFetch);
+      const dateString = format(dateToFetch, "yyyy-MM-dd");
 
       // Get relevant meal periods for the day to upsert into periods table
       const relevantMealPeriods = currentSchedule.mealPeriods.filter(
         (mealPeriod) =>
-          mealPeriod.openHours[examinedDayOfWeek] && mealPeriod.closeHours[examinedDayOfWeek],
+          mealPeriod.openHours[dayOfWeekToFetch] && mealPeriod.closeHours[dayOfWeekToFetch],
       );
 
       const dayPeriodSet = new Set<number>();
@@ -220,8 +220,8 @@ export async function updateRestaurant(
           date: dateString,
           restaurantId: restaurantId,
           name: period.name,
-          startTime: period.openHours[examinedDayOfWeek] ?? "",
-          endTime: period.closeHours[examinedDayOfWeek] ?? "",
+          startTime: period.openHours[dayOfWeekToFetch] ?? "",
+          endTime: period.closeHours[dayOfWeekToFetch] ?? "",
           updatedAt,
         };
       });
