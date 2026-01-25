@@ -199,6 +199,7 @@ export async function updateRestaurant(
     const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
     const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
     const dishToMenuRowsToUpsert = new Map<string, Set<string>>();
+    let numDishToMenuRows = 0;
 
     type DietRestrictionBase = Omit<
       typeof diningDietRestriction.$inferInsert,
@@ -242,6 +243,7 @@ export async function updateRestaurant(
       if (!dishToMenuRowsToUpsert.has(menuId)) {
         dishToMenuRowsToUpsert.set(menuId, new Set());
       }
+      numDishToMenuRows += 1;
       dishToMenuRowsToUpsert.get(menuId)?.add(dish.id);
     }
 
@@ -273,7 +275,7 @@ export async function updateRestaurant(
           set: conflictUpdateSetAllCols(diningNutritionInfo),
         });
 
-      console.log(`Upserting ${dishToMenuRowsToUpsert.size} dish-to-menu rows...`);
+      console.log(`Upserting ${numDishToMenuRows} dish-to-menu rows...`);
       await tx
         .insert(diningDishToMenu)
         .values(
