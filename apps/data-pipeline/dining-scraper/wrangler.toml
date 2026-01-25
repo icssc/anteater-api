@@ -6,8 +6,8 @@ workers_dev = false
 main = "src/handler.ts"
 minify = true
 
-# [triggers]
-# crons = ["*/5 * * * *"]
+[triggers]
+crons = ["0 1 * * *"]
 
 [observability]
 enabled = true
