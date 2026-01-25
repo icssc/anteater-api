@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { lt, sql } from "@packages/db/drizzle";
+import { inArray, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import fetch from "cross-fetch";
@@ -165,7 +165,7 @@ async function fetchServices(): Promise<BookingsService[]> {
   return data.service;
 }
 
-function formatDateForAPI(date: Date) {
+function formatDateForAPI(date: Date, boundary: "start" | "end") {
   const formatter = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "2-digit",
@@ -179,7 +179,12 @@ function formatDateForAPI(date: Date) {
   const p = Object.fromEntries(formatter.formatToParts(date).map((x) => [x.type, x.value]));
 
   return {
-    dateTime: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:00`,
+    // note: the start time should be 00:00 because of a bug where if you start
+    // in the middle of some BUSY interval, the API incorrectly assumes its AVAILABLE
+    dateTime:
+      boundary === "end"
+        ? `${p.year}-${p.month}-${p.day}T23:59:00`
+        : `${p.year}-${p.month}-${p.day}T00:00:00`,
     // note: it looks microsoft timezone automatically switches between PST and PDT.
     // there is not separate PDT timezone (and the API will not accept it)
     // if this ends up not being true, we can fix it
@@ -209,8 +214,8 @@ async function fetchStaffAvailability(
 ): Promise<StaffAvailability[]> {
   const payload = {
     staffIds,
-    startDateTime: formatDateForAPI(startDate),
-    endDateTime: formatDateForAPI(endDate),
+    startDateTime: formatDateForAPI(startDate, "start"),
+    endDateTime: formatDateForAPI(endDate, "end"),
   };
   console.log(payload);
   const data = await fetch(AVAILABILITY_URL, {
@@ -242,14 +247,10 @@ async function scrapePlazaVerde(): Promise<{
   // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
   // gets slots for the current day and the one after it, same as original website
   const startDate = new Date();
-  startDate.setTime(
-    startDate.getTime() - (startDate.getTime() % (SLOT_INTERVAL_MINUTES * 60 * 1000)),
-  );
-
   const endDate = new Date(startDate.getTime());
   endDate.setUTCDate(endDate.getUTCDate() + DAYS_TO_FETCH);
 
-  console.log(`We are going from ${startDate} to ${endDate}`);
+  console.log(`We are going from ${startDate} to ${endDate} [local time]`);
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
 
   const availabilityMap = new Map<string, AvailabilityItem[]>();
@@ -297,7 +298,7 @@ async function scrapePlazaVerde(): Promise<{
   };
 
   // testing logs
-  console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  console.log(`Search date range: ${startDate.toISOString()} to ${endDate.toISOString()} [UTC]`);
   console.log(`Total rooms: ${rooms.length}`);
   console.log(`Available slots: ${slots.filter((s) => s.isAvailable).length}`);
   return { location, rooms, slots };
@@ -308,6 +309,7 @@ async function scrapePlazaVerde(): Promise<{
  */
 export async function doPVScrape(db: ReturnType<typeof database>) {
   const { location, rooms, slots } = await scrapePlazaVerde();
+  const roomIds = rooms.map((room) => room.id);
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
@@ -328,6 +330,8 @@ export async function doPVScrape(db: ReturnType<typeof database>) {
         set: conflictUpdateSetAllCols(studyRoom),
       });
 
+    await tx.delete(studyRoomSlot).where(inArray(studyRoomSlot.studyRoomId, roomIds));
+
     await tx
       .insert(studyRoomSlot)
       .values(slots)
@@ -335,7 +339,5 @@ export async function doPVScrape(db: ReturnType<typeof database>) {
         target: [studyRoomSlot.studyRoomId, studyRoomSlot.start, studyRoomSlot.end],
         set: conflictUpdateSetAllCols(studyRoomSlot),
       });
-
-    await tx.delete(studyRoomSlot).where(lt(studyRoomSlot.end, new Date()));
   });
 }
