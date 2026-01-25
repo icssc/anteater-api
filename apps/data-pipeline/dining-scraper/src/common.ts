@@ -1,6 +1,6 @@
 export async function queryAdobeECommerce(query: string, variables: object): Promise<unknown> {
   const response = await fetch(
-    "https://api.elevate-dxp.com/api/mesh/c087f756-cc72-4649-a36f-3a41b700c519/graphql?",
+    `https://api.elevate-dxp.com/api/mesh/c087f756-cc72-4649-a36f-3a41b700c519/graphql?query=${encodeURIComponent(query)}&variables=${encodeURIComponent(JSON.stringify(variables))}`,
     {
       headers: {
         "User-Agent":
@@ -14,7 +14,6 @@ export async function queryAdobeECommerce(query: string, variables: object): Pro
         "x-api-key": "ElevateAPIProd",
         Origin: "https://uci.mydininghub.com",
       },
-      body: JSON.stringify({ query, variables }),
     },
   );
 
@@ -22,6 +21,7 @@ export async function queryAdobeECommerce(query: string, variables: object): Pro
     console.error("GraphQL ERROR in queryAdobeECommerce:");
     console.error("HTTP status:", response.status);
     console.error("Response body:", await response.text());
+    return null;
   }
 
   return await response.json();
