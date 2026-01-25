@@ -12,6 +12,7 @@ import {
   pgEnum,
   pgMaterializedView,
   pgTable,
+  primaryKey,
   real,
   text,
   time,
@@ -900,7 +901,7 @@ export const diningDish = pgTable("dining_dish", {
     }),
   name: varchar("name").notNull(),
   description: varchar("description").notNull(),
-  ingredients: varchar("ingredients").default("Ingredient Statement Not Available"),
+  ingredients: varchar("ingredients"),
   category: varchar("category").notNull(),
   numRatings: integer("num_ratings").default(0).notNull(),
   totalRating: integer("total_rating").default(0).notNull(),
@@ -932,6 +933,52 @@ export const diningNutritionInfo = pgTable("dining_nutrition_info", {
   vitaminCIU: varchar("vitamin_c"),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
+
+export const diningDietRestriction = pgTable("dining_diet_restruction", {
+  dishId: text("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  containsEggs: boolean("contains_eggs"),
+  containsFish: boolean("contains_fish"),
+  containsMilk: boolean("contains_milk"),
+  containsPeanuts: boolean("contains_peanuts"),
+  containsSesame: boolean("contains_sesame"),
+  containsShellfish: boolean("contains_shellfish"),
+  containsSoy: boolean("contains_soy"),
+  containsTreeNuts: boolean("contains_tree_nuts"),
+  containsWheat: boolean("contains_wheat"),
+  isGlutenFree: boolean("is_gluten_free"),
+  isHalal: boolean("is_halal"),
+  isKosher: boolean("is_kosher"),
+  isLocallyGrown: boolean("is_locally_grown"),
+  isOrganic: boolean("is_organic"),
+  isVegan: boolean("is_vegan"),
+  isVegetarian: boolean("is_vegetarian"),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDishToMenu = pgTable(
+  "dining_dish_to_menu",
+  {
+    menuId: varchar("menu_id")
+      .notNull()
+      .references(() => diningMenu.id),
+    dishId: varchar("dish_id")
+      .notNull()
+      .references(() => diningDish.id),
+  },
+  (table) => [
+    {
+      pk: primaryKey({
+        name: "dining_dish_to_menu_pk",
+        columns: [table.menuId, table.dishId],
+      }),
+    },
+  ],
+);
 
 // Materialized views
 

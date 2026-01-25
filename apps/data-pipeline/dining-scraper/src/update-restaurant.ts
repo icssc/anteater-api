@@ -1,12 +1,27 @@
 import type { database } from "@packages/db";
 import { sql } from "@packages/db/drizzle";
-import { diningMenu, diningPeriod, diningRestaurant, diningStation } from "@packages/db/schema";
+import {
+  diningDietRestriction,
+  diningDish,
+  diningDishToMenu,
+  diningMenu,
+  diningNutritionInfo,
+  diningPeriod,
+  diningRestaurant,
+  diningStation,
+} from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
-import { type DiningHallInformation, type RestaurantName, restaurantUrlMap } from "./model.ts";
+import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
+import {
+  type DiningHallInformation,
+  type RestaurantName,
+  allergens,
+  dietaryPreferences,
+  restaurantUrlMap,
+} from "./model.ts";
 import { findCurrentlyActiveSchedule, restaurantIdFor } from "./util.ts";
-import { type FetchedDish, getAdobeEcommerceMenuWeekView } from "./week-view.ts";
 
 /**
  * Upserts the menu for the week starting at `date` for a restaurant, up until
@@ -119,19 +134,16 @@ export async function updateRestaurant(
   );
 
   const menusToUpsert: (typeof diningMenu.$inferInsert)[] = [];
-  const dishesToUpsert: {
-    dish: FetchedDish;
+  const dishBundlesToInsert: {
+    fetchedDish: FetchedDish;
     menuId: string;
+    updatedAt: Date;
   }[] = [];
 
   await Promise.all(
     Array.from(periodSet).map(async (periodId) => {
       const periodUpdatedAt = new Date();
-      const currentPeriodWeekly = await getAdobeEcommerceMenuWeekView(
-        today,
-        restaurantName,
-        periodId,
-      );
+      const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantName, periodId);
 
       if (!currentPeriodWeekly) {
         console.log(`Skipping period ${periodId}, period is null.`);
@@ -161,9 +173,10 @@ export async function updateRestaurant(
 
         for (const fetchedDish of dishes) {
           if (fetchedDish.dish.name !== "UNIDENTIFIED") {
-            dishesToUpsert.push({
-              dish: fetchedDish,
+            dishBundlesToInsert.push({
+              fetchedDish: fetchedDish,
               menuId: menuIdHash,
+              updatedAt: periodUpdatedAt,
             });
           }
         }
@@ -185,16 +198,110 @@ export async function updateRestaurant(
       });
   }
 
-  if (dishesToUpsert.length > 0) {
-    console.log(`Upserting ${dishesToUpsert.length} dishes...`);
+  if (dishBundlesToInsert.length > 0) {
+    console.log(`Processing ${dishBundlesToInsert.length} dish bundles into upserts...`);
 
-    for (const dish of dishesToUpsert) {
+    const dishesToUpsert = new Map<string, typeof diningDish.$inferInsert>();
+    const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
+    const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
+    const dishToMenuRowsToUpsert = new Map<string, Set<string>>();
+
+    type DietRestrictionBase = Omit<
+      typeof diningDietRestriction.$inferInsert,
+      "dishId" | "createdAt" | "updatedAt"
+    >;
+    for (const {
+      fetchedDish: { dish, nutritionInfo, recipeAllergenCodes, recipePreferenceCodes },
+      menuId,
+      updatedAt,
+    } of dishBundlesToInsert) {
+      // cast is safe because we update all containsX and isY for allergens x in X and restrictions y in Y
+      const baseDietRestriction = {} as Partial<Omit<DietRestrictionBase, "dishId" | "updatedAt">>;
+
+      // Parse available allergens and add to diet restriction if present
+      for (const key of allergens) {
+        const containsKey =
+          `contains${key.replaceAll(" ", "")}` as keyof typeof baseDietRestriction;
+        const allergenCode: number = restaurantInfo.allergenIntoleranceCodes[key] ?? -1;
+
+        baseDietRestriction[containsKey] = recipeAllergenCodes.has(allergenCode);
+      }
+
+      // Parse available preferences and add to diet restriction if present
+      for (const key of dietaryPreferences) {
+        const isKey = `is${key.replaceAll(" ", "")}` as keyof typeof baseDietRestriction;
+        const preferenceCode: number = restaurantInfo.menuPreferenceCodes[key] ?? -1;
+
+        baseDietRestriction[isKey] = recipePreferenceCodes.has(preferenceCode);
+      }
+
+      // Compile diet restriction with dish ID
+      const dietRestriction: typeof diningDietRestriction.$inferInsert = {
+        dishId: dish.id,
+        updatedAt,
+        ...baseDietRestriction,
+      };
+
+      dishesToUpsert.set(dish.id, { ...dish, updatedAt });
+      dietRestrictionsToUpsert.set(dish.id, dietRestriction);
+      nutritionInfosToUpsert.set(dish.id, { ...nutritionInfo, updatedAt });
+      if (!dishToMenuRowsToUpsert.has(menuId)) {
+        dishToMenuRowsToUpsert.set(menuId, new Set());
+      }
+      dishToMenuRowsToUpsert.get(menuId)?.add(dish.id);
     }
-    //
-    // await Promise.allSettled(
-    //   dishesToUpsert.map(
-    //     async (d) => await parseAndUpsertDish(db, restaurantInfo, d.dish, d.menuId),
-    //   ),
-    // );
+
+    await db.transaction(async (tx) => {
+      console.log(`Upserting ${dishesToUpsert.size} dishes...`);
+      await tx
+        .insert(diningDish)
+        .values(dishesToUpsert.values().toArray())
+        .onConflictDoUpdate({
+          target: [diningDish.id],
+          set: conflictUpdateSetAllCols(diningDish),
+        });
+
+      console.log(`Upserting ${dietRestrictionsToUpsert.size} dietary restriction entries...`);
+      await tx
+        .insert(diningDietRestriction)
+        .values(dietRestrictionsToUpsert.values().toArray())
+        .onConflictDoUpdate({
+          target: [diningDietRestriction.dishId],
+          set: conflictUpdateSetAllCols(diningDietRestriction),
+        });
+
+      console.log(`Upserting ${nutritionInfosToUpsert.size} nutrition info entries...`);
+      await tx
+        .insert(diningNutritionInfo)
+        .values(nutritionInfosToUpsert.values().toArray())
+        .onConflictDoUpdate({
+          target: [diningNutritionInfo.dishId],
+          set: conflictUpdateSetAllCols(diningNutritionInfo),
+        });
+
+      console.log(`Upserting ${dishToMenuRowsToUpsert.size} dish-to-menu rows...`);
+      await tx
+        .insert(diningDishToMenu)
+        .values(
+          dishToMenuRowsToUpsert
+            .entries()
+            .flatMap(([menuId, dishes]) =>
+              dishes
+                .keys()
+                .map((dishId) => {
+                  return {
+                    menuId,
+                    dishId,
+                  };
+                })
+                .toArray(),
+            )
+            .toArray(),
+        )
+        .onConflictDoUpdate({
+          target: [diningDishToMenu.dishId, diningDishToMenu.menuId],
+          set: conflictUpdateSetAllCols(diningDishToMenu),
+        });
+    });
   }
 }

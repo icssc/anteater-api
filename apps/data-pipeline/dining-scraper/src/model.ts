@@ -40,3 +40,27 @@ export type DiningHallInformation = {
   // Schedules (special and standard) for this dining hall
   schedules: Schedule[];
 };
+
+// The keys for reading allergen intolerances from the API response's attributes
+export const allergens = [
+  "Eggs",
+  "Fish",
+  "Milk",
+  "Peanuts",
+  "Sesame",
+  "Shellfish",
+  "Soy",
+  "Tree Nuts",
+  "Wheat",
+] as const;
+
+// The keys for reading preferences from the API response's attributes
+export const dietaryPreferences = [
+  "Gluten Free",
+  "Halal",
+  "Kosher",
+  "Locally Grown",
+  "Organic", // in dietRestriction schema but not returned by API
+  "Vegan",
+  "Vegetarian",
+] as const;

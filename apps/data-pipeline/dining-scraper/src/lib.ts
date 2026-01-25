@@ -7,9 +7,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
   const today = new Date();
 
   console.log("[weekly] Starting Brandywine and Anteatery Menu jobs...");
-  await Promise.all([
-    updateRestaurant(db, today, "brandywine"),
-    updateRestaurant(db, today, "anteatery"),
-  ]);
+  await updateRestaurant(db, today, "brandywine");
+  await updateRestaurant(db, today, "anteatery");
   console.log("[weekly] Finished Brandywine and Anteatery Menu jobs.");
 }

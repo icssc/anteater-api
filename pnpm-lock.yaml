@@ -182,6 +182,9 @@ importers:
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../../../packages/stdlib
       date-fns:
         specifier: ^3.0.0
         version: 3.6.0

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
     "date-fns": "^3.0.0",
     "winston": "3.15.0",
     "zod": "^4.1.13"

@@ -213,7 +213,7 @@ function parseProducts(products: WeeklyProducts): ProductDictionary {
  * @param periodId the meal period to get the menus for
  * @returns returns a list of objects for each date
  */
-export async function getAdobeEcommerceMenuWeekView(
+export async function fetchMenuWeekView(
   date: Date,
   restaurantName: RestaurantName,
   periodId: number,

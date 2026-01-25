@@ -1,5 +1,5 @@
 {
-  "id": "cf192146-ecaa-49f3-9159-887d89e0d112",
+  "id": "d9b22d2c-fd1b-47b2-9f7c-d8d377d4b47f",
   "prevId": "169622b6-bb25-46af-9384-cb3825533964",
   "version": "7",
   "dialect": "postgresql",
@@ -634,19 +634,273 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.dining_diet_restruction": {
+      "name": "dining_diet_restruction",
+      "schema": "",
+      "columns": {
+        "dish_id": {
+          "name": "dish_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "contains_eggs": {
+          "name": "contains_eggs",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_fish": {
+          "name": "contains_fish",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_milk": {
+          "name": "contains_milk",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_peanuts": {
+          "name": "contains_peanuts",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_sesame": {
+          "name": "contains_sesame",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_shellfish": {
+          "name": "contains_shellfish",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_soy": {
+          "name": "contains_soy",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_tree_nuts": {
+          "name": "contains_tree_nuts",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contains_wheat": {
+          "name": "contains_wheat",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_gluten_free": {
+          "name": "is_gluten_free",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_halal": {
+          "name": "is_halal",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_kosher": {
+          "name": "is_kosher",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_locally_grown": {
+          "name": "is_locally_grown",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_organic": {
+          "name": "is_organic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_vegan": {
+          "name": "is_vegan",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_vegetarian": {
+          "name": "is_vegetarian",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_diet_restruction_dish_id_dining_dish_id_fk": {
+          "name": "dining_diet_restruction_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_diet_restruction",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_dish": {
+      "name": "dining_dish",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "station_id": {
+          "name": "station_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ingredients": {
+          "name": "ingredients",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_ratings": {
+          "name": "num_ratings",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "total_rating": {
+          "name": "total_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_dish_station_id_dining_station_id_fk": {
+          "name": "dining_dish_station_id_dining_station_id_fk",
+          "tableFrom": "dining_dish",
+          "tableTo": "dining_station",
+          "columnsFrom": ["station_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_dish_to_menu": {
+      "name": "dining_dish_to_menu",
+      "schema": "",
+      "columns": {
+        "menu_id": {
+          "name": "menu_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dish_id": {
+          "name": "dish_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_dish_to_menu_menu_id_dining_menu_id_fk": {
+          "name": "dining_dish_to_menu_menu_id_dining_menu_id_fk",
+          "tableFrom": "dining_dish_to_menu",
+          "tableTo": "dining_menu",
+          "columnsFrom": ["menu_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dining_dish_to_menu_dish_id_dining_dish_id_fk": {
+          "name": "dining_dish_to_menu_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_dish_to_menu",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.dining_menu": {
       "name": "dining_menu",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
         "period_id": {
           "name": "period_id",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -659,12 +913,6 @@
         "restaurant_id": {
           "name": "restaurant_id",
           "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "price": {
-          "name": "price",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -682,6 +930,137 @@
           "tableFrom": "dining_menu",
           "tableTo": "dining_restaurant",
           "columnsFrom": ["restaurant_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_nutrition_info": {
+      "name": "dining_nutrition_info",
+      "schema": "",
+      "columns": {
+        "dish_id": {
+          "name": "dish_id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "serving_size": {
+          "name": "serving_size",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "serving_unit": {
+          "name": "serving_unit",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calories": {
+          "name": "calories",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_fat_g": {
+          "name": "total_fat_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trans_fat_g": {
+          "name": "trans_fat_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "saturated_fat_g": {
+          "name": "saturated_fat_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cholesterol_mg": {
+          "name": "cholesterol_mg",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sodium_mg": {
+          "name": "sodium_mg",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_carbs_g": {
+          "name": "total_carbs_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dietary_fiber_g": {
+          "name": "dietary_fiber_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sugars_g": {
+          "name": "sugars_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_g": {
+          "name": "protein_g",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calcium": {
+          "name": "calcium",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iron": {
+          "name": "iron",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vitamin_a": {
+          "name": "vitamin_a",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vitamin_c": {
+          "name": "vitamin_c",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_nutrition_info_dish_id_dining_dish_id_fk": {
+          "name": "dining_nutrition_info_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_nutrition_info",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
@@ -729,7 +1108,7 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -823,13 +1202,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
