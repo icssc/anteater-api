@@ -194,15 +194,15 @@ export async function upsertMenusForWeek(
   const dayPeriodMap = new Map<string, Set<number>>();
 
   await Promise.all(
-    upsertedDates.map(async (currentDate) => {
-      const currentDayOfWeek = currentDate.getDay();
-      const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, currentDate);
-      const dateString = format(currentDate, "yyyy-MM-dd");
+    upsertedDates.map(async (examinedDate) => {
+      const examinedDayOfWeek = examinedDate.getDay();
+      const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, examinedDate);
+      const dateString = format(examinedDate, "yyyy-MM-dd");
 
       // Get relevant meal periods for the day to upsert into periods table
       const relevantMealPeriods = currentSchedule.mealPeriods.filter(
         (mealPeriod) =>
-          mealPeriod.openHours[currentDayOfWeek] && mealPeriod.closeHours[currentDayOfWeek],
+          mealPeriod.openHours[examinedDayOfWeek] && mealPeriod.closeHours[examinedDayOfWeek],
       );
 
       const dayPeriodSet = new Set<number>();
@@ -220,8 +220,8 @@ export async function upsertMenusForWeek(
           date: dateString,
           restaurantId: restaurantId,
           name: period.name,
-          startTime: period.openHours[dayOfWeek] ?? "",
-          endTime: period.closeHours[dayOfWeek] ?? "",
+          startTime: period.openHours[examinedDayOfWeek] ?? "",
+          endTime: period.closeHours[examinedDayOfWeek] ?? "",
           updatedAt,
         };
       });
