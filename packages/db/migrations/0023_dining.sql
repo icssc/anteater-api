@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "dining_diet_restruction" (
+CREATE TABLE IF NOT EXISTS "dining_diet_restriction" (
 	"dish_id" text PRIMARY KEY NOT NULL,
 	"contains_eggs" boolean,
 	"contains_fish" boolean,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS "dining_station" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_diet_restruction" ADD CONSTRAINT "dining_diet_restruction_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_diet_restriction" ADD CONSTRAINT "dining_diet_restriction_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE cascade;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

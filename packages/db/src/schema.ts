@@ -934,7 +934,7 @@ export const diningNutritionInfo = pgTable("dining_nutrition_info", {
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
-export const diningDietRestriction = pgTable("dining_diet_restruction", {
+export const diningDietRestriction = pgTable("dining_diet_restriction", {
   dishId: text("dish_id")
     .primaryKey()
     .references(() => diningDish.id, {

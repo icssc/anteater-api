@@ -634,8 +634,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.dining_diet_restruction": {
-      "name": "dining_diet_restruction",
+    "public.dining_diet_restriction": {
+      "name": "dining_diet_restriction",
       "schema": "",
       "columns": {
         "dish_id": {
@@ -749,9 +749,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "dining_diet_restruction_dish_id_dining_dish_id_fk": {
-          "name": "dining_diet_restruction_dish_id_dining_dish_id_fk",
-          "tableFrom": "dining_diet_restruction",
+        "dining_diet_restriction_dish_id_dining_dish_id_fk": {
+          "name": "dining_diet_restriction_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_diet_restriction",
           "tableTo": "dining_dish",
           "columnsFrom": ["dish_id"],
           "columnsTo": ["id"],
