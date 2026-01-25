@@ -14,13 +14,7 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import {
-  type DiningHallInformation,
-  type RestaurantName,
-  allergens,
-  dietaryPreferences,
-  restaurantUrlMap,
-} from "./model.ts";
+import { type RestaurantName, allergens, dietaryPreferences, restaurantUrlMap } from "./model.ts";
 import { findCurrentlyActiveSchedule, restaurantIdFor } from "./util.ts";
 
 /**
@@ -41,7 +35,7 @@ export async function updateRestaurant(
   const updatedAt = new Date();
 
   // Get all the periods and stations available for the week.
-  const restaurantInfo: DiningHallInformation = await fetchLocation({
+  const restaurantInfo = await fetchLocation({
     locationUrlKey: restaurantUrlMap[restaurantName],
     sortOrder: "ASC",
   });
@@ -86,7 +80,7 @@ export async function updateRestaurant(
 
   // Keep a set of all relevant meal periods (ones that were relevant throughout
   // at least some days in the week) to query weekly on later
-  const periodSet: Set<number> = new Set<number>();
+  const periodSet = new Set<number>();
 
   const dayPeriodMap = new Map<string, Set<number>>();
 
