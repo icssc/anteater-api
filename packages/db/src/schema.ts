@@ -4,6 +4,7 @@ import {
   boolean,
   date,
   decimal,
+  foreignKey,
   index,
   integer,
   json,
@@ -13,6 +14,7 @@ import {
   pgTable,
   real,
   text,
+  time,
   timestamp,
   uniqueIndex,
   uuid,
@@ -816,6 +818,78 @@ export const libraryTrafficHistory = pgTable(
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
+
+// dining stuff
+export const diningRestaurant = pgTable("dining_restaurant", {
+  id: varchar("id").primaryKey(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  name: varchar("name").notNull(),
+});
+
+export const diningPeriod = pgTable(
+  "dining_period",
+  {
+    // id: uuid("id"),
+    // .primaryKey()
+    // adobeId: text("adobe_id").notNull(),
+    id: varchar("id").notNull(),
+    date: date("date").notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    startTime: time("start").notNull(),
+    endTime: time("end").notNull(),
+    name: text("name").notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [uniqueIndex().on(table.id, table.date, table.restaurantId)],
+  // (table) => [{ pk: primaryKey({ columns: [table.id, table.date, table.restaurantId] }) }],
+);
+
+export const diningMenu = pgTable(
+  "dining_menu",
+  {
+    id: text("id").primaryKey(),
+    // periodId: uuid("period_id")
+    //   .notNull()
+    //   .references(() => diningPeriod.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    periodId: text("period_id").notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    price: text("price").notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    {
+      periodFk: foreignKey({
+        columns: [table.periodId, table.date, table.restaurantId],
+        foreignColumns: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
+      })
+        .onDelete("cascade")
+        .onUpdate("cascade"),
+    },
+  ],
+);
+
+export const diningStation = pgTable("dining_station", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  restaurantId: varchar("restaurant_id")
+    .notNull()
+    .references(() => diningRestaurant.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
 
 // Materialized views
 
