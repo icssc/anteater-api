@@ -831,7 +831,7 @@ export const diningPeriod = pgTable(
   {
     // id: uuid("id"),
     // .primaryKey()
-    // adobeId: text("adobe_id").notNull(),
+    // adobeId: varchar("adobe_id").notNull(),
     id: varchar("id").notNull(),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
@@ -842,7 +842,7 @@ export const diningPeriod = pgTable(
       }),
     startTime: time("start").notNull(),
     endTime: time("end").notNull(),
-    name: text("name").notNull(),
+    name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [uniqueIndex().on(table.id, table.date, table.restaurantId)],
@@ -852,11 +852,11 @@ export const diningPeriod = pgTable(
 export const diningMenu = pgTable(
   "dining_menu",
   {
-    id: text("id").primaryKey(),
+    id: varchar("id").primaryKey(),
     // periodId: uuid("period_id")
     //   .notNull()
     //   .references(() => diningPeriod.id, { onDelete: "cascade", onUpdate: "cascade" }),
-    periodId: text("period_id").notNull(),
+    periodId: varchar("period_id").notNull(),
     date: date("date", { mode: "string" }).notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -864,7 +864,6 @@ export const diningMenu = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    price: text("price").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
@@ -880,14 +879,57 @@ export const diningMenu = pgTable(
 );
 
 export const diningStation = pgTable("dining_station", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
   restaurantId: varchar("restaurant_id")
     .notNull()
     .references(() => diningRestaurant.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDish = pgTable("dining_dish", {
+  id: varchar("id").primaryKey(),
+  stationId: varchar("station_id")
+    .notNull()
+    .references(() => diningStation.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  name: varchar("name").notNull(),
+  description: varchar("description").notNull(),
+  ingredients: varchar("ingredients").default("Ingredient Statement Not Available"),
+  category: varchar("category").notNull(),
+  numRatings: integer("num_ratings").default(0).notNull(),
+  totalRating: integer("total_rating").default(0).notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningNutritionInfo = pgTable("dining_nutrition_info", {
+  dishId: varchar("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  servingSize: varchar("serving_size"),
+  servingUnit: varchar("serving_unit"),
+  calories: varchar("calories"),
+  totalFatG: varchar("total_fat_g"),
+  transFatG: varchar("trans_fat_g"),
+  saturatedFatG: varchar("saturated_fat_g"),
+  cholesterolMg: varchar("cholesterol_mg"),
+  sodiumMg: varchar("sodium_mg"),
+  totalCarbsG: varchar("total_carbs_g"),
+  dietaryFiberG: varchar("dietary_fiber_g"),
+  sugarsG: varchar("sugars_g"),
+  proteinG: varchar("protein_g"),
+  calciumMg: varchar("calcium"),
+  ironMg: varchar("iron"),
+  vitaminAIU: varchar("vitamin_a"),
+  vitaminCIU: varchar("vitamin_c"),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 

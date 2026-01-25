@@ -104,3 +104,50 @@ export type DiningHallInformation = {
   // Schedules (special and standard) for this dining hall
   schedules: Schedule[];
 };
+
+export const getLocationRecipesSchema = z.object({
+  data: z.object({
+    getLocationRecipes: z.object({
+      locationRecipesMap: z
+        .object({
+          dateSkuMap: z.array(
+            z.object({
+              date: z.string().date(),
+              stations: z.array(
+                z.object({
+                  id: z.number(),
+                  skus: z.object({
+                    simple: z.array(z.string()),
+                  }),
+                }),
+              ),
+            }),
+          ),
+        })
+        .nullable(),
+      products: z
+        .object({
+          items: z.array(
+            z.object({
+              sku: z.string(),
+              name: z.string(),
+              images: z.array(
+                z.object({
+                  url: z.string(),
+                }),
+              ),
+              attributes: z.array(
+                z.object({
+                  name: z.string(),
+                  value: z.union([z.string(), z.array(z.string())]),
+                }),
+              ),
+            }),
+          ),
+        })
+        .nullable(),
+    }),
+  }),
+});
+
+export type GetLocationRecipesResponse = z.infer<typeof getLocationRecipesSchema>;

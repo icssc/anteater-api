@@ -169,6 +169,13 @@
       "when": 1769372806645,
       "tag": "0023_dining",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1769375550306,
+      "tag": "0024_dining",
+      "breakpoints": true
     }
   ]
 }
