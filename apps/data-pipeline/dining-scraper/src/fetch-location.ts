@@ -32,7 +32,7 @@ const fetchLocationResponseSchema = z.object({
     }),
     getLocation: z.object({
       commerceAttributes: z.object({
-        maxMenusDate: z.string().date(),
+        maxMenusDate: z.iso.date(),
         children: z.array(
           z.object({
             id: z.number(),
@@ -55,8 +55,8 @@ const fetchLocationResponseSchema = z.object({
                   opening_hours: z.string(),
                 }),
               ),
-              start_date: z.string().date().optional(),
-              end_date: z.string().date().optional(),
+              start_date: z.iso.date().optional(),
+              end_date: z.iso.date().optional(),
             }),
           ),
         }),
