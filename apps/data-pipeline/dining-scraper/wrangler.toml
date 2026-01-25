@@ -1,0 +1,17 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "anteater-api_dining-scraper"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+main = "src/handler.ts"
+minify = true
+
+# [triggers]
+# crons = ["*/5 * * * *"]
+
+[observability]
+enabled = true
+
+[[hyperdrive]]
+binding = "DB"
+id = "1c4c82477bfa4114a48c63d4dc838e73"

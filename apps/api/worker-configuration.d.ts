@@ -4,6 +4,6 @@ interface Env {
   API_KEYS: KVNamespace;
   GQL_CACHE: KVNamespace;
   CF_ENV: string;
-  RATE_LIMITER: DurableObjectNamespace<import("./src/index").DurableObjectRateLimiter>;
+  RATE_LIMITER: DurableObjectNamespace /* DurableObjectRateLimiter */;
   DB: Hyperdrive;
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@apps/peterplate-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "deploy": "wrangler deploy",
+    "postinstall": "wrangler types --x-include-runtime",
+    "start": "dotenv -e ../../../.env -- tsx src/lib.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "winston": "3.15.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "wrangler": "3.99.0"
+  }
+}

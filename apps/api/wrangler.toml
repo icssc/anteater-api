@@ -7,7 +7,7 @@ kv_namespaces = [
   { binding = "GQL_CACHE", id = "4523675af51d41a4bd9b0b626ab958f9" },
 ]
 assets = { directory = "public" }
-main = "src/index.ts"
+main = "src/lib.ts"
 minify = true
 
 [vars]

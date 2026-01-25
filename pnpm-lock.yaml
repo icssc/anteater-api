@@ -177,6 +177,22 @@ importers:
         specifier: 4.1.13
         version: 4.1.13
 
+  apps/data-pipeline/dining-scraper:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      winston:
+        specifier: 3.15.0
+        version: 3.15.0
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
+    devDependencies:
+      wrangler:
+        specifier: 3.99.0
+        version: 3.99.0(@cloudflare/workers-types@4.20241230.0)
+
   apps/data-pipeline/grades-importer:
     dependencies:
       '@packages/db':
