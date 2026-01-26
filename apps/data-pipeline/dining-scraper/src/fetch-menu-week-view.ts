@@ -239,7 +239,9 @@ export async function fetchMenuWeekView(
   const products = queried.data.getLocationRecipes.products;
   const locationRecipesMap = queried.data.getLocationRecipes.locationRecipesMap;
 
-  if (products == null || locationRecipesMap == null) return null;
+  if (products == null || locationRecipesMap == null) {
+    return null;
+  }
 
   const parsedProducts = parseProducts(products.items);
   const dateSkuMap = locationRecipesMap.dateSkuMap;

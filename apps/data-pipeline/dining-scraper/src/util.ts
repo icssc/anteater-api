@@ -38,17 +38,20 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     const parts = block.split(/\s+/); // Split by one or more spaces
 
     if (parts.length < 2) {
-      console.warn(`[parseOpeningHours]: Skipping invalid time block format: ${block}`);
+      console.warn(`parseOpeningHours: Skipping invalid time block format: ${block}`);
       continue;
     }
 
-    const dayRangeStr = parts[0]; // "Mo-Fr"
-    const timeRangeStr = parts[1]; // "07:15-11:00 OR off"
+    const [dayRangeStr, timeRangeStr] = parts; // "Mo-Fr", "07:15-11:00 OR off"
 
-    if (!dayRangeStr || !timeRangeStr) continue;
+    if (!dayRangeStr || !timeRangeStr) {
+      continue;
+    }
 
     // If the timeRange is off, then we need not do anything (it is not open)
-    if (timeRangeStr === "off") continue;
+    if (timeRangeStr === "off") {
+      continue;
+    }
 
     const [openTime, closeTime] = timeRangeStr.split("-"); // "07:15", "11:00"
 
@@ -73,7 +76,9 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
       const startDay = dayParts[0];
       const endDay = dayParts[1];
 
-      if (!startDay || !endDay) continue;
+      if (!startDay || !endDay) {
+        continue;
+      }
 
       const startIndex = DAY_MAP[startDay];
       const endIndex = DAY_MAP[endDay];
@@ -85,14 +90,19 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
 
       // handles if date range wraps around (i.e. Mo-Su)
       if (startIndex <= endIndex) {
-        for (let i = startIndex; i <= endIndex; i++) dayIndices.push(i);
+        for (let i = startIndex; i <= endIndex; i++) {
+          dayIndices.push(i);
+        }
       } else {
-        for (let i = startIndex; i < 7; i++) dayIndices.push(i);
-        for (let i = 0; i <= endIndex; i++) dayIndices.push(i);
+        for (let i = startIndex; i < 7; i++) {
+          dayIndices.push(i);
+        }
+        for (let i = 0; i <= endIndex; i++) {
+          dayIndices.push(i);
+        }
       }
-
-      // Case: Single Day (e.g., "Mo")
     } else {
+      // Case: Single Day (e.g., "Mo")
       const singleIndex = DAY_MAP[dayRangeStr];
       if (singleIndex !== undefined) {
         dayIndices.push(singleIndex);
