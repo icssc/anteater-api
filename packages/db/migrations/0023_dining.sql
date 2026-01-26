@@ -26,8 +26,6 @@ CREATE TABLE IF NOT EXISTS "dining_dish" (
 	"description" varchar NOT NULL,
 	"ingredients" varchar,
 	"category" varchar NOT NULL,
-	"num_ratings" integer DEFAULT 0 NOT NULL,
-	"total_rating" integer DEFAULT 0 NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint

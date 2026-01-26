@@ -903,8 +903,6 @@ export const diningDish = pgTable("dining_dish", {
   description: varchar("description").notNull(),
   ingredients: varchar("ingredients"),
   category: varchar("category").notNull(),
-  numRatings: integer("num_ratings").default(0).notNull(),
-  totalRating: integer("total_rating").default(0).notNull(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
