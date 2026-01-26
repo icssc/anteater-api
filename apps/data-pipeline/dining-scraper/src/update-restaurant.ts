@@ -282,15 +282,12 @@ export async function updateRestaurant(
           dishToMenuRowsToUpsert
             .entries()
             .flatMap(([menuId, dishes]) =>
-              dishes
-                .keys()
-                .map((dishId) => {
-                  return {
-                    menuId,
-                    dishId,
-                  };
-                })
-                .toArray(),
+              dishes.keys().map((dishId) => {
+                return {
+                  menuId,
+                  dishId,
+                };
+              }),
             )
             .toArray(),
         )
