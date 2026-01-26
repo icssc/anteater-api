@@ -136,7 +136,7 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
       }
     }
 
-    console.log("Upserting restaurants before events...");
+    console.log("Upserting restaurants before upserting events...");
     const updatedAt = new Date();
     await db
       .insert(diningRestaurant)
