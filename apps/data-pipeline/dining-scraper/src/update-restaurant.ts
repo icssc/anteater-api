@@ -29,6 +29,8 @@ export async function updateRestaurant(
   today: Date,
   restaurantName: RestaurantName,
 ): Promise<void> {
+  console.log(`Updating restaurant ${restaurantName}...`);
+
   const restaurantId = restaurantIdFor(restaurantName);
   const todayDayOfWeek = today.getDay();
 
@@ -104,7 +106,7 @@ export async function updateRestaurant(
 
       dayPeriodMap.set(dateString, dayPeriodSet);
 
-      console.log(`Upserting ${relevantMealPeriods.length} periods...`);
+      console.log(`Upserting ${relevantMealPeriods.length} periods on ${dateString}...`);
       const periodsToUpsert = relevantMealPeriods.map((period) => {
         return {
           id: period.id.toString(),

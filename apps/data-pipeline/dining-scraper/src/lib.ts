@@ -6,8 +6,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
   await updateEvents(db);
 
   const today = new Date();
-  console.log("Starting Brandywine and Anteatery Menu jobs...");
-  await updateRestaurant(db, today, "brandywine");
   await updateRestaurant(db, today, "anteatery");
-  console.log("Finished Brandywine and Anteatery Menu jobs.");
+  await updateRestaurant(db, today, "brandywine");
+  console.log("All done!");
 }
