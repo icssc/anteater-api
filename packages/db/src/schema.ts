@@ -980,6 +980,33 @@ export const diningDishToMenu = pgTable(
   ],
 );
 
+export const diningEvent = pgTable(
+  "dining_event",
+  {
+    title: varchar("title").notNull(),
+    image: varchar("image"),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    shortDescription: varchar("short_description"),
+    longDescription: varchar("long_description"),
+    start: timestamp("start"),
+    end: timestamp("end"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({
+        name: "dining_event_pk",
+        columns: [table.title, table.restaurantId, table.start],
+      }),
+    };
+  },
+);
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {

@@ -37,6 +37,18 @@ CREATE TABLE IF NOT EXISTS "dining_dish_to_menu" (
     CONSTRAINT dining_dish_to_menu_pk PRIMARY KEY (menu_id, dish_id)
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "dining_event" (
+	"title" varchar NOT NULL,
+	"image" varchar,
+	"restaurant_id" varchar NOT NULL,
+	"short_description" varchar,
+	"long_description" varchar,
+	"start" timestamp,
+	"end" timestamp,
+	"updated_at" timestamp with time zone NOT NULL,
+	CONSTRAINT "dining_event_pk" PRIMARY KEY("title","restaurant_id","start")
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_menu" (
 	"id" varchar PRIMARY KEY NOT NULL,
 	"period_id" varchar NOT NULL,
@@ -109,6 +121,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "dining_dish_to_menu" ADD CONSTRAINT "dining_dish_to_menu_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "dining_event" ADD CONSTRAINT "dining_event_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
