@@ -6,10 +6,8 @@
     "build": "next build",
     "check:types": "tsc -p './tsconfig.json' -noEmit",
     "deploy": "sst deploy --stage production",
-    "deploy:local": "dotenv -- sst deploy --stage production",
     "dev": "next dev --turbopack",
-    "migrate": "tsx src/db/migrate.ts",
-    "refresh": "sst refresh --stage production"
+    "migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "1.7.2",
