@@ -16,23 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-1
-
-  AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-  AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-
-  AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-  USERS_DB_URL: ${{ secrets.USERS_DB_URL }}
-
-  CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
   CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-  DB_URL: ${{ secrets.DB_URL }}
-
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
   deploy_staging:
     name: Deploy API to staging
@@ -60,9 +45,3 @@ jobs:
       - name: Deploy API to staging
         working-directory: ./apps/api
         run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
-
-      - name: Prefer SST bundled Pulumi
-        run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
-
-      - name: Deploy Key Manager/Dashboard if present
-        run: pnpm --filter "./apps/key-manager/**" run deploy
