@@ -67,11 +67,9 @@ jobs:
       - name: Debug SST
         run: |
           echo "PATH=$PATH"
-          pnpm -w list sst || true
-          ls -la node_modules/.bin | grep sst || true
-          which sst || true
-          sst --version || true
-          pnpm exec sst --version || true
+          ls -la "$HOME/.config/sst/bin" || true
+          ls -la node_modules/.bin | head -50
+          ls -la node_modules/.bin/sst || true
 
       - name: Deploy Key Manager/Dashboard if present
-        run: pnpm exec sst deploy --stage production
+        run: pnpm --filter "./apps/key-manager/**" run deploy
