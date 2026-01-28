@@ -112,93 +112,105 @@ export class AuditParser {
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
-      switch (rule.ruleType) {
-        case "Block":
-        case "Noncourse":
-          break;
-        case "Course": {
-          const includedCourses = rule.requirement.courseArray.map(
-            (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
-          );
-          const toInclude = new Map(
-            await Promise.all(includedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
-              x.flat().map((y) => [y.id, y]),
-            ),
-          );
-          const excludedCourses =
-            rule.requirement.except?.courseArray.map(
+      if (
+        rule.ifElsePart === "ElsePart" &&
+        rule.proxyAdvice?.textList.some((x) =>
+          /specialization|concentration|emphasis|area|track|major/i.test(x),
+        )
+      ) {
+        ret.push({
+          label: AuditParser.suppressLabelPolymorphism(rule.label),
+          requirementType: "Spec",
+        });
+      } else {
+        switch (rule.ruleType) {
+          case "Block":
+          case "Noncourse":
+            break;
+          case "Course": {
+            const includedCourses = rule.requirement.courseArray.map(
               (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
-            ) ?? [];
-          const toExclude = new Set<string>(
-            await Promise.all(excludedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
-              x.flat().map((y) => y.id),
-            ),
-          );
-          const courses = Array.from(toInclude)
-            .filter(([x]) => !toExclude.has(x))
-            .sort(([, a], [, b]) =>
-              a.department === b.department
-                ? a.courseNumeric - b.courseNumeric || this.lexOrd(a.courseNumber, b.courseNumber)
-                : this.lexOrd(a.department, b.department),
-            )
-            .map(([x]) => x);
-          if (rule.requirement.classesBegin) {
-            ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Course",
-              courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
-              courses,
-            });
-          } else if (rule.requirement.creditsBegin) {
-            ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Unit",
-              unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
-              courses,
-            });
-          }
-          break;
-        }
-        case "Group": {
-          ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
-            requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements: await this.ruleArrayToRequirements(rule.ruleArray),
-          });
-          break;
-        }
-        case "IfStmt": {
-          const rules = this.flattenIfStmt([rule]);
-          if (!rules.some((x) => x.ruleType === "Block")) {
-            if (rules.length > 1) {
+            );
+            const toInclude = new Map(
+              await Promise.all(includedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
+                x.flat().map((y) => [y.id, y]),
+              ),
+            );
+            const excludedCourses =
+              rule.requirement.except?.courseArray.map(
+                (x) => `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
+              ) ?? [];
+            const toExclude = new Set<string>(
+              await Promise.all(excludedCourses.map(this.normalizeCourseId.bind(this))).then((x) =>
+                x.flat().map((y) => y.id),
+              ),
+            );
+            const courses = Array.from(toInclude)
+              .filter(([x]) => !toExclude.has(x))
+              .sort(([, a], [, b]) =>
+                a.department === b.department
+                  ? a.courseNumeric - b.courseNumeric || this.lexOrd(a.courseNumber, b.courseNumber)
+                  : this.lexOrd(a.department, b.department),
+              )
+              .map(([x]) => x);
+            if (rule.requirement.classesBegin) {
               ret.push({
-                label: "Select 1 of the following",
-                requirementType: "Group",
-                requirementCount: 1,
-                requirements: await this.ruleArrayToRequirements(rules),
+                label: AuditParser.suppressLabelPolymorphism(rule.label),
+                requirementType: "Course",
+                courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
+                courses,
               });
-            } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(rules)));
+            } else if (rule.requirement.creditsBegin) {
+              ret.push({
+                label: AuditParser.suppressLabelPolymorphism(rule.label),
+                requirementType: "Unit",
+                unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
+                courses,
+              });
             }
+            break;
           }
-          break;
-        }
-        case "Complete":
-        case "Incomplete":
-          ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Marker",
-          });
-          break;
-        case "Subset": {
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
-          ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
-            requirementCount: Object.keys(requirements).length,
-            requirements,
-          });
+          case "Group": {
+            ret.push({
+              label: AuditParser.suppressLabelPolymorphism(rule.label),
+              requirementType: "Group",
+              requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
+              requirements: await this.ruleArrayToRequirements(rule.ruleArray),
+            });
+            break;
+          }
+          case "IfStmt": {
+            const rules = this.flattenIfStmt([rule]);
+            if (!rules.some((x) => x.ruleType === "Block")) {
+              if (rules.length > 1) {
+                ret.push({
+                  label: "Select 1 of the following",
+                  requirementType: "Group",
+                  requirementCount: 1,
+                  requirements: await this.ruleArrayToRequirements(rules),
+                });
+              } else if (rules.length === 1) {
+                ret.push(...(await this.ruleArrayToRequirements(rules)));
+              }
+            }
+            break;
+          }
+          case "Complete":
+          case "Incomplete":
+            ret.push({
+              label: AuditParser.suppressLabelPolymorphism(rule.label),
+              requirementType: "Marker",
+            });
+            break;
+          case "Subset": {
+            const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+            ret.push({
+              label: AuditParser.suppressLabelPolymorphism(rule.label),
+              requirementType: "Group",
+              requirementCount: Object.keys(requirements).length,
+              requirements,
+            });
+          }
         }
       }
     }
