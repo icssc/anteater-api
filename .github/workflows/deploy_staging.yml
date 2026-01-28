@@ -54,12 +54,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      #      - name: Check types
-      #        run: pnpm check:types
+      - name: Check types
+        run: pnpm check:types
 
-      #      - name: Deploy API to staging
-      #        working-directory: ./apps/api
-      #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
+      - name: Deploy API to staging
+        working-directory: ./apps/api
+        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
       - name: Prefer SST bundled Pulumi
         run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
