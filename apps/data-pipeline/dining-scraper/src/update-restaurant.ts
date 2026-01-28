@@ -73,20 +73,22 @@ export async function updateRestaurant(
     });
 
   const datesToFetch: Date[] = [];
-  const daysUntilNextSunday = (7 - todayDayOfWeek) % 7;
-  for (let i = 0; i <= daysUntilNextSunday; i++) {
+  const daysUntilNextSunday = (7 - todayDayOfWeek) % 7 || 7;
+  for (let i = 0; i <= daysUntilNextSunday; ++i) {
     const nextDate = new Date(today);
     nextDate.setDate(today.getDate() + i);
     datesToFetch.push(nextDate);
   }
+  console.log(
+    `Fetching ${datesToFetch.length} dates: ${datesToFetch.map((d) => format(d, "yyyy-MM-dd")).join(", ")}`,
+  );
 
   // Keep a set of all relevant meal periods (ones that were relevant throughout
   // at least some days in the week) to query weekly on later
   const periodSet = new Set<number>();
   const dayPeriodMap = new Map<string, Set<number>>();
 
-  const periodsToUpsert: (typeof diningPeriod.$inferInsert)[] = [];
-  const periodRowKeySet = new Set<string>();
+  const periodsToUpsertByKey = new Map<string, typeof diningPeriod.$inferInsert>();
 
   for (const dateToFetch of datesToFetch) {
     const dayOfWeekToFetch = dateToFetch.getDay();
@@ -114,14 +116,13 @@ export async function updateRestaurant(
         updatedAt,
       } satisfies typeof diningPeriod.$inferInsert;
 
-      const key = `${row.id}-${row.date}-${row.restaurantId}`;
-      if (!periodRowKeySet.has(key)) {
-        periodRowKeySet.add(key);
-        periodsToUpsert.push(row);
-      }
+      const key = `${row.id}|${row.date}|${row.restaurantId}`;
+      periodsToUpsertByKey.set(key, row);
     }
     dayPeriodMap.set(dateString, dayPeriodSet);
   }
+
+  const periodsToUpsert = Array.from(periodsToUpsertByKey.values());
   console.log(`Upserting ${periodsToUpsert.length} periods...`);
   await db
     .insert(diningPeriod)

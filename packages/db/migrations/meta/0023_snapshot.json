@@ -1,5 +1,5 @@
 {
-  "id": "6b7d138f-b0ba-4c1a-96f2-6b8ad34a2488",
+  "id": "4e731e24-1dbf-4f2b-9df0-0f7a24d0c4d5",
   "prevId": "169622b6-bb25-46af-9384-cb3825533964",
   "version": "7",
   "dialect": "postgresql",
@@ -640,7 +640,7 @@
       "columns": {
         "dish_id": {
           "name": "dish_id",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
@@ -804,20 +804,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "num_ratings": {
-          "name": "num_ratings",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_rating": {
-          "name": "total_rating",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "updated_at": {
           "name": "updated_at",
