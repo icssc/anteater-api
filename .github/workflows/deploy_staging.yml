@@ -61,15 +61,8 @@ jobs:
       #        working-directory: ./apps/api
       #        run: pnpm run deploy --name=anteater-api-staging-${{ github.event.pull_request.number }}
 
-      - name: Prefer SST bundled Pulumi
-        run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
-
-      - name: Debug SST
-        run: |
-          echo "PATH=$PATH"
-          ls -la "$HOME/.config/sst/bin" || true
-          ls -la node_modules/.bin | head -50
-          ls -la node_modules/.bin/sst || true
+      #      - name: Prefer SST bundled Pulumi
+      #        run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
 
       - name: Deploy Key Manager/Dashboard if present
         run: pnpm --filter "./apps/key-manager/**" run deploy
