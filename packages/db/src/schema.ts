@@ -128,6 +128,10 @@ export type DegreeWorksMarkerRequirement = {
   requirementType: "Marker";
 };
 
+export type DegreeWorksSpecRequirement = {
+  requirementType: "Spec";
+};
+
 export type DegreeWorksRequirementBase = { label: string };
 
 export type DegreeWorksRequirement = DegreeWorksRequirementBase &
@@ -136,6 +140,7 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksUnitRequirement
     | DegreeWorksGroupRequirement
     | DegreeWorksMarkerRequirement
+    | DegreeWorksSpecRequirement
   );
 
 export type APCoursesGrantedTree =
