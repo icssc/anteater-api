@@ -5,6 +5,7 @@ import type { DegreeWorksProgramId } from "@packages/db/schema";
  */
 export type RuleBase = {
   label: string;
+  ifElsePart?: "IfPart" | "ElsePart";
   proxyAdvice?: {
     textList: string[];
   };
