@@ -18,15 +18,14 @@ runs:
       with:
         run_install: false
         version: 10
+#    - name: Get pnpm store directory
+#      id: pnpm-cache
+#      shell: bash
+#      run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-    - name: Get pnpm store directory
-      id: pnpm-cache
-      shell: bash
-      run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-    - name: Setup pnpm cache
-      uses: actions/cache@53aa38c736a561b9c17b62df3fe885a17b78ee6d # v4
-      with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: ${{ runner.os }}-pnpm-store-
+#    - name: Setup pnpm cache
+#      uses: actions/cache@53aa38c736a561b9c17b62df3fe885a17b78ee6d # v4
+#      with:
+#        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+#        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+#        restore-keys: ${{ runner.os }}-pnpm-store-
