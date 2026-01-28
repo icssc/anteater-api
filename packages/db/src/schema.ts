@@ -933,7 +933,7 @@ export const diningNutritionInfo = pgTable("dining_nutrition_info", {
 });
 
 export const diningDietRestriction = pgTable("dining_diet_restriction", {
-  dishId: text("dish_id")
+  dishId: varchar("dish_id")
     .primaryKey()
     .references(() => diningDish.id, {
       onDelete: "cascade",

@@ -72,9 +72,9 @@ export async function updateRestaurant(
       set: conflictUpdateSetAllCols(diningStation),
     });
 
-  const datesToFetch: Date[] = [today];
-  const daysUntilNextSunday = (7 - todayDayOfWeek) % 7 || 7;
-  for (let i = 0; i <= daysUntilNextSunday; ++i) {
+  const datesToFetch: Date[] = [];
+  const daysUntilNextSunday = (7 - todayDayOfWeek) % 7;
+  for (let i = 0; i <= daysUntilNextSunday; i++) {
     const nextDate = new Date(today);
     nextDate.setDate(today.getDate() + i);
     datesToFetch.push(nextDate);
@@ -83,51 +83,53 @@ export async function updateRestaurant(
   // Keep a set of all relevant meal periods (ones that were relevant throughout
   // at least some days in the week) to query weekly on later
   const periodSet = new Set<number>();
-
   const dayPeriodMap = new Map<string, Set<number>>();
 
-  await Promise.all(
-    datesToFetch.map(async (dateToFetch) => {
-      const dayOfWeekToFetch = dateToFetch.getDay();
-      const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, dateToFetch);
-      const dateString = format(dateToFetch, "yyyy-MM-dd");
+  const periodsToUpsert: (typeof diningPeriod.$inferInsert)[] = [];
+  const periodRowKeySet = new Set<string>();
 
-      // Get relevant meal periods for the day to upsert into periods table
-      const relevantMealPeriods = currentSchedule.mealPeriods.filter(
-        (mealPeriod) =>
-          mealPeriod.openHours[dayOfWeekToFetch] && mealPeriod.closeHours[dayOfWeekToFetch],
-      );
+  for (const dateToFetch of datesToFetch) {
+    const dayOfWeekToFetch = dateToFetch.getDay();
+    const currentSchedule = findCurrentlyActiveSchedule(restaurantInfo.schedules, dateToFetch);
+    const dateString = format(dateToFetch, "yyyy-MM-dd");
 
-      const dayPeriodSet = new Set<number>();
-      for (const period of relevantMealPeriods) {
-        periodSet.add(period.id);
-        dayPeriodSet.add(period.id);
+    // Get relevant meal periods for the day to upsert into periods table
+    const relevantMealPeriods = currentSchedule.mealPeriods.filter(
+      (mealPeriod) =>
+        mealPeriod.openHours[dayOfWeekToFetch] && mealPeriod.closeHours[dayOfWeekToFetch],
+    );
+
+    const dayPeriodSet = new Set<number>();
+    for (const period of relevantMealPeriods) {
+      periodSet.add(period.id);
+      dayPeriodSet.add(period.id);
+
+      const row = {
+        id: period.id.toString(),
+        date: dateString,
+        restaurantId,
+        name: period.name,
+        startTime: period.openHours[dayOfWeekToFetch] ?? "",
+        endTime: period.closeHours[dayOfWeekToFetch] ?? "",
+        updatedAt,
+      } satisfies typeof diningPeriod.$inferInsert;
+
+      const key = `${row.id}-${row.date}-${row.restaurantId}`;
+      if (!periodRowKeySet.has(key)) {
+        periodRowKeySet.add(key);
+        periodsToUpsert.push(row);
       }
-
-      dayPeriodMap.set(dateString, dayPeriodSet);
-
-      console.log(`Upserting ${relevantMealPeriods.length} periods on ${dateString}...`);
-      const periodsToUpsert = relevantMealPeriods.map((period) => {
-        return {
-          id: period.id.toString(),
-          date: dateString,
-          restaurantId: restaurantId,
-          name: period.name,
-          startTime: period.openHours[dayOfWeekToFetch] ?? "",
-          endTime: period.closeHours[dayOfWeekToFetch] ?? "",
-          updatedAt,
-        };
-      });
-
-      await db
-        .insert(diningPeriod)
-        .values(periodsToUpsert)
-        .onConflictDoUpdate({
-          target: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
-          set: conflictUpdateSetAllCols(diningPeriod),
-        });
-    }),
-  );
+    }
+    dayPeriodMap.set(dateString, dayPeriodSet);
+  }
+  console.log(`Upserting ${periodsToUpsert.length} periods...`);
+  await db
+    .insert(diningPeriod)
+    .values(periodsToUpsert)
+    .onConflictDoUpdate({
+      target: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
+      set: conflictUpdateSetAllCols(diningPeriod),
+    });
 
   const menusToUpsert: (typeof diningMenu.$inferInsert)[] = [];
   const dishBundlesToInsert: {
