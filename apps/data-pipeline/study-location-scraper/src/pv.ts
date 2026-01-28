@@ -179,14 +179,15 @@ function formatDateForAPI(date: Date, boundary: "start" | "end") {
   const p = Object.fromEntries(formatter.formatToParts(date).map((x) => [x.type, x.value]));
 
   return {
-    // note: the start time should be 00:00 because of a bug where if you start
-    // in the middle of some BUSY interval, the API incorrectly assumes its AVAILABLE
+    // note: the start time is 00:00 because of a bug where if you start in the
+    // middle of some BUSY interval, the API incorrectly assumes it's AVAILABLE.
+    // The filtering of past study room slots is handled in scrapePlazaVerde()
     dateTime:
       boundary === "end"
         ? `${p.year}-${p.month}-${p.day}T23:59:00`
         : `${p.year}-${p.month}-${p.day}T00:00:00`,
     // note: it looks microsoft timezone automatically switches between PST and PDT.
-    // there is not separate PDT timezone (and the API will not accept it)
+    // there is not a separate PDT timezone (and the API will not accept it)
     // if this ends up not being true, we can fix it
     timeZone: "Pacific Standard Time",
   };
@@ -250,7 +251,9 @@ async function scrapePlazaVerde(): Promise<{
   const endDate = new Date(startDate.getTime());
   endDate.setUTCDate(endDate.getUTCDate() + DAYS_TO_FETCH);
 
-  console.log(`We are going from ${startDate} to ${endDate} [local time]`);
+  console.log(
+    `We are searching from ${formatDateForAPI(startDate, "start").dateTime} to ${formatDateForAPI(endDate, "end").dateTime} Pacific Standard Time`,
+  );
   const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
 
   const availabilityMap = new Map<string, AvailabilityItem[]>();
@@ -290,13 +293,16 @@ async function scrapePlazaVerde(): Promise<{
     }
   }
 
+  // filter slots so that we only return those that are yet to start
+  const filteredSlots = slots.filter((s) => s.start >= startDate);
+
   // create location record
   const location = {
     id: STUDY_LOCATION_ID,
     name: STUDY_LOCATION_NAME,
   };
 
-  return { location, rooms, slots };
+  return { location, rooms, slots: filteredSlots };
 }
 
 /**

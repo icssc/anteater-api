@@ -283,19 +283,6 @@ importers:
         specifier: 3.99.0
         version: 3.99.0(@cloudflare/workers-types@4.20241230.0)
 
-  apps/data-pipeline/pv-study-room-scraper:
-    dependencies:
-      '@packages/db':
-        specifier: workspace:*
-        version: link:../../../packages/db
-      cross-fetch:
-        specifier: 4.0.0
-        version: 4.0.0
-    devDependencies:
-      wrangler:
-        specifier: 3.99.0
-        version: 3.99.0(@cloudflare/workers-types@4.20241230.0)
-
   apps/data-pipeline/sample-program-scraper:
     dependencies:
       '@packages/db':
