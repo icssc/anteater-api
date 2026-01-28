@@ -3,7 +3,12 @@ import type { DegreeWorksProgramId } from "@packages/db/schema";
 /**
  * The base type for all `Rule` objects.
  */
-export type RuleBase = { label: string };
+export type RuleBase = {
+  label: string;
+  proxyAdvice?: {
+    textList: string[];
+  };
+};
 /**
  * A group of `numberOfRules` rules,
  * of which `numberOfGroups` must be satisfied
