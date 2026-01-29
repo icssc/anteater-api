@@ -165,27 +165,37 @@ async function fetchServices(): Promise<BookingsService[]> {
   return data.service;
 }
 
-function formatDateForAPI(date: Date, boundary: "start" | "end") {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23", // avoid midnight being 24:00
-    timeZone: "America/Los_Angeles",
-  });
+/**
+ * Adds days to a date string formatted by Intl (M/D/YYYY or MM/DD/YYYY).
+ * Uses Date.UTC as a naive date container for calendar math,
+ * then formats back with timeZone: 'UTC' to avoid timezone conversion.
+ */
+function addDaysToDatePST(intlDateString: string, daysToAdd: number): string {
+  const [month, day, year] = intlDateString.split("/").map(Number);
 
-  const p = Object.fromEntries(formatter.formatToParts(date).map((x) => [x.type, x.value]));
+  const newDate = new Date(Date.UTC(year, month - 1, day + daysToAdd));
+
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).format(newDate);
+}
+
+/**
+ * Converts an Intl-formatted date string (M/D/YYYY or MM/DD/YYYY) to the API format.
+ */
+function formatDateForAPI(intlDateString: string, boundary: "start" | "end") {
+  const [month, day, year] = intlDateString.split("/").map(Number);
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
 
   return {
     // note: the start time is 00:00 because of a bug where if you start in the
     // middle of some BUSY interval, the API incorrectly assumes it's AVAILABLE.
     // The filtering of past study room slots is handled in scrapePlazaVerde()
-    dateTime:
-      boundary === "end"
-        ? `${p.year}-${p.month}-${p.day}T23:59:00`
-        : `${p.year}-${p.month}-${p.day}T00:00:00`,
+    dateTime: boundary === "end" ? `${year}-${mm}-${dd}T23:59:00` : `${year}-${mm}-${dd}T00:00:00`,
     // note: it looks microsoft timezone automatically switches between PST and PDT.
     // there is not a separate PDT timezone (and the API will not accept it)
     // if this ends up not being true, we can fix it
@@ -210,13 +220,13 @@ function parseISO8601Duration(duration: string): number {
 // given an array of staffIds, fetch the schedule within the given date
 async function fetchStaffAvailability(
   staffIds: string[],
-  startDate: Date,
-  endDate: Date,
+  startDateTime: { dateTime: string; timeZone: string },
+  endDateTime: { dateTime: string; timeZone: string },
 ): Promise<StaffAvailability[]> {
   const payload = {
     staffIds,
-    startDateTime: formatDateForAPI(startDate, "start"),
-    endDateTime: formatDateForAPI(endDate, "end"),
+    startDateTime,
+    endDateTime,
   };
 
   const data = await fetch(AVAILABILITY_URL, {
@@ -245,16 +255,23 @@ async function scrapePlazaVerde(): Promise<{
   // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
-  // we need to be careful be here about using functions that use local timezone like setHours(0,0,0,0). we only convert to PST later
-  // gets slots for the current day and the one after it, same as original website
-  const startDate = new Date();
-  const endDate = new Date(startDate.getTime());
-  endDate.setUTCDate(endDate.getUTCDate() + DAYS_TO_FETCH);
+  // Get today's date formatted in LA timezone as a string (M/D/YYYY)
+  const dateInLA = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).format(new Date());
+
+  const endDateInLA = addDaysToDatePST(dateInLA, DAYS_TO_FETCH);
+
+  const startDateTime = formatDateForAPI(dateInLA, "start");
+  const endDateTime = formatDateForAPI(endDateInLA, "end");
 
   console.log(
-    `We are searching from ${formatDateForAPI(startDate, "start").dateTime} to ${formatDateForAPI(endDate, "end").dateTime} Pacific Standard Time`,
+    `We are searching from ${startDateTime.dateTime} to ${endDateTime.dateTime} Pacific Standard Time`,
   );
-  const availabilities = await fetchStaffAvailability(allStaffIds, startDate, endDate);
+  const availabilities = await fetchStaffAvailability(allStaffIds, startDateTime, endDateTime);
 
   const availabilityMap = new Map<string, AvailabilityItem[]>();
   for (const availability of availabilities) {
@@ -294,7 +311,7 @@ async function scrapePlazaVerde(): Promise<{
   }
 
   // filter slots so that we only return those that are yet to start
-  const filteredSlots = slots.filter((s) => s.start >= startDate);
+  const filteredSlots = slots.filter((s) => s.start >= new Date());
 
   // create location record
   const location = {
