@@ -32,7 +32,6 @@ export class ProgramsService {
         .select({
           id: major.id,
           name: major.name,
-          requireSpec: major.requireSpec,
           specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${specialization.id}), NULL)`.as(
             "specializations",
           ),
@@ -47,7 +46,7 @@ export class ProgramsService {
       .select({
         id: majorSpecialization.id,
         name: majorSpecialization.name,
-        requireSpec: majorSpecialization.requireSpec,
+        requireSpec: major.requireSpec,
         specializations: majorSpecialization.specializations,
         type: degree.name,
         division: degree.division,
