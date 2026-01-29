@@ -56,6 +56,9 @@ export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
   }),
+  requirementId: z.string().openapi({
+    description: "Identifier for this requirement block",
+  }),
 });
 
 export const programCourseRequirementSchema = programRequirementBaseSchema
@@ -74,6 +77,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     example: {
       requirementType: "Course",
       label: "I&CSci 6N or Math 3A",
+      requirementId: "n5q3hZb2-T",
       courseCount: 1,
       courses: ["I&CSCI6N", "MATH3A"],
     },
@@ -96,6 +100,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       "A unit requirement; a requirement for some number of units earned from a set of courses.",
     example: {
       label: "8 Units Of DRAMA 101",
+      requirementId: "Q7yJf8lR2w",
       requirementType: "Unit",
       unitCount: 8,
       courses: ["DRAMA101A", "DRAMA101B", "DRAMA101C", "DRAMA101D", "DRAMA101E", "DRAMA101S"],
@@ -130,17 +135,20 @@ export const programGroupRequirementSchema: z.ZodType<
     description: "A group requirement; a requirement to fulfill some number of sub-requirements.",
     example: {
       label: "Select I&CSCI 31-32-33 or I&CSCI H32-33",
+      requirementId: "kP3uGZ1s0_",
       requirementType: "Group",
       requirementCount: 1,
       requirements: [
         {
           label: "I&CSCI 31, 32, 33",
+          requirementId: "xA9mVt4Dce",
           requirementType: "Course",
           courseCount: 3,
           courses: ["I&CSCI31", "I&CSCI32", "I&CSCI33"],
         },
         {
           label: "I&CSCI H32, 33",
+          requirementId: "b2R_M7pQwL",
           requirementType: "Course",
           courseCount: 2,
           courses: ["I&CSCIH32", "I&CSCI33"],
@@ -158,6 +166,7 @@ export const programMarkerRequirementSchema = programRequirementBaseSchema
       "A rule which must be marked as complete, e.g the fulfillment of GE VIII (foreign language) via high school credit",
     example: {
       label: "Entry Level Writing",
+      requirementId: "hX7q9N3b_s",
       requirementType: "Marker",
     },
   });

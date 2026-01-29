@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Block, Rule } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
@@ -13,6 +14,7 @@ export class AuditParser {
   private static readonly electiveMatcher = /ELECTIVE @+/;
   private static readonly wildcardMatcher = /\w@/;
   private static readonly rangeMatcher = /-\w+/;
+  private requirementIdMap = new Map<string, string>();
 
   constructor(private readonly db: ReturnType<typeof database>) {
     console.log("[AuditParser.new] AuditParser initialized");
@@ -99,6 +101,28 @@ export class AuditParser {
       .limit(1);
   }
 
+  generateRequirementId(requirementType: string, contentsSalt: string): string {
+    const requirementObjectStr = JSON.stringify({
+      requirementType,
+      contentsSalt,
+    });
+
+    const requirementId = createHash("md5")
+      .update(requirementObjectStr)
+      .digest("base64url")
+      .slice(0, 10);
+
+    const existingRequirementObjectStr = this.requirementIdMap.has(requirementId)
+      ? this.requirementIdMap.get(requirementId)
+      : null;
+    if (existingRequirementObjectStr && existingRequirementObjectStr !== requirementObjectStr) {
+      console.error("Collision detected between two requirementIds");
+    }
+    this.requirementIdMap.set(requirementId, requirementObjectStr);
+
+    return requirementId;
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -143,16 +167,26 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Course";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Course",
+              label,
+              requirementId,
+              requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
           } else if (rule.requirement.creditsBegin) {
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Unit";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Unit",
+              label,
+              requirementId,
+              requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
             });
@@ -160,11 +194,17 @@ export class AuditParser {
           break;
         }
         case "Group": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
+            label,
+            requirementId,
+            requirementType,
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements: await this.ruleArrayToRequirements(rule.ruleArray),
+            requirements,
           });
           break;
         }
@@ -172,11 +212,17 @@ export class AuditParser {
           const rules = this.flattenIfStmt([rule]);
           if (!rules.some((x) => x.ruleType === "Block")) {
             if (rules.length > 1) {
+              const label = "Select 1 of the following";
+              const requirementType = "Group";
+              const requirements = await this.ruleArrayToRequirements(rules);
+              const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+              const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
-                label: "Select 1 of the following",
-                requirementType: "Group",
+                label,
+                requirementId,
+                requirementType,
                 requirementCount: 1,
-                requirements: await this.ruleArrayToRequirements(rules),
+                requirements,
               });
             } else if (rules.length === 1) {
               ret.push(...(await this.ruleArrayToRequirements(rules)));
@@ -185,17 +231,28 @@ export class AuditParser {
           break;
         }
         case "Complete":
-        case "Incomplete":
+        case "Incomplete": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Marker";
+          const contentsSalt = label;
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Marker",
+            label,
+            requirementId,
+            requirementType,
           });
           break;
+        }
         case "Subset": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
+            label,
+            requirementId,
+            requirementType,
             requirementCount: Object.keys(requirements).length,
             requirements,
           });
