@@ -48,6 +48,7 @@ const staffAvailabilityResponseSchema = z.object({
 type BookingsService = z.infer<typeof bookingsServiceSchema>;
 type AvailabilityItem = z.infer<typeof availabilityItemSchema>;
 type StaffAvailability = z.infer<typeof staffAvailabilitySchema>;
+type BookingsDateTime = z.infer<typeof bookingsDateTimeSchema>;
 
 type Slot = {
   studyRoomId: string;
@@ -170,7 +171,7 @@ async function fetchServices(): Promise<BookingsService[]> {
  * Uses Date.UTC as a naive date container for calendar math,
  * then formats back with timeZone: 'UTC' to avoid timezone conversion.
  */
-function addDaysToDatePST(intlDateString: string, daysToAdd: number): string {
+function addDaysToIntlDate(intlDateString: string, daysToAdd: number): string {
   const [month, day, year] = intlDateString.split("/").map(Number);
 
   const newDate = new Date(Date.UTC(year, month - 1, day + daysToAdd));
@@ -192,13 +193,12 @@ function formatDateForAPI(intlDateString: string, boundary: "start" | "end") {
   const dd = String(day).padStart(2, "0");
 
   return {
-    // note: the start time is 00:00 because of a bug where if you start in the
-    // middle of some BUSY interval, the API incorrectly assumes it's AVAILABLE.
-    // The filtering of past study room slots is handled in scrapePlazaVerde()
+    // note: start time is always 00:00 to work around an API bug. Currently, the API response
+    // always starts with an AVAILABLE interval. If the query starts during an ongoing BUSY interval,
+    // the response ignores it and creates a new AVAILABLE interval from start time until the next existing interval.
+    // Past slots are filtered out in scrapePlazaVerde().
     dateTime: boundary === "end" ? `${year}-${mm}-${dd}T23:59:00` : `${year}-${mm}-${dd}T00:00:00`,
-    // note: it looks microsoft timezone automatically switches between PST and PDT.
-    // there is not a separate PDT timezone (and the API will not accept it)
-    // if this ends up not being true, we can fix it
+    // note: "Pacific Standard Time" handles both PST/PDT automatically; there is no separate PDT timezone in this API.
     timeZone: "Pacific Standard Time",
   };
 }
@@ -220,8 +220,8 @@ function parseISO8601Duration(duration: string): number {
 // given an array of staffIds, fetch the schedule within the given date
 async function fetchStaffAvailability(
   staffIds: string[],
-  startDateTime: { dateTime: string; timeZone: string },
-  endDateTime: { dateTime: string; timeZone: string },
+  startDateTime: BookingsDateTime,
+  endDateTime: BookingsDateTime,
 ): Promise<StaffAvailability[]> {
   const payload = {
     staffIds,
@@ -229,18 +229,18 @@ async function fetchStaffAvailability(
     endDateTime,
   };
 
-  const data = await fetch(AVAILABILITY_URL, {
+  const res = await fetch(AVAILABILITY_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify(payload),
-  }).then((res) => res.json());
+  });
 
-  const response = staffAvailabilityResponseSchema.parse(data);
+  const data = staffAvailabilityResponseSchema.parse(await res.json());
 
-  return response.staffAvailabilityResponse;
+  return data.staffAvailabilityResponse;
 }
 
 // bulk of the processing logic
@@ -255,15 +255,17 @@ async function scrapePlazaVerde(): Promise<{
   // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
+  const now = new Date();
+
   // Get today's date formatted in LA timezone as a string (M/D/YYYY)
   const dateInLA = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Los_Angeles",
     year: "numeric",
     month: "numeric",
     day: "numeric",
-  }).format(new Date());
+  }).format(now);
 
-  const endDateInLA = addDaysToDatePST(dateInLA, DAYS_TO_FETCH);
+  const endDateInLA = addDaysToIntlDate(dateInLA, DAYS_TO_FETCH);
 
   const startDateTime = formatDateForAPI(dateInLA, "start");
   const endDateTime = formatDateForAPI(endDateInLA, "end");
@@ -311,7 +313,7 @@ async function scrapePlazaVerde(): Promise<{
   }
 
   // filter slots so that we only return those that are yet to start
-  const filteredSlots = slots.filter((s) => s.start >= new Date());
+  const filteredSlots = slots.filter((s) => s.start >= now);
 
   // create location record
   const location = {
