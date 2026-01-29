@@ -128,6 +128,10 @@ export type DegreeWorksMarkerRequirement = {
   requirementType: "Marker";
 };
 
+export type DegreeWorksSpecRequirement = {
+  requirementType: "Spec";
+};
+
 export type DegreeWorksRequirementBase = { label: string };
 
 export type DegreeWorksRequirement = DegreeWorksRequirementBase &
@@ -136,6 +140,7 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksUnitRequirement
     | DegreeWorksGroupRequirement
     | DegreeWorksMarkerRequirement
+    | DegreeWorksSpecRequirement
   );
 
 export type APCoursesGrantedTree =
@@ -671,6 +676,7 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
+    requireSpec: boolean("require_spec").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
