@@ -12,7 +12,7 @@ function parseEventDate(dateStr: string | null, time: string | null): Date | nul
   return new Date(`${dateStr}T${time}`);
 }
 
-export const getAEMEventsQuery = `
+const getAEMEventsQuery = `
 query AEM_eventList($filter: AEM_EventModelFilter) {
   AEM_eventList(filter: $filter) {
     items {
@@ -31,7 +31,7 @@ query AEM_eventList($filter: AEM_EventModelFilter) {
 `;
 
 /* Represents the schema of the return data from GraphQL resource AEM_eventList */
-const AEMEventListSchema = z.object({
+const aemEventListSchema = z.object({
   data: z.object({
     AEM_eventList: z.object({
       items: z.array(
@@ -80,7 +80,7 @@ async function getAEMEvents(
   };
 
   const updatedAt = new Date();
-  const response = await queryAdobeECommerce(getAEMEventsQuery, queryFilter, AEMEventListSchema);
+  const response = await queryAdobeECommerce(getAEMEventsQuery, queryFilter, aemEventListSchema);
   if (!response) {
     throw new Error(`Can't getAEMEvents for location ${location}`);
   }
@@ -118,10 +118,10 @@ async function getAEMEvents(
  */
 export async function updateEvents(db: ReturnType<typeof database>): Promise<void> {
   try {
-    const [brandywineEvents, anteateryEvents] = await Promise.all([
-      getAEMEvents("Brandywine"),
-      getAEMEvents("The Anteatery"),
-    ]);
+    const [brandywineEvents, anteateryEvents] = [
+      await getAEMEvents("Brandywine"),
+      await getAEMEvents("The Anteatery"),
+    ];
 
     const allEvents = [...brandywineEvents, ...anteateryEvents];
     const eventImages = await fetchEventImages();
