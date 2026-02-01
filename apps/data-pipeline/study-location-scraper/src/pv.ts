@@ -193,10 +193,10 @@ function formatDateForAPI(intlDateString: string, boundary: "start" | "end") {
   const dd = String(day).padStart(2, "0");
 
   return {
-    // note: start time is always 00:00 to work around an API bug. Currently, the API response
-    // always starts with an AVAILABLE interval. If the query starts during an ongoing BUSY interval,
-    // the response ignores it and creates a new AVAILABLE interval from start time until the next existing interval.
-    // Past slots are filtered out in scrapePlazaVerde().
+    // note: start time is always 00:00 to work around an API bug. Currently, the API response always
+    // starts with an AVAILABLE interval. If the query starts during an ongoing BUSY interval, the response
+    // still treats the interval as AVAILABLE and creates a new AVAILABLE interval from start time until the
+    // next existing interval. Slots starting before the current time are filtered out in scrapePlazaVerde().
     dateTime: boundary === "end" ? `${year}-${mm}-${dd}T23:59:00` : `${year}-${mm}-${dd}T00:00:00`,
     // note: "Pacific Standard Time" handles both PST/PDT automatically; there is no separate PDT timezone in this API.
     timeZone: "Pacific Standard Time",
