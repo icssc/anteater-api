@@ -16,7 +16,7 @@ export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getUpcomingEvents(input: DiningEventQuery) {
-    // only get events ending after the current time
+    // only get events ending at or after the current time
     const conds = [gte(diningEvent.end, new Date())];
 
     if (input.restaurantId) {
@@ -32,7 +32,7 @@ export class DiningService {
         longDescription: diningEvent.longDescription,
         start: diningEvent.start,
         end: diningEvent.end,
-        // don't return updatedAt field?
+        updatedAt: diningEvent.updatedAt,
       })
       .from(diningEvent)
       .where(and(...conds));

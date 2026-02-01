@@ -19,7 +19,7 @@ export const eventSchema = z.object({
   image: z.string().nullable().openapi({ description: "URL to event promotional image" }),
   restaurantId: z.string().openapi({
     example: "3056",
-    description: "Optional unique identifier for desired restaurant",
+    description: "Unique identifier for the restaurant hosting this event",
   }),
   longDescription: z.string().nullable(),
   // transforms Date objects in db to ISO 8601 strings (I hope)
@@ -28,6 +28,7 @@ export const eventSchema = z.object({
     .date()
     .nullable()
     .transform((d) => d?.toISOString() ?? null),
+  updatedAt: z.coerce.date().transform((d) => d.toISOString()),
 });
 
 export const dietRestrictionSchema = z.object({
