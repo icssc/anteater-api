@@ -108,11 +108,9 @@ function processAvailabilityItems(
   const slots: Slot[] = [];
 
   for (const item of availabilityItems) {
-    // Parse the UTC offset from the API response timezone
-    const startOffset = item.startDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1];
-    const endOffset = item.endDateTime.timeZone.match(/UTC([+-]\d{2}:\d{2})/)?.[1];
-    const start = new Date(`${item.startDateTime.dateTime}${startOffset}`);
-    const end = new Date(`${item.endDateTime.dateTime}${endOffset}`);
+    // Treat the returned wall-clock time as UTC to avoid timezone shifting on storage.
+    const start = new Date(`${item.startDateTime.dateTime}Z`);
+    const end = new Date(`${item.endDateTime.dateTime}Z`);
 
     if (item.status === "BOOKINGSAVAILABILITYSTATUS_AVAILABLE") {
       const availableSlots = generateSlotsFromAvailableWindow(
