@@ -1,5 +1,5 @@
 {
-  "id": "107b8176-4361-4a6b-a332-de738cdb43af",
+  "id": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "prevId": "169622b6-bb25-46af-9384-cb3825533964",
   "version": "7",
   "dialect": "postgresql",
@@ -1536,6 +1536,12 @@
         "tech_enhanced": {
           "name": "tech_enhanced",
           "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },

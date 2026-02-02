@@ -25,7 +25,9 @@ export const slotSchema = z.object({
 
 export const studyRoomSchema = z.object({
   id: z.string().openapi({
-    description: "The ID of this study room, internal to the UCI Libraries system",
+    description:
+      "The ID of this study room taken from the external booking system. " +
+      "UCI Libraries IDs are numeric (e.g., 44670), while PV IDs are UUIDs (e.g., fa1db88e-1cf9-4441-8e2f-0ae693add526).",
     example: "44670",
   }),
   name: z.string().openapi({

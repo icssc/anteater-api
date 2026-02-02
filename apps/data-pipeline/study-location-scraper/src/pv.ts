@@ -271,7 +271,7 @@ async function scrapePlazaVerde(): Promise<{
   const endDateTime = formatDateForAPI(endDateInLA, "end");
 
   console.log(
-    `We are searching from ${startDateTime.dateTime} to ${endDateTime.dateTime} Pacific Standard Time`,
+    `PV study rooms scraped from ${startDateTime.dateTime} to ${endDateTime.dateTime} Pacific Standard Time`,
   );
   const availabilities = await fetchStaffAvailability(allStaffIds, startDateTime, endDateTime);
 
