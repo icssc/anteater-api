@@ -12,6 +12,7 @@ const bookingsServiceSchema = z.object({
   description: z.string(),
   defaultDuration: z.string(),
   staffMemberIds: z.string().array(),
+  webUrl: z.string(),
 });
 
 const availabilityStatusSchema = z.enum([
@@ -291,9 +292,12 @@ async function scrapePlazaVerde(): Promise<{
       name: service.title,
       capacity: null,
       location: STUDY_LOCATION_NAME,
-      description: service.description ?? "",
+      description: service.description,
       directions: "",
       techEnhanced: null,
+      // pv does not support deep linking to specific time slots.
+      // all slots will link to the booking page for its respective pv room.
+      url: service.webUrl,
       studyLocationId: STUDY_LOCATION_ID,
     });
 

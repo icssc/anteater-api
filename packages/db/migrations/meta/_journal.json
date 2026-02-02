@@ -169,6 +169,13 @@
       "when": 1769308686134,
       "tag": "0023_pv_nullable_capacity_tech_enhanced",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1769996514518,
+      "tag": "0024_add_study_room_url",
+      "breakpoints": true
     }
   ]
 }

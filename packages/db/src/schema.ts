@@ -729,6 +729,7 @@ export const studyRoom = pgTable(
     description: varchar("description").notNull(),
     directions: varchar("directions").notNull(),
     techEnhanced: boolean("tech_enhanced"),
+    url: varchar("url"),
     studyLocationId: varchar("study_location_id")
       .references(() => studyLocation.id)
       .notNull(),
