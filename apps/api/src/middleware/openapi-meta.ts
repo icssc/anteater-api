@@ -6,7 +6,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     version: "2.0.0",
     title: "Anteater API",
     description:
-      "The unified API for UCI related data. View documentation at https://docs.icssc.club/docs/developer/anteaterapi and API reference at https://anteaterapi.com/reference.\n\nWhile all data from this API is derived from official UCI sources, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepencies at https://github.com/icssc/anteater-api/issues.",
+      "The unified API for UCI related data. View documentation at https://docs.icssc.club/docs/developer/anteaterapi and API reference at https://anteaterapi.com/reference.\n\nWhile all data from this API is derived from official UCI sources, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepancies at https://github.com/icssc/anteater-api/issues.",
     contact: { email: "icssc@uci.edu" },
   },
   externalDocs: {
@@ -59,7 +59,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Study Rooms",
       description:
-        "Data sourced from the UCI Libraries reservation site (https://spaces.lib.uci.edu/).",
+        "Data sourced from the UCI Libraries reservation site (https://spaces.lib.uci.edu/) and Plaza Verde amenity reservations site (https://outlook.office365.com/book/PlazaVerde3@americancampus.onmicrosoft.com/)",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     {
