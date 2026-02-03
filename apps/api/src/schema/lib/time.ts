@@ -64,7 +64,7 @@ export const timeRangeSchema = z
   .transform((s) => s.split("-"))
   .pipe(timeSchema.array().length(2))
   .refine(([start, end]) => start <= end, {
-    message: "Start time must be before or equal to end time",
+    message: "Start time must not be after end time",
   })
   .openapi({
     description: "Time range; endpoints may be in 12 or 24 hour format",
