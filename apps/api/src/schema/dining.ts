@@ -1,5 +1,14 @@
 import { z } from "@hono/zod-openapi";
-
+import type {
+  diningDietRestriction,
+  diningDish,
+  diningEvent,
+  diningMenu,
+  diningNutritionInfo,
+  diningPeriod,
+  diningRestaurant,
+  diningStation,
+} from "@packages/db/schema";
 export const diningEventQuerySchema = z.object({
   restaurantId: z.string().optional().openapi({
     example: "3056",
@@ -12,6 +21,10 @@ export const diningDishQuerySchema = z.object({
     example: "1923_101628_M35424_1_13208",
     description: "Unique dish identifier from dining system",
   }),
+});
+
+export const diningZotmealQuerySchema = z.object({
+  date: z.coerce.date(),
 });
 
 export const eventSchema = z.object({
@@ -100,6 +113,7 @@ export const dishSchema = z.object({
 });
 
 export const diningEventsResponseSchema = z.array(eventSchema);
+
 export const diningDatesResponseSchema = z.object({
   // earliest and latest are nullable since the diningMenu table will be empty for non-available dates
   earliest: z.string().nullable().openapi({
@@ -111,3 +125,36 @@ export const diningDatesResponseSchema = z.object({
     example: "2026-01-31",
   }),
 });
+
+type SelectDish = typeof diningDish.$inferSelect;
+type SelectStation = typeof diningStation.$inferSelect;
+type SelectMenu = typeof diningMenu.$inferSelect;
+type SelectPeriod = typeof diningPeriod.$inferSelect;
+type SelectEvent = typeof diningEvent.$inferSelect;
+type SelectDietRestriction = typeof diningDietRestriction.$inferSelect;
+type SelectNutritionInfo = typeof diningNutritionInfo.$inferSelect;
+type SelectRestaurant = typeof diningRestaurant.$inferSelect;
+interface RestaurantInfo extends SelectRestaurant {
+  events: SelectEvent[];
+  menus: (SelectMenu & {
+    period: SelectPeriod;
+    stations: (SelectStation & {
+      dishes: (SelectDish & {
+        menuId: SelectMenu["id"];
+        restaurant: SelectRestaurant["name"];
+        dietRestriction: SelectDietRestriction;
+        nutritionInfo: SelectNutritionInfo;
+      })[];
+    })[];
+  })[];
+}
+
+type ZotmealData = {
+  anteatery: RestaurantInfo;
+  brandywine: RestaurantInfo;
+};
+
+export const zotmealSchema = z.object({
+  anteatery: z.any(),
+  brandywine: z.any(),
+}) as unknown as z.ZodType<ZotmealData>;

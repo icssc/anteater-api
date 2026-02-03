@@ -4,9 +4,11 @@ import {
   diningDishQuerySchema,
   diningEventQuerySchema,
   diningEventsResponseSchema,
+  diningZotmealQuerySchema,
   dishSchema,
   errorSchema,
   responseSchema,
+  zotmealSchema,
 } from "$schema";
 import { DiningService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -104,6 +106,27 @@ const datesRoute = createRoute({
       },
       description: "Successful operation",
     },
+  },
+});
+const zotmealRoute = createRoute({
+  summary: "Get all information about restaurants by given date",
+  operationId: "zotmeal",
+  tag: ["Dining"],
+  method: "get",
+  path: "/zotmeal/{date}",
+  request: { params: diningZotmealQuerySchema },
+  description: "Get all information about restaurants by given date",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(zotmealSchema) },
+      },
+      description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Server error occurred",
@@ -116,6 +139,12 @@ diningRouter.openapi(datesRoute, async (c) => {
   const dates = await service.getPickableDates();
 
   return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
+});
+
+diningRouter.openapi(zotmealRoute, async (c) => {
+  const { date } = c.req.valid("param");
+  const service = new DiningService(database(c.env.DB.connectionString));
+  const dish = await service.getRestaurantsByDate({ date });
 });
 
 export { diningRouter };
