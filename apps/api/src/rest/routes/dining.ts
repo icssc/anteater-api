@@ -1,5 +1,6 @@
 import { defaultHook } from "$hooks";
 import {
+  diningDatesResponseSchema,
   diningDishQuerySchema,
   diningEventQuerySchema,
   diningEventsResponseSchema,
@@ -87,6 +88,34 @@ diningRouter.openapi(dishRoute, async (c) => {
   }
 
   return c.json({ ok: true, data: dishSchema.parse(dish) }, 200);
+});
+
+const datesRoute = createRoute({
+  summary: "Get date range for available dining data",
+  operationId: "getDiningDates",
+  tags: ["Dining"],
+  method: "get",
+  path: "/dates",
+  description: "Retrieves the earliest and latest dates that have menu information available",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(diningDatesResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+diningRouter.openapi(datesRoute, async (c) => {
+  const service = new DiningService(database(c.env.DB.connectionString));
+  const dates = await service.getPickableDates();
+
+  return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
 });
 
 export { diningRouter };

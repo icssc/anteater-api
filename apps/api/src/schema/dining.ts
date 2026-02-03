@@ -100,3 +100,14 @@ export const dishSchema = z.object({
 });
 
 export const diningEventsResponseSchema = z.array(eventSchema);
+export const diningDatesResponseSchema = z.object({
+  // earliest and latest are nullable since the diningMenu table will be empty for non-available dates
+  earliest: z.string().nullable().openapi({
+    description: "Earliest date with available menu data, or null if no such menus exist",
+    example: "2026-01-01",
+  }),
+  latest: z.string().nullable().openapi({
+    description: "Latest date with available menu data, or null if no such menus exist",
+    example: "2026-01-31",
+  }),
+});

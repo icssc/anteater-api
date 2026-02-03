@@ -1,10 +1,11 @@
 import type { diningDishQuerySchema, diningEventQuerySchema } from "$schema";
 import type { database } from "@packages/db";
-import { and, eq, gte } from "@packages/db/drizzle";
+import { and, eq, gte, max, min } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
   diningEvent,
+  diningMenu,
   diningNutritionInfo,
 } from "@packages/db/schema";
 import type { z } from "zod";
@@ -64,6 +65,20 @@ export class DiningService {
       ...dish,
       nutritionInfo: nutritionInfo ?? null,
       dietRestriction: dietRestriction ?? null,
+    };
+  }
+
+  async getPickableDates() {
+    const result = await this.db
+      .select({
+        earliest: min(diningMenu.date),
+        latest: max(diningMenu.date),
+      })
+      .from(diningMenu);
+
+    return {
+      earliest: result[0]?.earliest ?? null,
+      latest: result[0]?.latest ?? null,
     };
   }
 }
