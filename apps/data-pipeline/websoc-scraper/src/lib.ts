@@ -50,6 +50,30 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
+// Time constants (matching API's week calculation)
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+const FALL_OFFSET_MS = 4 * DAY_MS;
+
+type Period = "ADD_DROP" | "ENROLLMENT" | "REGULAR";
+
+function getWeek(currentDate: Date, instructionStart: Date, quarter: string): number {
+  const offset = quarter === "Fall" ? FALL_OFFSET_MS : 0;
+  return Math.floor((currentDate.valueOf() - (instructionStart.valueOf() + offset)) / WEEK_MS) + 1;
+}
+
+function detectPeriod(week: number): Period {
+  if (week >= 1 && week <= 2) return "ADD_DROP";
+  if (week >= 8 && week <= 10) return "ENROLLMENT";
+  return "REGULAR";
+}
+
+function isWithinSnapshotWindow(period: Period, hour: number): boolean {
+  if (period === "ENROLLMENT") return hour >= 7 && hour < 19;
+  if (period === "ADD_DROP") return true;
+  return false;
+}
+
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
@@ -503,9 +527,9 @@ const doChunkUpsert = async (
           })
           .filter(notNull),
       )
-      .onConflictDoNothing({
-        target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
-      })
+      // .onConflictDoNothing({
+      //   target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
+      // })
       .returning({ id: websocSectionEnrollment.id });
     console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
     const sectionsToInstructors = resp.schools
