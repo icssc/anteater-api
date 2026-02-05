@@ -106,7 +106,7 @@ export interface UndergraduateRequirements {
   UC: Block;
   // general education requirements
   GE: Block;
-  // requirements for the four-year campus honors collegium program
+  // requirements for the four-year campuswide honors collegium program
   CHC4: Block | undefined;
   // requirements for the two-year variant of campuswide honors collegium
   CHC2: Block | undefined;
