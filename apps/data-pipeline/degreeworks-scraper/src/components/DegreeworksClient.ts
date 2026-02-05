@@ -73,14 +73,23 @@ export class DegreeworksClient {
       return;
     }
 
-    const honorsFourRequirements = json.blockArray.find(
+    const honorsRequirements = json.blockArray.find(
       (b) => b.requirementType === "OTHER" && b.requirementValue === "CHP",
     );
+
+    const honorsFourRequirements = honorsRequirements?.ruleArray.some((r) => r?.labelTag === "FY")
+      ? honorsRequirements
+      : undefined;
+
+    const honorsTwoRequirements = honorsRequirements?.ruleArray.some((r) => r?.labelTag === "HTH")
+      ? honorsRequirements
+      : undefined;
 
     return {
       UC: ucRequirements,
       GE: geRequirements,
       CHC4: honorsFourRequirements,
+      CHC2: honorsTwoRequirements,
     };
   }
 
