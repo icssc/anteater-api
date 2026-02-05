@@ -50,7 +50,7 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
-// Time constants (matching API's week calculation)
+// Time constants
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
 const FALL_OFFSET_MS = 4 * DAY_MS;
@@ -517,21 +517,53 @@ const doChunkUpsert = async (
         (rows) =>
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
-    const enrollmentEntries = await tx
-      .insert(websocSectionEnrollment)
-      .values(
-        mappedSections
-          .map(({ sectionCode, ...rest }) => {
-            const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-            return sectionId ? { sectionId, ...rest } : undefined;
-          })
-          .filter(notNull),
+    const currentDate = new Date();
+    const [currentTerm] = await tx
+      .select({
+        instructionStart: calendarTerm.instructionStart,
+        quarter: calendarTerm.quarter,
+      })
+      .from(calendarTerm)
+      .where(
+        and(
+          lte(calendarTerm.instructionStart, currentDate),
+          gte(calendarTerm.instructionEnd, currentDate),
+        ),
       )
-      // .onConflictDoNothing({
-      //   target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
-      // })
-      .returning({ id: websocSectionEnrollment.id });
-    console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+      .limit(1);
+
+    let shouldSnapshot = true;
+
+    if (currentTerm) {
+      const week = getWeek(currentDate, currentTerm.instructionStart, currentTerm.quarter);
+      const period = detectPeriod(week);
+      const hour = currentDate.getHours();
+
+      if (period === "ENROLLMENT") {
+        shouldSnapshot = hour >= 7 && hour < 19;
+      } else if (period === "REGULAR") {
+        shouldSnapshot = false;
+      }
+
+      console.log(`Period: ${period}, Week: ${week}, Should snapshot: ${shouldSnapshot}`);
+    }
+
+    if (!shouldSnapshot) {
+      console.log("Skipped enrollment snapshot");
+    } else {
+      const enrollmentEntries = await tx
+        .insert(websocSectionEnrollment)
+        .values(
+          mappedSections
+            .map(({ sectionCode, ...rest }) => {
+              const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+              return sectionId ? { sectionId, ...rest } : undefined;
+            })
+            .filter(notNull),
+        )
+        .returning({ id: websocSectionEnrollment.id });
+      console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+    }
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
