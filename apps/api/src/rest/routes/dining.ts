@@ -144,9 +144,9 @@ diningRouter.openapi(datesRoute, async (c) => {
 diningRouter.openapi(zotmealRoute, async (c) => {
   const { date } = c.req.valid("param");
   const service = new DiningService(database(c.env.DB.connectionString));
-  const dish = await service.getRestaurantsByDate({ date });
+  const data = await service.getRestaurantsByDate({ date });
 
-  return c.json({ ok: true, data: zotmealSchema.parse(dish) }, 200);
+  return c.json({ ok: true, data: zotmealSchema.parse(data) }, 200);
 });
 
 export { diningRouter };
