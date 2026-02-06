@@ -6,7 +6,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     version: "2.0.0",
     title: "Anteater API",
     description:
-      "The unified API for UCI related data. View documentation at https://docs.icssc.club/docs/developer/anteaterapi and API reference at https://anteaterapi.com/reference.\n\nWhile all data from this API is derived from official UCI sources where applicable, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepencies at https://github.com/icssc/anteater-api/issues.",
+      "The unified API for UCI related data. View documentation at https://docs.icssc.club/docs/developer/anteaterapi and API reference at https://anteaterapi.com/reference.\n\nWhile all data from this API is derived from official UCI sources where applicable, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepancies at https://github.com/icssc/anteater-api/issues.",
     contact: { email: "icssc@uci.edu" },
   },
   externalDocs: {
