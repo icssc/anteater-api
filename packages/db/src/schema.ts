@@ -4,6 +4,7 @@ import {
   boolean,
   date,
   decimal,
+  foreignKey,
   index,
   integer,
   json,
@@ -11,8 +12,10 @@ import {
   pgEnum,
   pgMaterializedView,
   pgTable,
+  primaryKey,
   real,
   text,
+  time,
   timestamp,
   uniqueIndex,
   uuid,
@@ -815,6 +818,191 @@ export const libraryTrafficHistory = pgTable(
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
+
+// dining stuff
+export const diningRestaurant = pgTable("dining_restaurant", {
+  id: varchar("id").primaryKey(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  name: varchar("name").notNull(),
+});
+
+export const diningPeriod = pgTable(
+  "dining_period",
+  {
+    // id: uuid("id"),
+    // .primaryKey()
+    // adobeId: varchar("adobe_id").notNull(),
+    id: varchar("id").notNull(),
+    date: date("date").notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    startTime: time("start").notNull(),
+    endTime: time("end").notNull(),
+    name: varchar("name").notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [uniqueIndex().on(table.id, table.date, table.restaurantId)],
+  // (table) => [{ pk: primaryKey({ columns: [table.id, table.date, table.restaurantId] }) }],
+);
+
+export const diningMenu = pgTable(
+  "dining_menu",
+  {
+    id: varchar("id").primaryKey(),
+    // periodId: uuid("period_id")
+    //   .notNull()
+    //   .references(() => diningPeriod.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    periodId: varchar("period_id").notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    {
+      periodFk: foreignKey({
+        columns: [table.periodId, table.date, table.restaurantId],
+        foreignColumns: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
+      })
+        .onDelete("cascade")
+        .onUpdate("cascade"),
+    },
+  ],
+);
+
+export const diningStation = pgTable("dining_station", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  restaurantId: varchar("restaurant_id")
+    .notNull()
+    .references(() => diningRestaurant.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDish = pgTable("dining_dish", {
+  id: varchar("id").primaryKey(),
+  stationId: varchar("station_id")
+    .notNull()
+    .references(() => diningStation.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  name: varchar("name").notNull(),
+  description: varchar("description").notNull(),
+  ingredients: varchar("ingredients"),
+  category: varchar("category").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningNutritionInfo = pgTable("dining_nutrition_info", {
+  dishId: varchar("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  servingSize: varchar("serving_size"),
+  servingUnit: varchar("serving_unit"),
+  calories: varchar("calories"),
+  totalFatG: varchar("total_fat_g"),
+  transFatG: varchar("trans_fat_g"),
+  saturatedFatG: varchar("saturated_fat_g"),
+  cholesterolMg: varchar("cholesterol_mg"),
+  sodiumMg: varchar("sodium_mg"),
+  totalCarbsG: varchar("total_carbs_g"),
+  dietaryFiberG: varchar("dietary_fiber_g"),
+  sugarsG: varchar("sugars_g"),
+  proteinG: varchar("protein_g"),
+  calciumMg: varchar("calcium"),
+  ironMg: varchar("iron"),
+  vitaminAIU: varchar("vitamin_a"),
+  vitaminCIU: varchar("vitamin_c"),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDietRestriction = pgTable("dining_diet_restriction", {
+  dishId: varchar("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  containsEggs: boolean("contains_eggs"),
+  containsFish: boolean("contains_fish"),
+  containsMilk: boolean("contains_milk"),
+  containsPeanuts: boolean("contains_peanuts"),
+  containsSesame: boolean("contains_sesame"),
+  containsShellfish: boolean("contains_shellfish"),
+  containsSoy: boolean("contains_soy"),
+  containsTreeNuts: boolean("contains_tree_nuts"),
+  containsWheat: boolean("contains_wheat"),
+  isGlutenFree: boolean("is_gluten_free"),
+  isHalal: boolean("is_halal"),
+  isKosher: boolean("is_kosher"),
+  isLocallyGrown: boolean("is_locally_grown"),
+  isOrganic: boolean("is_organic"),
+  isVegan: boolean("is_vegan"),
+  isVegetarian: boolean("is_vegetarian"),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDishToMenu = pgTable(
+  "dining_dish_to_menu",
+  {
+    menuId: varchar("menu_id")
+      .notNull()
+      .references(() => diningMenu.id),
+    dishId: varchar("dish_id")
+      .notNull()
+      .references(() => diningDish.id),
+  },
+  (table) => [
+    {
+      pk: primaryKey({
+        name: "dining_dish_to_menu_pk",
+        columns: [table.menuId, table.dishId],
+      }),
+    },
+  ],
+);
+
+export const diningEvent = pgTable(
+  "dining_event",
+  {
+    title: varchar("title").notNull(),
+    image: varchar("image"),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    shortDescription: varchar("short_description"),
+    longDescription: varchar("long_description"),
+    start: timestamp("start"),
+    end: timestamp("end"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({
+        name: "dining_event_pk",
+        columns: [table.title, table.restaurantId, table.start],
+      }),
+    };
+  },
 );
 
 // Materialized views

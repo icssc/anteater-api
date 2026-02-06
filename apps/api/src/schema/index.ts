@@ -3,6 +3,7 @@ export * from "./base";
 export * from "./calendar";
 export * from "./catalogue";
 export * from "./courses";
+export * from "./dining";
 export * from "./enrollment-history";
 export * from "./grades";
 export * from "./instructors";
