@@ -5,15 +5,22 @@ import { doPVScrape } from "./pv";
 export default {
   async scheduled(_, env) {
     const db = database(env.DB.connectionString);
-    const results = await Promise.allSettled([doLibraryScrape(db), doPVScrape(db)]);
-    const names = ["Library", "PV"];
-    results.forEach((r, i) => {
-      if (r.status === "rejected") {
-        console.error(`${names[i]} scrape failed:`, r.reason);
-      }
-    });
+    let libraryError: unknown = null;
+    let pvError: unknown = null;
+    try {
+      await doLibraryScrape(db);
+    } catch (err) {
+      libraryError = err;
+      console.error("Libraries scrape failed:", err);
+    }
+    try {
+      await doPVScrape(db);
+    } catch (err) {
+      pvError = err;
+      console.error("PV scrape failed:", err);
+    }
     await db.$client.end();
-    if (results.some((r) => r.status === "rejected")) {
+    if (libraryError || pvError) {
       throw new Error("One or more scrapes failed");
     }
   },
