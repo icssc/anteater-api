@@ -7,14 +7,23 @@ async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
-  const results = await Promise.allSettled([doLibraryScrape(db), doPVScrape(db)]);
-  const names = ["Library", "PV"];
-  results.forEach((r, i) => {
-    if (r.status === "rejected") {
-      console.error(`${names[i]} scrape failed:`, r.reason);
-    }
-  });
-  exit(results.some((r) => r.status === "rejected") ? 1 : 0);
+  let libraryError: unknown = null;
+  let pvError: unknown = null;
+  // Here we run both UCI Libraries and Plaza Verde scrapers, using separate await
+  // statements so we can trace errors while ensuring both scrapes are performed.
+  try {
+    await doLibraryScrape(db);
+  } catch (err) {
+    libraryError = err;
+    console.error("Libraries scrape failed:", err);
+  }
+  try {
+    await doPVScrape(db);
+  } catch (err) {
+    pvError = err;
+    console.error("PV scrape failed:", err);
+  }
+  exit(libraryError || pvError ? 1 : 0);
 }
 
 main().then();
