@@ -50,6 +50,27 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
+/**
+ * Time constants for week and period calculations.
+ * Used to determine snapshot frequency based on academic calendar.
+ */
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+const FALL_OFFSET_MS = 4 * DAY_MS;
+
+type Period = "ADD_DROP" | "ENROLLMENT" | "REGULAR";
+
+function getWeek(currentDate: Date, instructionStart: Date, quarter: string): number {
+  const offset = quarter === "Fall" ? FALL_OFFSET_MS : 0;
+  return Math.floor((currentDate.valueOf() - (instructionStart.valueOf() + offset)) / WEEK_MS) + 1;
+}
+
+function detectPeriod(week: number): Period {
+  if (week >= 1 && week <= 2) return "ADD_DROP";
+  if (week >= 8 && week <= 10) return "ENROLLMENT";
+  return "REGULAR";
+}
+
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
@@ -493,21 +514,83 @@ const doChunkUpsert = async (
         (rows) =>
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
-    const enrollmentEntries = await tx
-      .insert(websocSectionEnrollment)
-      .values(
-        mappedSections
-          .map(({ sectionCode, ...rest }) => {
-            const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-            return sectionId ? { sectionId, ...rest } : undefined;
-          })
-          .filter(notNull),
-      )
-      .onConflictDoNothing({
-        target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
+    // Dynamic enrollment snapshot frequency based on academic period
+    const currentDate = new Date();
+    const [currentTerm] = await tx
+      .select({
+        instructionStart: calendarTerm.instructionStart,
+        quarter: calendarTerm.quarter,
       })
-      .returning({ id: websocSectionEnrollment.id });
-    console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+      .from(calendarTerm)
+      .where(
+        and(
+          lte(calendarTerm.instructionStart, currentDate),
+          gte(calendarTerm.instructionEnd, currentDate),
+        ),
+      )
+      .limit(1);
+    let shouldSnapshot = false;
+    // Get last snapshot timestamp (used by all periods)
+    const [lastSnapshot] = await tx
+      .select({ createdAt: websocSectionEnrollment.createdAt })
+      .from(websocSectionEnrollment)
+      .orderBy(sql`${websocSectionEnrollment.createdAt} DESC`)
+      .limit(1);
+
+    // Calculate hours elapsed since last snapshot (Uses Infinity when no prior snapshots exist to guarantee first insertion)
+    const hoursSinceLastSnapshot = lastSnapshot
+      ? (currentDate.getTime() - lastSnapshot.createdAt.getTime()) / (1000 * 60 * 60)
+      : Number.POSITIVE_INFINITY;
+    if (currentTerm) {
+      const week = getWeek(currentDate, currentTerm.instructionStart, currentTerm.quarter);
+      const period = detectPeriod(week);
+      const hour = currentDate.getHours();
+
+      if (period === "ENROLLMENT") {
+        const inTimeWindow = hour >= 7 && hour < 19;
+        shouldSnapshot = inTimeWindow && hoursSinceLastSnapshot >= 3;
+      } else if (period === "ADD_DROP") {
+        const currentDayOfWeek = currentDate.getDay();
+
+        if (week === 2 && currentDayOfWeek === 5 && hour >= 12 && hour <= 17) {
+          shouldSnapshot = hoursSinceLastSnapshot >= 1;
+        } else {
+          shouldSnapshot = hoursSinceLastSnapshot >= 6;
+        }
+      } else if (period === "REGULAR") {
+        shouldSnapshot = hoursSinceLastSnapshot >= 168;
+      }
+
+      // Calculate add/drop day for logging
+      const addDropDay =
+        Math.floor((currentDate.getTime() - currentTerm.instructionStart.getTime()) / DAY_MS) + 1;
+
+      console.log(
+        `Period: ${period}, Week: ${week}, Day: ${period === "ADD_DROP" ? addDropDay : "N/A"}, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshot}`,
+      );
+    } else {
+      // Between quarters: weekly snapshots
+      shouldSnapshot = hoursSinceLastSnapshot >= 168;
+      console.log(
+        `Between quarters, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshot}`,
+      );
+    }
+    if (!shouldSnapshot) {
+      console.log("Skipped enrollment snapshot");
+    } else {
+      const enrollmentEntries = await tx
+        .insert(websocSectionEnrollment)
+        .values(
+          mappedSections
+            .map(({ sectionCode, ...rest }) => {
+              const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
+              return sectionId ? { sectionId, ...rest } : undefined;
+            })
+            .filter(notNull),
+        )
+        .returning({ id: websocSectionEnrollment.id });
+      console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
+    }
     const sectionsToInstructors = resp.schools
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
