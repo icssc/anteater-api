@@ -108,6 +108,14 @@ const datesRoute = createRoute({
     },
   },
 });
+
+diningRouter.openapi(datesRoute, async (c) => {
+  const service = new DiningService(database(c.env.DB.connectionString));
+  const dates = await service.getPickableDates();
+
+  return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
+});
+
 const zotmealRoute = createRoute({
   summary: "Get all information about restaurants by given date",
   operationId: "zotmeal",
@@ -132,13 +140,6 @@ const zotmealRoute = createRoute({
       description: "Server error occurred",
     },
   },
-});
-
-diningRouter.openapi(datesRoute, async (c) => {
-  const service = new DiningService(database(c.env.DB.connectionString));
-  const dates = await service.getPickableDates();
-
-  return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
 });
 
 diningRouter.openapi(zotmealRoute, async (c) => {
