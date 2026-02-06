@@ -189,6 +189,18 @@ importers:
         specifier: 0.24.0
         version: 0.24.0
 
+  apps/data-pipeline/instructor-association-resolver:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../../../packages/stdlib
+      winston:
+        specifier: 3.15.0
+        version: 3.15.0
+
   apps/data-pipeline/instructor-scraper:
     dependencies:
       '@packages/db':

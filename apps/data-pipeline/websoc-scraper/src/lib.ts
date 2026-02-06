@@ -30,7 +30,6 @@ import {
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
   baseTenIntOrNull,
-  intersectAll,
   notNull,
   parseMeetingDays,
   parseStartAndEndTimes,
@@ -51,9 +50,9 @@ const SECTIONS_PER_CHUNK = 891;
 const LAST_SECTION_CODE = "97999";
 
 /**
- * Separates faculty names and their departments during processing
+ * Separates faculty names and their school/departments during processing.
  */
-const DEPT_DELIMITER = "&|*";
+const INSTRUCTOR_DELIMETER = "&|*";
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -404,6 +403,7 @@ const doChunkUpsert = async (
       })
       .returning({ id: websocSchool.id, schoolName: websocSchool.schoolName })
       .then((rows) => new Map(rows.map((row) => [row.schoolName, row.id])));
+
     const departments = await tx
       .insert(websocDepartment)
       .values(
@@ -518,25 +518,12 @@ const doChunkUpsert = async (
         school.departments.flatMap((dept) =>
           dept.courses.flatMap((course) =>
             course.sections.flatMap((section) => {
-              return Array.from(
-                intersectAll(
-                  new Set(
-                    course.sections[0].instructors.map(
-                      (ins) => `${ins}${DEPT_DELIMITER}${dept.deptName}${DEPT_DELIMITER}`,
-                    ),
-                  ),
-                  ...course.sections
-                    .slice(1)
-                    .map(
-                      (section) =>
-                        new Set(
-                          section.instructors.map(
-                            (ins) => `${ins}${DEPT_DELIMITER}${dept.deptName}${DEPT_DELIMITER}`,
-                          ),
-                        ),
-                    ),
-                ),
-              ).map((instructor) => [section.sectionCode, instructor]);
+              return section.instructors.map((ins) => {
+                return [
+                  section.sectionCode,
+                  `${ins}${INSTRUCTOR_DELIMETER}${school.schoolName}${INSTRUCTOR_DELIMETER}${dept.deptName}`,
+                ];
+              });
             }),
           ),
         ),
@@ -549,27 +536,37 @@ const doChunkUpsert = async (
         return acc.set(sectionCode, [instructor]);
       }, new Map<string, string[]>());
 
-    // pray that two people with the same last name and first initial don't work in the same department
+    // pray that two people with the same last name and first initial don't work in the same school
     const instructorsToInsert = Array.from(new Set(sectionsToInstructors.values())).flatMap(
       (names) =>
-        names.map((name) => ({
-          identifier: name,
-          name: name.substring(0, name.indexOf(DEPT_DELIMITER)),
-          department: name.substring(
-            name.indexOf(DEPT_DELIMITER) + DEPT_DELIMITER.length,
-            name.lastIndexOf(DEPT_DELIMITER),
-          ),
-          updatedAt,
-        })),
+        names.map((name) => {
+          return {
+            identifier: name.substring(0, name.indexOf(INSTRUCTOR_DELIMETER)),
+            name: name.substring(
+              0,
+              name.lastIndexOf(INSTRUCTOR_DELIMETER) + INSTRUCTOR_DELIMETER.length,
+            ),
+            school: name.substring(
+              name.indexOf(INSTRUCTOR_DELIMETER) + INSTRUCTOR_DELIMETER.length,
+              name.lastIndexOf(INSTRUCTOR_DELIMETER),
+            ),
+            department: name.substring(name.lastIndexOf(INSTRUCTOR_DELIMETER, name.length) + 3),
+            updatedAt,
+          };
+        }),
     );
 
     if (instructorsToInsert.length) {
       await tx
         .insert(websocInstructor)
-        .values(instructorsToInsert)
+        .values(
+          instructorsToInsert.filter((w, i) => {
+            return instructorsToInsert.findIndex((ins) => ins.name === w.name) === i;
+          }),
+        )
         .onConflictDoUpdate({
-          target: [websocInstructor.identifier],
-          set: conflictUpdateSetAllCols(websocSection),
+          target: websocInstructor.name,
+          set: conflictUpdateSetAllCols(websocInstructor),
         });
     }
 
@@ -585,6 +582,7 @@ const doChunkUpsert = async (
           .toArray(),
       ),
     );
+
     const instructorAssociationsToInsert = sectionsToInstructors
       .entries()
       .flatMap(([k, names]) =>
@@ -593,7 +591,10 @@ const doChunkUpsert = async (
           return sectionId
             ? {
                 sectionId,
-                instructorName: instructorName.substring(0, instructorName.indexOf(DEPT_DELIMITER)),
+                instructorName: instructorName.substring(
+                  0,
+                  instructorName.lastIndexOf(INSTRUCTOR_DELIMETER) + 3,
+                ),
               }
             : undefined;
         }),
@@ -810,6 +811,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   for (const ge of geCategories) {
     console.log(`Scraping GE ${ge}`);
     const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
+
     const courses = resp.schools.flatMap((school) =>
       school.departments.flatMap((dept) =>
         dept.courses.map(
@@ -817,6 +819,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
         ),
       ),
     );
+
     for (const course of courses) {
       const update = updates.get(course);
       if (update) {
@@ -827,6 +830,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
     await sleep(1000);
   }
+
   await db.transaction(async (tx) => {
     for (const [course, update] of updates) {
       const [deptCode, courseNumber, courseTitle] = course.split(",", 3);

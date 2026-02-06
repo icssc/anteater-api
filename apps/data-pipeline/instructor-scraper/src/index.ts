@@ -2,7 +2,7 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { eq, isNull, or } from "@packages/db/drizzle";
+import { and, eq, isNotNull, isNull, or } from "@packages/db/drizzle";
 import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
@@ -37,7 +37,9 @@ const HEADERS_INIT = {
   "Content-Type": "application/x-www-form-urlencoded",
 };
 
-const FILTER_KEYWORDS = ["professor", "lecturer", "faculty"];
+const INSTRUCTOR_DELIMETER = "&|*";
+
+const FILTER_KEYWORDS = ["professor", "lecturer", "faculty", "graduate"];
 
 const MAX_DELAY_MS = 8_000;
 
@@ -54,7 +56,7 @@ type DirectoryEntry = {
 
 type DirectoryResponse = [number, DirectoryEntry][];
 
-async function fetchDirectoryWithDelay(name: string, delayMs = 1000): Promise<DirectoryResponse> {
+async function fetchDirectoryWithDelay(name: string, delayMs = 800): Promise<DirectoryResponse> {
   try {
     logger.info("Making request to UCI Directory");
     await sleep(delayMs);
@@ -152,32 +154,42 @@ async function main() {
   logger.info("instructor-scraper starting");
 
   const names = await db
-    .select({ name: websocInstructor.name })
+    .select({
+      name: websocInstructor.name,
+      department: websocInstructor.department,
+    })
     .from(websocInstructor)
     .leftJoin(
       instructorToWebsocInstructor,
       eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
     )
     .where(
-      or(
-        isNull(instructorToWebsocInstructor.websocInstructorName),
-        isNull(instructorToWebsocInstructor.instructorUcinetid),
+      and(
+        or(
+          isNull(instructorToWebsocInstructor.websocInstructorName),
+          isNull(instructorToWebsocInstructor.instructorUcinetid),
+        ),
+        // filter out legacy websoc instructor entries
+        isNotNull(websocInstructor.department),
       ),
     )
-    .then((rows) =>
-      rows
-        .map(({ name }) => {
-          return name;
-        })
-        .filter((x) => x !== "STAFF"),
-    );
+    .then((rows) => rows.filter((x) => !x.name.startsWith("STAFF")));
 
   logger.info(`Found ${names.length} WebSoc instructors without associated instructors`);
 
   const shortNamesToUcinetids = new Map<string, Array<string | null>>();
   const ucinetidToInstructorObject = new Map<string, typeof instructor.$inferInsert>();
 
-  for (const name of names) {
+  let indx = 0;
+
+  for (let { name, department } of names) {
+    indx++;
+    logger.info(indx);
+
+    const uniqueName = name;
+    const delimIndex = name.indexOf(INSTRUCTOR_DELIMETER);
+    if (delimIndex !== -1) name = name.substring(0, delimIndex);
+
     const normalizedName = name.toLowerCase().replaceAll(/, ?/g, " ").trim();
     const fullyNormalizedName = normalizedName.replaceAll(/\./g, " ").trim();
     const indexOfLastSpace = normalizedName.lastIndexOf(" ");
@@ -208,10 +220,10 @@ async function main() {
       logger.warn("Did not find any entries for this instructor.");
       logger.warn("Assigning this instructor a null UCInetID.");
 
-      if (shortNamesToUcinetids.has(name)) {
-        shortNamesToUcinetids.get(name)?.push(null);
+      if (shortNamesToUcinetids.has(uniqueName)) {
+        shortNamesToUcinetids.get(uniqueName)?.push(null);
       } else {
-        shortNamesToUcinetids.set(name, [null]);
+        shortNamesToUcinetids.set(uniqueName, [null]);
       }
 
       continue;
@@ -227,10 +239,10 @@ async function main() {
         logger.warn("Mapping this instructor to the UCInetID 'student'.");
       }
 
-      if (shortNamesToUcinetids.has(name)) {
-        shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
+      if (shortNamesToUcinetids.has(uniqueName)) {
+        shortNamesToUcinetids.get(uniqueName)?.push(instructor.ucinetid);
       } else {
-        shortNamesToUcinetids.set(name, [instructor.ucinetid]);
+        shortNamesToUcinetids.set(uniqueName, [instructor.ucinetid]);
       }
 
       ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
@@ -241,7 +253,9 @@ async function main() {
 
     let isolatedInstructor = false;
 
-    for (const keyword of FILTER_KEYWORDS) {
+    for (const keyword of FILTER_KEYWORDS.concat(
+      !department ? [] : FILTER_KEYWORDS.map((s) => `${s} ${department.toLowerCase()}`),
+    ).reverse()) {
       logger.info(
         `Fetching directory with '${keyword}' appended to normalized name (Exact Directory Search: ${fullyNormalizedName} ${keyword}).`,
       );
@@ -251,9 +265,14 @@ async function main() {
           x
             .map(([_, entry]) => entry)
             .filter(({ Title }) => {
+              const leadingTitle = keyword.split(" ")[0];
               return (
-                Title.includes(keyword.substring(0, 1).toUpperCase() + keyword.substring(1)) ||
-                Title.includes(keyword.substring(0, 1).toLocaleLowerCase() + keyword.substring(1))
+                Title.includes(
+                  leadingTitle.substring(0, 1).toUpperCase() + leadingTitle.substring(1),
+                ) ||
+                Title.includes(
+                  leadingTitle.substring(0, 1).toLocaleLowerCase() + leadingTitle.substring(1),
+                )
               );
             })
             .filter(nameFilterFor(normalizedLastName, normalizedFirstInitials)),
@@ -269,10 +288,10 @@ async function main() {
           logger.warn("Mapping this instructor to the UCInetID 'student'.");
         }
 
-        if (shortNamesToUcinetids.has(name)) {
-          shortNamesToUcinetids.get(name)?.push(instructor.ucinetid);
+        if (shortNamesToUcinetids.has(uniqueName)) {
+          shortNamesToUcinetids.get(uniqueName)?.push(instructor.ucinetid);
         } else {
-          shortNamesToUcinetids.set(name, [instructor.ucinetid]);
+          shortNamesToUcinetids.set(uniqueName, [instructor.ucinetid]);
         }
 
         ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
@@ -297,12 +316,26 @@ async function main() {
     logger.error(`Cannot find a unique match for instructor with WebSoc name '${name}'.`);
     logger.error("Assigning this instructor a null UCInetID.");
 
-    if (shortNamesToUcinetids.has(name)) {
-      shortNamesToUcinetids.get(name)?.push(null);
+    if (shortNamesToUcinetids.has(uniqueName)) {
+      shortNamesToUcinetids.get(uniqueName)?.push(null);
     } else {
-      shortNamesToUcinetids.set(name, [null]);
+      shortNamesToUcinetids.set(uniqueName, [null]);
     }
   }
+
+  const uciNetList = Array.from(shortNamesToUcinetids).flatMap(
+    ([websocInstructorName, ucinetIds]) =>
+      ucinetIds.map((instructorUcinetid) => ({
+        instructorUcinetid,
+        websocInstructorName,
+      })),
+  );
+
+  const filtered = uciNetList.filter(
+    (v, i) =>
+      uciNetList.findIndex((c) => c.instructorUcinetid === v.instructorUcinetid) === i &&
+      v.instructorUcinetid !== "student",
+  );
 
   await db.transaction(async (tx) => {
     await tx
@@ -314,11 +347,7 @@ async function main() {
       });
     await tx
       .insert(instructorToWebsocInstructor)
-      .values(
-        Array.from(shortNamesToUcinetids).flatMap(([websocInstructorName, ucinetIds]) =>
-          ucinetIds.map((instructorUcinetid) => ({ instructorUcinetid, websocInstructorName })),
-        ),
-      )
+      .values(filtered)
       .onConflictDoUpdate({
         target: [
           instructorToWebsocInstructor.instructorUcinetid,
