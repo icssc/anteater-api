@@ -24,7 +24,9 @@ export const diningDishQuerySchema = z.object({
 });
 
 export const diningZotmealQuerySchema = z.object({
-  date: z.coerce.date(),
+  date: z.coerce.date().openapi({
+    example: "2026-01-28",
+  }),
 });
 
 export const eventSchema = z.object({
