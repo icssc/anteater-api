@@ -9,8 +9,6 @@ async function main() {
   const db = database(url);
   let libraryError: unknown = null;
   let pvError: unknown = null;
-  // Here we run both UCI Libraries and Plaza Verde scrapers, using separate await
-  // statements so we can trace errors while ensuring both scrapes are performed.
   try {
     await doLibraryScrape(db);
   } catch (err) {
