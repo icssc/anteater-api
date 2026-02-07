@@ -1,0 +1,1 @@
+ALTER TABLE "major" ADD COLUMN "require_spec" boolean NOT NULL;
