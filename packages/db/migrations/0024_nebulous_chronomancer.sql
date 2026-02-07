@@ -1,1 +1,0 @@
-ALTER TABLE "major" ALTER COLUMN "require_spec" SET NOT NULL;
