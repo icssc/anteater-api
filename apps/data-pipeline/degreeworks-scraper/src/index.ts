@@ -43,9 +43,9 @@ async function main() {
     .toArray();
 
   const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
-  const majorData = parsedPrograms
-    .values()
-    .map(([college, { name, degreeType, code, requirements }]) => {
+  let majorData = parsedPrograms
+    .entries()
+    .map(([[, specCode], [college, { name, degreeType, code, requirements }]]) => {
       let collegeBlockIndex: number | undefined;
       if (college?.requirements) {
         const wouldInsert = { name: college.name, requirements: college.requirements };
@@ -70,6 +70,7 @@ async function main() {
         id: `${degreeType}-${code}`,
         degreeId: degreeType ?? "",
         code,
+        specCode,
         name,
         requirements,
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
@@ -77,6 +78,12 @@ async function main() {
     })
     .toArray();
 
+  const majorRequirementData = majorData.map(({ id, specCode, requirements }) => ({
+    majorId: id,
+    specId: specCode,
+    majorRequirements: requirements,
+  }));
+  majorData = majorData.filter(({ specCode }) => specCode === undefined);
   const minorData = parsedMinorPrograms
     .values()
     .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
@@ -161,6 +168,11 @@ async function main() {
       .insert(specialization)
       .values(specData)
       .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(specialization) });
+    // await tx
+    //   .insert(majorRequirement)
+    //   .values(majorRequirementData)
+    //   .onConflictDoNothing()
+    //.onConflictDoUpdate({target: major.id, set: conflictUpdateSetAllCols(majorRequirement)})
   });
   exit(0);
 }

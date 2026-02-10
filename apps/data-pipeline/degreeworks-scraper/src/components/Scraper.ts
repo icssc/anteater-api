@@ -164,9 +164,9 @@ export class Scraper {
         );
         continue;
       }
-      if (ret.keys().some(([title]) => title === majorAudit.title)) {
+      if (ret.has([majorAudit.title, specCode])) {
         console.log(
-          `Requirements block already exists for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${majorAudit.title}" with specialization "${specCode ? `with spec: ${specCode}` : ""}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
@@ -185,7 +185,7 @@ export class Scraper {
       );
 
       console.log(
-        `Requirements block found and parsed for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        `Requirements block found and parsed for "${majorAudit.title}" ${specCode ? `with spec: ${specCode}` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
     }
     return ret;
@@ -394,6 +394,8 @@ export class Scraper {
         );
       }
     }
+
+    // this.parsedPrograms = new Map([...this.parsedPrograms, ...await this.scrapePrograms(foundMajorSpecPairs)])
 
     this.degreesAwarded = new Map(
       Array.from(
