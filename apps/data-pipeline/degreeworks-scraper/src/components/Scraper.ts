@@ -298,6 +298,7 @@ export class Scraper {
     console.log(`loading ${this.specializationCache.size} cached specializations`);
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
+    const foundMajorSpecPairs: [ProgramTriplet, string][] = [];
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
       let specBlock: Block | undefined;
@@ -347,7 +348,14 @@ export class Scraper {
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
         );
 
-        foundMajorAssured.specs.push(specCode);
+        foundMajorSpecPairs.push([
+          [
+            foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
+            foundMajorAssured.code,
+            foundMajorAssured.degreeType,
+          ] as ProgramTriplet,
+          specCode,
+        ]);
 
         this.specializationCache.set(specCode, {
           // we are storing the entire program even though we only need the DegreeWorksProgramId supertype
