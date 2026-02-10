@@ -203,9 +203,13 @@ export class SearchService {
       ),
     );
 
+    const [courseMapping, instructorMapping] = await Promise.all([
+      this.courseMappingFromResults(results.course),
+      this.instructorMappingFromResults(results.instructor),
+    ]);
     const lookedUp = {
-      course: await this.courseMappingFromResults(results.course),
-      instructor: await this.instructorMappingFromResults(results.instructor),
+      course: courseMapping,
+      instructor: instructorMapping,
     };
 
     return {
