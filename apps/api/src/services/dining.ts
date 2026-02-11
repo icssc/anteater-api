@@ -149,7 +149,7 @@ export class DiningService {
 
     const [firstRestaurant, secondRestaurant] = mappedRestaurants;
 
-    if (!firstRestaurant || !secondRestaurant) {
+    if (mappedRestaurants.length !== 2) {
       throw new Error("Restaurants not found, there should always be two restaurants");
     }
 
