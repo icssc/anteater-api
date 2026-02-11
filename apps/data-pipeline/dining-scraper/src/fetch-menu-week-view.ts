@@ -122,8 +122,8 @@ type WeeklyProducts = NonNullable<
 type ProductAttributes = {
   name: string;
   description: string;
-  category: string;
   ingredients: string;
+  category: string;
   imageUrl: string | null;
   allergenIntolerances: Set<number>;
   recipePreferences: Set<number>;
@@ -200,8 +200,8 @@ function parseProducts(products: WeeklyProducts): ProductDictionary {
     parsedProducts[product.sku] = {
       name: product.name,
       description: (attributesMap.get("marketing_description") as string) ?? "",
-      category: (attributesMap.get("master_recipe_type") as string) ?? "",
       ingredients: (attributesMap.get("recipe_ingredients") as string) ?? "",
+      category: (attributesMap.get("master_recipe_type") as string) ?? "",
       imageUrl: firstImageUrl,
       allergenIntolerances,
       recipePreferences,
@@ -265,8 +265,8 @@ export async function fetchMenuWeekView(
             name: item?.name ?? "UNIDENTIFIED",
             stationId: stationId.toString(),
             description: item?.description ?? "",
-            category: item?.category ?? "",
             ingredients: item?.ingredients ?? "",
+            category: item?.category ?? "",
             imageUrl: item?.imageUrl,
           },
           nutritionInfo: item?.nutritionInfo ?? {},
