@@ -13,7 +13,7 @@ export class YogaKVCache implements Cache {
   async set(id: string, data: ExecutionResult, _: unknown, ttl: number): Promise<void> {
     // convert milliseconds (Yoga) to seconds (Cloudflare) and enforce Cloudflare KV minimum of 60 seconds
     const expirationTtl = Math.max(Math.floor(ttl / 1000), 60);
-    await this.kv.put(id, JSON.stringify(data), { expirationTtl: expirationTtl });
+    await this.kv.put(id, JSON.stringify(data), { expirationTtl });
   }
 
   // This is a no-op because our API doesn't have mutations.
