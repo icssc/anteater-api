@@ -29,7 +29,10 @@ import {
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
+  DAY_MS,
   baseTenIntOrNull,
+  detectPeriod,
+  getWeek,
   intersectAll,
   notNull,
   parseMeetingDays,
@@ -49,27 +52,6 @@ const SECTIONS_PER_CHUNK = 891;
  * These are not associated with any department that is searchable directly through WebSoc.
  */
 const LAST_SECTION_CODE = "97999";
-
-/**
- * Time constants for week and period calculations.
- * Used to determine snapshot frequency based on academic calendar.
- */
-const DAY_MS = 24 * 60 * 60 * 1000;
-const WEEK_MS = 7 * DAY_MS;
-const FALL_OFFSET_MS = 4 * DAY_MS;
-
-type Period = "ADD_DROP" | "ENROLLMENT" | "REGULAR";
-
-function getWeek(currentDate: Date, instructionStart: Date, quarter: string): number {
-  const offset = quarter === "Fall" ? FALL_OFFSET_MS : 0;
-  return Math.floor((currentDate.valueOf() - (instructionStart.valueOf() + offset)) / WEEK_MS) + 1;
-}
-
-function detectPeriod(week: number): Period {
-  if (week >= 1 && week <= 2) return "ADD_DROP";
-  if (week >= 8 && week <= 10) return "ENROLLMENT";
-  return "REGULAR";
-}
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
