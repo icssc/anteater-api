@@ -1,5 +1,5 @@
 {
-  "id": "59cd8381-2715-4b1f-98cf-da73600cd11e",
+  "id": "08f5e9b8-8435-41a2-86f2-ca6b5d8d4f11",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -1033,85 +1033,85 @@
         },
         "calories": {
           "name": "calories",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "total_fat_g": {
           "name": "total_fat_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "trans_fat_g": {
           "name": "trans_fat_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "saturated_fat_g": {
           "name": "saturated_fat_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "cholesterol_mg": {
           "name": "cholesterol_mg",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "sodium_mg": {
           "name": "sodium_mg",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "total_carbs_g": {
           "name": "total_carbs_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "dietary_fiber_g": {
           "name": "dietary_fiber_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "sugars_g": {
           "name": "sugars_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "protein_g": {
           "name": "protein_g",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "calcium": {
           "name": "calcium",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "iron": {
           "name": "iron",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "vitamin_a": {
           "name": "vitamin_a",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
         "vitamin_c": {
           "name": "vitamin_c",
-          "type": "varchar",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
