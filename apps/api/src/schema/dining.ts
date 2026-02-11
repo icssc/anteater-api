@@ -104,6 +104,9 @@ export const dishSchema = z.object({
     example: "Saute",
     description: "Category of the dish",
   }),
+  imageUrl: z.string().nullable().openapi({
+    description: "A URL to an image of this dish",
+  }),
   updatedAt: z.coerce.date().transform((d) => d?.toISOString()),
   // are these nullable?
   dietRestriction: dietRestrictionSchema
