@@ -4,11 +4,11 @@ import {
   diningDishQuerySchema,
   diningEventQuerySchema,
   diningEventsResponseSchema,
-  diningZotmealQuerySchema,
+  diningPeterplateQuerySchema,
   dishSchema,
   errorSchema,
+  peterplateSchema,
   responseSchema,
-  zotmealSchema,
 } from "$schema";
 import { DiningService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -116,18 +116,18 @@ diningRouter.openapi(datesRoute, async (c) => {
   return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
 });
 
-const zotmealRoute = createRoute({
+const peterplateRoute = createRoute({
   summary: "Get all information about restaurants by given date",
-  operationId: "zotmeal",
+  operationId: "peterplate",
   tag: ["Dining"],
   method: "get",
-  path: "/zotmeal/{date}",
-  request: { params: diningZotmealQuerySchema },
+  path: "/peterplate/{date}",
+  request: { params: diningPeterplateQuerySchema },
   description: "Get all information about restaurants by given date",
   responses: {
     200: {
       content: {
-        "application/json": { schema: responseSchema(zotmealSchema) },
+        "application/json": { schema: responseSchema(peterplateSchema) },
       },
       description: "Successful operation",
     },
@@ -142,12 +142,12 @@ const zotmealRoute = createRoute({
   },
 });
 
-diningRouter.openapi(zotmealRoute, async (c) => {
+diningRouter.openapi(peterplateRoute, async (c) => {
   const { date } = c.req.valid("param");
   const service = new DiningService(database(c.env.DB.connectionString));
   const data = await service.getRestaurantsByDate({ date });
 
-  return c.json({ ok: true, data: zotmealSchema.parse(data) }, 200);
+  return c.json({ ok: true, data: peterplateSchema.parse(data) }, 200);
 });
 
 export { diningRouter };

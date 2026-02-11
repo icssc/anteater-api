@@ -23,7 +23,7 @@ export const diningDishQuerySchema = z.object({
   }),
 });
 
-export const diningZotmealQuerySchema = z.object({
+export const diningPeterplateQuerySchema = z.object({
   date: z.coerce.date().openapi({
     example: "2026-01-28",
   }),
@@ -151,12 +151,12 @@ interface RestaurantInfo extends SelectRestaurant {
   })[];
 }
 
-type ZotmealData = {
+type PeterplateData = {
   anteatery: RestaurantInfo;
   brandywine: RestaurantInfo;
 };
 
-export const zotmealSchema = z.object({
+export const peterplateSchema = z.object({
   anteatery: z.any(),
   brandywine: z.any(),
-}) as unknown as z.ZodType<ZotmealData>;
+}) as unknown as z.ZodType<PeterplateData>;

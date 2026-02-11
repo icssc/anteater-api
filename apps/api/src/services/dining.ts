@@ -1,7 +1,7 @@
 import type {
   diningDishQuerySchema,
   diningEventQuerySchema,
-  diningZotmealQuerySchema,
+  diningPeterplateQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, gte, max, min } from "@packages/db/drizzle";
@@ -19,7 +19,7 @@ import type { z } from "zod";
 
 type DiningDishQuery = z.infer<typeof diningDishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventQuerySchema>;
-type DiningZotmealQuery = z.infer<typeof diningZotmealQuerySchema>;
+type DiningPeterplateQuery = z.infer<typeof diningPeterplateQuerySchema>;
 
 export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
@@ -90,7 +90,7 @@ export class DiningService {
     };
   }
 
-  async getRestaurantsByDate(input: DiningZotmealQuery) {
+  async getRestaurantsByDate(input: DiningPeterplateQuery) {
     const dateStr = input.date.toISOString().split("T")[0]; // "YYYY-MM-DD"
 
     const restaurants = await this.db.select().from(diningRestaurant);
