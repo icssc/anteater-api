@@ -58,13 +58,47 @@ export class DiningService {
     if (!dish) return null;
 
     const [nutritionInfo] = await this.db
-      .select()
+      .select({
+        servingSize: diningNutritionInfo.servingSize,
+        servingUnit: diningNutritionInfo.servingUnit,
+        calories: diningNutritionInfo.calories,
+        totalFatG: diningNutritionInfo.totalFatG,
+        transFatG: diningNutritionInfo.transFatG,
+        saturatedFatG: diningNutritionInfo.saturatedFatG,
+        cholesterolMg: diningNutritionInfo.cholesterolMg,
+        sodiumMg: diningNutritionInfo.sodiumMg,
+        totalCarbsG: diningNutritionInfo.totalCarbsG,
+        dietaryFiberG: diningNutritionInfo.dietaryFiberG,
+        sugarsG: diningNutritionInfo.sugarsG,
+        proteinG: diningNutritionInfo.proteinG,
+        calciumMg: diningNutritionInfo.calciumMg,
+        ironMg: diningNutritionInfo.ironMg,
+        vitaminAIU: diningNutritionInfo.vitaminAIU,
+        vitaminCIU: diningNutritionInfo.vitaminCIU,
+      })
       .from(diningNutritionInfo)
       .where(eq(diningNutritionInfo.dishId, input.id))
       .limit(1);
 
     const [dietRestriction] = await this.db
-      .select()
+      .select({
+        containsEggs: diningDietRestriction.containsEggs,
+        containsFish: diningDietRestriction.containsFish,
+        containsMilk: diningDietRestriction.containsMilk,
+        containsPeanuts: diningDietRestriction.containsPeanuts,
+        containsSesame: diningDietRestriction.containsSesame,
+        containsShellfish: diningDietRestriction.containsShellfish,
+        containsSoy: diningDietRestriction.containsSoy,
+        containsTreeNuts: diningDietRestriction.containsTreeNuts,
+        containsWheat: diningDietRestriction.containsWheat,
+        isGlutenFree: diningDietRestriction.isGlutenFree,
+        isHalal: diningDietRestriction.isHalal,
+        isKosher: diningDietRestriction.isKosher,
+        isLocallyGrown: diningDietRestriction.isLocallyGrown,
+        isOrganic: diningDietRestriction.isOrganic,
+        isVegan: diningDietRestriction.isVegan,
+        isVegetarian: diningDietRestriction.isVegetarian,
+      })
       .from(diningDietRestriction)
       .where(eq(diningDietRestriction.dishId, input.id))
       .limit(1);

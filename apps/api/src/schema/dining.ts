@@ -47,7 +47,7 @@ export const eventSchema = z.object({
 });
 
 export const dietRestrictionSchema = z.object({
-  dishId: z.string(),
+  // omit redundant foreign key in output
   containsEggs: z.boolean().nullable(),
   containsFish: z.boolean().nullable(),
   containsMilk: z.boolean().nullable(),
@@ -68,7 +68,7 @@ export const dietRestrictionSchema = z.object({
 });
 
 export const nutritionInfoSchema = z.object({
-  dishId: z.string(),
+  // omit redundant foreign key in output
   servingSize: z.string().nullable(),
   servingUnit: z.string().nullable(),
   calories: z.coerce.number().nullable(),
