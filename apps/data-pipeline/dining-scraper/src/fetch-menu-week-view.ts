@@ -267,7 +267,7 @@ export async function fetchMenuWeekView(
             description: item?.description ?? "",
             category: item?.category ?? "",
             ingredients: item?.ingredients ?? "",
-            imageUrl: item.imageUrl,
+            imageUrl: item?.imageUrl,
           },
           nutritionInfo: item?.nutritionInfo ?? {},
           recipeAllergenCodes: item?.allergenIntolerances ?? new Set<number>(),
