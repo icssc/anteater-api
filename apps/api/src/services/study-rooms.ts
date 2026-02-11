@@ -20,14 +20,17 @@ export class StudyRoomsService {
         description: studyRoom.description,
         directions: studyRoom.directions,
         techEnhanced: studyRoom.techEnhanced,
-        url: sql`'https://spaces.lib.uci.edu/space/' || ${studyRoom.id}`,
+        url: sql`COALESCE(${studyRoom.url}, 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id})`,
         slots:
           sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
             ELSE JSONB_BUILD_OBJECT(
               'studyRoomId', ${studyRoomSlot.studyRoomId},
               'start', TO_JSON(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
               'end', TO_JSON(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
-              'url', 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || TO_CHAR(${studyRoomSlot.start}::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times', 
+              'url', CASE
+                WHEN ${studyRoom.url} IS NOT NULL THEN ${studyRoom.url}
+                ELSE 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || TO_CHAR(${studyRoomSlot.start}::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times'
+              END,
               'isAvailable', ${studyRoomSlot.isAvailable}
             )
             END), ARRAY[]::JSONB[]), NULL)`.as("slots"),

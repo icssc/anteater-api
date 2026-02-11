@@ -74,4 +74,4 @@ jobs:
         run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
 
       - name: Deploy Key Manager/Dashboard if present
-        run: pnpm exec sst deploy --stage production
+        run: pnpm --filter "./apps/key-manager/**" run deploy
