@@ -124,6 +124,7 @@ type ProductAttributes = {
   description: string;
   category: string;
   ingredients: string;
+  imageUrl: string | null;
   allergenIntolerances: Set<number>;
   recipePreferences: Set<number>;
   nutritionInfo: typeof diningNutritionInfo.$inferInsert;
@@ -192,11 +193,16 @@ function parseProducts(products: WeeklyProducts): ProductDictionary {
       // attributes["recipe_additional_data"]
     } as typeof diningNutritionInfo.$inferInsert;
 
+    const firstImageUrlField = product.images?.[0]?.url?.trim();
+    const firstImageUrl =
+      firstImageUrlField == null || firstImageUrlField === "" ? null : firstImageUrlField;
+
     parsedProducts[product.sku] = {
       name: product.name,
       description: (attributesMap.get("marketing_description") as string) ?? "",
       category: (attributesMap.get("master_recipe_type") as string) ?? "",
       ingredients: (attributesMap.get("recipe_ingredients") as string) ?? "",
+      imageUrl: firstImageUrl,
       allergenIntolerances,
       recipePreferences,
       nutritionInfo,
@@ -261,6 +267,7 @@ export async function fetchMenuWeekView(
             description: item?.description ?? "",
             category: item?.category ?? "",
             ingredients: item?.ingredients ?? "",
+            imageUrl: item.imageUrl,
           },
           nutritionInfo: item?.nutritionInfo ?? {},
           recipeAllergenCodes: item?.allergenIntolerances ?? new Set<number>(),

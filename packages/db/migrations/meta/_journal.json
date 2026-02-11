@@ -162,13 +162,6 @@
       "when": 1766088418349,
       "tag": "0022_fix_websoc_is_cancelled",
       "breakpoints": true
-    },
-    {
-      "idx": 23,
-      "version": "7",
-      "when": 1769579176163,
-      "tag": "0023_dining",
-      "breakpoints": true
     }
   ]
 }
