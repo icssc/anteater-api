@@ -1,4 +1,4 @@
-import { createHash } from "node:domain";
+import { createHash } from "node:crypto";
 import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
