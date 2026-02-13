@@ -53,6 +53,14 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
+/**
+ * Module-level variables for snapshot decision.
+ * Set once in scrapeTerm before chunks process, ensuring all chunks
+ * use the same timestamp and decision to prevent partial snapshots.
+ */
+let scraperRunTimestamp: Date | null = null;
+let shouldSnapshotThisRun = false;
+
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
@@ -497,67 +505,8 @@ const doChunkUpsert = async (
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
     // Dynamic enrollment snapshot frequency based on academic period
-    const currentDate = new Date();
-    const [currentTerm] = await tx
-      .select({
-        instructionStart: calendarTerm.instructionStart,
-        quarter: calendarTerm.quarter,
-      })
-      .from(calendarTerm)
-      .where(
-        and(
-          lte(calendarTerm.instructionStart, currentDate),
-          gte(calendarTerm.instructionEnd, currentDate),
-        ),
-      )
-      .limit(1);
-    let shouldSnapshot = false;
-    // Get last snapshot timestamp (used by all periods)
-    const [lastSnapshot] = await tx
-      .select({ createdAt: websocSectionEnrollment.createdAt })
-      .from(websocSectionEnrollment)
-      .orderBy(sql`${websocSectionEnrollment.createdAt} DESC`)
-      .limit(1);
-
-    // Calculate hours elapsed since last snapshot (Uses Infinity when no prior snapshots exist to guarantee first insertion)
-    const hoursSinceLastSnapshot = lastSnapshot
-      ? (currentDate.getTime() - lastSnapshot.createdAt.getTime()) / (1000 * 60 * 60)
-      : Number.POSITIVE_INFINITY;
-    if (currentTerm) {
-      const week = getWeek(currentDate, currentTerm.instructionStart, currentTerm.quarter);
-      const period = detectPeriod(week);
-      const hour = currentDate.getHours();
-
-      if (period === "ENROLLMENT") {
-        const inTimeWindow = hour >= 7 && hour < 19;
-        shouldSnapshot = inTimeWindow && hoursSinceLastSnapshot >= 3;
-      } else if (period === "ADD_DROP") {
-        const currentDayOfWeek = currentDate.getDay();
-
-        if (week === 2 && currentDayOfWeek === 5 && hour >= 12 && hour <= 17) {
-          shouldSnapshot = hoursSinceLastSnapshot >= 1;
-        } else {
-          shouldSnapshot = hoursSinceLastSnapshot >= 6;
-        }
-      } else if (period === "REGULAR") {
-        shouldSnapshot = hoursSinceLastSnapshot >= 168;
-      }
-
-      // Calculate add/drop day for logging
-      const addDropDay =
-        Math.floor((currentDate.getTime() - currentTerm.instructionStart.getTime()) / DAY_MS) + 1;
-
-      console.log(
-        `Period: ${period}, Week: ${week}, Day: ${period === "ADD_DROP" ? addDropDay : "N/A"}, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshot}`,
-      );
-    } else {
-      // Between quarters: weekly snapshots
-      shouldSnapshot = hoursSinceLastSnapshot >= 168;
-      console.log(
-        `Between quarters, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshot}`,
-      );
-    }
-    if (!shouldSnapshot) {
+    // Use module-level decision variables set in scrapeTerm
+    if (!shouldSnapshotThisRun) {
       console.log("Skipped enrollment snapshot");
     } else {
       const enrollmentEntries = await tx
@@ -566,10 +515,14 @@ const doChunkUpsert = async (
           mappedSections
             .map(({ sectionCode, ...rest }) => {
               const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-              return sectionId ? { sectionId, ...rest } : undefined;
+              if (!sectionId || !scraperRunTimestamp) return undefined;
+              return { sectionId, ...rest, createdAt: scraperRunTimestamp };
             })
             .filter(notNull),
         )
+        .onConflictDoNothing({
+          target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
+        })
         .returning({ id: websocSectionEnrollment.id });
       console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
     }
@@ -875,6 +828,70 @@ export async function scrapeTerm(
 ) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
+  // Calculate snapshot decision ONCE before processing chunks
+  scraperRunTimestamp = new Date();
+  // Get current term info
+  const [currentTerm] = await db
+    .select({
+      instructionStart: calendarTerm.instructionStart,
+      quarter: calendarTerm.quarter,
+    })
+    .from(calendarTerm)
+    .where(
+      and(
+        lte(calendarTerm.instructionStart, scraperRunTimestamp),
+        gte(calendarTerm.instructionEnd, scraperRunTimestamp),
+      ),
+    )
+    .limit(1);
+
+  // Get last snapshot
+  const [lastSnapshot] = await db
+    .select({ createdAt: websocSectionEnrollment.createdAt })
+    .from(websocSectionEnrollment)
+    .orderBy(sql`${websocSectionEnrollment.createdAt} DESC`)
+    .limit(1);
+
+  const hoursSinceLastSnapshot = lastSnapshot
+    ? (scraperRunTimestamp.getTime() - lastSnapshot.createdAt.getTime()) / (1000 * 60 * 60)
+    : Number.POSITIVE_INFINITY;
+
+  shouldSnapshotThisRun = false;
+
+  if (currentTerm) {
+    const week = getWeek(scraperRunTimestamp, currentTerm.instructionStart, currentTerm.quarter);
+    const period = detectPeriod(week);
+    const hour = scraperRunTimestamp.getHours();
+
+    if (period === "ENROLLMENT") {
+      const inTimeWindow = hour >= 7 && hour < 19;
+      shouldSnapshotThisRun = inTimeWindow && hoursSinceLastSnapshot >= 3;
+    } else if (period === "ADD_DROP") {
+      const currentDayOfWeek = scraperRunTimestamp.getDay();
+      if (week === 2 && currentDayOfWeek === 5 && hour >= 12 && hour <= 17) {
+        shouldSnapshotThisRun = hoursSinceLastSnapshot >= 1;
+      } else {
+        shouldSnapshotThisRun = hoursSinceLastSnapshot >= 6;
+      }
+    } else if (period === "REGULAR") {
+      shouldSnapshotThisRun = hoursSinceLastSnapshot >= 168;
+    }
+
+    const addDropDay =
+      Math.floor(
+        (scraperRunTimestamp.getTime() - currentTerm.instructionStart.getTime()) / DAY_MS,
+      ) + 1;
+    console.log(
+      `Period: ${period}, Week: ${week}, Day: ${period === "ADD_DROP" ? addDropDay : "N/A"}, ` +
+        `Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshotThisRun}`,
+    );
+  } else {
+    shouldSnapshotThisRun = hoursSinceLastSnapshot >= 168;
+    console.log(
+      `Between quarters, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, ` +
+        `Should snapshot: ${shouldSnapshotThisRun}`,
+    );
+  }
   const sectionCodeBounds = await db
     .execute(
       sql<Array<{ section_code: string }>>`
