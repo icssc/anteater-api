@@ -2,7 +2,7 @@ import { defaultHook } from "$hooks";
 import {
   diningDatesResponseSchema,
   diningDishQuerySchema,
-  diningEventQuerySchema,
+  diningEventsQuerySchema,
   diningEventsResponseSchema,
   dishSchema,
   errorSchema,
@@ -20,7 +20,7 @@ const eventsRoute = createRoute({
   tags: ["Dining"],
   method: "get",
   path: "/events",
-  request: { query: diningEventQuerySchema },
+  request: { query: diningEventsQuerySchema },
   description: "Retrieves all dining events that end today or later",
   responses: {
     200: {
@@ -38,14 +38,6 @@ const eventsRoute = createRoute({
       description: "Server error occurred",
     },
   },
-});
-
-diningRouter.openapi(eventsRoute, async (c) => {
-  const query = c.req.valid("query");
-  const service = new DiningService(database(c.env.DB.connectionString));
-  const events = await service.getUpcomingEvents(query);
-
-  return c.json({ ok: true, data: diningEventsResponseSchema.parse(events) }, 200);
 });
 
 const dishRoute = createRoute({
@@ -78,18 +70,6 @@ const dishRoute = createRoute({
   },
 });
 
-diningRouter.openapi(dishRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const service = new DiningService(database(c.env.DB.connectionString));
-  const dish = await service.getDishById({ id });
-
-  if (!dish) {
-    return c.json({ ok: false, message: "Dish not found" }, 404);
-  }
-
-  return c.json({ ok: true, data: dishSchema.parse(dish) }, 200);
-});
-
 const datesRoute = createRoute({
   summary: "Get date range for available dining data",
   operationId: "getDiningDates",
@@ -105,6 +85,26 @@ const datesRoute = createRoute({
       description: "Successful operation",
     },
   },
+});
+
+diningRouter.openapi(eventsRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+  const events = await service.getUpcomingEvents(query);
+
+  return c.json({ ok: true, data: diningEventsResponseSchema.parse(events) }, 200);
+});
+
+diningRouter.openapi(dishRoute, async (c) => {
+  const { id } = c.req.valid("param");
+  const service = new DiningService(database(c.env.DB.connectionString));
+  const dish = await service.getDishById({ id });
+
+  if (!dish) {
+    return c.json({ ok: false, message: "Dish not found" }, 404);
+  }
+
+  return c.json({ ok: true, data: dishSchema.parse(dish) }, 200);
 });
 
 diningRouter.openapi(datesRoute, async (c) => {

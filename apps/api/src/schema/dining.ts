@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
-export const diningEventQuerySchema = z.object({
+export const diningEventsQuerySchema = z.object({
   restaurantId: z.string().optional().openapi({
     example: "anteatery",
     description: "Filter events by restaurant ID",
@@ -130,4 +130,10 @@ export const diningDatesResponseSchema = z.object({
     description: "Latest date with available menu data, or null if no such menus exist",
     example: "2026-01-31",
   }),
+});
+
+export const restaurantSchema = z.object({});
+
+export const restaurantsResponseSchema = z.object({
+  restaurantId: z.string().optional(),
 });

@@ -1,4 +1,4 @@
-import type { diningDishQuerySchema, diningEventQuerySchema } from "$schema";
+import type { diningDishQuerySchema, diningEventsQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, gte, max, min } from "@packages/db/drizzle";
 import {
@@ -11,7 +11,7 @@ import {
 import type { z } from "zod";
 
 type DiningDishQuery = z.infer<typeof diningDishQuerySchema>;
-type DiningEventQuery = z.infer<typeof diningEventQuerySchema>;
+type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 
 export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
