@@ -108,11 +108,12 @@ export const dishSchema = z.object({
   imageUrl: z.string().nullable().openapi({
     description: "A URL to an image of this dish",
   }),
-  updatedAt: z.coerce.date().transform((d) => d?.toISOString()),
-  // are these nullable?
+  updatedAt: z.coerce.date(),
+  // almost always present
   dietRestriction: dietRestrictionSchema
     .nullable()
     .openapi({ description: "Dietary restriction and allergen information" }),
+  // almost always present
   nutritionInfo: nutritionInfoSchema
     .nullable()
     .openapi({ description: "Nutritional information per serving" }),
@@ -123,11 +124,11 @@ export const diningEventsResponseSchema = z.array(eventSchema);
 export const diningDatesResponseSchema = z.object({
   // earliest and latest are nullable since the diningMenu table will be empty for non-available dates
   earliest: z.string().nullable().openapi({
-    description: "Earliest date with available menu data, or null if no such menus exist",
+    description: "Earliest date with available menu data, or null if no menus exist",
     example: "2026-01-01",
   }),
   latest: z.string().nullable().openapi({
-    description: "Latest date with available menu data, or null if no such menus exist",
+    description: "Latest date with available menu data, or null if no menus exist",
     example: "2026-01-31",
   }),
 });
@@ -177,12 +178,9 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
         z.string().openapi({ description: "The ID of a station." }),
         z.object({
           name: z.string().openapi({ description: "The name of the station being described." }),
-          dishes: z
-            .string()
-            .array()
-            .openapi({
-              description: "The ID(s) of the dish(es) served at this station in this period.",
-            }),
+          dishes: z.string().array().openapi({
+            description: "The ID(s) of the dish(es) served at this station in this period.",
+          }),
         }),
       ),
       updatedAt: z.date(),
