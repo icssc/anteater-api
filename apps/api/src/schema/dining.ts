@@ -32,13 +32,9 @@ export const eventSchema = z.object({
       "New year, new vibes. Kick off the celebration with bold Szechuan beef steak, chicken teriyaki dumplings, spicy vegetable lo mein, and more!",
     description: "Description of the event",
   }),
-  // transforms Date objects in db to ISO 8601 strings (I hope)
-  start: z.coerce.date().transform((d) => d?.toISOString()),
-  end: z.coerce
-    .date()
-    .nullable()
-    .transform((d) => d?.toISOString() ?? null),
-  updatedAt: z.coerce.date().transform((d) => d.toISOString()),
+  start: z.coerce.date(),
+  end: z.coerce.date().nullable(),
+  updatedAt: z.coerce.date(),
 });
 
 export const dietRestrictionSchema = z.object({
