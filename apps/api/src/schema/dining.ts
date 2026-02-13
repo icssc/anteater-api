@@ -143,7 +143,7 @@ export const restaurantsQuerySchema = z.object({
 export const stationSchema = z.object({
   id: z.string(),
   name: z.string().openapi({
-    example: "The Crossroads",
+    example: "Grubb",
   }),
   restaurantId: restaurantIdSchema,
   updatedAt: z.date(),
