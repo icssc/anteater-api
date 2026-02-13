@@ -15,10 +15,10 @@ export function getWeek(currentDate: Date, instructionStart: Date, quarter: stri
 
 /**
  * Determine the academic period based on week number.
- * Week 1-2: ADD_DROP, Week 8-10: ENROLLMENT, Other: REGULAR
+ * Week 0-2: ADD_DROP, Week 8-10: ENROLLMENT, Other: REGULAR
  */
 export function detectPeriod(week: number): Period {
-  if (week >= 1 && week <= 2) return "ADD_DROP";
+  if (week >= 0 && week <= 2) return "ADD_DROP";
   if (week >= 8 && week <= 10) return "ENROLLMENT";
   return "REGULAR";
 }
