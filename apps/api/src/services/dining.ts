@@ -1,26 +1,30 @@
 import type {
   diningDishQuerySchema,
   diningEventsQuerySchema,
+  restaurantTodayQuerySchema,
   restaurantsQuerySchema,
   restaurantsResponseSchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { and, eq, gte, max, min } from "@packages/db/drizzle";
+import { and, eq, gte, max, min, sql } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
+  diningDishToMenu,
   diningEvent,
   diningMenu,
   diningNutritionInfo,
+  diningPeriod,
   diningRestaurant,
   diningStation,
 } from "@packages/db/schema";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import type { z } from "zod";
 
 type DiningDishQuery = z.infer<typeof diningDishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 
-export class DiningService {
+class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getUpcomingEvents(input: DiningEventQuery) {
@@ -158,4 +162,92 @@ export class DiningService {
 
     return Object.values(result);
   }
+
+  async getRestaurantToday(query: z.infer<typeof restaurantTodayQuerySchema>) {
+    const rows = await this.db
+      .select({
+        restaurant: {
+          id: diningRestaurant.id,
+          updatedAt: diningRestaurant.updatedAt,
+        },
+        period: {
+          id: diningPeriod.id,
+          startTime: diningPeriod.startTime,
+          endTime: diningPeriod.endTime,
+          updatedAt: diningPeriod.updatedAt,
+        },
+        station: {
+          id: diningStation.id,
+          name: diningStation.name,
+          updatedAt: diningStation.updatedAt,
+        },
+        // because menus are keyed by their (restaurant ID, date, period ID),
+        // there cannot be more than one menu per period
+        // thus, we can elide menus from the visible data model entirely
+        dishes: sql`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
+      })
+      .from(diningRestaurant)
+      .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
+      .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
+      .leftJoin(
+        diningMenu,
+        and(
+          eq(diningRestaurant.id, diningMenu.restaurantId),
+          eq(diningPeriod.id, diningMenu.periodId),
+        ),
+      )
+      .leftJoin(diningDishToMenu, eq(diningMenu.id, diningDishToMenu.menuId))
+      .innerJoin(diningDish, eq(diningDish.id, diningDishToMenu.dishId))
+      .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
+      .groupBy(
+        // query planner bad
+        diningRestaurant.id,
+        diningPeriod.id,
+        diningPeriod.startTime,
+        diningPeriod.endTime,
+        diningPeriod.updatedAt,
+        diningStation.id,
+        diningMenu.id,
+        diningDishToMenu.menuId,
+      );
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const periods = new Map();
+
+    for (const { period, station, dishes } of rows) {
+      if (period === null) {
+        continue;
+      }
+
+      if (!periods.has(period.id)) {
+        periods.set(period.id, {
+          startTime: period.startTime,
+          endTime: period.endTime,
+          stations: {} as Record<
+            typeof diningStation.$inferSelect.id,
+            {
+              name: typeof diningPeriod.$inferSelect.name;
+              dishes: (typeof diningDish.$inferSelect.id)[];
+            }
+          >,
+          updatedAt: period.updatedAt,
+        });
+      }
+
+      if (station !== null) {
+        getFromMapOrThrow(periods, period.id).stations[station.id] = { name: station.name, dishes };
+      }
+    }
+
+    return {
+      id: rows[0].restaurant.id,
+      periods: Object.fromEntries(periods),
+      updatedAt: rows[0].restaurant.updatedAt,
+    };
+  }
 }
+
+export default DiningService;

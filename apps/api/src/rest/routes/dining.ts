@@ -7,6 +7,8 @@ import {
   dishSchema,
   errorSchema,
   responseSchema,
+  restaurantTodayQuerySchema,
+  restaurantTodayResponseSchema,
   restaurantsQuerySchema,
   restaurantsResponseSchema,
 } from "$schema";
@@ -132,6 +134,37 @@ const restaurantsRoute = createRoute({
   },
 });
 
+const restaurantTodayRoute = createRoute({
+  summary: "Get state for restaurant on day",
+  operationId: "getDiningRestaurantToday",
+  tags: ["Dining"],
+  method: "get",
+  path: "/restaurantToday",
+  request: { query: restaurantTodayQuerySchema },
+  description:
+    "Retrieve state for one restaurant on one day, e.g. menus and dishes. These will vary between days.",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(restaurantTodayResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Restaurant not found",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
 diningRouter.openapi(eventsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new DiningService(database(c.env.DB.connectionString));
@@ -165,6 +198,17 @@ diningRouter.openapi(restaurantsRoute, async (c) => {
 
   const data = restaurantsResponseSchema.parse(await service.getRestaurants(query));
   if (!data.length && query.id !== undefined) {
+    return c.json({ ok: false, message: "Restaurant not found" }, 404);
+  }
+  return c.json({ ok: true, data: data }, 200);
+});
+
+diningRouter.openapi(restaurantTodayRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+
+  const data = restaurantTodayResponseSchema.parse(await service.getRestaurantToday(query));
+  if (!data) {
     return c.json({ ok: false, message: "Restaurant not found" }, 404);
   }
   return c.json({ ok: true, data: data }, 200);

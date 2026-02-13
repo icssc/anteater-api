@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
-export const restaurantIdSchema = z.string().openapi({
-  example: "anteatery",
-});
+export const restaurantIdSchema = z.enum(["anteatery", "brandywine"]);
 
 export const diningEventsQuerySchema = z.object({
   restaurantId: restaurantIdSchema.optional().openapi({
@@ -135,7 +133,7 @@ export const diningDatesResponseSchema = z.object({
 });
 
 export const restaurantsQuerySchema = z.object({
-  id: z.string().optional().openapi({
+  id: restaurantIdSchema.optional().openapi({
     description: "If present, only return the restaurant with this ID (if it exists)",
   }),
 });
@@ -149,10 +147,45 @@ export const stationSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const restaurantSchema = z.object({ id: restaurantIdSchema, updatedAt: z.date() });
+export const restaurantSchema = z.object({
+  id: restaurantIdSchema,
+  updatedAt: z.date(),
+});
 
 export const restaurantsResponseSchema = restaurantSchema
   .extend({
     stations: stationSchema.omit({ restaurantId: true }).array(),
   })
   .array();
+
+export const restaurantTodayQuerySchema = z.object({
+  id: restaurantIdSchema.openapi({
+    description: "Get information on the restaurant with this ID",
+  }),
+  date: z.iso.date().openapi({
+    description: "Get information for this day, in the UCI timezone",
+  }),
+});
+
+export const restaurantTodayResponseSchema = restaurantSchema.extend({
+  periods: z.record(
+    z.string().openapi({ description: "The ID of a period." }),
+    z.object({
+      startTime: z.iso.time(),
+      endTime: z.iso.time(),
+      stations: z.record(
+        z.string().openapi({ description: "The ID of a station." }),
+        z.object({
+          name: z.string().openapi({ description: "The name of the station being described." }),
+          dishes: z
+            .string()
+            .array()
+            .openapi({
+              description: "The ID(s) of the dish(es) served at this station in this period.",
+            }),
+        }),
+      ),
+      updatedAt: z.date(),
+    }),
+  ),
+});
