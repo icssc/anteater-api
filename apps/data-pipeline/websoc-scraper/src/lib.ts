@@ -31,7 +31,6 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
   DAY_MS,
   baseTenIntOrNull,
-  detectPeriod,
   getWeek,
   intersectAll,
   notNull,
@@ -54,12 +53,25 @@ const SECTIONS_PER_CHUNK = 891;
 const LAST_SECTION_CODE = "97999";
 
 /**
- * Module-level variables for snapshot decision.
- * Set once in scrapeTerm before chunks process, ensuring all chunks
- * use the same timestamp and decision to prevent partial snapshots.
+ * Snapshot decision calculated once per scraper run.
+ * Ensures all chunks use identical timestamp to prevent partial snapshots.
  */
-let scraperRunTimestamp: Date | null = null;
-let shouldSnapshotThisRun = false;
+type SnapshotDecision = {
+  shouldSnapshot: boolean;
+  timestamp: Date;
+};
+
+type Period = "ADD_DROP" | "ENROLLMENT" | "REGULAR";
+
+/**
+ * Determine the academic period based on week number.
+ * Week 0-2: ADD_DROP, Week 8-10: ENROLLMENT, Other: REGULAR
+ */
+function detectPeriod(week: number): Period {
+  if (week >= 0 && week <= 2) return "ADD_DROP";
+  if (week >= 8 && week <= 10) return "ENROLLMENT";
+  return "REGULAR";
+}
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -398,6 +410,7 @@ const doChunkUpsert = async (
   term: Term,
   resp: WebsocResponse,
   department: string | null,
+  snapshotDecision: SnapshotDecision,
 ) =>
   await db.transaction(async (tx) => {
     const updatedAt = new Date();
@@ -505,8 +518,8 @@ const doChunkUpsert = async (
           new Map(rows.map((row) => [row.sectionCode.toString(10).padStart(5, "0"), row.id])),
       );
     // Dynamic enrollment snapshot frequency based on academic period
-    // Use module-level decision variables set in scrapeTerm
-    if (!shouldSnapshotThisRun) {
+    // Decision passed from scrapeTerm to prevent partial snapshots
+    if (!snapshotDecision.shouldSnapshot) {
       console.log("Skipped enrollment snapshot");
     } else {
       const enrollmentEntries = await tx
@@ -515,8 +528,8 @@ const doChunkUpsert = async (
           mappedSections
             .map(({ sectionCode, ...rest }) => {
               const sectionId = sections.get(sectionCode.toString(10).padStart(5, "0"));
-              if (!sectionId || !scraperRunTimestamp) return undefined;
-              return { sectionId, ...rest, createdAt: scraperRunTimestamp };
+              if (!sectionId) return undefined;
+              return { sectionId, ...rest, createdAt: snapshotDecision.timestamp };
             })
             .filter(notNull),
         )
@@ -828,8 +841,8 @@ export async function scrapeTerm(
 ) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
-  // Calculate snapshot decision ONCE before processing chunks
-  scraperRunTimestamp = new Date();
+  // Calculate snapshot decision once before chunks to prevent partial snapshots
+  const scraperRunTimestamp = new Date();
   // Get current term info
   const [currentTerm] = await db
     .select({
@@ -845,35 +858,40 @@ export async function scrapeTerm(
     )
     .limit(1);
 
-  // Get last snapshot
+  // Get last snapshot to calculate time elapsed
   const [lastSnapshot] = await db
     .select({ createdAt: websocSectionEnrollment.createdAt })
     .from(websocSectionEnrollment)
     .orderBy(sql`${websocSectionEnrollment.createdAt} DESC`)
     .limit(1);
 
+  // Use Infinity for first-ever snapshot to guarantee insertion
   const hoursSinceLastSnapshot = lastSnapshot
     ? (scraperRunTimestamp.getTime() - lastSnapshot.createdAt.getTime()) / (1000 * 60 * 60)
     : Number.POSITIVE_INFINITY;
 
-  shouldSnapshotThisRun = false;
+  let shouldSnapshotThisRun = false;
 
   if (currentTerm) {
     const week = getWeek(scraperRunTimestamp, currentTerm.instructionStart, currentTerm.quarter);
     const period = detectPeriod(week);
     const hour = scraperRunTimestamp.getHours();
 
+    // ENROLLMENT (weeks 8-10): snapshot every 3 hours during 7am-7pm
     if (period === "ENROLLMENT") {
       const inTimeWindow = hour >= 7 && hour < 19;
       shouldSnapshotThisRun = inTimeWindow && hoursSinceLastSnapshot >= 3;
     } else if (period === "ADD_DROP") {
       const currentDayOfWeek = scraperRunTimestamp.getDay();
+      // Week 2 Friday 12pm-5pm: hourly snapshots (add/drop deadline)
       if (week === 2 && currentDayOfWeek === 5 && hour >= 12 && hour <= 17) {
         shouldSnapshotThisRun = hoursSinceLastSnapshot >= 1;
       } else {
+        // ADD_DROP (weeks 0-2): snapshot every 6 hours
         shouldSnapshotThisRun = hoursSinceLastSnapshot >= 6;
       }
     } else if (period === "REGULAR") {
+      // REGULAR (weeks 3-7, 11+): snapshot weekly
       shouldSnapshotThisRun = hoursSinceLastSnapshot >= 168;
     }
 
@@ -886,12 +904,19 @@ export async function scrapeTerm(
         `Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, Should snapshot: ${shouldSnapshotThisRun}`,
     );
   } else {
+    // Between quarters: snapshot weekly
     shouldSnapshotThisRun = hoursSinceLastSnapshot >= 168;
     console.log(
       `Between quarters, Hours since last: ${hoursSinceLastSnapshot.toFixed(1)}, ` +
         `Should snapshot: ${shouldSnapshotThisRun}`,
     );
   }
+
+  // All chunks use this same decision and timestamp
+  const snapshotDecision: SnapshotDecision = {
+    shouldSnapshot: shouldSnapshotThisRun,
+    timestamp: scraperRunTimestamp,
+  };
   const sectionCodeBounds = await db
     .execute(
       sql<Array<{ section_code: string }>>`
@@ -912,7 +937,7 @@ export async function scrapeTerm(
         department,
         cancelledCourses: "Include",
       }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      if (resp.schools.length) await doChunkUpsert(db, term, resp, department, snapshotDecision);
       await sleep(1000);
     }
   } else if (!sectionCodeBounds.length) {
@@ -923,7 +948,7 @@ export async function scrapeTerm(
         department,
         cancelledCourses: "Include",
       }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
+      if (resp.schools.length) await doChunkUpsert(db, term, resp, department, snapshotDecision);
       await sleep(1000);
     }
   } else {
@@ -931,7 +956,7 @@ export async function scrapeTerm(
     for (let i = 0; i < sectionCodeBounds.length; i += 2) {
       const lower = sectionCodeBounds[i] as `${number}`;
       const upper = (sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE) as `${number}`;
-      await ingestChunk(db, term, lower, upper);
+      await ingestChunk(db, term, lower, upper, snapshotDecision);
     }
   }
   await scrapeGEsForTerm(db, term);
@@ -950,6 +975,7 @@ async function ingestChunk(
   term: Term,
   lower: `${number}`,
   upper: `${number}`,
+  snapshotDecision: SnapshotDecision,
 ) {
   const sectionCodes = `${lower}-${upper}`;
   console.log(`Scraping chunk ${sectionCodes}`);
@@ -958,7 +984,7 @@ async function ingestChunk(
       sectionCodes,
       cancelledCourses: "Include",
     }).then(normalizeResponse);
-    if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+    if (resp.schools.length) await doChunkUpsert(db, term, resp, null, snapshotDecision);
     await sleep(1000);
   } catch (e) {
     /*
@@ -982,8 +1008,20 @@ async function ingestChunk(
     console.log(`Chunk ${sectionCodes} failed (probably too large); bisecting and trying again...`);
 
     const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
-    await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
-    await ingestChunk(db, term, (middleInt + 1).toString().padStart(5, "0") as `${number}`, upper);
+    await ingestChunk(
+      db,
+      term,
+      lower,
+      middleInt.toString().padStart(5, "0") as `${number}`,
+      snapshotDecision,
+    );
+    await ingestChunk(
+      db,
+      term,
+      (middleInt + 1).toString().padStart(5, "0") as `${number}`,
+      upper,
+      snapshotDecision,
+    );
   }
 }
 
