@@ -125,76 +125,143 @@ export class DiningService {
   }
 
   async getRestaurantsByDate(input: DiningPeterplateQuery) {
-    const dateStr = input.date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    const dateStr = input.date.toISOString().split("T")[0];
 
-    const restaurants = await this.db.select().from(diningRestaurant);
+    const rows = await this.db
+      .select({
+        restaurant: diningRestaurant,
+        menu: diningMenu,
+        period: diningPeriod,
+        dish: diningDish,
+        nutrition: diningNutritionInfo,
+        dietRestriction: diningDietRestriction,
+        event: diningEvent,
+      })
+      .from(diningRestaurant)
+      .leftJoin(
+        diningMenu,
+        and(eq(diningMenu.restaurantId, diningRestaurant.id), eq(diningMenu.date, dateStr)),
+      )
+      .leftJoin(diningPeriod, eq(diningPeriod.id, diningMenu.periodId))
+      .leftJoin(diningDishToMenu, eq(diningDishToMenu.menuId, diningMenu.id))
+      .leftJoin(diningDish, eq(diningDish.id, diningDishToMenu.dishId))
+      .leftJoin(diningNutritionInfo, eq(diningNutritionInfo.dishId, diningDish.id))
+      .leftJoin(diningDietRestriction, eq(diningDietRestriction.dishId, diningDish.id))
+      .leftJoin(
+        diningEvent,
+        and(eq(diningEvent.restaurantId, diningRestaurant.id), gte(diningEvent.end, new Date())),
+      );
+    type Period = {
+      id: string;
+      startTime: string | null;
+      endTime: string | null;
+    };
 
-    const menus = await this.db.select().from(diningMenu).where(eq(diningMenu.date, dateStr));
+    type NutritionInfo = {
+      id: string;
+      calories: number | null;
+    };
 
-    const periods = await this.db.select().from(diningPeriod);
+    type DietRestriction = {
+      id: string;
+      name: string;
+    };
 
-    const dishToMenus = await this.db.select().from(diningDishToMenu);
+    type Dish = {
+      id: string;
+      name: string;
+      nutritionInfo?: NutritionInfo | null;
+      dietRestrictions?: DietRestriction[];
+    };
 
-    const dishes = await this.db.select().from(diningDish);
+    type Menu = {
+      id: string;
+      date: string;
+      period: Period | null;
+      dishes: Dish[];
+    };
 
-    const nutritionInfos = await this.db.select().from(diningNutritionInfo);
+    type Event = {
+      id: string;
+      name: string;
+    };
 
-    const dietRestrictions = await this.db.select().from(diningDietRestriction);
+    type Restaurant = {
+      id: string;
+      name: string;
+      menus: Menu[];
+      events: Event[];
+    };
 
-    const events = await this.db.select().from(diningEvent).where(gte(diningEvent.end, new Date()));
+    const restaurantMap = new Map<string, Restaurant>();
 
-    const mappedRestaurants = restaurants.map((restaurant) => {
-      const restaurantMenus = menus.filter((m) => m.restaurantId === restaurant.id);
+    for (const row of rows) {
+      const r = row.restaurant;
 
-      const restaurantEvents = events.filter((e) => e.restaurantId === restaurant.id);
+      if (!restaurantMap.has(r.id)) {
+        restaurantMap.set(r.id, {
+          ...r,
+          menus: [],
+          events: [],
+        });
+      }
 
-      return {
-        ...restaurant,
-        menus: restaurantMenus
-          .map((menu) => {
-            const period = periods.find((p) => p.id === menu.periodId);
+      const restaurant = restaurantMap.get(r.id);
 
-            const menuDishes = dishToMenus
-              .filter((dtm) => dtm.menuId === menu.id)
-              .map((dtm) => {
-                const dish = dishes.find((d) => d.id === dtm.dishId);
-                if (!dish) return null;
+      if (row.event) {
+        if (!restaurant.events.some((e) => e.id === row.event.id)) {
+          restaurant.events.push(row.event);
+        }
+      }
 
-                return {
-                  ...dish,
-                  nutritionInfo: nutritionInfos.find((n) => n.dishId === dish.id) ?? null,
-                  dietRestriction: dietRestrictions.find((d) => d.dishId === dish.id) ?? null,
-                  menuId: menu.id,
-                  restaurant: restaurant.name,
-                };
-              })
-              .filter(Boolean);
+      if (!row.menu) continue;
 
-            return {
-              ...menu,
-              period,
-              dishes: menuDishes,
-            };
-          })
-          .sort((a, b) => (a.period?.startTime ?? "").localeCompare(b.period?.startTime ?? "")),
-        events: restaurantEvents,
-      };
-    });
+      let menu = restaurant.menus.find((m) => m.id === row.menu.id);
 
-    const [firstRestaurant, secondRestaurant] = mappedRestaurants;
+      if (!menu) {
+        menu = {
+          ...row.menu,
+          period: row.period ?? null,
+          dishes: [],
+        };
+        restaurant.menus.push(menu);
+      }
 
-    if (mappedRestaurants.length !== 2) {
+      if (!row.dish) continue;
+
+      if (!menu.dishes.some((d) => d.id === row.dish.id)) {
+        menu.dishes.push({
+          ...row.dish,
+          nutritionInfo: row.nutrition ?? null,
+          dietRestriction: row.dietRestriction ?? null,
+          menuId: row.menu.id,
+          restaurant: r.name,
+        });
+      }
+    }
+
+    const restaurants = Array.from(restaurantMap.values());
+
+    if (restaurants.length !== 2) {
       throw new Error("Restaurants not found, there should always be two restaurants");
     }
 
-    return firstRestaurant.name === "anteatery"
-      ? {
-          anteatery: firstRestaurant,
-          brandywine: secondRestaurant,
-        }
-      : {
-          anteatery: secondRestaurant,
-          brandywine: firstRestaurant,
-        };
+    for (const restaurant of restaurants) {
+      restaurant.menus.sort((a, b) =>
+        (a.period?.startTime ?? "").localeCompare(b.period?.startTime ?? ""),
+      );
+    }
+
+    const anteatery = restaurants.find((r) => r.name.toLowerCase() === "anteatery");
+    const brandywine = restaurants.find((r) => r.name.toLowerCase() === "brandywine");
+
+    if (!anteatery || !brandywine) {
+      throw new Error("Expected anteatery and brandywine");
+    }
+
+    return {
+      anteatery,
+      brandywine,
+    };
   }
 }
