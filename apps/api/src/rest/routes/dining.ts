@@ -7,6 +7,8 @@ import {
   dishSchema,
   errorSchema,
   responseSchema,
+  restaurantsQuerySchema,
+  restaurantsResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -84,6 +86,49 @@ const datesRoute = createRoute({
       },
       description: "Successful operation",
     },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Dish not found",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
+const restaurantsRoute = createRoute({
+  summary: "Get restaurants",
+  operationId: "getDiningRestaurants",
+  tags: ["Dining"],
+  method: "get",
+  path: "/restaurants",
+  request: { query: restaurantsQuerySchema },
+  description:
+    "Retrieve restaurants and associated stations. These are expected to change very infrequently, if at all.",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(restaurantsResponseSchema) },
+      },
+      description: "Successful operation",
+    },
+    404: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Restaurant not found",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
   },
 });
 
@@ -112,6 +157,17 @@ diningRouter.openapi(datesRoute, async (c) => {
   const dates = await service.getPickableDates();
 
   return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
+});
+
+diningRouter.openapi(restaurantsRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+
+  const data = restaurantsResponseSchema.parse(await service.getRestaurants(query));
+  if (!data.length && query.id !== undefined) {
+    return c.json({ ok: false, message: "Restaurant not found" }, 404);
+  }
+  return c.json({ ok: true, data: data }, 200);
 });
 
 export { diningRouter };

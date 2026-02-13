@@ -1,4 +1,9 @@
-import type { diningDishQuerySchema, diningEventsQuerySchema } from "$schema";
+import type {
+  diningDishQuerySchema,
+  diningEventsQuerySchema,
+  restaurantsQuerySchema,
+  restaurantsResponseSchema,
+} from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, gte, max, min } from "@packages/db/drizzle";
 import {
@@ -7,6 +12,8 @@ import {
   diningEvent,
   diningMenu,
   diningNutritionInfo,
+  diningRestaurant,
+  diningStation,
 } from "@packages/db/schema";
 import type { z } from "zod";
 
@@ -114,5 +121,41 @@ export class DiningService {
       earliest: result[0]?.earliest ?? null,
       latest: result[0]?.latest ?? null,
     };
+  }
+
+  async getRestaurants(query: z.infer<typeof restaurantsQuerySchema>) {
+    const fetched = await this.db
+      .select({
+        restaurant: {
+          id: diningRestaurant.id,
+          updatedAt: diningRestaurant.updatedAt,
+        },
+        station: {
+          id: diningStation.id,
+          name: diningStation.name,
+          updatedAt: diningStation.updatedAt,
+        },
+      })
+      .from(diningRestaurant)
+      .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
+      .where(query.id ? eq(diningRestaurant.id, query.id) : undefined);
+
+    const result = {} as Record<
+      (typeof diningRestaurant.$inferInsert)["id"],
+      z.infer<typeof restaurantsResponseSchema>[number]
+    >;
+
+    for (const { restaurant, station } of fetched) {
+      // incorrectness of as cast is not observed because we immediately establish the missing invariant
+      // biome-ignore lint/suspicious/noAssignInExpressions: yes, i meant that
+      const stations = ((result[restaurant.id] ??= restaurant as z.infer<
+        typeof restaurantsResponseSchema
+      >[number]).stations ??= []);
+      if (station) {
+        stations.push(station);
+      }
+    }
+
+    return Object.values(result);
   }
 }

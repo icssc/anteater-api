@@ -1,8 +1,11 @@
 import { z } from "@hono/zod-openapi";
 
+export const restaurantIdSchema = z.string().openapi({
+  example: "anteatery",
+});
+
 export const diningEventsQuerySchema = z.object({
-  restaurantId: z.string().optional().openapi({
-    example: "anteatery",
+  restaurantId: restaurantIdSchema.optional().openapi({
     description: "Filter events by restaurant ID",
   }),
 });
@@ -23,8 +26,7 @@ export const diningPeterplateQuerySchema = z.object({
 export const eventSchema = z.object({
   title: z.string().openapi({ example: "Lunar New Year Celebration" }),
   image: z.string().nullable().openapi({ description: "URL to event promotional image" }),
-  restaurantId: z.string().openapi({
-    example: "anteatery",
+  restaurantId: restaurantIdSchema.openapi({
     description: "Unique identifier for the restaurant hosting this event",
   }),
   longDescription: z.string().nullable().openapi({
@@ -132,8 +134,25 @@ export const diningDatesResponseSchema = z.object({
   }),
 });
 
-export const restaurantSchema = z.object({});
-
-export const restaurantsResponseSchema = z.object({
-  restaurantId: z.string().optional(),
+export const restaurantsQuerySchema = z.object({
+  id: z.string().optional().openapi({
+    description: "If present, only return the restaurant with this ID (if it exists)",
+  }),
 });
+
+export const stationSchema = z.object({
+  id: z.string(),
+  name: z.string().openapi({
+    example: "The Crossroads",
+  }),
+  restaurantId: restaurantIdSchema,
+  updatedAt: z.date(),
+});
+
+export const restaurantSchema = z.object({ id: restaurantIdSchema, updatedAt: z.date() });
+
+export const restaurantsResponseSchema = restaurantSchema
+  .extend({
+    stations: stationSchema.omit({ restaurantId: true }).array(),
+  })
+  .array();
