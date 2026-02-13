@@ -36,7 +36,11 @@ export const eventSchema = z.object({
     example: "3056",
     description: "Unique identifier for the restaurant hosting this event",
   }),
-  longDescription: z.string().nullable(),
+  longDescription: z.string().nullable().openapi({
+    example:
+      "New year, new vibes. Kick off the celebration with bold Szechuan beef steak, chicken teriyaki dumplings, spicy vegetable lo mein, and more!",
+    description: "Description of the event",
+  }),
   // transforms Date objects in db to ISO 8601 strings (I hope)
   start: z.coerce.date().transform((d) => d?.toISOString()),
   end: z.coerce
@@ -89,7 +93,10 @@ export const nutritionInfoSchema = z.object({
 });
 
 export const dishSchema = z.object({
-  id: z.string().openapi({ example: "1923_101628_M35424_1_13208" }),
+  id: z.string().openapi({
+    example: "1923_101628_M35424_1_13208",
+    description: "Unique dish identifier",
+  }),
   stationId: z.string().openapi({
     example: "1935",
     description: "ID of the station serving this dish",
@@ -98,7 +105,10 @@ export const dishSchema = z.object({
     example: "Grilled Chicken Breast",
     description: "Name of the dish",
   }),
-  description: z.string().openapi({ example: "Seasoned and grilled chicken" }),
+  description: z.string().openapi({
+    example: "Seasoned and grilled chicken",
+    description: "Description of the dish",
+  }),
   ingredients: z.string().nullable().openapi({ example: "Chicken, salt, pepper" }),
   category: z.string().openapi({
     example: "Saute",
