@@ -42,15 +42,7 @@ export const gradesQuerySchema = z.object({
     }),
 });
 
-export const rawGradeSchema = z.object({
-  year: z.string(),
-  quarter: z.enum(terms),
-  sectionCode: z.string(),
-  department: z.string(),
-  courseNumber: z.string(),
-  courseNumeric: z.number(),
-  geCategories: z.enum(inputGECategories).array(),
-  instructors: z.string().array(),
+const gradeBaseShape = z.object({
   gradeACount: z.number(),
   gradeBCount: z.number(),
   gradeCCount: z.number(),
@@ -61,6 +53,19 @@ export const rawGradeSchema = z.object({
   gradeWCount: z.number(),
   averageGPA: z.number().nullable(),
 });
+
+const sectionShape = z.object({
+  year: z.string(),
+  quarter: z.enum(terms),
+  sectionCode: z.string(),
+  department: z.string(),
+  courseNumber: z.string(),
+  courseNumeric: z.number(),
+  geCategories: z.enum(inputGECategories).array(),
+  instructors: z.string().array(),
+});
+
+export const rawGradeSchema = gradeBaseShape.extend(sectionShape.shape);
 
 export const gradesOptionsSchema = z.object({
   years: z.string().array(),
@@ -70,56 +75,15 @@ export const gradesOptionsSchema = z.object({
 });
 
 export const aggregateGradesSchema = z.object({
-  sectionList: z
-    .object({
-      year: z.string(),
-      quarter: z.enum(terms),
-      sectionCode: z.string(),
-      department: z.string(),
-      courseNumber: z.string(),
-      courseNumeric: z.number(),
-      geCategories: z.enum(inputGECategories).array(),
-      instructors: z.string().array(),
-    })
-    .array(),
-  gradeDistribution: z.object({
-    gradeACount: z.number(),
-    gradeBCount: z.number(),
-    gradeCCount: z.number(),
-    gradeDCount: z.number(),
-    gradeFCount: z.number(),
-    gradePCount: z.number(),
-    gradeNPCount: z.number(),
-    gradeWCount: z.number(),
-    averageGPA: z.number().nullable(),
-  }),
+  sectionList: sectionShape.array(),
+  gradeDistribution: gradeBaseShape,
 });
 
-export const aggregateGradeByCourseSchema = z.object({
+export const aggregateGradeByCourseSchema = gradeBaseShape.extend({
   department: z.string(),
   courseNumber: z.string(),
-  gradeACount: z.number(),
-  gradeBCount: z.number(),
-  gradeCCount: z.number(),
-  gradeDCount: z.number(),
-  gradeFCount: z.number(),
-  gradePCount: z.number(),
-  gradeNPCount: z.number(),
-  gradeWCount: z.number(),
-  averageGPA: z.number().nullable(),
 });
 
-export const aggregateGradeByOfferingSchema = z.object({
-  department: z.string(),
-  courseNumber: z.string(),
+export const aggregateGradeByOfferingSchema = aggregateGradeByCourseSchema.extend({
   instructor: z.string(),
-  gradeACount: z.number(),
-  gradeBCount: z.number(),
-  gradeCCount: z.number(),
-  gradeDCount: z.number(),
-  gradeFCount: z.number(),
-  gradePCount: z.number(),
-  gradeNPCount: z.number(),
-  gradeWCount: z.number(),
-  averageGPA: z.number().nullable(),
 });
