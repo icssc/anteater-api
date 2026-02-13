@@ -15,12 +15,6 @@ export const diningDishQuerySchema = z.object({
   }),
 });
 
-export const diningPeterplateQuerySchema = z.object({
-  date: z.coerce.date().openapi({
-    example: "2026-01-28",
-  }),
-});
-
 export const eventSchema = z.object({
   title: z.string().openapi({ example: "Lunar New Year Celebration" }),
   image: z.string().nullable().openapi({ description: "URL to event promotional image" }),
