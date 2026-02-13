@@ -4,8 +4,9 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { geCategories } from "../../../api/src/schema";
 import { geCategoryToColumn } from "../../../api/src/services";
-import apExamData, { geCategories, type geCategory } from "./data.ts";
+import apExamData, { type geCategory } from "./data.ts";
 
 async function main() {
   const url = process.env.DB_URL;
