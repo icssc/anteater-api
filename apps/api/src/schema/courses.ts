@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import type { PrerequisiteTree } from "@packages/db/schema";
 import { instructorPreviewSchema } from "./instructors";
-import { inputGECategories } from "./lib";
+import { geCategories } from "./lib";
 
 export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
@@ -14,6 +14,8 @@ export const outputCourseLevels = [
   "Upper Division (100-199)",
   "Graduate/Professional Only (200+)",
 ] as const;
+
+const inputGECategories = geCategories;
 
 export const outputGECategories = [
   "GE Ia: Lower Division Writing",

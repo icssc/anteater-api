@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { courseSchema, inputCourseLevelSchema } from "./courses.ts";
 import { instructorSchema } from "./instructors.ts";
-import { inputGECategories } from "./lib";
+import { geCategories } from "./lib";
 
 export const searchQuerySchema = z.object({
   query: z.string({ message: "Parameter 'query' is required" }),
@@ -35,7 +35,7 @@ export const searchQuerySchema = z.object({
   ge: z.coerce
     .string()
     .transform((l) => l.split(",").map((cat) => cat.trim()))
-    .pipe(z.enum(inputGECategories).array())
+    .pipe(z.enum(geCategories).array())
     .optional()
     .openapi({
       description:

@@ -37,6 +37,7 @@ import {
   sleep,
 } from "@packages/stdlib";
 import { load } from "cheerio";
+import { geCategories } from "../../../api/src/schema";
 
 /**
  * WebSoc allows us to scrape up to 900 sections per chunk.
@@ -734,19 +735,6 @@ type CourseGEUpdate = {
   isGE7?: boolean;
   isGE8?: boolean;
 };
-
-const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
 
 const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpdate> = {
   "GE-1A": "isGE1A",

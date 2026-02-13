@@ -52,7 +52,7 @@ export const courseNumberSchema = z.string().transform(courseNumberTransform).op
   example: "46,6B,51-53",
 });
 
-export const inputGECategories = [
+export const geCategories = [
   "GE-1A",
   "GE-1B",
   "GE-2",
