@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS "dining_period" (
 	"id" varchar NOT NULL,
 	"date" date NOT NULL,
 	"restaurant_id" varchar NOT NULL,
-	"start" time NOT NULL,
-	"end" time NOT NULL,
+	"start_time" time NOT NULL,
+	"end_time" time NOT NULL,
 	"name" varchar NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL
 );
