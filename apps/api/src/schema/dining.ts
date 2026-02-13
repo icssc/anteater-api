@@ -8,7 +8,14 @@ export const diningEventsQuerySchema = z.object({
   }),
 });
 
-export const diningDishQuerySchema = z.object({
+export const batchDishesQuerySchema = z.object({
+  ids: z
+    .string({ error: "Parameter 'ids' is required" })
+    .transform((xs) => xs.split(","))
+    .openapi({ example: "1923_101628_M34418_1_30296,1923_101628_M10094_1_19163" }),
+});
+
+export const dishQuerySchema = z.object({
   id: z.string().openapi({
     example: "1923_101628_M35424_1_13208",
     description: "Unique dish identifier from dining system",
