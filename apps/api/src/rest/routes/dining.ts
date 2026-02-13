@@ -1,9 +1,10 @@
 import { defaultHook } from "$hooks";
 import {
+  batchDishesQuerySchema,
   diningDatesResponseSchema,
-  diningDishQuerySchema,
   diningEventsQuerySchema,
   diningEventsResponseSchema,
+  dishQuerySchema,
   dishSchema,
   errorSchema,
   responseSchema,
@@ -44,13 +45,39 @@ const eventsRoute = createRoute({
   },
 });
 
+const batchDishesRoute = createRoute({
+  summary: "Retrieve dishes by IDs",
+  operationId: "batchDishes",
+  tags: ["Courses"],
+  method: "get",
+  path: "/dishes/batch",
+  request: { query: batchDishesQuerySchema },
+  description: "Retrieves courses with the IDs provided",
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: responseSchema(dishSchema.array()) },
+      },
+      description: "Successful operation",
+    },
+    422: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Parameters failed validation",
+    },
+    500: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Server error occurred",
+    },
+  },
+});
+
 const dishRoute = createRoute({
   summary: "Get a dish by ID",
   operationId: "getDiningDish",
   tags: ["Dining"],
   method: "get",
   path: "/dishes/{id}",
-  request: { params: diningDishQuerySchema },
+  request: { params: dishQuerySchema },
   description: "Retrieves a single dish with nutrition and dietary restriction information",
   responses: {
     200: {
@@ -171,6 +198,18 @@ diningRouter.openapi(eventsRoute, async (c) => {
   const events = await service.getUpcomingEvents(query);
 
   return c.json({ ok: true, data: diningEventsResponseSchema.parse(events) }, 200);
+});
+
+diningRouter.openapi(batchDishesRoute, async (c) => {
+  const { ids } = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+  return c.json(
+    {
+      ok: true,
+      data: dishSchema.array().parse(await service.batchGetDishes(ids)),
+    },
+    200,
+  );
 });
 
 diningRouter.openapi(dishRoute, async (c) => {

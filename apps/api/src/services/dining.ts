@@ -1,12 +1,13 @@
 import type {
-  diningDishQuerySchema,
   diningEventsQuerySchema,
+  dishQuerySchema,
+  dishSchema,
   restaurantTodayQuerySchema,
   restaurantsQuerySchema,
   restaurantsResponseSchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { and, eq, gte, max, min, sql } from "@packages/db/drizzle";
+import { type SQL, and, eq, gte, inArray, max, min, sql } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -18,10 +19,10 @@ import {
   diningRestaurant,
   diningStation,
 } from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
+import { getFromMapOrThrow, orNull } from "@packages/stdlib";
 import type { z } from "zod";
 
-type DiningDishQuery = z.infer<typeof diningDishQuerySchema>;
+type DiningDishQuery = z.infer<typeof dishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 
 class DiningService {
@@ -50,67 +51,99 @@ class DiningService {
       .where(and(...conds));
   }
 
-  async getDishById(input: DiningDishQuery) {
-    const [dish] = await this.db
-      .select()
+  async getDishesRaw(input: { where?: SQL }): Promise<z.infer<typeof dishSchema>[]> {
+    const rows = await this.db
+      .select({
+        id: diningDish.id,
+        stationId: diningDish.stationId,
+        name: diningDish.name,
+        description: diningDish.description,
+        ingredients: diningDish.ingredients,
+        category: diningDish.category,
+        imageUrl: diningDish.imageUrl,
+        updatedAt: diningDish.updatedAt,
+        nutritionInfo: {
+          servingSize: diningNutritionInfo.servingSize,
+          servingUnit: diningNutritionInfo.servingUnit,
+          calories: diningNutritionInfo.calories,
+          totalFatG: diningNutritionInfo.totalFatG,
+          transFatG: diningNutritionInfo.transFatG,
+          saturatedFatG: diningNutritionInfo.saturatedFatG,
+          cholesterolMg: diningNutritionInfo.cholesterolMg,
+          sodiumMg: diningNutritionInfo.sodiumMg,
+          totalCarbsG: diningNutritionInfo.totalCarbsG,
+          dietaryFiberG: diningNutritionInfo.dietaryFiberG,
+          sugarsG: diningNutritionInfo.sugarsG,
+          proteinG: diningNutritionInfo.proteinG,
+          calciumMg: diningNutritionInfo.calciumMg,
+          ironMg: diningNutritionInfo.ironMg,
+          vitaminAIU: diningNutritionInfo.vitaminAIU,
+          vitaminCIU: diningNutritionInfo.vitaminCIU,
+          containsEggs: diningDietRestriction.containsEggs,
+          containsFish: diningDietRestriction.containsFish,
+          containsMilk: diningDietRestriction.containsMilk,
+          containsPeanuts: diningDietRestriction.containsPeanuts,
+          containsSesame: diningDietRestriction.containsSesame,
+          containsShellfish: diningDietRestriction.containsShellfish,
+          containsSoy: diningDietRestriction.containsSoy,
+          containsTreeNuts: diningDietRestriction.containsTreeNuts,
+          containsWheat: diningDietRestriction.containsWheat,
+          isGlutenFree: diningDietRestriction.isGlutenFree,
+          isHalal: diningDietRestriction.isHalal,
+          isKosher: diningDietRestriction.isKosher,
+          isLocallyGrown: diningDietRestriction.isLocallyGrown,
+          isOrganic: diningDietRestriction.isOrganic,
+          isVegan: diningDietRestriction.isVegan,
+          isVegetarian: diningDietRestriction.isVegetarian,
+          updatedAt: diningDietRestriction.updatedAt,
+        },
+        dietRestriction: {
+          containsEggs: diningDietRestriction.containsEggs,
+          containsFish: diningDietRestriction.containsFish,
+          containsMilk: diningDietRestriction.containsMilk,
+          containsPeanuts: diningDietRestriction.containsPeanuts,
+          containsSesame: diningDietRestriction.containsSesame,
+          containsShellfish: diningDietRestriction.containsShellfish,
+          containsSoy: diningDietRestriction.containsSoy,
+          containsTreeNuts: diningDietRestriction.containsTreeNuts,
+          containsWheat: diningDietRestriction.containsWheat,
+          isGlutenFree: diningDietRestriction.isGlutenFree,
+          isHalal: diningDietRestriction.isHalal,
+          isKosher: diningDietRestriction.isKosher,
+          isLocallyGrown: diningDietRestriction.isLocallyGrown,
+          isOrganic: diningDietRestriction.isOrganic,
+          isVegan: diningDietRestriction.isVegan,
+          isVegetarian: diningDietRestriction.isVegetarian,
+          updatedAt: diningDietRestriction.updatedAt,
+        },
+      })
       .from(diningDish)
-      .where(eq(diningDish.id, input.id))
-      // ensures that only 1 dish is returned
-      .limit(1);
+      .leftJoin(diningNutritionInfo, eq(diningDish.id, diningNutritionInfo.dishId))
+      .leftJoin(diningDietRestriction, eq(diningDish.id, diningDietRestriction.dishId))
+      .where(input.where);
 
-    if (!dish) return null;
+    return rows.map((r) => {
+      // alias to allow these assignments
+      const rPun = r as z.infer<typeof dishSchema>;
 
-    const [nutritionInfo] = await this.db
-      .select({
-        servingSize: diningNutritionInfo.servingSize,
-        servingUnit: diningNutritionInfo.servingUnit,
-        calories: diningNutritionInfo.calories,
-        totalFatG: diningNutritionInfo.totalFatG,
-        transFatG: diningNutritionInfo.transFatG,
-        saturatedFatG: diningNutritionInfo.saturatedFatG,
-        cholesterolMg: diningNutritionInfo.cholesterolMg,
-        sodiumMg: diningNutritionInfo.sodiumMg,
-        totalCarbsG: diningNutritionInfo.totalCarbsG,
-        dietaryFiberG: diningNutritionInfo.dietaryFiberG,
-        sugarsG: diningNutritionInfo.sugarsG,
-        proteinG: diningNutritionInfo.proteinG,
-        calciumMg: diningNutritionInfo.calciumMg,
-        ironMg: diningNutritionInfo.ironMg,
-        vitaminAIU: diningNutritionInfo.vitaminAIU,
-        vitaminCIU: diningNutritionInfo.vitaminCIU,
-      })
-      .from(diningNutritionInfo)
-      .where(eq(diningNutritionInfo.dishId, input.id))
-      .limit(1);
+      if (r.nutritionInfo.updatedAt === null) {
+        rPun.nutritionInfo = null;
+      }
+      // this optional won't ever trigger
+      if (r.dietRestriction?.updatedAt === null) {
+        rPun.dietRestriction = null;
+      }
 
-    const [dietRestriction] = await this.db
-      .select({
-        containsEggs: diningDietRestriction.containsEggs,
-        containsFish: diningDietRestriction.containsFish,
-        containsMilk: diningDietRestriction.containsMilk,
-        containsPeanuts: diningDietRestriction.containsPeanuts,
-        containsSesame: diningDietRestriction.containsSesame,
-        containsShellfish: diningDietRestriction.containsShellfish,
-        containsSoy: diningDietRestriction.containsSoy,
-        containsTreeNuts: diningDietRestriction.containsTreeNuts,
-        containsWheat: diningDietRestriction.containsWheat,
-        isGlutenFree: diningDietRestriction.isGlutenFree,
-        isHalal: diningDietRestriction.isHalal,
-        isKosher: diningDietRestriction.isKosher,
-        isLocallyGrown: diningDietRestriction.isLocallyGrown,
-        isOrganic: diningDietRestriction.isOrganic,
-        isVegan: diningDietRestriction.isVegan,
-        isVegetarian: diningDietRestriction.isVegetarian,
-      })
-      .from(diningDietRestriction)
-      .where(eq(diningDietRestriction.dishId, input.id))
-      .limit(1);
+      return rPun;
+    });
+  }
 
-    return {
-      ...dish,
-      nutritionInfo: nutritionInfo ?? null,
-      dietRestriction: dietRestriction ?? null,
-    };
+  async batchGetDishes(ids: string[]) {
+    return this.getDishesRaw({ where: inArray(diningDish.id, ids) });
+  }
+
+  async getDishById(input: DiningDishQuery) {
+    return this.getDishesRaw({ where: eq(diningDish.id, input.id) }).then((x) => orNull(x[0]));
   }
 
   async getPickableDates() {
