@@ -1,7 +1,7 @@
 import type { LocationResponse } from "./fetch-location.ts";
 
-export const restaurantIDs = ["anteatery", "brandywine"] as const;
-export type RestaurantID = (typeof restaurantIDs)[number];
+export const restaurantIds = ["anteatery", "brandywine"] as const;
+export type RestaurantId = (typeof restaurantIds)[number];
 
 export const restaurantIDToURL = {
   anteatery: "the-anteatery",

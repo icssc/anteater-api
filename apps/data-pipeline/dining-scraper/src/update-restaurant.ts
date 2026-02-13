@@ -14,7 +14,7 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import { type RestaurantID, allergens, dietaryPreferences, restaurantIDToURL } from "./model.ts";
+import { type RestaurantId, allergens, dietaryPreferences, restaurantIDToURL } from "./model.ts";
 import { findCurrentlyActiveSchedule } from "./util.ts";
 
 /**
@@ -27,7 +27,7 @@ import { findCurrentlyActiveSchedule } from "./util.ts";
 export async function updateRestaurant(
   db: ReturnType<typeof database>,
   today: Date,
-  restaurantId: RestaurantID,
+  restaurantId: RestaurantId,
 ): Promise<void> {
   console.log(`Updating restaurant ${restaurantId}...`);
 

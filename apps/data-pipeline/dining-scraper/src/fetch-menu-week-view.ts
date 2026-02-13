@@ -1,6 +1,6 @@
 import type { diningDish, diningNutritionInfo } from "@packages/db/schema";
 import z from "zod";
-import { type RestaurantID, restaurantIDToURL } from "./model.ts";
+import { type RestaurantId, restaurantIDToURL } from "./model.ts";
 import { queryAdobeECommerce } from "./query.ts";
 
 const getLocationRecipesSchema = z.object({
@@ -232,7 +232,7 @@ function parseProducts(products: WeeklyProducts): ProductDictionary {
  */
 export async function fetchMenuWeekView(
   date: Date,
-  restaurantID: RestaurantID,
+  restaurantID: RestaurantId,
   periodId: number,
 ): Promise<DateDishMap | null> {
   const getLocationRecipesVariables = {

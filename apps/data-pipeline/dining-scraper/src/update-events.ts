@@ -3,7 +3,7 @@ import { diningEvent, diningRestaurant } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import z from "zod";
 import { fetchEventImages } from "./fetch-event-images.ts";
-import { restaurantIDs } from "./model.ts";
+import { restaurantIds } from "./model.ts";
 import { queryAdobeECommerce } from "./query.ts";
 
 function parseEventDate(dateStr: string | null, time: string | null): Date | null {
@@ -138,7 +138,7 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
     await db
       .insert(diningRestaurant)
       .values(
-        restaurantIDs.map((rId) => {
+        restaurantIds.map((rId) => {
           return {
             id: rId,
             updatedAt,
