@@ -1,15 +1,4 @@
-import {
-  type RestaurantId,
-  type RestaurantName,
-  type Schedule,
-  type WeekTimes,
-  restaurantIds,
-  restaurantNames,
-} from "./model.ts";
-
-export function restaurantIdFor(name: RestaurantName): RestaurantId {
-  return restaurantIds[restaurantNames.findIndex((n) => n === name)];
-}
+import type { Schedule, WeekTimes } from "./model.ts";
 
 /**
  * Takes in data in the form "Mo-Fr 07:15-11:00; Sa-Su 09:00-11:00"

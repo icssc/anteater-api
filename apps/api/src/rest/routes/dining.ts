@@ -4,10 +4,8 @@ import {
   diningDishQuerySchema,
   diningEventQuerySchema,
   diningEventsResponseSchema,
-  diningPeterplateQuerySchema,
   dishSchema,
   errorSchema,
-  peterplateSchema,
   responseSchema,
 } from "$schema";
 import { DiningService } from "$services";
@@ -114,40 +112,6 @@ diningRouter.openapi(datesRoute, async (c) => {
   const dates = await service.getPickableDates();
 
   return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
-});
-
-const peterplateRoute = createRoute({
-  summary: "Get all information about restaurants by given date",
-  operationId: "peterplate",
-  tag: ["Dining"],
-  method: "get",
-  path: "/peterplate/{date}",
-  request: { params: diningPeterplateQuerySchema },
-  description: "Get all information about restaurants by given date",
-  responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(peterplateSchema) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
-  },
-});
-
-diningRouter.openapi(peterplateRoute, async (c) => {
-  const { date } = c.req.valid("param");
-  const service = new DiningService(database(c.env.DB.connectionString));
-  const data = await service.getRestaurantsByDate({ date });
-
-  return c.json({ ok: true, data: peterplateSchema.parse(data) }, 200);
 });
 
 export { diningRouter };

@@ -3,9 +3,8 @@ import { diningEvent, diningRestaurant } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import z from "zod";
 import { fetchEventImages } from "./fetch-event-images.ts";
-import { restaurantNames } from "./model.ts";
+import { restaurantIDs } from "./model.ts";
 import { queryAdobeECommerce } from "./query.ts";
-import { restaurantIdFor } from "./util.ts";
 
 function parseEventDate(dateStr: string | null, time: string | null): Date | null {
   if (!dateStr || !time) return null;
@@ -85,14 +84,12 @@ async function getAEMEvents(
     throw new Error(`Can't getAEMEvents for location ${location}`);
   }
   const events = response.data.AEM_eventList.items;
-  const restaurantID = restaurantIdFor(
-    (
-      {
-        "The Anteatery": "anteatery",
-        Brandywine: "brandywine",
-      } as const
-    )[location],
-  );
+  const restaurantID = (
+    {
+      "The Anteatery": "anteatery",
+      Brandywine: "brandywine",
+    } as const
+  )[location];
 
   return events.map((e) => {
     const startDate = parseEventDate(e.startDate, e.startTime);
@@ -141,10 +138,9 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
     await db
       .insert(diningRestaurant)
       .values(
-        restaurantNames.map((rName) => {
+        restaurantIDs.map((rId) => {
           return {
-            id: restaurantIdFor(rName),
-            name: rName,
+            id: rId,
             updatedAt,
           };
         }),

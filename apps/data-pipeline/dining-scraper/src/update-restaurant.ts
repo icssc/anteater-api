@@ -14,31 +14,30 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import { type RestaurantName, allergens, dietaryPreferences, restaurantUrlMap } from "./model.ts";
-import { findCurrentlyActiveSchedule, restaurantIdFor } from "./util.ts";
+import { type RestaurantID, allergens, dietaryPreferences, restaurantIDToURL } from "./model.ts";
+import { findCurrentlyActiveSchedule } from "./util.ts";
 
 /**
  * Upserts the menu for the week starting at `date` for a restaurant, up until
  * the next Sunday.
  * @param db the Drizzle database instance
  * @param today will update using menus from this date to the next sunday, inclusive
- * @param restaurantName the restaurant to upsert the menu for ("anteatery", "brandywine")
+ * @param restaurantId the restaurant to upsert the menu for ("anteatery", "brandywine")
  */
 export async function updateRestaurant(
   db: ReturnType<typeof database>,
   today: Date,
-  restaurantName: RestaurantName,
+  restaurantId: RestaurantID,
 ): Promise<void> {
-  console.log(`Updating restaurant ${restaurantName}...`);
+  console.log(`Updating restaurant ${restaurantId}...`);
 
-  const restaurantId = restaurantIdFor(restaurantName);
   const todayDayOfWeek = today.getDay();
 
   const updatedAt = new Date();
 
   // Get all the periods and stations available for the week.
   const restaurantInfo = await fetchLocation({
-    locationUrlKey: restaurantUrlMap[restaurantName],
+    locationUrlKey: restaurantIDToURL[restaurantId],
     sortOrder: "ASC",
   });
 
@@ -46,7 +45,6 @@ export async function updateRestaurant(
     .insert(diningRestaurant)
     .values({
       id: restaurantId,
-      name: restaurantName,
       updatedAt,
     })
     .onConflictDoUpdate({
@@ -142,7 +140,7 @@ export async function updateRestaurant(
   await Promise.all(
     Array.from(periodSet).map(async (periodId) => {
       const periodUpdatedAt = new Date();
-      const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantName, periodId);
+      const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantId, periodId);
 
       if (!currentPeriodWeekly) {
         console.log(`Skipping period ${periodId}, period is null.`);

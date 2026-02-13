@@ -1,17 +1,8 @@
 import { z } from "@hono/zod-openapi";
-import type {
-  diningDietRestriction,
-  diningDish,
-  diningEvent,
-  diningMenu,
-  diningNutritionInfo,
-  diningPeriod,
-  diningRestaurant,
-  diningStation,
-} from "@packages/db/schema";
+
 export const diningEventQuerySchema = z.object({
   restaurantId: z.string().optional().openapi({
-    example: "3056",
+    example: "anteatery",
     description: "Filter events by restaurant ID",
   }),
 });
@@ -33,7 +24,7 @@ export const eventSchema = z.object({
   title: z.string().openapi({ example: "Lunar New Year Celebration" }),
   image: z.string().nullable().openapi({ description: "URL to event promotional image" }),
   restaurantId: z.string().openapi({
-    example: "3056",
+    example: "anteatery",
     description: "Unique identifier for the restaurant hosting this event",
   }),
   longDescription: z.string().nullable().openapi({
@@ -140,36 +131,3 @@ export const diningDatesResponseSchema = z.object({
     example: "2026-01-31",
   }),
 });
-
-type SelectDish = typeof diningDish.$inferSelect;
-type SelectStation = typeof diningStation.$inferSelect;
-type SelectMenu = typeof diningMenu.$inferSelect;
-type SelectPeriod = typeof diningPeriod.$inferSelect;
-type SelectEvent = typeof diningEvent.$inferSelect;
-type SelectDietRestriction = typeof diningDietRestriction.$inferSelect;
-type SelectNutritionInfo = typeof diningNutritionInfo.$inferSelect;
-type SelectRestaurant = typeof diningRestaurant.$inferSelect;
-interface RestaurantInfo extends SelectRestaurant {
-  events: SelectEvent[];
-  menus: (SelectMenu & {
-    period: SelectPeriod;
-    stations: (SelectStation & {
-      dishes: (SelectDish & {
-        menuId: SelectMenu["id"];
-        restaurant: SelectRestaurant["name"];
-        dietRestriction: SelectDietRestriction;
-        nutritionInfo: SelectNutritionInfo;
-      })[];
-    })[];
-  })[];
-}
-
-type PeterplateData = {
-  anteatery: RestaurantInfo;
-  brandywine: RestaurantInfo;
-};
-
-export const peterplateSchema = z.object({
-  anteatery: z.any(),
-  brandywine: z.any(),
-}) as unknown as z.ZodType<PeterplateData>;

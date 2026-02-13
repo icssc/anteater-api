@@ -1,6 +1,6 @@
 import type { diningDish, diningNutritionInfo } from "@packages/db/schema";
 import z from "zod";
-import { type RestaurantName, restaurantUrlMap } from "./model.ts";
+import { type RestaurantID, restaurantIDToURL } from "./model.ts";
 import { queryAdobeECommerce } from "./query.ts";
 
 const getLocationRecipesSchema = z.object({
@@ -226,18 +226,18 @@ function parseProducts(products: WeeklyProducts): ProductDictionary {
 /**
  * Fetches the Adobe ECommerce Menu specified for a week, starting at the date.
  * @param date the date for which to start getting the menus
- * @param restaurantName the restaurant for which to get the dishes
+ * @param restaurantID the restaurant for which to get the dishes
  * @param periodId the meal period to get the menus for
  * @returns returns a list of objects for each date
  */
 export async function fetchMenuWeekView(
   date: Date,
-  restaurantName: RestaurantName,
+  restaurantID: RestaurantID,
   periodId: number,
 ): Promise<DateDishMap | null> {
   const getLocationRecipesVariables = {
     date: toISODateString(date),
-    locationUrlKey: restaurantUrlMap[restaurantName],
+    locationUrlKey: restaurantIDToURL[restaurantID],
     mealPeriod: periodId,
     viewType: "WEEKLY",
   } as GetLocationRecipesVariables;
@@ -249,7 +249,7 @@ export async function fetchMenuWeekView(
   );
   if (queried === null) {
     throw new Error(
-      `Could not getAdobeEcommerceMenuWeekView for date ${date}, restaurant name ${restaurantName}, period ID ${periodId}`,
+      `Could not getAdobeEcommerceMenuWeekView for date ${date}, restaurant name ${restaurantID}, period ID ${periodId}`,
     );
   }
 

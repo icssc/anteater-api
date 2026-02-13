@@ -1,5 +1,5 @@
 {
-  "id": "e70c6cb8-c58f-41e1-a0aa-eaaa980548e1",
+  "id": "57505746-e7c1-42c8-9492-f423bbe90d5d",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -1246,12 +1246,6 @@
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         }

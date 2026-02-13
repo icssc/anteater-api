@@ -1,25 +1,17 @@
-import type {
-  diningDishQuerySchema,
-  diningEventQuerySchema,
-  diningPeterplateQuerySchema,
-} from "$schema";
+import type { diningDishQuerySchema, diningEventQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, gte, max, min } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
-  diningDishToMenu,
   diningEvent,
   diningMenu,
   diningNutritionInfo,
-  diningPeriod,
-  diningRestaurant,
 } from "@packages/db/schema";
 import type { z } from "zod";
 
 type DiningDishQuery = z.infer<typeof diningDishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventQuerySchema>;
-type DiningPeterplateQuery = z.infer<typeof diningPeterplateQuerySchema>;
 
 export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
@@ -121,147 +113,6 @@ export class DiningService {
     return {
       earliest: result[0]?.earliest ?? null,
       latest: result[0]?.latest ?? null,
-    };
-  }
-
-  async getRestaurantsByDate(input: DiningPeterplateQuery) {
-    const dateStr = input.date.toISOString().split("T")[0];
-
-    const rows = await this.db
-      .select({
-        restaurant: diningRestaurant,
-        menu: diningMenu,
-        period: diningPeriod,
-        dish: diningDish,
-        nutrition: diningNutritionInfo,
-        dietRestriction: diningDietRestriction,
-        event: diningEvent,
-      })
-      .from(diningRestaurant)
-      .leftJoin(
-        diningMenu,
-        and(eq(diningMenu.restaurantId, diningRestaurant.id), eq(diningMenu.date, dateStr)),
-      )
-      .leftJoin(diningPeriod, eq(diningPeriod.id, diningMenu.periodId))
-      .leftJoin(diningDishToMenu, eq(diningDishToMenu.menuId, diningMenu.id))
-      .leftJoin(diningDish, eq(diningDish.id, diningDishToMenu.dishId))
-      .leftJoin(diningNutritionInfo, eq(diningNutritionInfo.dishId, diningDish.id))
-      .leftJoin(diningDietRestriction, eq(diningDietRestriction.dishId, diningDish.id))
-      .leftJoin(
-        diningEvent,
-        and(eq(diningEvent.restaurantId, diningRestaurant.id), gte(diningEvent.end, new Date())),
-      );
-    type Period = {
-      id: string;
-      startTime: string | null;
-      endTime: string | null;
-    };
-
-    type NutritionInfo = {
-      id: string;
-      calories: number | null;
-    };
-
-    type DietRestriction = {
-      id: string;
-      name: string;
-    };
-
-    type Dish = {
-      id: string;
-      name: string;
-      nutritionInfo?: NutritionInfo | null;
-      dietRestrictions?: DietRestriction[];
-    };
-
-    type Menu = {
-      id: string;
-      date: string;
-      period: Period | null;
-      dishes: Dish[];
-    };
-
-    type Event = {
-      id: string;
-      name: string;
-    };
-
-    type Restaurant = {
-      id: string;
-      name: string;
-      menus: Menu[];
-      events: Event[];
-    };
-
-    const restaurantMap = new Map<string, Restaurant>();
-
-    for (const row of rows) {
-      const r = row.restaurant;
-
-      if (!restaurantMap.has(r.id)) {
-        restaurantMap.set(r.id, {
-          ...r,
-          menus: [],
-          events: [],
-        });
-      }
-
-      const restaurant = restaurantMap.get(r.id);
-
-      if (row.event) {
-        if (!restaurant.events.some((e) => e.id === row.event.id)) {
-          restaurant.events.push(row.event);
-        }
-      }
-
-      if (!row.menu) continue;
-
-      let menu = restaurant.menus.find((m) => m.id === row.menu.id);
-
-      if (!menu) {
-        menu = {
-          ...row.menu,
-          period: row.period ?? null,
-          dishes: [],
-        };
-        restaurant.menus.push(menu);
-      }
-
-      if (!row.dish) continue;
-
-      if (!menu.dishes.some((d) => d.id === row.dish.id)) {
-        menu.dishes.push({
-          ...row.dish,
-          nutritionInfo: row.nutrition ?? null,
-          dietRestriction: row.dietRestriction ?? null,
-          menuId: row.menu.id,
-          restaurant: r.name,
-        });
-      }
-    }
-
-    const restaurants = Array.from(restaurantMap.values());
-
-    if (restaurants.length !== 2) {
-      throw new Error("Restaurants not found, there should always be two restaurants");
-    }
-
-    for (const restaurant of restaurants) {
-      restaurant.menus.sort((a, b) =>
-        (a.period?.startTime ?? "").localeCompare(b.period?.startTime ?? ""),
-      );
-    }
-
-    const anteatery = restaurants.find((r) => r.name.toLowerCase() === "anteatery");
-    const brandywine = restaurants.find((r) => r.name.toLowerCase() === "brandywine");
-
-    if (!anteatery || !brandywine) {
-      throw new Error("Expected anteatery and brandywine");
-    }
-
-    return {
-      anteatery,
-      brandywine,
     };
   }
 }

@@ -826,7 +826,6 @@ export const libraryTrafficHistory = pgTable(
 export const diningRestaurant = pgTable("dining_restaurant", {
   id: varchar("id").primaryKey(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-  name: varchar("name").notNull(),
 });
 
 export const diningPeriod = pgTable(

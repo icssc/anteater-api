@@ -89,8 +89,7 @@ CREATE TABLE IF NOT EXISTS "dining_period" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_restaurant" (
 	"id" varchar PRIMARY KEY NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL,
-	"name" varchar NOT NULL
+	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_station" (
