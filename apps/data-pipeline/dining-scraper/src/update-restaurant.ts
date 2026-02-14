@@ -78,7 +78,7 @@ export async function updateRestaurant(
     datesToFetch.push(nextDate);
   }
   console.log(
-    `Fetching ${datesToFetch.length} dates: ${datesToFetch.map((d) => format(d, "yyyy-MM-dd")).join(", ")}`,
+    `Parsing info for ${datesToFetch.length} dates: ${datesToFetch.map((d) => format(d, "yyyy-MM-dd")).join(", ")}`,
   );
 
   // Keep a set of all relevant meal periods (ones that were relevant throughout
