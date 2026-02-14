@@ -204,6 +204,7 @@ class DiningService {
         },
         period: {
           id: diningPeriod.id,
+          name: diningPeriod.name,
           startTime: diningPeriod.startTime,
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
@@ -247,6 +248,7 @@ class DiningService {
 
       if (!periods.has(period.id)) {
         periods.set(period.id, {
+          name: period.name,
           startTime: period.startTime,
           endTime: period.endTime,
           stationToDishes: {},
