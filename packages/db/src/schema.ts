@@ -4,7 +4,6 @@ import {
   boolean,
   date,
   decimal,
-  foreignKey,
   index,
   integer,
   json,
@@ -831,10 +830,8 @@ export const diningRestaurant = pgTable("dining_restaurant", {
 export const diningPeriod = pgTable(
   "dining_period",
   {
-    // id: uuid("id"),
-    // .primaryKey()
-    // adobeId: varchar("adobe_id").notNull(),
-    id: varchar("id").notNull(),
+    id: uuid("id").primaryKey().defaultRandom(),
+    adobeId: integer("adobe_id").notNull(),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -847,37 +844,7 @@ export const diningPeriod = pgTable(
     name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
-  (table) => [uniqueIndex().on(table.id, table.date, table.restaurantId)],
-  // (table) => [{ pk: primaryKey({ columns: [table.id, table.date, table.restaurantId] }) }],
-);
-
-export const diningMenu = pgTable(
-  "dining_menu",
-  {
-    id: varchar("id").primaryKey(),
-    // periodId: uuid("period_id")
-    //   .notNull()
-    //   .references(() => diningPeriod.id, { onDelete: "cascade", onUpdate: "cascade" }),
-    periodId: varchar("period_id").notNull(),
-    date: date("date", { mode: "string" }).notNull(),
-    restaurantId: varchar("restaurant_id")
-      .notNull()
-      .references(() => diningRestaurant.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-  },
-  (table) => [
-    {
-      periodFk: foreignKey({
-        columns: [table.periodId, table.date, table.restaurantId],
-        foreignColumns: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
-      })
-        .onDelete("cascade")
-        .onUpdate("cascade"),
-    },
-  ],
+  (table) => [uniqueIndex().on(table.adobeId, table.date, table.restaurantId)],
 );
 
 export const diningStation = pgTable("dining_station", {
@@ -960,12 +927,12 @@ export const diningDietRestriction = pgTable("dining_diet_restriction", {
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
 
-export const diningDishToMenu = pgTable(
-  "dining_dish_to_menu",
+export const diningDishToPeriod = pgTable(
+  "dining_dish_to_period",
   {
-    menuId: varchar("menu_id")
+    periodId: uuid("period_id")
       .notNull()
-      .references(() => diningMenu.id),
+      .references(() => diningPeriod.id),
     dishId: varchar("dish_id")
       .notNull()
       .references(() => diningDish.id),
@@ -973,8 +940,8 @@ export const diningDishToMenu = pgTable(
   (table) => [
     {
       pk: primaryKey({
-        name: "dining_dish_to_menu_pk",
-        columns: [table.menuId, table.dishId],
+        name: "dining_dish_to_period_pk",
+        columns: [table.periodId, table.dishId],
       }),
     },
   ],

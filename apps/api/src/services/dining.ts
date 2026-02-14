@@ -12,9 +12,8 @@ import { type SQL, and, eq, gte, inArray, max, min, sql } from "@packages/db/dri
 import {
   diningDietRestriction,
   diningDish,
-  diningDishToMenu,
+  diningDishToPeriod,
   diningEvent,
-  diningMenu,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
@@ -150,10 +149,10 @@ class DiningService {
   async getPickableDates() {
     const result = await this.db
       .select({
-        earliest: min(diningMenu.date),
-        latest: max(diningMenu.date),
+        earliest: min(diningPeriod.date),
+        latest: max(diningPeriod.date),
       })
-      .from(diningMenu);
+      .from(diningPeriod);
 
     return {
       earliest: result[0]?.earliest ?? null,
@@ -215,10 +214,6 @@ class DiningService {
           name: diningStation.name,
           updatedAt: diningStation.updatedAt,
         },
-        // because menus are keyed by their (restaurant ID, date, period ID),
-        // and a menu lives within a period, which lives within a date,
-        // there cannot be more than one menu per period
-        // thus, we can elide menus from the visible data model entirely
         dishes: sql<
           (typeof diningDish.$inferSelect.id)[]
         >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
@@ -226,15 +221,8 @@ class DiningService {
       .from(diningRestaurant)
       .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
       .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
-      .leftJoin(
-        diningMenu,
-        and(
-          eq(diningRestaurant.id, diningMenu.restaurantId),
-          eq(diningPeriod.id, diningMenu.periodId),
-        ),
-      )
-      .leftJoin(diningDishToMenu, eq(diningMenu.id, diningDishToMenu.menuId))
-      .innerJoin(diningDish, eq(diningDish.id, diningDishToMenu.dishId))
+      .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
+      .innerJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
       .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
       .groupBy(
         // yes, we actually need all of these
@@ -244,8 +232,7 @@ class DiningService {
         diningPeriod.endTime,
         diningPeriod.updatedAt,
         diningStation.id,
-        diningMenu.id,
-        diningDishToMenu.menuId,
+        diningDishToPeriod.periodId,
       );
 
     if (rows.length === 0) {

@@ -1,10 +1,8 @@
 import type { database } from "@packages/db";
-import { sql } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
-  diningDishToMenu,
-  diningMenu,
+  diningDishToPeriod,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
@@ -81,10 +79,8 @@ export async function updateRestaurant(
     `Parsing info for ${datesToFetch.length} dates: ${datesToFetch.map((d) => format(d, "yyyy-MM-dd")).join(", ")}`,
   );
 
-  // Keep a set of all relevant meal periods (ones that were relevant throughout
-  // at least some days in the week) to query weekly on later
   const periodSet = new Set<number>();
-  const dayPeriodMap = new Map<string, Set<number>>();
+  const dayToPeriods = new Map<string, Set<number>>();
 
   const periodsToUpsert = new Map<string, typeof diningPeriod.$inferInsert>();
 
@@ -99,13 +95,13 @@ export async function updateRestaurant(
         mealPeriod.openHours[dayOfWeekToFetch] && mealPeriod.closeHours[dayOfWeekToFetch],
     );
 
-    const dayPeriodSet = new Set<number>();
+    const periodsOnDay = new Set<number>();
     for (const period of relevantMealPeriods) {
       periodSet.add(period.id);
-      dayPeriodSet.add(period.id);
+      periodsOnDay.add(period.id);
 
       const row = {
-        id: period.id.toString(),
+        adobeId: period.id,
         date: dateString,
         restaurantId,
         name: period.name,
@@ -114,35 +110,41 @@ export async function updateRestaurant(
         updatedAt,
       } satisfies typeof diningPeriod.$inferInsert;
 
-      const key = `${row.id}|${row.date}|${row.restaurantId}`;
+      const key = `${row.adobeId}|${row.date}|${row.restaurantId}`;
       periodsToUpsert.set(key, row);
     }
-    dayPeriodMap.set(dateString, dayPeriodSet);
+    dayToPeriods.set(dateString, periodsOnDay);
   }
 
   console.log(`Upserting ${periodsToUpsert.size} periods...`);
-  await db
+  const periodsInserted = await db
     .insert(diningPeriod)
     .values(Array.from(periodsToUpsert.values()))
     .onConflictDoUpdate({
-      target: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
+      target: [diningPeriod.adobeId, diningPeriod.date, diningPeriod.restaurantId],
       set: conflictUpdateSetAllCols(diningPeriod),
+    })
+    .returning({
+      id: diningPeriod.id,
+      adobeId: diningPeriod.adobeId,
+      date: diningPeriod.date,
+      restaurantId: diningPeriod.restaurantId,
     });
 
-  const menusToUpsert: (typeof diningMenu.$inferInsert)[] = [];
   const dishBundlesToInsert: {
     fetchedDish: FetchedDish;
-    menuId: string;
+    periodId: string;
     updatedAt: Date;
   }[] = [];
 
   await Promise.all(
-    Array.from(periodSet).map(async (periodId) => {
+    // since we have our own surrogate UUID ID, let's call their number the "adobe ID"
+    Array.from(periodSet).map(async (periodAdobeId) => {
       const periodUpdatedAt = new Date();
-      const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantId, periodId);
+      const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantId, periodAdobeId);
 
       if (!currentPeriodWeekly) {
-        console.log(`Skipping period ${periodId}, period is null.`);
+        console.log(`Skipping period ${periodAdobeId}, period is null.`);
         return;
       }
 
@@ -153,25 +155,20 @@ export async function updateRestaurant(
         // Saturdays returns some dishes), this is an issue because we now have to
         // make sure the period exists on the day for the returned data.
         // If the current date has this period, upsert, otherwise, skip.
-        const periodsOfDay = dayPeriodMap.get(dateString);
-        if (periodsOfDay && !periodsOfDay.has(periodId)) {
+        const periodsOfDay = dayToPeriods.get(dateString);
+        if (periodsOfDay && !periodsOfDay.has(periodAdobeId)) {
           continue;
         }
-
-        const menuIdHash = `${restaurantId}|${dateString}|${periodId}`;
-        menusToUpsert.push({
-          id: menuIdHash,
-          periodId: periodId.toString(),
-          date: dateString,
-          restaurantId,
-          updatedAt: periodUpdatedAt,
-        });
 
         for (const fetchedDish of dishes) {
           if (fetchedDish.dish.name !== "UNIDENTIFIED") {
             dishBundlesToInsert.push({
               fetchedDish: fetchedDish,
-              menuId: menuIdHash,
+              // this cast is ok because every periodAdobeId has a corresponding upserted row
+              periodId: periodsInserted.find(
+                ({ adobeId, date, restaurantId: rId }) =>
+                  rId === restaurantId && date === dateString && adobeId === periodAdobeId,
+              )?.id as string,
               updatedAt: periodUpdatedAt,
             });
           }
@@ -180,27 +177,13 @@ export async function updateRestaurant(
     }),
   );
 
-  if (menusToUpsert.length > 0) {
-    console.log(`Upserting ${menusToUpsert.length} menus...`);
-    await db
-      .insert(diningMenu)
-      .values(menusToUpsert)
-      .onConflictDoUpdate({
-        target: diningMenu.id,
-        set: {
-          periodId: sql`EXCLUDED.period_id`,
-          date: sql`EXCLUDED.date`,
-        },
-      });
-  }
-
   if (dishBundlesToInsert.length > 0) {
     console.log(`Processing ${dishBundlesToInsert.length} dish bundles into upserts...`);
 
     const dishesToUpsert = new Map<string, typeof diningDish.$inferInsert>();
     const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
     const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
-    const dishToMenuRowsToUpsert = new Map<string, Set<string>>();
+    const dishToPeriodRowsToUpsert = new Map<string, Set<string>>();
     let numDishToMenuRows = 0;
 
     type DietRestrictionBase = Omit<
@@ -209,7 +192,7 @@ export async function updateRestaurant(
     >;
     for (const {
       fetchedDish: { dish, nutritionInfo, recipeAllergenCodes, recipePreferenceCodes },
-      menuId,
+      periodId,
       updatedAt,
     } of dishBundlesToInsert) {
       // cast is safe because we update all containsX and isY for allergens x in X and restrictions y in Y
@@ -242,11 +225,11 @@ export async function updateRestaurant(
       dishesToUpsert.set(dish.id, { ...dish, updatedAt });
       dietRestrictionsToUpsert.set(dish.id, dietRestriction);
       nutritionInfosToUpsert.set(dish.id, { ...nutritionInfo, updatedAt });
-      if (!dishToMenuRowsToUpsert.has(menuId)) {
-        dishToMenuRowsToUpsert.set(menuId, new Set());
+      if (!dishToPeriodRowsToUpsert.has(periodId)) {
+        dishToPeriodRowsToUpsert.set(periodId, new Set());
       }
       numDishToMenuRows += 1;
-      dishToMenuRowsToUpsert.get(menuId)?.add(dish.id);
+      dishToPeriodRowsToUpsert.get(periodId)?.add(dish.id);
     }
 
     await db.transaction(async (tx) => {
@@ -279,14 +262,14 @@ export async function updateRestaurant(
 
       console.log(`Upserting ${numDishToMenuRows} dish-to-menu rows...`);
       await tx
-        .insert(diningDishToMenu)
+        .insert(diningDishToPeriod)
         .values(
-          dishToMenuRowsToUpsert
+          dishToPeriodRowsToUpsert
             .entries()
-            .flatMap(([menuId, dishes]) =>
+            .flatMap(([periodId, dishes]) =>
               dishes.keys().map((dishId) => {
                 return {
-                  menuId,
+                  periodId,
                   dishId,
                 };
               }),
@@ -294,8 +277,8 @@ export async function updateRestaurant(
             .toArray(),
         )
         .onConflictDoUpdate({
-          target: [diningDishToMenu.dishId, diningDishToMenu.menuId],
-          set: conflictUpdateSetAllCols(diningDishToMenu),
+          target: [diningDishToPeriod.dishId, diningDishToPeriod.periodId],
+          set: conflictUpdateSetAllCols(diningDishToPeriod),
         });
     });
   }

@@ -1,5 +1,5 @@
 {
-  "id": "57505746-e7c1-42c8-9492-f423bbe90d5d",
+  "id": "ba568c04-b22c-4ed7-b07c-ea4166d26259",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -836,13 +836,13 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.dining_dish_to_menu": {
-      "name": "dining_dish_to_menu",
+    "public.dining_dish_to_period": {
+      "name": "dining_dish_to_period",
       "schema": "",
       "columns": {
-        "menu_id": {
-          "name": "menu_id",
-          "type": "varchar",
+        "period_id": {
+          "name": "period_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -855,18 +855,18 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "dining_dish_to_menu_menu_id_dining_menu_id_fk": {
-          "name": "dining_dish_to_menu_menu_id_dining_menu_id_fk",
-          "tableFrom": "dining_dish_to_menu",
-          "tableTo": "dining_menu",
-          "columnsFrom": ["menu_id"],
+        "dining_dish_to_period_period_id_dining_period_id_fk": {
+          "name": "dining_dish_to_period_period_id_dining_period_id_fk",
+          "tableFrom": "dining_dish_to_period",
+          "tableTo": "dining_period",
+          "columnsFrom": ["period_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "dining_dish_to_menu_dish_id_dining_dish_id_fk": {
-          "name": "dining_dish_to_menu_dish_id_dining_dish_id_fk",
-          "tableFrom": "dining_dish_to_menu",
+        "dining_dish_to_period_dish_id_dining_dish_id_fk": {
+          "name": "dining_dish_to_period_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_dish_to_period",
           "tableTo": "dining_dish",
           "columnsFrom": ["dish_id"],
           "columnsTo": ["id"],
@@ -951,59 +951,6 @@
           "columns": ["title", "restaurant_id", "start"]
         }
       },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.dining_menu": {
-      "name": "dining_menu",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "period_id": {
-          "name": "period_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "restaurant_id": {
-          "name": "restaurant_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "dining_menu_restaurant_id_dining_restaurant_id_fk": {
-          "name": "dining_menu_restaurant_id_dining_restaurant_id_fk",
-          "tableFrom": "dining_menu",
-          "tableTo": "dining_restaurant",
-          "columnsFrom": ["restaurant_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -1146,7 +1093,14 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "adobe_id": {
+          "name": "adobe_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -1188,11 +1142,11 @@
         }
       },
       "indexes": {
-        "dining_period_id_date_restaurant_id_index": {
-          "name": "dining_period_id_date_restaurant_id_index",
+        "dining_period_adobe_id_date_restaurant_id_index": {
+          "name": "dining_period_adobe_id_date_restaurant_id_index",
           "columns": [
             {
-              "expression": "id",
+              "expression": "adobe_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

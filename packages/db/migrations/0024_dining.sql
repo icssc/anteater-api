@@ -30,10 +30,10 @@ CREATE TABLE IF NOT EXISTS "dining_dish" (
 	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "dining_dish_to_menu" (
-	"menu_id" varchar NOT NULL,
+CREATE TABLE IF NOT EXISTS "dining_dish_to_period" (
+	"period_id" uuid NOT NULL,
 	"dish_id" varchar NOT NULL,
-    CONSTRAINT dining_dish_to_menu_pk PRIMARY KEY (menu_id, dish_id)
+    CONSTRAINT dining_dish_to_period_pk PRIMARY KEY (period_id, dish_id)
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_event" (
@@ -46,14 +46,6 @@ CREATE TABLE IF NOT EXISTS "dining_event" (
 	"end" timestamp,
 	"updated_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "dining_event_pk" PRIMARY KEY("title","restaurant_id","start")
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "dining_menu" (
-	"id" varchar PRIMARY KEY NOT NULL,
-	"period_id" varchar NOT NULL,
-	"date" date NOT NULL,
-	"restaurant_id" varchar NOT NULL,
-	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_nutrition_info" (
@@ -78,7 +70,8 @@ CREATE TABLE IF NOT EXISTS "dining_nutrition_info" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_period" (
-	"id" varchar NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"adobe_id" integer NOT NULL,
 	"date" date NOT NULL,
 	"restaurant_id" varchar NOT NULL,
 	"start_time" time NOT NULL,
@@ -112,25 +105,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_dish_to_menu" ADD CONSTRAINT "dining_dish_to_menu_menu_id_dining_menu_id_fk" FOREIGN KEY ("menu_id") REFERENCES "public"."dining_menu"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "dining_dish_to_period" ADD CONSTRAINT "dining_dish_to_period_period_id_dining_period_id_fk" FOREIGN KEY ("period_id") REFERENCES "public"."dining_period"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_dish_to_menu" ADD CONSTRAINT "dining_dish_to_menu_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "dining_dish_to_period" ADD CONSTRAINT "dining_dish_to_period_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "dining_event" ADD CONSTRAINT "dining_event_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "dining_menu" ADD CONSTRAINT "dining_menu_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -153,4 +140,4 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "dining_period_id_date_restaurant_id_index" ON "dining_period" USING btree ("id","date","restaurant_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "dining_period_adobe_id_date_restaurant_id_index" ON "dining_period" USING btree ("adobe_id","date","restaurant_id");
