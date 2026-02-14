@@ -846,34 +846,43 @@ export const diningPeriod = pgTable(
   (table) => [
     uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
     index().on(table.date),
+    index().on(table.restaurantId),
   ],
 );
 
-export const diningStation = pgTable("dining_station", {
-  id: varchar("id").primaryKey(),
-  name: varchar("name").notNull(),
-  restaurantId: varchar("restaurant_id")
-    .notNull()
-    .references(() => diningRestaurant.id, {
-      onDelete: "cascade",
-    }),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-});
+export const diningStation = pgTable(
+  "dining_station",
+  {
+    id: varchar("id").primaryKey(),
+    name: varchar("name").notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [index().on(table.restaurantId)],
+);
 
-export const diningDish = pgTable("dining_dish", {
-  id: varchar("id").primaryKey(),
-  stationId: varchar("station_id")
-    .notNull()
-    .references(() => diningStation.id, {
-      onDelete: "cascade",
-    }),
-  name: varchar("name").notNull(),
-  description: varchar("description").notNull(),
-  ingredients: varchar("ingredients"),
-  category: varchar("category").notNull(),
-  imageUrl: varchar("image_url"),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-});
+export const diningDish = pgTable(
+  "dining_dish",
+  {
+    id: varchar("id").primaryKey(),
+    stationId: varchar("station_id")
+      .notNull()
+      .references(() => diningStation.id, {
+        onDelete: "cascade",
+      }),
+    name: varchar("name").notNull(),
+    description: varchar("description").notNull(),
+    ingredients: varchar("ingredients"),
+    category: varchar("category").notNull(),
+    imageUrl: varchar("image_url"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [index().on(table.stationId)],
+);
 
 export const diningNutritionInfo = pgTable("dining_nutrition_info", {
   dishId: varchar("dish_id")

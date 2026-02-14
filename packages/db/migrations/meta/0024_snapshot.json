@@ -1,5 +1,5 @@
 {
-  "id": "35117970-cd97-4daa-ae1c-8bcf14e884e7",
+  "id": "2f5adc6b-c42e-47c1-bdcf-3a12c34e93d1",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -818,7 +818,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dining_dish_station_id_index": {
+          "name": "dining_dish_station_id_index",
+          "columns": [
+            {
+              "expression": "station_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "dining_dish_station_id_dining_station_id_fk": {
           "name": "dining_dish_station_id_dining_station_id_fk",
@@ -1183,6 +1199,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "dining_period_restaurant_id_index": {
+          "name": "dining_period_restaurant_id_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1256,7 +1287,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dining_station_restaurant_id_index": {
+          "name": "dining_station_restaurant_id_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "dining_station_restaurant_id_dining_restaurant_id_fk": {
           "name": "dining_station_restaurant_id_dining_restaurant_id_fk",

@@ -140,5 +140,8 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "dining_dish_station_id_index" ON "dining_dish" USING btree ("station_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "dining_period_adobe_id_date_restaurant_id_index" ON "dining_period" USING btree ("adobe_id","date","restaurant_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "dining_period_date_index" ON "dining_period" USING btree ("date");
+CREATE INDEX IF NOT EXISTS "dining_period_date_index" ON "dining_period" USING btree ("date");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "dining_period_restaurant_id_index" ON "dining_period" USING btree ("restaurant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "dining_station_restaurant_id_index" ON "dining_station" USING btree ("restaurant_id");
