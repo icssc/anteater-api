@@ -30,7 +30,7 @@ class DiningService {
 
   async getUpcomingEvents(input: DiningEventQuery) {
     // only get events ending at or after the current time
-    const conds = [gte(diningEvent.end, new Date())];
+    const conds = [gte(diningEvent.end, sql`NOW()`)];
 
     if (input.restaurantId) {
       conds.push(eq(diningEvent.restaurantId, input.restaurantId));
