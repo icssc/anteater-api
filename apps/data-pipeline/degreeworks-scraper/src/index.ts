@@ -1,4 +1,5 @@
 import * as assert from "node:assert";
+import * as fs from "node:fs/promises";
 import { exit } from "node:process";
 import { Scraper } from "$components";
 import { database } from "@packages/db";
@@ -6,6 +7,7 @@ import {
   collegeRequirement,
   degree,
   major,
+  majorRequirement,
   minor,
   schoolRequirement,
   specialization,
@@ -45,7 +47,9 @@ async function main() {
   const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
   let majorData = parsedPrograms
     .entries()
-    .map(([[, specCode], [college, { name, degreeType, code, requirements }]]) => {
+    .map(([k, [college, { name, degreeType, code, requirements }]]) => {
+      const specCode = k.split(";")[1] !== "" ? `${degreeType}-${k.split(";")[1]}` : undefined;
+      console.log(`got spec code: '${specCode}' from '${k}'`);
       let collegeBlockIndex: number | undefined;
       if (college?.requirements) {
         const wouldInsert = { name: college.name, requirements: college.requirements };
@@ -70,14 +74,17 @@ async function main() {
         id: `${degreeType}-${code}`,
         degreeId: degreeType ?? "",
         code,
-        specCode,
+        ...(specCode !== undefined ? { specCode } : {}),
         name,
         requirements,
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };
     })
     .toArray();
-
+  console.log(
+    `length of parsedProgarms: ${parsedPrograms.size}. lengthed of objectified parsedPrograms: ${Object.fromEntries(parsedPrograms)}.length of majorData: ${majorData.length}`,
+  );
+  await fs.writeFile("./MajorDataFirst.json", JSON.stringify(majorData, null, 2));
   const majorRequirementData = majorData.map(({ id, specCode, requirements }) => ({
     majorId: id,
     specId: specCode,
@@ -98,6 +105,13 @@ async function main() {
       requirements,
     }))
     .toArray();
+
+  await fs.writeFile(
+    "./ParsedPrograms.json",
+    JSON.stringify(Object.fromEntries(parsedPrograms), null, 2),
+  );
+  await fs.writeFile("./MajorData.json", JSON.stringify(majorData, null, 2));
+  await fs.writeFile("./MajorReq.json", JSON.stringify(majorRequirementData, null, 2));
   await db.transaction(async (tx) => {
     if (ucRequirementData && geRequirementData) {
       await tx
@@ -117,6 +131,7 @@ async function main() {
           set: conflictUpdateSetAllCols(schoolRequirement),
         });
     }
+    console.log("Updated GE and UC req");
 
     if (honorsFourRequirementData) {
       await tx
@@ -132,11 +147,13 @@ async function main() {
           set: conflictUpdateSetAllCols(schoolRequirement),
         });
     }
+    console.log("Updated School Req");
 
     await tx
       .insert(degree)
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
+    console.log("Updated Degree Data");
 
     // we need to determine the db ID of school blocks and update major objects accordingly first
     const collegeBlockIds = await tx
@@ -148,6 +165,7 @@ async function main() {
       })
       .returning({ id: collegeRequirement.id })
       .then((rows) => rows.map(({ id }) => id));
+    console.log("Updated college requirements");
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
@@ -155,24 +173,34 @@ async function main() {
           collegeBlockIds[majorObj.collegeBlockIndex];
       }
     }
+    console.log("Set college Req on majorData");
 
     await tx
       .insert(major)
       .values(majorData)
       .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
+    console.log("Updated Major");
     await tx
       .insert(minor)
       .values(minorData)
-      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(minor) });
+      .onConflictDoUpdate({ target: minor.id, set: conflictUpdateSetAllCols(minor) });
+    console.log("Updated Minors");
     await tx
       .insert(specialization)
       .values(specData)
-      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(specialization) });
-    // await tx
-    //   .insert(majorRequirement)
-    //   .values(majorRequirementData)
-    //   .onConflictDoNothing()
-    //.onConflictDoUpdate({target: major.id, set: conflictUpdateSetAllCols(majorRequirement)})
+      .onConflictDoUpdate({
+        target: specialization.id,
+        set: conflictUpdateSetAllCols(specialization),
+      });
+    console.log("Updated Specs");
+    await tx
+      .insert(majorRequirement)
+      .values(majorRequirementData)
+      .onConflictDoUpdate({
+        target: majorRequirement.id,
+        set: conflictUpdateSetAllCols(majorRequirement),
+      });
+    console.log("Updated major requirements");
   });
   exit(0);
 }
