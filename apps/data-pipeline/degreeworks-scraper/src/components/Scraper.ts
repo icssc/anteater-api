@@ -37,9 +37,8 @@ export class Scraper {
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
   // both undergrad majors and grad programs; tuple of (school, program)
-  //private parsedPrograms = new Map<string, MajorProgram>();
   // both undergrad majors and grad programs; key is tuple of (majorName, specID?), value is tuple of (school, program)
-  private parsedPrograms = new Map<[string, string?], MajorProgram>();
+  private parsedPrograms = new Map<string, MajorProgram>();
   // (parent major, name, program object)
   private parsedSpecializations = new Map<
     string,
@@ -145,7 +144,7 @@ export class Scraper {
   }
 
   private async scrapePrograms(degrees: Iterable<[ProgramTriplet, string?]>) {
-    const ret = new Map<[string, string?], MajorProgram>();
+    const ret = new Map<string, MajorProgram>();
     for (const [[schoolCode, majorCode, degreeCode], specCode] of degrees) {
       const audit = await this.dw.getMajorAudit(
         degreeCode,
@@ -164,25 +163,22 @@ export class Scraper {
         );
         continue;
       }
-      if (ret.has([majorAudit.title, specCode])) {
+      if (ret.has([majorAudit.title, specCode].join(";"))) {
         console.log(
-          `Requirements block already exists for "${majorAudit.title}" with specialization "${specCode ? `with spec: ${specCode}` : ""}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${majorAudit.title}" ${specCode ? `with spec: '${specCode}'` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      ret.set(
-        [majorAudit.title, specCode],
-        [
-          audit?.college
-            ? await this.ap.parseBlock(
-                `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
-                audit?.college,
-              )
-            : undefined,
-          await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
-        ],
-      );
+      ret.set([majorAudit.title, specCode].join(";"), [
+        audit?.college
+          ? await this.ap.parseBlock(
+              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
+              audit?.college,
+            )
+          : undefined,
+        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
+      ]);
 
       console.log(
         `Requirements block found and parsed for "${majorAudit.title}" ${specCode ? `with spec: ${specCode}` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
@@ -201,7 +197,7 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get(["Major in Chemistry", undefined]) as MajorProgram;
+      const inMap = this.parsedPrograms.get("Major in Chemistry") as MajorProgram;
       return inMap ? [inMap[1]] : [];
     }
 
@@ -395,7 +391,10 @@ export class Scraper {
       }
     }
 
-    // this.parsedPrograms = new Map([...this.parsedPrograms, ...await this.scrapePrograms(foundMajorSpecPairs)])
+    this.parsedPrograms = new Map([
+      ...this.parsedPrograms,
+      ...(await this.scrapePrograms(foundMajorSpecPairs)),
+    ]);
 
     this.degreesAwarded = new Map(
       Array.from(
@@ -410,7 +409,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get(["Major in Art History", undefined]) as MajorProgram;
+    const x = this.parsedPrograms.get("Major in Art History") as MajorProgram;
     const y = this.parsedSpecializations.get("AHGEO")?.[2] as DegreeWorksProgram;
     const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
     if (x && y && z) {
@@ -418,7 +417,7 @@ export class Scraper {
       x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
-      this.parsedPrograms.set(["Major in Art History", undefined], x);
+      this.parsedPrograms.set("Major in Art History", x);
     }
 
     this.done = true;
