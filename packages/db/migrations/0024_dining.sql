@@ -31,8 +31,9 @@ CREATE TABLE IF NOT EXISTS "dining_dish" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_dish_to_period" (
-	"period_id" uuid NOT NULL,
-	"dish_id" varchar NOT NULL
+    "period_id" uuid NOT NULL,
+    "dish_id" varchar NOT NULL,
+    CONSTRAINT dining_dish_to_period_pk PRIMARY KEY (period_id, dish_id)
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_event" (
@@ -92,13 +93,13 @@ CREATE TABLE IF NOT EXISTS "dining_station" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_diet_restriction" ADD CONSTRAINT "dining_diet_restriction_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_diet_restriction" ADD CONSTRAINT "dining_diet_restriction_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_dish" ADD CONSTRAINT "dining_dish_station_id_dining_station_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."dining_station"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_dish" ADD CONSTRAINT "dining_dish_station_id_dining_station_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."dining_station"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -116,25 +117,25 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_event" ADD CONSTRAINT "dining_event_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_event" ADD CONSTRAINT "dining_event_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_nutrition_info" ADD CONSTRAINT "dining_nutrition_info_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_nutrition_info" ADD CONSTRAINT "dining_nutrition_info_dish_id_dining_dish_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."dining_dish"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_period" ADD CONSTRAINT "dining_period_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_period" ADD CONSTRAINT "dining_period_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "dining_station" ADD CONSTRAINT "dining_station_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE cascade;
+ ALTER TABLE "dining_station" ADD CONSTRAINT "dining_station_restaurant_id_dining_restaurant_id_fk" FOREIGN KEY ("restaurant_id") REFERENCES "public"."dining_restaurant"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

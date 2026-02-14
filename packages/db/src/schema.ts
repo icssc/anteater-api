@@ -837,7 +837,6 @@ export const diningPeriod = pgTable(
       .notNull()
       .references(() => diningRestaurant.id, {
         onDelete: "cascade",
-        onUpdate: "cascade",
       }),
     startTime: time("start_time").notNull(),
     endTime: time("end_time").notNull(),
@@ -857,7 +856,6 @@ export const diningStation = pgTable("dining_station", {
     .notNull()
     .references(() => diningRestaurant.id, {
       onDelete: "cascade",
-      onUpdate: "cascade",
     }),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
 });
@@ -868,7 +866,6 @@ export const diningDish = pgTable("dining_dish", {
     .notNull()
     .references(() => diningStation.id, {
       onDelete: "cascade",
-      onUpdate: "cascade",
     }),
   name: varchar("name").notNull(),
   description: varchar("description").notNull(),
@@ -883,7 +880,6 @@ export const diningNutritionInfo = pgTable("dining_nutrition_info", {
     .primaryKey()
     .references(() => diningDish.id, {
       onDelete: "cascade",
-      onUpdate: "cascade",
     }),
   servingSize: varchar("serving_size"),
   servingUnit: varchar("serving_unit"),
@@ -909,7 +905,6 @@ export const diningDietRestriction = pgTable("dining_diet_restriction", {
     .primaryKey()
     .references(() => diningDish.id, {
       onDelete: "cascade",
-      onUpdate: "cascade",
     }),
   containsEggs: boolean("contains_eggs"),
   containsFish: boolean("contains_fish"),
@@ -959,7 +954,6 @@ export const diningEvent = pgTable(
       .notNull()
       .references(() => diningRestaurant.id, {
         onDelete: "cascade",
-        onUpdate: "cascade",
       }),
     shortDescription: varchar("short_description"),
     longDescription: varchar("long_description"),

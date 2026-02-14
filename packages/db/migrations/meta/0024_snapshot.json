@@ -1,5 +1,5 @@
 {
-  "id": "e6dc0f0a-6cca-4ab6-8fc1-a43a3b792fbb",
+  "id": "35117970-cd97-4daa-ae1c-8bcf14e884e7",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -756,7 +756,7 @@
           "columnsFrom": ["dish_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -827,7 +827,7 @@
           "columnsFrom": ["station_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -942,7 +942,7 @@
           "columnsFrom": ["restaurant_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -1078,7 +1078,7 @@
           "columnsFrom": ["dish_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1193,7 +1193,7 @@
           "columnsFrom": ["restaurant_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1265,7 +1265,7 @@
           "columnsFrom": ["restaurant_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
