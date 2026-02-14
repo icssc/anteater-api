@@ -86,7 +86,7 @@ export async function updateRestaurant(
   const periodSet = new Set<number>();
   const dayPeriodMap = new Map<string, Set<number>>();
 
-  const periodsToUpsertByKey = new Map<string, typeof diningPeriod.$inferInsert>();
+  const periodsToUpsert = new Map<string, typeof diningPeriod.$inferInsert>();
 
   for (const dateToFetch of datesToFetch) {
     const dayOfWeekToFetch = dateToFetch.getDay();
@@ -115,16 +115,15 @@ export async function updateRestaurant(
       } satisfies typeof diningPeriod.$inferInsert;
 
       const key = `${row.id}|${row.date}|${row.restaurantId}`;
-      periodsToUpsertByKey.set(key, row);
+      periodsToUpsert.set(key, row);
     }
     dayPeriodMap.set(dateString, dayPeriodSet);
   }
 
-  const periodsToUpsert = Array.from(periodsToUpsertByKey.values());
-  console.log(`Upserting ${periodsToUpsert.length} periods...`);
+  console.log(`Upserting ${periodsToUpsert.size} periods...`);
   await db
     .insert(diningPeriod)
-    .values(periodsToUpsert)
+    .values(Array.from(periodsToUpsert.values()))
     .onConflictDoUpdate({
       target: [diningPeriod.id, diningPeriod.date, diningPeriod.restaurantId],
       set: conflictUpdateSetAllCols(diningPeriod),
