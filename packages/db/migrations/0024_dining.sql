@@ -32,8 +32,7 @@ CREATE TABLE IF NOT EXISTS "dining_dish" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_dish_to_period" (
 	"period_id" uuid NOT NULL,
-	"dish_id" varchar NOT NULL,
-    CONSTRAINT dining_dish_to_period_pk PRIMARY KEY (period_id, dish_id)
+	"dish_id" varchar NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_event" (
@@ -140,4 +139,5 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "dining_period_adobe_id_date_restaurant_id_index" ON "dining_period" USING btree ("adobe_id","date","restaurant_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "dining_period_adobe_id_date_restaurant_id_index" ON "dining_period" USING btree ("adobe_id","date","restaurant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "dining_period_date_index" ON "dining_period" USING btree ("date");

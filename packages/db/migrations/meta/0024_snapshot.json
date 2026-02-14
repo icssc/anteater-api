@@ -1,5 +1,5 @@
 {
-  "id": "ba568c04-b22c-4ed7-b07c-ea4166d26259",
+  "id": "e6dc0f0a-6cca-4ab6-8fc1-a43a3b792fbb",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -1165,6 +1165,21 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dining_period_date_index": {
+          "name": "dining_period_date_index",
+          "columns": [
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}

@@ -844,7 +844,10 @@ export const diningPeriod = pgTable(
     name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
-  (table) => [uniqueIndex().on(table.adobeId, table.date, table.restaurantId)],
+  (table) => [
+    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    index().on(table.date),
+  ],
 );
 
 export const diningStation = pgTable("dining_station", {
