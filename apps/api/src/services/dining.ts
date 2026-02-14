@@ -218,7 +218,9 @@ class DiningService {
         // and a menu lives within a period, which lives within a date,
         // there cannot be more than one menu per period
         // thus, we can elide menus from the visible data model entirely
-        dishes: sql<string[]>`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
+        dishes: sql<
+          (typeof diningDish.$inferSelect.id)[]
+        >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
       })
       .from(diningRestaurant)
       .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
