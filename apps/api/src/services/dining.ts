@@ -3,6 +3,7 @@ import type {
   dishQuerySchema,
   dishSchema,
   restaurantTodayQuerySchema,
+  restaurantTodayResponseSchema,
   restaurantsQuerySchema,
   restaurantsResponseSchema,
 } from "$schema";
@@ -251,7 +252,8 @@ class DiningService {
       return null;
     }
 
-    const periods = new Map();
+    type PeriodsRecord = z.infer<typeof restaurantTodayResponseSchema>["periods"];
+    const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
     for (const { period, station, dishes } of rows) {
       if (period === null) {
@@ -262,13 +264,7 @@ class DiningService {
         periods.set(period.id, {
           startTime: period.startTime,
           endTime: period.endTime,
-          stations: {} as Record<
-            typeof diningStation.$inferSelect.id,
-            {
-              name: typeof diningPeriod.$inferSelect.name;
-              dishes: (typeof diningDish.$inferSelect.id)[];
-            }
-          >,
+          stations: {},
           updatedAt: period.updatedAt,
         });
       }
