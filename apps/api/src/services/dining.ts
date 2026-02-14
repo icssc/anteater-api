@@ -41,8 +41,7 @@ class DiningService {
         title: diningEvent.title,
         image: diningEvent.image,
         restaurantId: diningEvent.restaurantId,
-        // somewhere it was mentioned that shortDescription is never stored, so don't return it
-        longDescription: diningEvent.longDescription,
+        description: diningEvent.description,
         start: diningEvent.start,
         end: diningEvent.end,
         updatedAt: diningEvent.updatedAt,

@@ -31,17 +31,15 @@ CREATE TABLE IF NOT EXISTS "dining_dish" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_dish_to_period" (
-    "period_id" uuid NOT NULL,
-    "dish_id" varchar NOT NULL,
-    CONSTRAINT dining_dish_to_period_pk PRIMARY KEY (period_id, dish_id)
+	"period_id" uuid NOT NULL,
+	"dish_id" varchar NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "dining_event" (
 	"title" varchar NOT NULL,
 	"image" varchar,
 	"restaurant_id" varchar NOT NULL,
-	"short_description" varchar,
-	"long_description" varchar,
+	"description" varchar,
 	"start" timestamp,
 	"end" timestamp,
 	"updated_at" timestamp with time zone NOT NULL,

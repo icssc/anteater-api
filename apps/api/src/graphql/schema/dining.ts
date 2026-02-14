@@ -54,7 +54,7 @@ type DiningEvent {
   title: String!
   image: String
   restaurantId: String!
-  longDescription: String
+  description: String
   start: String!
   end: String
   updatedAt: String!

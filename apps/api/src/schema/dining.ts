@@ -28,7 +28,7 @@ export const eventSchema = z.object({
   restaurantId: restaurantIdSchema.openapi({
     description: "Unique identifier for the restaurant hosting this event",
   }),
-  longDescription: z.string().nullable().openapi({
+  description: z.string().nullable().openapi({
     example:
       "New year, new vibes. Kick off the celebration with bold Szechuan beef steak, chicken teriyaki dumplings, spicy vegetable lo mein, and more!",
     description: "Description of the event",

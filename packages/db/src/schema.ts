@@ -964,8 +964,7 @@ export const diningEvent = pgTable(
       .references(() => diningRestaurant.id, {
         onDelete: "cascade",
       }),
-    shortDescription: varchar("short_description"),
-    longDescription: varchar("long_description"),
+    description: varchar("description"),
     start: timestamp("start"),
     end: timestamp("end"),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
