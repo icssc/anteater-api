@@ -662,13 +662,18 @@ export const collegeRequirement = pgTable("college_requirement", {
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
 });
 
-export const majorRequirement = pgTable("major_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const majorSpecPairToRequirement = pgTable("major_spec_pair_to_requirement", {
+  id: varchar("id").primaryKey(),
   majorId: varchar("major_id")
     .notNull()
     .references(() => major.id),
   specId: varchar("spec_id").references(() => specialization.id),
-  majorRequirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  requirementId: uuid("requirementId").references(() => majorRequirement.id),
+});
+
+export const majorRequirement = pgTable("major_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
 });
 
 export const major = pgTable(
