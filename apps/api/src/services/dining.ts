@@ -234,7 +234,7 @@ class DiningService {
       .innerJoin(diningDish, eq(diningDish.id, diningDishToMenu.dishId))
       .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
       .groupBy(
-        // query planner bad
+        // yes, we actually need all of these
         diningRestaurant.id,
         diningPeriod.id,
         diningPeriod.startTime,
