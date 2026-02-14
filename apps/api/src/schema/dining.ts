@@ -171,13 +171,10 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
     z.object({
       startTime: z.iso.time(),
       endTime: z.iso.time(),
-      stations: z.record(
+      stationToDishes: z.record(
         z.string().openapi({ description: "The ID of a station." }),
-        z.object({
-          name: z.string().openapi({ description: "The name of the station being described." }),
-          dishes: z.string().array().openapi({
-            description: "The ID(s) of the dish(es) served at this station in this period.",
-          }),
+        z.string().array().openapi({
+          description: "The ID(s) of the dish(es) served at this station in this period.",
         }),
       ),
       updatedAt: z.date(),

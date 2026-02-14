@@ -210,7 +210,6 @@ class DiningService {
         },
         station: {
           id: diningStation.id,
-          name: diningStation.name,
           updatedAt: diningStation.updatedAt,
         },
         dishes: sql<
@@ -250,13 +249,13 @@ class DiningService {
         periods.set(period.id, {
           startTime: period.startTime,
           endTime: period.endTime,
-          stations: {},
+          stationToDishes: {},
           updatedAt: period.updatedAt,
         });
       }
 
       if (station !== null) {
-        getFromMapOrThrow(periods, period.id).stations[station.id] = { name: station.name, dishes };
+        getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
       }
     }
 
