@@ -23,7 +23,27 @@ export type RuleGroup = {
 /**
  * An object that represents a (range of) course(s).
  */
-export type Course = { discipline: string; number: string; numberEnd?: string };
+export type Course = {
+  discipline: string;
+  number: string;
+  numberEnd?: string;
+  withArray?: WithClause[];
+};
+/**
+ * a specification for course range for unit req, etc.
+ */
+export type WithClause = {
+  code:
+    | "DWCREDITS"
+    | "DWCREDIT"
+    | "DWLOCATION"
+    | "DWTERM"
+    | "DWTITLE"
+    | "DWGRADETYPE"
+    | "DWPASSFAIL";
+  operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
+  valueList: string[];
+};
 /**
  * A rule that is fulfilled by taking `creditsBegin` units
  * and/or `classesBegin` courses from the `courseArray`.

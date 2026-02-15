@@ -162,6 +162,13 @@
       "when": 1766088418349,
       "tag": "0022_fix_websoc_is_cancelled",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1770072497788,
+      "tag": "0023_pv_study_rooms",
+      "breakpoints": true
     }
   ]
 }
