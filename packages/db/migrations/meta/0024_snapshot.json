@@ -1,5 +1,5 @@
 {
-  "id": "49339d5c-621f-4a10-a42c-e527106d76f5",
+  "id": "b80d8f96-6e0a-4fa5-ac52-b848764a8705",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -1194,6 +1194,51 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements_hash": {
+          "name": "requirements_hash",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "major_requirement_requirements_hash_unique": {
+          "name": "major_requirement_requirements_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": ["requirements_hash"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.major_spec_pair_to_requirement": {
+      "name": "major_spec_pair_to_requirement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "generated": {
+            "as": "\n        CASE WHEN \"major_spec_pair_to_requirement\".\"spec_id\" IS NOT NULL\n        THEN \"major_spec_pair_to_requirement\".\"major_id\" || '+' || \"major_spec_pair_to_requirement\".\"spec_id\"\n        ELSE \"major_spec_pair_to_requirement\".\"major_id\"\n        END",
+            "type": "stored"
+          }
+        },
         "major_id": {
           "name": "major_id",
           "type": "varchar",
@@ -1206,29 +1251,38 @@
           "primaryKey": false,
           "notNull": false
         },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
+        "requirement_id": {
+          "name": "requirement_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "major_requirement_major_id_specialization_id_fk": {
-          "name": "major_requirement_major_id_specialization_id_fk",
-          "tableFrom": "major_requirement",
-          "tableTo": "specialization",
+        "major_spec_pair_to_requirement_major_id_major_id_fk": {
+          "name": "major_spec_pair_to_requirement_major_id_major_id_fk",
+          "tableFrom": "major_spec_pair_to_requirement",
+          "tableTo": "major",
           "columnsFrom": ["major_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "major_requirement_spec_id_specialization_id_fk": {
-          "name": "major_requirement_spec_id_specialization_id_fk",
-          "tableFrom": "major_requirement",
+        "major_spec_pair_to_requirement_spec_id_specialization_id_fk": {
+          "name": "major_spec_pair_to_requirement_spec_id_specialization_id_fk",
+          "tableFrom": "major_spec_pair_to_requirement",
           "tableTo": "specialization",
           "columnsFrom": ["spec_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "major_spec_pair_to_requirement_requirement_id_major_requirement_id_fk": {
+          "name": "major_spec_pair_to_requirement_requirement_id_major_requirement_id_fk",
+          "tableFrom": "major_spec_pair_to_requirement",
+          "tableTo": "major_requirement",
+          "columnsFrom": ["requirement_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
