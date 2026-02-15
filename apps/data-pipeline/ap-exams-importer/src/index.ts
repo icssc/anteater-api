@@ -4,9 +4,20 @@ import { database } from "@packages/db";
 
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { geCategories } from "../../../api/src/schema";
-import { geCategoryToColumn } from "../../../api/src/services";
-import apExamData, { type geCategory } from "./data.ts";
+import apExamData, { geCategories, type geCategory } from "./data.ts";
+
+const geCategoryToColumn = {
+  "GE-1A": "ge1aCoursesGranted",
+  "GE-1B": "ge1bCoursesGranted",
+  "GE-2": "ge2CoursesGranted",
+  "GE-3": "ge3CoursesGranted",
+  "GE-4": "ge4CoursesGranted",
+  "GE-5A": "ge5aCoursesGranted",
+  "GE-5B": "ge5bCoursesGranted",
+  "GE-6": "ge6CoursesGranted",
+  "GE-7": "ge7CoursesGranted",
+  "GE-8": "ge8CoursesGranted",
+} as const;
 
 async function main() {
   const url = process.env.DB_URL;
