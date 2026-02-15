@@ -106,7 +106,6 @@ async function main() {
       majorRequirementBlockIndex = existing;
     }
     return {
-      id: `${id}+${specCode}`,
       majorId: id,
       specId: specCode,
       majorRequirementBlockIndex,
@@ -195,7 +194,7 @@ async function main() {
       .insert(majorRequirement)
       .values(majorRequirementBlocks)
       .onConflictDoUpdate({
-        target: majorRequirement.requirements,
+        target: majorRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(majorRequirement),
       })
       .returning({ id: majorRequirement.id })
@@ -241,7 +240,7 @@ async function main() {
       .values(majorSpecToRequirementData)
       .onConflictDoUpdate({
         target: majorSpecPairToRequirement.id,
-        set: conflictUpdateSetAllCols(majorRequirement),
+        set: conflictUpdateSetAllCols(majorSpecPairToRequirement),
       });
     console.log("Updated Major Spec pair to Requirements table");
   });

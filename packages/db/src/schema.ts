@@ -1,6 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   decimal,
@@ -663,18 +664,33 @@ export const collegeRequirement = pgTable("college_requirement", {
 });
 
 export const majorSpecPairToRequirement = pgTable("major_spec_pair_to_requirement", {
-  id: varchar("id").primaryKey(),
+  id: varchar("id")
+    .primaryKey()
+    .generatedAlwaysAs((): SQL => {
+      return sql`
+        CASE WHEN ${majorSpecPairToRequirement.specId} IS NOT NULL
+        THEN ${majorSpecPairToRequirement.majorId} || '+' || ${majorSpecPairToRequirement.specId}
+        ELSE ${majorSpecPairToRequirement.majorId}
+        END`;
+    }),
   majorId: varchar("major_id")
     .notNull()
     .references(() => major.id),
   specId: varchar("spec_id").references(() => specialization.id),
-  requirementId: uuid("requirementId").references(() => majorRequirement.id),
+  requirementId: uuid("requirement_id").references(() => majorRequirement.id),
 });
 
-export const majorRequirement = pgTable("major_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
-});
+export const majorRequirement = pgTable(
+  "major_requirement",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+    requirementsHash: bigint("requirements_hash", { mode: "bigint" })
+      .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
+      .unique(),
+  },
+  (table) => [],
+);
 
 export const major = pgTable(
   "major",
