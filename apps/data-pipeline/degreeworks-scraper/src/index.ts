@@ -194,7 +194,7 @@ async function main() {
       .insert(majorRequirement)
       .values(majorRequirementBlocks)
       .onConflictDoUpdate({
-        target: majorRequirement.requirementsHash,
+        target: majorRequirement.id,
         set: conflictUpdateSetAllCols(majorRequirement),
       })
       .returning({ id: majorRequirement.id })

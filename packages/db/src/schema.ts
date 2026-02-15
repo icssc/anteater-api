@@ -677,17 +677,16 @@ export const majorSpecPairToRequirement = pgTable("major_spec_pair_to_requiremen
     .notNull()
     .references(() => major.id),
   specId: varchar("spec_id").references(() => specialization.id),
-  requirementId: uuid("requirement_id").references(() => majorRequirement.id),
+  requirementId: bigint("requirement_id", { mode: "bigint" }).references(() => majorRequirement.id),
 });
 
 export const majorRequirement = pgTable(
   "major_requirement",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-    requirementsHash: bigint("requirements_hash", { mode: "bigint" })
-      .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-      .unique(),
+    id: bigint("id", { mode: "bigint" })
+      .primaryKey()
+      .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
   },
   (table) => [],
 );
