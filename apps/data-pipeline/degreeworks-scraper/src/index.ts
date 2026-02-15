@@ -76,7 +76,8 @@ async function main() {
         code,
         ...(specCode !== undefined ? { specCode } : {}),
         name,
-        requirements,
+        requireSpec: requirements.some((x) => x.requirementType === "Spec"),
+        requirements: requirements.filter((x) => x.requirementType !== "Spec"),
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };
     })
