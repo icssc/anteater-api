@@ -169,6 +169,13 @@
       "when": 1770072497788,
       "tag": "0023_pv_study_rooms",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1771120329194,
+      "tag": "0024_add_req_spec_to_major_table",
+      "breakpoints": true
     }
   ]
 }
