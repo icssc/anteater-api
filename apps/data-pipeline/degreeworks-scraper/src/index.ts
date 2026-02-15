@@ -1,5 +1,4 @@
 import * as assert from "node:assert";
-import * as fs from "node:fs/promises";
 import { exit } from "node:process";
 import { Scraper } from "$components";
 import { database } from "@packages/db";
@@ -82,10 +81,6 @@ async function main() {
       };
     })
     .toArray();
-  console.log(
-    `length of parsedProgarms: ${parsedPrograms.size}. lengthed of objectified parsedPrograms: ${Object.fromEntries(parsedPrograms)}.length of majorData: ${majorSpecData.length}`,
-  );
-  await fs.writeFile("./MajorDataFirst.json", JSON.stringify(majorSpecData, null, 2));
 
   const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
   const majorSpecToRequirementData = majorSpecData.map(({ id, specCode, requirements }) => {
@@ -129,12 +124,6 @@ async function main() {
     }))
     .toArray();
 
-  await fs.writeFile(
-    "./ParsedPrograms.json",
-    JSON.stringify(Object.fromEntries(parsedPrograms), null, 2),
-  );
-  await fs.writeFile("./MajorData.json", JSON.stringify(majorData, null, 2));
-  await fs.writeFile("./MajorReq.json", JSON.stringify(majorSpecToRequirementData, null, 2));
   await db.transaction(async (tx) => {
     if (ucRequirementData && geRequirementData) {
       await tx
