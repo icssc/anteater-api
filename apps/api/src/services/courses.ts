@@ -5,8 +5,8 @@ import type {
   coursesQuerySchema,
   instructorPreviewSchema,
   outputCourseLevels,
-  outputGECategories,
 } from "$schema";
+import { outputGECategories } from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
 import { and, eq, gte, ilike, inArray, lt } from "@packages/db/drizzle";
