@@ -161,7 +161,6 @@ export class AuditParser {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       // heuristic for matching a specialization requirement
-      // false positive on B.S. ChemE (pr#295)
       if (
         rule.ifElsePart === "ElsePart" &&
         rule.proxyAdvice?.textList.some((x) =>
