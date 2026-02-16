@@ -1,12 +1,13 @@
 import { z } from "@hono/zod-openapi";
+import { skipBaseSchema, takeBaseSchema } from "./base";
 import { courseSchema, inputCourseLevelSchema } from "./courses.ts";
 import { instructorSchema } from "./instructors.ts";
 import { geCategories } from "./lib";
 
 export const searchQuerySchema = z.object({
   query: z.string({ message: "Parameter 'query' is required" }),
-  take: z.coerce.number().lte(100, "Page size must be less than or equal to 100").default(100),
-  skip: z.coerce.number().default(0),
+  take: takeBaseSchema,
+  skip: skipBaseSchema,
   resultType: z.union([z.literal("course"), z.literal("instructor")]).optional(),
   department: z.coerce
     .string()

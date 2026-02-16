@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { cursorBaseSchema, skipBaseSchema, takeBaseSchema } from "./base";
 
 export const instructorsPathSchema = z.object({
   ucinetid: z
@@ -28,19 +29,15 @@ const instructorsQuerySchemaBase = z.object({
   }),
 });
 
-const instructorsQueryTake = z.coerce
-  .number()
-  .lte(100, "Page size must be less than or equal to 100")
-  .default(100)
-  .openapi({
-    description:
-      "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
-    example: 100,
-  });
+const instructorsQueryTake = takeBaseSchema.openapi({
+  description:
+    "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+  example: 100,
+});
 
 export const instructorsQuerySchema = instructorsQuerySchemaBase.extend({
   take: instructorsQueryTake,
-  skip: z.coerce.number().default(0).openapi({
+  skip: skipBaseSchema.openapi({
     description:
       "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
     example: 0,
@@ -48,9 +45,7 @@ export const instructorsQuerySchema = instructorsQuerySchemaBase.extend({
 });
 
 export const instructorsByCursorQuerySchema = instructorsQuerySchemaBase.extend({
-  cursor: z
-    .string()
-    .optional()
+  cursor: cursorBaseSchema
     .openapi({
       description:
         "Pagination cursor based on instructor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
