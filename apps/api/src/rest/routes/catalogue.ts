@@ -1,14 +1,10 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import {
-  errorSchema,
-  responseSchema,
-  sampleProgramsQuerySchema,
-  sampleProgramsResponseSchema,
-} from "$schema";
+import { responseSchema, sampleProgramsQuerySchema, sampleProgramsResponseSchema } from "$schema";
 import { ProgramsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import { response200, response404, response500 } from "./base";
 
 const catalogueRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -21,22 +17,9 @@ const sampleProgramsRoute = createRoute({
   description: "List sample programs in UCI's current catalogue.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(sampleProgramsResponseSchema),
-        },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Sample program data not found",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(sampleProgramsResponseSchema)),
+    404: response404("Sample program data not found"),
+    500: response500(),
   },
 });
 

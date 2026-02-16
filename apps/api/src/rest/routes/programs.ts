@@ -1,7 +1,6 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
-  errorSchema,
   majorRequirementsQuerySchema,
   majorRequirementsResponseSchema,
   majorsQuerySchema,
@@ -22,6 +21,7 @@ import {
 import { ProgramsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import { response200, response404, response422, response500 } from "./base";
 
 const programsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -36,20 +36,9 @@ const majorsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: majorsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(majorsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Major data not found",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(majorsResponseSchema)),
+    404: response404("Major data not found"),
+    500: response500(),
   },
 });
 
@@ -62,20 +51,9 @@ const minorsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: minorsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(minorsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Minor data not found",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(minorsResponseSchema)),
+    404: response404("Minor data not found"),
+    500: response500(),
   },
 });
 
@@ -88,20 +66,9 @@ const specializationsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: specializationsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(specializationsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Specialization data not found",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(specializationsResponseSchema)),
+    404: response404("Specialization data not found"),
+    500: response500(),
   },
 });
 
@@ -116,24 +83,10 @@ const majorRequirements = createRoute({
     "if this major has specializations, then one is mandatory and its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(majorRequirementsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Major not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(majorRequirementsResponseSchema)),
+    404: response404("Major not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -146,24 +99,10 @@ const minorRequirements = createRoute({
   description: "Retrieve course requirements for a minor in UCI's current catalogue.",
   request: { query: minorRequirementsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(minorRequirementsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Minor not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(minorRequirementsResponseSchema)),
+    404: response404("Minor not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -176,24 +115,10 @@ const specializationRequirements = createRoute({
   description: "Retrieve course requirements for a specialization in UCI's current catalogue.",
   request: { query: specializationRequirementsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(specializationRequirementsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Specialization not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(specializationRequirementsResponseSchema)),
+    404: response404("Specialization not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -206,24 +131,10 @@ const ugradRequirements = createRoute({
   description: "Retrieve requirements external to, but required for, for all undergraduate degrees",
   request: { query: ugradRequirementsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(ugradRequirementsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Specialization not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(ugradRequirementsResponseSchema)),
+    404: response404("Specialization not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 

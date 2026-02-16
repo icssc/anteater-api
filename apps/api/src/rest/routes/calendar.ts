@@ -1,9 +1,10 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { calendarQuerySchema, calendarTermSchema, errorSchema, responseSchema } from "$schema";
+import { calendarQuerySchema, calendarTermSchema, responseSchema } from "$schema";
 import { CalendarService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import { response200, response404, response422, response500 } from "./base";
 
 const calendarRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -16,24 +17,10 @@ const calendarTermRoute = createRoute({
   request: { query: calendarQuerySchema },
   description: "Retrieves key dates for the provided term.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(calendarTermSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Term not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(calendarTermSchema)),
+    404: response404("Term not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -45,18 +32,8 @@ const allCalendarTermsRoute = createRoute({
   path: "/all",
   description: "Retrieves all data for all terms that are currently available.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(calendarTermSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(calendarTermSchema.array())),
+    500: response500(),
   },
 });
 

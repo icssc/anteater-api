@@ -1,8 +1,9 @@
 import { defaultHook } from "$hooks";
-import { errorSchema, responseSchema, weekQuerySchema, weekSchema } from "$schema";
+import { responseSchema, weekQuerySchema, weekSchema } from "$schema";
 import { WeekService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import { response200, response422, response500 } from "./base";
 
 const weekRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -15,18 +16,9 @@ const weekRoute = createRoute({
   request: { query: weekQuerySchema },
   description: "Retrieves week data for the provided date, or today if one is not provided.",
   responses: {
-    200: {
-      content: { "application/json": { schema: responseSchema(weekSchema) } },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(weekSchema)),
+    422: response422(),
+    500: response500(),
   },
 });
 

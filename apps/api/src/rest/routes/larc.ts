@@ -1,10 +1,11 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { errorSchema, responseSchema } from "$schema";
+import { responseSchema } from "$schema";
 import { larcQuerySchema, larcResponseSchema } from "$schema";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 import { LarcService } from "../../services/larc.ts";
+import { response200, response422, response500 } from "./base";
 
 const larcRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -17,22 +18,9 @@ const larcSectionsRoute = createRoute({
   description: "Retrieves LARC sections data matching the given filters.",
   request: { query: larcQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(larcResponseSchema),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(responseSchema(larcResponseSchema)),
+    422: response422(),
+    500: response500(),
   },
 });
 
