@@ -6,15 +6,16 @@ import {
   coursesByCursorQuerySchema,
   coursesPathSchema,
   coursesQuerySchema,
-  cursorResponseSchema,
   prerequisiteSchema,
   prerequisiteTreeSchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
 } from "$schema";
 import { CoursesService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response404, response422, response500 } from "./base";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 const coursesCursorRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
@@ -31,7 +32,7 @@ const batchCoursesRoute = createRoute({
   request: { query: batchCoursesQuerySchema },
   description: "Retrieves courses with the IDs provided",
   responses: {
-    200: response200(responseSchema(courseSchema.array())),
+    200: response200(courseSchema.array()),
     422: response422(),
     500: response500(),
   },
@@ -46,7 +47,7 @@ const courseByIdRoute = createRoute({
   request: { params: coursesPathSchema },
   description: "Retrieves a course by its ID.",
   responses: {
-    200: response200(responseSchema(courseSchema)),
+    200: response200(courseSchema),
     404: response404("Course not found"),
     422: response422(),
     500: response500(),
@@ -62,7 +63,7 @@ const coursesByFiltersRoute = createRoute({
   request: { query: coursesQuerySchema },
   description: "Retrieves courses matching the given filters.",
   responses: {
-    200: response200(responseSchema(courseSchema.array())),
+    200: response200(courseSchema.array()),
     422: response422(),
     500: response500(),
   },
@@ -77,7 +78,7 @@ const coursesByCursorRoute = createRoute({
   request: { query: coursesByCursorQuerySchema },
   description: "Retrieves courses matching the given filters with cursor-based pagination.",
   responses: {
-    200: response200(cursorResponseSchema(courseSchema.array())),
+    200: response200(courseSchema.array(), true),
     422: response422(),
     500: response500(),
   },

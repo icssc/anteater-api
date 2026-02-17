@@ -1,7 +1,9 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
-  responseSchema,
+  response200,
+  response422,
+  response500,
   websocDepartmentsQuerySchema,
   websocDepartmentsResponseSchema,
   websocQuerySchema,
@@ -11,7 +13,6 @@ import {
 import { WebsocService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response422, response500 } from "./base";
 
 const websocRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -24,7 +25,7 @@ const websocRoute = createRoute({
   description: "Retrieves WebSoc data satisfying the given parameters.",
   request: { query: websocQuerySchema },
   responses: {
-    200: response200(responseSchema(websocResponseSchema)),
+    200: response200(websocResponseSchema),
     422: response422(),
     500: response500(),
   },
@@ -38,7 +39,7 @@ const websocTermsRoute = createRoute({
   path: "/terms",
   description: "Retrieve all terms currently available on WebSoc.",
   responses: {
-    200: response200(responseSchema(websocTermResponseSchema.array())),
+    200: response200(websocTermResponseSchema.array()),
     422: response422(),
     500: response500(),
   },
@@ -53,7 +54,7 @@ const websocDepartmentsRoute = createRoute({
   description: "Retrieve departments which have appeared on WebSoc.",
   request: { query: websocDepartmentsQuerySchema },
   responses: {
-    200: response200(responseSchema(websocDepartmentsResponseSchema)),
+    200: response200(websocDepartmentsResponseSchema),
     422: response422(),
     500: response500(),
   },

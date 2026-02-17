@@ -1,10 +1,15 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { enrollmentHistoryQuerySchema, enrollmentHistorySchema, responseSchema } from "$schema";
+import {
+  enrollmentHistoryQuerySchema,
+  enrollmentHistorySchema,
+  response200,
+  response422,
+  response500,
+} from "$schema";
 import { EnrollmentHistoryService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response422, response500 } from "./base";
 
 const enrollmentHistoryRouter = new OpenAPIHono<{ Bindings: Env }>({
   defaultHook,
@@ -20,7 +25,7 @@ const enrollmentHistoryRoute = createRoute({
   description:
     "Retrieves historical enrollment data for the given parameters. Granular history arrays only available for recent terms.",
   responses: {
-    200: response200(responseSchema(enrollmentHistorySchema.array())),
+    200: response200(enrollmentHistorySchema.array()),
     422: response422(),
     500: response500(),
   },

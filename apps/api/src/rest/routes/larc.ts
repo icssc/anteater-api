@@ -1,11 +1,15 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { responseSchema } from "$schema";
-import { larcQuerySchema, larcResponseSchema } from "$schema";
+import {
+  larcQuerySchema,
+  larcResponseSchema,
+  response200,
+  response422,
+  response500,
+} from "$schema";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 import { LarcService } from "../../services/larc.ts";
-import { response200, response422, response500 } from "./base";
 
 const larcRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -18,7 +22,7 @@ const larcSectionsRoute = createRoute({
   description: "Retrieves LARC sections data matching the given filters.",
   request: { query: larcQuerySchema },
   responses: {
-    200: response200(responseSchema(larcResponseSchema)),
+    200: response200(larcResponseSchema),
     422: response422(),
     500: response500(),
   },

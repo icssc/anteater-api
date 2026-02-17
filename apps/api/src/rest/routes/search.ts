@@ -1,11 +1,16 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import { accessController } from "$middleware";
-import { responseSchema, searchQuerySchema, searchResponseSchema } from "$schema";
+import {
+  response200,
+  response422,
+  response500,
+  searchQuerySchema,
+  searchResponseSchema,
+} from "$schema";
 import { CoursesService, InstructorsService, SearchService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response422, response500 } from "./base";
 
 const searchRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -18,7 +23,7 @@ const searchRoute = createRoute({
   request: { query: searchQuerySchema },
   description: "Retrieves course/instructor results for the given search query.",
   responses: {
-    200: response200(responseSchema(searchResponseSchema)),
+    200: response200(searchResponseSchema),
     422: response422(),
     500: response500(),
   },

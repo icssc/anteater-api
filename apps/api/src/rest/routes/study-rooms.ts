@@ -1,6 +1,9 @@
 import { defaultHook } from "$hooks";
 import {
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
   studyRoomSchema,
   studyRoomsPathSchema,
   studyRoomsQuerySchema,
@@ -8,7 +11,6 @@ import {
 import { StudyRoomsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response404, response422, response500 } from "./base";
 
 const studyRoomsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -21,7 +23,7 @@ const studyRoomByIdRoute = createRoute({
   request: { params: studyRoomsPathSchema },
   description: "Retrieves a study room by its ID.",
   responses: {
-    200: response200(responseSchema(studyRoomSchema)),
+    200: response200(studyRoomSchema),
     404: response404("Study room not found"),
     422: response422(),
     500: response500(),
@@ -38,7 +40,7 @@ const studyRoomsByFiltersRoute = createRoute({
   description:
     "Retrieves study rooms matching the given filters. If no filters are provided, all rooms are returned.",
   responses: {
-    200: response200(responseSchema(studyRoomSchema.array())),
+    200: response200(studyRoomSchema.array()),
     500: response500(),
   },
 });

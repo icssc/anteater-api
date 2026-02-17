@@ -7,12 +7,13 @@ import {
   gradesOptionsSchema,
   gradesQuerySchema,
   rawGradeSchema,
-  responseSchema,
+  response200,
+  response422,
+  response500,
 } from "$schema";
 import { GradesService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response422, response500 } from "./base";
 
 const gradesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -25,7 +26,7 @@ const rawGradesRoute = createRoute({
   request: { query: gradesQuerySchema },
   description: "Retrieves raw grades data for the given parameters.",
   responses: {
-    200: response200(responseSchema(rawGradeSchema.array())),
+    200: response200(rawGradeSchema.array()),
     422: response422(),
     500: response500(),
   },
@@ -40,7 +41,7 @@ const gradesOptionsRoute = createRoute({
   request: { query: gradesQuerySchema },
   description: "Retrieves a set of further possible filters for the given parameters.",
   responses: {
-    200: response200(responseSchema(gradesOptionsSchema)),
+    200: response200(gradesOptionsSchema),
     422: response422(),
     500: response500(),
   },
@@ -56,7 +57,7 @@ const aggregateGradesRoute = createRoute({
   description:
     "Retrieves grades aggregated by section and the set of sections that are included in this aggregation.",
   responses: {
-    200: response200(responseSchema(aggregateGradesSchema)),
+    200: response200(aggregateGradesSchema),
     422: response422(),
     500: response500(),
   },
@@ -72,7 +73,7 @@ const aggregateGradesByCourseRoute = createRoute({
   description:
     "Retrieves grades aggregated by course and the set of courses that are included in this aggregation.",
   responses: {
-    200: response200(responseSchema(aggregateGradeByCourseSchema.array())),
+    200: response200(aggregateGradeByCourseSchema.array()),
     422: response422(),
     500: response500(),
   },
@@ -88,7 +89,7 @@ const aggregateGradesByOfferingRoute = createRoute({
   description:
     "Retrieves grades aggregated by offering, which is a course and the instructor who taught it, and the set of courses that are included in this aggregation.",
   responses: {
-    200: response200(responseSchema(aggregateGradeByOfferingSchema.array())),
+    200: response200(aggregateGradeByOfferingSchema.array()),
     422: response422(),
     500: response500(),
   },

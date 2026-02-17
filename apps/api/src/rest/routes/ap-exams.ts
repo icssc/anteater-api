@@ -4,12 +4,13 @@ import {
   apExamsQuerySchema,
   apExamsResponseSchema,
   coursesGrantedTreeSchema,
-  responseSchema,
+  response200,
+  response404,
+  response500,
 } from "$schema";
 import { APExamsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response404, response500 } from "./base";
 
 const apExamsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -25,7 +26,7 @@ const apExamsRoute = createRoute({
     "Get AP exam data: mappings from College Board exam names to UCI Catalogue names and course credit for each exam score.",
   request: { query: apExamsQuerySchema },
   responses: {
-    200: response200(responseSchema(apExamsResponseSchema)),
+    200: response200(apExamsResponseSchema),
     404: response404("AP Exam mapping not found"),
     500: response500(),
   },

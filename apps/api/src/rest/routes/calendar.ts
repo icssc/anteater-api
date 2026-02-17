@@ -1,10 +1,16 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
-import { calendarQuerySchema, calendarTermSchema, responseSchema } from "$schema";
+import {
+  calendarQuerySchema,
+  calendarTermSchema,
+  response200,
+  response404,
+  response422,
+  response500,
+} from "$schema";
 import { CalendarService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response404, response422, response500 } from "./base";
 
 const calendarRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -17,7 +23,7 @@ const calendarTermRoute = createRoute({
   request: { query: calendarQuerySchema },
   description: "Retrieves key dates for the provided term.",
   responses: {
-    200: response200(responseSchema(calendarTermSchema)),
+    200: response200(calendarTermSchema),
     404: response404("Term not found"),
     422: response422(),
     500: response500(),
@@ -32,7 +38,7 @@ const allCalendarTermsRoute = createRoute({
   path: "/all",
   description: "Retrieves all data for all terms that are currently available.",
   responses: {
-    200: response200(responseSchema(calendarTermSchema.array())),
+    200: response200(calendarTermSchema.array()),
     500: response500(),
   },
 });

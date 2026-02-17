@@ -1,9 +1,8 @@
 import { defaultHook } from "$hooks";
-import { responseSchema, weekQuerySchema, weekSchema } from "$schema";
+import { response200, response422, response500, weekQuerySchema, weekSchema } from "$schema";
 import { WeekService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response422, response500 } from "./base";
 
 const weekRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -16,7 +15,7 @@ const weekRoute = createRoute({
   request: { query: weekQuerySchema },
   description: "Retrieves week data for the provided date, or today if one is not provided.",
   responses: {
-    200: response200(responseSchema(weekSchema)),
+    200: response200(weekSchema),
     422: response422(),
     500: response500(),
   },

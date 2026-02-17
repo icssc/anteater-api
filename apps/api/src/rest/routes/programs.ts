@@ -10,7 +10,10 @@ import {
   minorsQuerySchema,
   minorsResponseSchema,
   programRequirementSchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
   specializationRequirementsQuerySchema,
   specializationRequirementsResponseSchema,
   specializationsQuerySchema,
@@ -21,7 +24,6 @@ import {
 import { ProgramsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { response200, response404, response422, response500 } from "./base";
 
 const programsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -36,7 +38,7 @@ const majorsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: majorsQuerySchema },
   responses: {
-    200: response200(responseSchema(majorsResponseSchema)),
+    200: response200(majorsResponseSchema),
     404: response404("Major data not found"),
     500: response500(),
   },
@@ -51,7 +53,7 @@ const minorsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: minorsQuerySchema },
   responses: {
-    200: response200(responseSchema(minorsResponseSchema)),
+    200: response200(minorsResponseSchema),
     404: response404("Minor data not found"),
     500: response500(),
   },
@@ -66,7 +68,7 @@ const specializationsRoute = createRoute({
   description: "List all available majors in UCI's current catalogue.",
   request: { query: specializationsQuerySchema },
   responses: {
-    200: response200(responseSchema(specializationsResponseSchema)),
+    200: response200(specializationsResponseSchema),
     404: response404("Specialization data not found"),
     500: response500(),
   },
@@ -83,7 +85,7 @@ const majorRequirements = createRoute({
     "if this major has specializations, then one is mandatory and its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
-    200: response200(responseSchema(majorRequirementsResponseSchema)),
+    200: response200(majorRequirementsResponseSchema),
     404: response404("Major not found"),
     422: response422(),
     500: response500(),
@@ -99,7 +101,7 @@ const minorRequirements = createRoute({
   description: "Retrieve course requirements for a minor in UCI's current catalogue.",
   request: { query: minorRequirementsQuerySchema },
   responses: {
-    200: response200(responseSchema(minorRequirementsResponseSchema)),
+    200: response200(minorRequirementsResponseSchema),
     404: response404("Minor not found"),
     422: response422(),
     500: response500(),
@@ -115,7 +117,7 @@ const specializationRequirements = createRoute({
   description: "Retrieve course requirements for a specialization in UCI's current catalogue.",
   request: { query: specializationRequirementsQuerySchema },
   responses: {
-    200: response200(responseSchema(specializationRequirementsResponseSchema)),
+    200: response200(specializationRequirementsResponseSchema),
     404: response404("Specialization not found"),
     422: response422(),
     500: response500(),
@@ -131,7 +133,7 @@ const ugradRequirements = createRoute({
   description: "Retrieve requirements external to, but required for, for all undergraduate degrees",
   request: { query: ugradRequirementsQuerySchema },
   responses: {
-    200: response200(responseSchema(ugradRequirementsResponseSchema)),
+    200: response200(ugradRequirementsResponseSchema),
     404: response404("Specialization not found"),
     422: response422(),
     500: response500(),
