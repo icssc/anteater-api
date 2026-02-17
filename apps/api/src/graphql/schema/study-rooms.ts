@@ -10,11 +10,11 @@ export const studyRoomsGraphQLSchema = `#graphql
   type StudyRoom {
     id: String!
     name: String!
-    capacity: Int!
+    capacity: Int
     location: String!
     description: String
     directions: String
-    techEnhanced: Boolean!
+    techEnhanced: Boolean
     url: String!
     slots: [Slot!]!
   }
