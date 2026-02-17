@@ -1,28 +1,29 @@
 import { errorSchema } from "$schema";
 import type { z } from "@hono/zod-openapi";
 
-export const response200 = <T extends z.ZodTypeAny>(successSchema: T) =>
-  ({
-    content: {
-      "application/json": { schema: successSchema },
-    },
+export function response200<T extends z.ZodTypeAny>(successSchema: T) {
+  return {
+    content: { "application/json": { schema: successSchema } },
     description: "Successful operation",
-  }) as const;
-
-export const response404 = (description: string) =>
-  ({
+  } as const;
+}
+export function response404(description: string) {
+  return {
     content: { "application/json": { schema: errorSchema } },
     description: description,
-  }) as const;
+  } as const;
+}
 
-export const response422 = () =>
-  ({
+export function response422() {
+  return {
     content: { "application/json": { schema: errorSchema } },
     description: "Parameters failed validation",
-  }) as const;
+  } as const;
+}
 
-export const response500 = () =>
-  ({
+export function response500() {
+  return {
     content: { "application/json": { schema: errorSchema } },
     description: "Server error occurred",
-  }) as const;
+  } as const;
+}
