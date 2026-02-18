@@ -70,13 +70,59 @@ type DiningDates @cacheControl(maxAge: 3600) {
   latest: String
 }
 
+type Stations {
+  id: String
+  name: String
+  restaurantId: RestaurantIds
+  updatedAt: String
+}
+
+type Restaurant {
+  id: RestaurantIds
+  updatedAt: String
+  stations: [Stations!]!
+}
+
+type StationDishMap {
+  stationId: String! 
+  dishIds: [String!]! 
+}
+
+type Period {
+  id: String! 
+  name: String! 
+  startTime: String! 
+  endTime: String!
+  stations: [StationDishMap!]!
+  updatedAt: String!
+}
+
+type RestaurantToday {
+  id: RestaurantIds
+  updatedAt: String
+  periods: [Period!]! 
+}
+
 input DiningEventsQuery {
   restaurantId: RestaurantId
+}
+
+input RestaurantsQuerySchema {
+  id: RestaurantIds
+}
+
+input RestaurantTodayQuerySchema {
+  id: RestaurantIds
+  date: String
 }
 
 extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
   diningDish(id: String!): DiningDish
   diningDates: DiningDates!
+    getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
+    @cacheControl(maxAge: 86400)
+  getRestaurantToday(query: RestaurantTodayQuerySchema): RestaurantToday
+    @cacheControl(maxAge: 86400)
 }
 `;

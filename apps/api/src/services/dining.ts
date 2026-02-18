@@ -25,7 +25,7 @@ import type { z } from "zod";
 type DiningDishQuery = z.infer<typeof dishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 
-class DiningService {
+export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getUpcomingEvents(input: DiningEventQuery) {
