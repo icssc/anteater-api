@@ -1,4 +1,9 @@
 export const diningSchema = `#graphql
+enum RestaurantId {
+  anteatery
+  brandywine
+}
+
 type DietRestriction {
   containsEggs: Boolean
   containsFish: Boolean
@@ -37,7 +42,7 @@ type NutritionInfo {
   vitaminCIU: Float
 }
 
-type DiningDish {
+type DiningDish @cacheControl(maxAge: 3600) {
   id: String!
   stationId: String!
   name: String!
@@ -50,18 +55,28 @@ type DiningDish {
   nutritionInfo: NutritionInfo
 }
 
-type DiningEvent {
+type DiningEvent @cacheControl(maxAge: 3600) {
   title: String!
   image: String
-  restaurantId: String!
+  restaurantId: RestaurantId!
   description: String
   start: String!
   end: String
   updatedAt: String!
 }
 
-type DiningDates {
+type DiningDates @cacheControl(maxAge: 3600) {
   earliest: String
   latest: String
+}
+
+input DiningEventsQuery {
+  restaurantId: RestaurantId
+}
+
+extend type Query {
+  diningEvents(query: DiningEventsQuery): [DiningEvent!]!
+  diningDish(id: String!): DiningDish
+  diningDates: DiningDates!
 }
 `;

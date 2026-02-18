@@ -13,11 +13,13 @@ import { studyRoomsResolvers } from "$graphql/resolvers/study-rooms";
 import { websocResolvers } from "$graphql/resolvers/websoc";
 import { weekResolvers } from "$graphql/resolvers/week";
 import { mergeResolvers } from "@graphql-tools/merge";
+import { diningResolvers } from "./dining";
 
 export const resolvers = mergeResolvers([
   apExamResolvers,
   calendarResolvers,
   coursesResolvers,
+  diningResolvers,
   enrollmentHistoryResolvers,
   gradesResolvers,
   instructorsResolvers,
