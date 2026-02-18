@@ -64,4 +64,32 @@ type DiningDates {
   earliest: String
   latest: String
 }
+
+enum RestaurantIds {
+  anteatery
+  brandywine
+}
+
+input RestaurantsQuerySchema {
+  id: RestaurantIds
+}
+
+type Stations {
+  id: String
+  name: String
+  restaurantId: RestaurantIds
+  updatedAt: String
+}
+
+type Restaurant {
+  id: RestaurantIds
+  updatedAt: String
+  stations: [Stations!]!
+}
+
+extend type Query {
+  getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
+    @cacheControl(maxAge: 86400)
+}
+
 `;
