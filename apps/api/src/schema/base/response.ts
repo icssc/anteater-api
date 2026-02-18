@@ -12,7 +12,7 @@ export function responseSchema<T extends z.ZodType>(data: T, isCursor = false) {
     : data.openapi({ description: "The data that was requested" });
 
   return z.object({
-    ok: z.literal(true).openapi({ example: true }),
+    ok: z.literal<boolean>(true).openapi({}),
     data: dataSchema,
   });
 }
