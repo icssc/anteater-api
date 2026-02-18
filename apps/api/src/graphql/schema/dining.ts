@@ -70,10 +70,6 @@ enum RestaurantIds {
   brandywine
 }
 
-input RestaurantsQuerySchema {
-  id: RestaurantIds
-}
-
 type Stations {
   id: String
   name: String
@@ -87,8 +83,38 @@ type Restaurant {
   stations: [Stations!]!
 }
 
+type StationDishMap {
+  stationId: String! 
+  dishIds: [String!]! 
+}
+
+type Period {
+  id: String! 
+  name: String! 
+  startTime: String! 
+  endTime: String!
+  stations: [StationDishMap!]!
+  updatedAt: String!
+}
+
+type RestaurantToday {
+  id: RestaurantIds
+  updatedAt: String
+  periods: [Period!]! 
+}
+
+input RestaurantsQuerySchema {
+  id: RestaurantIds
+}
+
+input RestaurantTodayQuerySchema {
+  id: RestaurantIds
+  date: String
+}
 extend type Query {
   getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
+    @cacheControl(maxAge: 86400)
+  getRestaurantToday(query: RestaurantTodayQuerySchema): RestaurantToday
     @cacheControl(maxAge: 86400)
 }
 
