@@ -73,12 +73,12 @@ type DiningDates @cacheControl(maxAge: 3600) {
 type Stations {
   id: String
   name: String
-  restaurantId: RestaurantIds
+  restaurantId: RestaurantId
   updatedAt: String
 }
 
 type Restaurant {
-  id: RestaurantIds
+  id: RestaurantId
   updatedAt: String
   stations: [Stations!]!
 }
@@ -98,7 +98,7 @@ type Period {
 }
 
 type RestaurantToday {
-  id: RestaurantIds
+  id: RestaurantId
   updatedAt: String
   periods: [Period!]! 
 }
@@ -108,11 +108,11 @@ input DiningEventsQuery {
 }
 
 input RestaurantsQuerySchema {
-  id: RestaurantIds
+  id: RestaurantId
 }
 
 input RestaurantTodayQuerySchema {
-  id: RestaurantIds
+  id: RestaurantId
   date: String
 }
 
@@ -120,7 +120,7 @@ extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
   diningDish(id: String!): DiningDish
   diningDates: DiningDates!
-    getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
+  getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
     @cacheControl(maxAge: 86400)
   getRestaurantToday(query: RestaurantTodayQuerySchema): RestaurantToday
     @cacheControl(maxAge: 86400)

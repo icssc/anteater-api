@@ -17,7 +17,7 @@ export const batchDishesQuerySchema = z.object({
 
 export const dishQuerySchema = z.object({
   id: z.string().openapi({
-    example: "1923_101628_M35424_1_13208",
+    example: "1821_122168_M40780_1_25617",
     description: "Unique dish identifier from dining system",
   }),
 });
@@ -82,24 +82,28 @@ export const nutritionInfoSchema = z.object({
 
 export const dishSchema = z.object({
   id: z.string().openapi({
-    example: "1923_101628_M35424_1_13208",
+    example: "1821_122168_M40780_1_25617",
     description: "Unique dish identifier",
   }),
   stationId: z.string().openapi({
-    example: "1935",
+    example: "1887",
     description: "ID of the station serving this dish",
   }),
   name: z.string().openapi({
-    example: "Grilled Chicken Breast",
+    example: "Grilled Indian-Spiced Chicken",
     description: "Name of the dish",
   }),
   description: z.string().openapi({
-    example: "Seasoned and grilled chicken",
+    example:
+      "Juicy chicken breast seasoned with a flavorful blend of toasted cumin, cinnamon and turmeric",
     description: "Description of the dish",
   }),
-  ingredients: z.string().nullable().openapi({ example: "Chicken, salt, pepper" }),
+  ingredients: z
+    .string()
+    .nullable()
+    .openapi({ example: "Chicken Breast, Canola Oil, Turmeric, Cinnamon, Cumin" }),
   category: z.string().openapi({
-    example: "Saute",
+    example: "Grilled",
     description: "Category of the dish",
   }),
   imageUrl: z.string().nullable().openapi({
@@ -162,6 +166,7 @@ export const restaurantTodayQuerySchema = z.object({
   }),
   date: z.iso.date().openapi({
     description: "Get information for this day, in the UCI timezone",
+    example: "2026-02-20",
   }),
 });
 
