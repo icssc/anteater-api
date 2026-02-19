@@ -166,7 +166,6 @@ export const restaurantTodayQuerySchema = z.object({
   }),
   date: z.iso.date().openapi({
     description: "Get information for this day, in the UCI timezone",
-    example: "2026-02-20",
   }),
 });
 
