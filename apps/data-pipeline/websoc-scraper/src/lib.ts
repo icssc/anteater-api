@@ -54,7 +54,7 @@ const LAST_SECTION_CODE = "97999";
 
 /**
  * Decision on whether to snapshot enrollment data during current scraper run.
- * Calculated once before processing chunks based on academic period and time elapsed from last snapshot.
+ * Calculated once before processing chunks based on period and time elapsed from last snapshot.
  * All chunks use the same decision and scraperStartTime to avoid partial snapshots.
  */
 type SnapshotDecision = {
@@ -876,18 +876,16 @@ export async function scrapeTerm(
     .limit(1);
 
   // Get last snapshot to calculate time elapsed
-  const [lastSnapshot] = await db
-    .select({
-      createdAt: max(websocSectionEnrollment.createdAt),
-    })
-    .from(websocSectionEnrollment);
-
+  const lastSnapshot = await db
+    .select({ createdAt: max(websocSectionEnrollment.createdAt) })
+    .from(websocSectionEnrollment)
+    .then(([row]) => row?.createdAt);
   /*
    * NOTE: Intervals are based on scraper start times, so actual data collection intervals
    * are ~20-30 seconds shorter (e.g., hourly = ~59min 40sec). This discrepancy is acceptable for our use case.
    */
-  const hoursSinceLastSnapshot = lastSnapshot?.createdAt
-    ? (scraperTimestamp.getTime() - lastSnapshot.createdAt.getTime()) / HOUR_MS
+  const hoursSinceLastSnapshot = lastSnapshot
+    ? (scraperTimestamp.getTime() - lastSnapshot.getTime()) / HOUR_MS
     : Number.POSITIVE_INFINITY;
 
   let shouldSnapshot = false;
@@ -904,10 +902,10 @@ export async function scrapeTerm(
         break;
       case "ADD_DROP":
         // Add/drop deadline is Friday week 2 at 5pm. Snapshot hourly from noon-5pm due to high activity
-        // Otherwise, snapshot every 6 hours.
         if (week === 2 && currentDayOfWeek === 5 && hour >= 12 && hour <= 17) {
           shouldSnapshot = hoursSinceLastSnapshot >= 1;
         } else {
+          // Otherwise, snapshot every 6 hours.
           shouldSnapshot = hoursSinceLastSnapshot >= 6;
         }
         break;
