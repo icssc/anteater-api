@@ -40,22 +40,22 @@ export const eventSchema = z.object({
 
 export const dietRestrictionSchema = z.object({
   // omit redundant foreign key in output
-  containsEggs: z.boolean().nullable(),
-  containsFish: z.boolean().nullable(),
-  containsMilk: z.boolean().nullable(),
-  containsPeanuts: z.boolean().nullable(),
-  containsSesame: z.boolean().nullable(),
-  containsShellfish: z.boolean().nullable(),
-  containsSoy: z.boolean().nullable(),
-  containsTreeNuts: z.boolean().nullable(),
-  containsWheat: z.boolean().nullable(),
-  isGlutenFree: z.boolean().nullable(),
-  isHalal: z.boolean().nullable(),
-  isKosher: z.boolean().nullable(),
-  isLocallyGrown: z.boolean().nullable(),
-  isOrganic: z.boolean().nullable(),
-  isVegan: z.boolean().nullable(),
-  isVegetarian: z.boolean().nullable(),
+  containsEggs: z.boolean(),
+  containsFish: z.boolean(),
+  containsMilk: z.boolean(),
+  containsPeanuts: z.boolean(),
+  containsSesame: z.boolean(),
+  containsShellfish: z.boolean(),
+  containsSoy: z.boolean(),
+  containsTreeNuts: z.boolean(),
+  containsWheat: z.boolean(),
+  isGlutenFree: z.boolean(),
+  isHalal: z.boolean(),
+  isKosher: z.boolean(),
+  isLocallyGrown: z.boolean(),
+  isOrganic: z.boolean(),
+  isVegan: z.boolean(),
+  isVegetarian: z.boolean(),
   // the updatedAt value is somewhat redundant, as it should be almost identical to the field of its dish
 });
 

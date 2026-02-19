@@ -1,5 +1,5 @@
 {
-  "id": "9d3eab5d-b497-4777-bd5b-762afc2209dd",
+  "id": "f1b90841-6952-48b7-a547-c974828883b2",
   "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
@@ -648,97 +648,97 @@
           "name": "contains_eggs",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_fish": {
           "name": "contains_fish",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_milk": {
           "name": "contains_milk",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_peanuts": {
           "name": "contains_peanuts",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_sesame": {
           "name": "contains_sesame",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_shellfish": {
           "name": "contains_shellfish",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_soy": {
           "name": "contains_soy",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_tree_nuts": {
           "name": "contains_tree_nuts",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "contains_wheat": {
           "name": "contains_wheat",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_gluten_free": {
           "name": "is_gluten_free",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_halal": {
           "name": "is_halal",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_kosher": {
           "name": "is_kosher",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_locally_grown": {
           "name": "is_locally_grown",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_organic": {
           "name": "is_organic",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_vegan": {
           "name": "is_vegan",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "is_vegetarian": {
           "name": "is_vegetarian",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "name": "updated_at",

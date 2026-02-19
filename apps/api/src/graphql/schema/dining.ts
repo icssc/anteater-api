@@ -5,22 +5,22 @@ enum RestaurantId {
 }
 
 type DietRestriction {
-  containsEggs: Boolean
-  containsFish: Boolean
-  containsMilk: Boolean
-  containsPeanuts: Boolean
-  containsSesame: Boolean
-  containsShellfish: Boolean
-  containsSoy: Boolean
-  containsTreeNuts: Boolean
-  containsWheat: Boolean
-  isGlutenFree: Boolean
-  isHalal: Boolean
-  isKosher: Boolean
-  isLocallyGrown: Boolean
-  isOrganic: Boolean
-  isVegan: Boolean
-  isVegetarian: Boolean
+  containsEggs: Boolean!
+  containsFish: Boolean!
+  containsMilk: Boolean!
+  containsPeanuts: Boolean!
+  containsSesame: Boolean!
+  containsShellfish: Boolean!
+  containsSoy: Boolean!
+  containsTreeNuts: Boolean!
+  containsWheat: Boolean!
+  isGlutenFree: Boolean!
+  isHalal: Boolean!
+  isKosher: Boolean!
+  isLocallyGrown: Boolean!
+  isOrganic: Boolean!
+  isVegan: Boolean!
+  isVegetarian: Boolean!
 }
 
 type NutritionInfo {
