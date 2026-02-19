@@ -56,7 +56,7 @@ export const dietRestrictionSchema = z.object({
   isOrganic: z.boolean(),
   isVegan: z.boolean(),
   isVegetarian: z.boolean(),
-  // the updatedAt value is somewhat redundant, as it should be almost identical to the field of its dish
+  // updatedAt
 });
 
 export const nutritionInfoSchema = z.object({
@@ -77,7 +77,7 @@ export const nutritionInfoSchema = z.object({
   ironMg: z.coerce.number().nullable(),
   vitaminAIU: z.coerce.number().nullable(),
   vitaminCIU: z.coerce.number().nullable(),
-  // the updatedAt value is somewhat redundant, as it should be almost identical to the field of its dish
+  // updatedAt
 });
 
 export const dishSchema = z.object({
