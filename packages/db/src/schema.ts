@@ -180,8 +180,10 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
 
 // Misc. enums
 
-export const term = pgEnum("term", terms);
+export { terms } from "@packages/stdlib";
 export type { Term } from "@packages/stdlib";
+
+export const term = pgEnum("term", terms);
 
 export const courseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 export const courseLevel = pgEnum("course_level", courseLevels);
