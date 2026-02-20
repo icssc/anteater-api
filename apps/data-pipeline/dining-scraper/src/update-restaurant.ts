@@ -196,7 +196,7 @@ export async function updateRestaurant(
       updatedAt,
     } of dishBundlesToInsert) {
       // cast is safe because we update all containsX and isY for allergens x in X and restrictions y in Y
-      const baseDietRestriction = {} as Partial<Omit<DietRestrictionBase, "dishId" | "updatedAt">>;
+      const baseDietRestriction = {} as Omit<DietRestrictionBase, "dishId" | "updatedAt">;
 
       // Parse available allergens and add to diet restriction if present
       for (const key of allergens) {
