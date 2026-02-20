@@ -4,7 +4,7 @@ enum RestaurantId {
   brandywine
 }
 
-type DietRestriction {
+type DietRestriction @cacheControl(maxAge: 3600) {
   containsEggs: Boolean!
   containsFish: Boolean!
   containsMilk: Boolean!
@@ -23,7 +23,7 @@ type DietRestriction {
   isVegetarian: Boolean!
 }
 
-type NutritionInfo {
+type NutritionInfo @cacheControl(maxAge: 3600) {
   servingSize: String
   servingUnit: String
   calories: Float
@@ -70,25 +70,25 @@ type DiningDates @cacheControl(maxAge: 3600) {
   latest: String
 }
 
-type Stations {
+type Stations @cacheControl(maxAge: 3600) {
   id: String
   name: String
   restaurantId: RestaurantId
   updatedAt: String
 }
 
-type Restaurant {
+type Restaurant @cacheControl(maxAge: 3600) {
   id: RestaurantId
   updatedAt: String
   stations: [Stations!]!
 }
 
-type StationDishMap {
+type StationDishMap @cacheControl(maxAge: 3600) {
   stationId: String! 
   dishIds: [String!]! 
 }
 
-type Period {
+type Period @cacheControl(maxAge: 3600) {
   id: String! 
   name: String! 
   startTime: String! 
@@ -97,7 +97,7 @@ type Period {
   updatedAt: String!
 }
 
-type RestaurantToday {
+type RestaurantToday @cacheControl(maxAge: 3600) {
   id: RestaurantId
   updatedAt: String
   periods: [Period!]! 
@@ -121,8 +121,6 @@ extend type Query {
   diningDish(id: String!): DiningDish
   diningDates: DiningDates!
   getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
-    @cacheControl(maxAge: 86400)
   getRestaurantToday(query: RestaurantTodayQuerySchema): RestaurantToday
-    @cacheControl(maxAge: 86400)
 }
 `;
