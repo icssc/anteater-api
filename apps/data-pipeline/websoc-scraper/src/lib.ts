@@ -95,6 +95,34 @@ function getPacificTimeParts(date: Date): { hour: number; currentDayOfWeek: numb
   return { hour, currentDayOfWeek };
 }
 
+const geCategories = [
+  "GE-1A",
+  "GE-1B",
+  "GE-2",
+  "GE-3",
+  "GE-4",
+  "GE-5A",
+  "GE-5B",
+  "GE-6",
+  "GE-7",
+  "GE-8",
+] as const;
+
+const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpdate> = {
+  "GE-1A": "isGE1A",
+  "GE-1B": "isGE1B",
+  "GE-2": "isGE2",
+  "GE-3": "isGE3",
+  "GE-4": "isGE4",
+  "GE-5A": "isGE5A",
+  "GE-5B": "isGE5B",
+  "GE-6": "isGE6",
+  "GE-7": "isGE7",
+  "GE-8": "isGE8",
+};
+
+const geColumns = Object.values(geCategoryToFlag) as string[];
+
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
 
@@ -427,6 +455,12 @@ function meetingMapper(
   };
 }
 
+const allCourseCols = conflictUpdateSetAllCols(websocCourse);
+
+const courseUpdateSet = Object.fromEntries(
+  Object.entries(allCourseCols).filter(([key]) => !geColumns.includes(key)),
+);
+
 const doChunkUpsert = async (
   db: ReturnType<typeof database>,
   term: Term,
@@ -496,7 +530,7 @@ const doChunkUpsert = async (
           websocCourse.courseNumber,
           websocCourse.courseTitle,
         ],
-        set: conflictUpdateSetAllCols(websocCourse),
+        set: courseUpdateSet,
       })
       .returning({
         id: websocCourse.id,
@@ -782,32 +816,6 @@ type CourseGEUpdate = {
   isGE6?: boolean;
   isGE7?: boolean;
   isGE8?: boolean;
-};
-
-const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
-
-const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpdate> = {
-  "GE-1A": "isGE1A",
-  "GE-1B": "isGE1B",
-  "GE-2": "isGE2",
-  "GE-3": "isGE3",
-  "GE-4": "isGE4",
-  "GE-5A": "isGE5A",
-  "GE-5B": "isGE5B",
-  "GE-6": "isGE6",
-  "GE-7": "isGE7",
-  "GE-8": "isGE8",
 };
 
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
