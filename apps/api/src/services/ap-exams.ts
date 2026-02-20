@@ -17,7 +17,7 @@ function buildQuery(query: z.infer<typeof apExamsQuerySchema>) {
   return and(...conds);
 }
 
-export const geCategoryToColumn = {
+const geCategoryToColumn = {
   "GE-1A": "ge1aCoursesGranted",
   "GE-1B": "ge1bCoursesGranted",
   "GE-2": "ge2CoursesGranted",
