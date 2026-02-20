@@ -44,6 +44,7 @@ type WebsocSection @cacheControl(maxAge: 300) {
     sectionComment: String!
     numNewOnlyReserved: String!
     numCurrentlyEnrolled: WebsocSectionCurrentlyEnrolled!
+    isCancelled: Boolean!
     updatedAt: String!
 }
 
@@ -121,6 +122,8 @@ input WebsocQuery {
 input WebsocDepartmentsQuery {
     sinceYear: String
     sinceTerm: Term
+    untilYear: String
+    untilTerm: Term
 }
 
 extend type Query {

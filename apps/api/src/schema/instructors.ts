@@ -3,13 +3,13 @@ import { cursorBaseSchema, skipBaseSchema, takeBaseSchema } from "./base";
 
 export const instructorsPathSchema = z.object({
   ucinetid: z
-    .string({ message: "Parameter 'ucinetid' is required" })
+    .string({ error: "Parameter 'ucinetid' is required" })
     .openapi({ param: { name: "ucinetid", in: "path" } }),
 });
 
 export const batchInstructorsQuerySchema = z.object({
   ucinetids: z
-    .string({ message: "Parameter 'ucinetids' is required" })
+    .string({ error: "Parameter 'ucinetids' is required" })
     .transform((xs) => xs.split(","))
     .openapi({ example: "mikes,klefstad" }),
 });

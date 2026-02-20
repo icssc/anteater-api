@@ -1,6 +1,8 @@
 import { z } from "@hono/zod-openapi";
 
-const programIdBase = z.string({ required_error: "programId is required" });
+const programIdBase = z.string({
+  error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
+});
 
 export const majorsQuerySchema = z.object({
   id: z.string().optional().openapi({

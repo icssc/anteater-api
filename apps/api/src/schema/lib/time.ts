@@ -21,9 +21,10 @@ const transformTime = (time: string, ctx: z.RefinementCtx): Date => {
   const match = time.match(TIME_REGEX);
 
   if (!match) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid time format: ${time}`,
+    ctx.issues.push({
+      input: time,
+      code: "custom",
+      error: `Invalid time format: ${time}`,
     });
     return z.NEVER;
   }
@@ -40,9 +41,10 @@ const transformTime = (time: string, ctx: z.RefinementCtx): Date => {
   }
 
   if (minute >= 60 || hour >= 24) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid time: ${time}`,
+    ctx.issues.push({
+      input: time,
+      code: "custom",
+      error: `Invalid time: ${time}`,
     });
     return z.NEVER;
   }
@@ -61,6 +63,9 @@ export const timeRangeSchema = z
   .regex(TIME_RANGE_REGEX)
   .transform((s) => s.split("-"))
   .pipe(timeSchema.array().length(2))
+  .refine(([start, end]) => start <= end, {
+    message: "Start time must not be after end time",
+  })
   .openapi({
     description: "Time range; endpoints may be in 12 or 24 hour format",
     examples: ["8:00am-2:00pm", "08:00-14:00"],

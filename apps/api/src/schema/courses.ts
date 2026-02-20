@@ -7,7 +7,7 @@ import { geCategories } from "./lib";
 export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
 export const inputCourseLevelSchema = z.enum(inputCourseLevels, {
-  message: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
+  error: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
 });
 
 export const outputCourseLevels = [
@@ -33,13 +33,13 @@ export const outputGECategories = [
 
 export const coursesPathSchema = z.object({
   id: z
-    .string({ message: "Parameter 'id' is required" })
+    .string({ error: "Parameter 'id' is required" })
     .openapi({ param: { name: "id", in: "path" } }),
 });
 
 export const batchCoursesQuerySchema = z.object({
   ids: z
-    .string({ message: "Parameter 'ids' is required" })
+    .string({ error: "Parameter 'ids' is required" })
     .transform((xs) => xs.split(","))
     .openapi({ example: "COMPSCI161,COMPSCI162" }),
 });

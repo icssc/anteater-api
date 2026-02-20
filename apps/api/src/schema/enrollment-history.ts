@@ -5,7 +5,12 @@ import { yearSchema } from "./lib";
 export const enrollmentHistoryQuerySchema = z
   .object({
     year: yearSchema.optional(),
-    quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
+    quarter: z
+      .enum(terms, {
+        error: (issue) =>
+          issue.value === undefined ? "quarter is required" : "Invalid quarter provided",
+      })
+      .optional(),
     instructorName: z.string().optional().openapi({
       description: "Only include courses taught by the specified instructor (case-insensitive)",
       example: "THORNTON, A.",
@@ -20,12 +25,12 @@ export const enrollmentHistoryQuerySchema = z
     }),
     sectionCode: z
       .string()
-      .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
+      .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
       .transform((x) => Number.parseInt(x, 10))
       .optional()
       .openapi({ description: "The 5-digit section code", example: "36120" }),
     sectionType: z
-      .enum(websocSectionTypes, { invalid_type_error: "Invalid sectionType provided" })
+      .enum(websocSectionTypes, { error: (_issue) => "Invalid sectionType provided" })
       .optional(),
   })
   .refine(

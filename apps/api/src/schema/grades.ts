@@ -4,7 +4,7 @@ import { geCategories, yearSchema } from "./lib";
 
 export const gradesQuerySchema = z.object({
   year: yearSchema.optional(),
-  quarter: z.enum(terms, { invalid_type_error: "Invalid quarter provided" }).optional(),
+  quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
   instructor: z.string().optional().openapi({
     description: "Only include courses taught by the specified instructor (case-insensitive)",
     example: "KLEFSTAD, R.",
@@ -19,7 +19,7 @@ export const gradesQuerySchema = z.object({
   }),
   sectionCode: z
     .string()
-    .regex(/^\d{5}$/, { message: "Invalid sectionCode provided" })
+    .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
     .optional()
     .openapi({ description: "The 5-digit section code", example: "35630" }),
   division: z

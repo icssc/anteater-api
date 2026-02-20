@@ -5,13 +5,13 @@
   "scripts": {
     "build": "next build",
     "check:types": "tsc -p './tsconfig.json' -noEmit",
-    "deploy": "dotenv -- sst deploy --stage production",
+    "deploy": "sst deploy --stage production",
     "dev": "next dev --turbopack",
     "migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "1.7.2",
-    "@hookform/resolvers": "3.9.1",
+    "@hookform/resolvers": "5.2.2",
     "@paralleldrive/cuid2": "2.2.2",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "1.1.2",
@@ -27,24 +27,24 @@
     "clsx": "2.1.1",
     "drizzle-orm": "0.36.0",
     "lucide-react": "0.460.0",
-    "next": "15.0.3",
+    "next": "16.0.10",
     "next-auth": "5.0.0-beta.25",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-hook-form": "7.53.2",
-    "sst": "3.3.22",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "7.67.0",
+    "sst": "3.17.25",
     "tailwind-merge": "2.5.4",
     "tailwindcss-animate": "1.0.7",
-    "zod": "3.23.8"
+    "zod": "4.1.13"
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
     "drizzle-kit": "0.27.0",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.15",
     "typescript": "5.6.3",
-    "wrangler": "3.100.0"
+    "wrangler": "3.99.0"
   }
 }

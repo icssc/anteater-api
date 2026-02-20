@@ -11,6 +11,7 @@ import {
   pgEnum,
   pgMaterializedView,
   pgTable,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -369,7 +370,8 @@ export const websocSection = pgTable(
     isCancelled: boolean("is_cancelled")
       .notNull()
       .generatedAlwaysAs(
-        (): SQL => sql`${websocSection.sectionComment} LIKE \'*** CANCELLED ***%\'`,
+        (): SQL =>
+          sql`${websocSection.sectionComment} LIKE \'%***  CANCELLED  ***%\' OR ${websocSection.sectionComment} LIKE \'%***  CANCELED  ***%\'`,
       ),
     webURL: text("web_url").notNull().default(""),
   },
@@ -441,7 +443,7 @@ export const websocSectionMeetingToLocation = pgTable(
   "websoc_section_meeting_to_location",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    meetingId: uuid("section_id")
+    meetingId: uuid("meeting_id")
       .references(() => websocSectionMeeting.id, { onDelete: "cascade" })
       .notNull(),
     locationId: uuid("location_id")
@@ -722,11 +724,12 @@ export const studyRoom = pgTable(
   {
     id: varchar("id").primaryKey(),
     name: varchar("name").notNull(),
-    capacity: integer("capacity").notNull(),
+    capacity: integer("capacity"),
     location: varchar("location").notNull(),
     description: varchar("description").notNull(),
     directions: varchar("directions").notNull(),
-    techEnhanced: boolean("tech_enhanced").notNull(),
+    techEnhanced: boolean("tech_enhanced"),
+    url: varchar("url"),
     studyLocationId: varchar("study_location_id")
       .references(() => studyLocation.id)
       .notNull(),
@@ -787,6 +790,33 @@ export const apExamReward = pgTable("ap_exam_reward", {
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
   coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
 });
+
+export const libraryTraffic = pgTable(
+  "library_traffic",
+  {
+    id: integer("id").primaryKey(),
+    libraryName: varchar("library_name").notNull(),
+    locationName: varchar("location_name").notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
+  },
+  (table) => [index().on(table.libraryName), index().on(table.locationName)],
+);
+
+export const libraryTrafficHistory = pgTable(
+  "library_traffic_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    locationId: integer("location_id")
+      .references(() => libraryTraffic.id, { onDelete: "cascade" })
+      .notNull(),
+    trafficCount: integer("traffic_count").notNull(),
+    trafficPercentage: real("traffic_percentage").notNull(),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
 
 // Materialized views
 
