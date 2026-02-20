@@ -109,7 +109,7 @@ export class DiningService {
       // alias to allow these assignments
       const rPun = r as z.infer<typeof dishSchema>;
 
-      if (r.nutritionInfo.updatedAt === null) {
+      if (r.nutritionInfo?.updatedAt === null) {
         rPun.nutritionInfo = null;
       }
       // this optional won't ever trigger
