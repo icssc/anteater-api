@@ -23,6 +23,10 @@ export const diningResolvers = {
       }
       return dish;
     },
+    batchDiningDishes: async (_: unknown, { ids }: { ids: string[] }, { db }: GraphQLContext) => {
+      const service = new DiningService(db);
+      return await service.batchGetDishes(ids);
+    },
     diningDates: async (_: unknown, _args: unknown, { db }: GraphQLContext) => {
       const service = new DiningService(db);
       return await service.getPickableDates();
