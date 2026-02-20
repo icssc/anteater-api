@@ -8,7 +8,7 @@ import type {
   restaurantsResponseSchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { type SQL, and, eq, gte, inArray, max, min, sql } from "@packages/db/drizzle";
+import { type SQL, and, eq, gte, inArray, isNull, max, min, or, sql } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -30,7 +30,7 @@ export class DiningService {
 
   async getUpcomingEvents(input: DiningEventQuery) {
     // only get events ending at or after the current time
-    const conds = [gte(diningEvent.end, sql`NOW()`)];
+    const conds = [or(gte(diningEvent.end, sql`NOW()`), isNull(diningEvent.end))];
 
     if (input.restaurantId) {
       conds.push(eq(diningEvent.restaurantId, input.restaurantId));

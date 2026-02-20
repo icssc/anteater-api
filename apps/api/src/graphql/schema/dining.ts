@@ -119,6 +119,7 @@ input RestaurantTodayQuerySchema {
 extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
   diningDish(id: String!): DiningDish
+  batchDiningDishes(ids: [String!]!): [DiningDish!]!
   diningDates: DiningDates!
   getRestaurants(query: RestaurantsQuerySchema): [Restaurant!]!
   getRestaurantToday(query: RestaurantTodayQuerySchema): RestaurantToday
