@@ -17,14 +17,10 @@ import {
 import { DiningService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { database } from "@packages/db";
-import { catalogueRouter } from "./catalogue.ts";
 
 const diningRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
-catalogueRouter.get(
-  "*",
-  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=3600" }),
-);
+diningRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=3600" }));
 
 const eventsRoute = createRoute({
   summary: "Get upcoming dining events",
