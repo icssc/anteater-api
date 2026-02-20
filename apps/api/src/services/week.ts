@@ -2,6 +2,7 @@ import type { weekQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, getTableColumns, gte, lte, or } from "@packages/db/drizzle";
 import { calendarTerm } from "@packages/db/schema";
+import { getWeek } from "@packages/stdlib";
 import type { z } from "zod";
 
 type WeekData = {
@@ -10,18 +11,7 @@ type WeekData = {
   display: string;
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const WEEK_MS = 7 * DAY_MS;
-const FALL_OFFSET_MS = 4 * DAY_MS;
-
 const quarters = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
-
-const getWeek = (date: Date, term: typeof calendarTerm.$inferSelect): number =>
-  Math.floor(
-    (date.valueOf() -
-      (term.instructionStart.valueOf() + (term.quarter === "Fall" ? FALL_OFFSET_MS : 0))) /
-      WEEK_MS,
-  ) + 1;
 
 const getQuarter = (year: string, quarter: (typeof quarters)[number]): string => {
   switch (quarter) {
@@ -79,7 +69,7 @@ export class WeekService {
     }
     if (termsInInstruction.length === 1 && !termsInFinals.length) {
       const [term] = termsInInstruction;
-      const weeks: [number] = [getWeek(date, term)];
+      const weeks: [number] = [getWeek(date, term.instructionStart, term.quarter)];
       const quarters: [string] = [getQuarter(term.year, term.quarter)];
       return {
         weeks,
@@ -97,7 +87,9 @@ export class WeekService {
       };
     }
     if (termsInInstruction.length === 2 && !termsInFinals.length) {
-      const [week1, week2] = termsInInstruction.map((x) => getWeek(date, x)) as [number, number];
+      const [week1, week2] = termsInInstruction.map((x) =>
+        getWeek(date, x.instructionStart, x.quarter),
+      ) as [number, number];
       const [quarter1, quarter2] = termsInInstruction.map(({ year, quarter }) =>
         getQuarter(year, quarter),
       ) as [string, string];
@@ -114,7 +106,10 @@ export class WeekService {
     if (termsInInstruction.length === 1 && termsInFinals.length === 1) {
       const [termInProgress] = termsInInstruction;
       const [termInFinals] = termsInFinals;
-      const weeks: [number, number] = [getWeek(date, termInProgress), -1];
+      const weeks: [number, number] = [
+        getWeek(date, termInProgress.instructionStart, termInProgress.quarter),
+        -1,
+      ];
       const quarters = [termInProgress, termInFinals].map(({ year, quarter }) =>
         getQuarter(year, quarter),
       ) as [string, string];

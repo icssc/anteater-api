@@ -1,0 +1,1 @@
+ALTER TABLE "websoc_section_enrollment" ALTER COLUMN "created_at" SET DATA TYPE timestamp;

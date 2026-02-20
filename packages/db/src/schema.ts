@@ -1,3 +1,4 @@
+import { terms } from "@packages/stdlib";
 import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
@@ -179,9 +180,10 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
 
 // Misc. enums
 
-export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
+export { terms } from "@packages/stdlib";
+export type { Term } from "@packages/stdlib";
+
 export const term = pgEnum("term", terms);
-export type Term = (typeof terms)[number];
 
 export const courseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 export const courseLevel = pgEnum("course_level", courseLevels);
@@ -466,7 +468,7 @@ export const websocSectionEnrollment = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    createdAt: date("created_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     maxCapacity: integer("max_capacity").notNull(),
