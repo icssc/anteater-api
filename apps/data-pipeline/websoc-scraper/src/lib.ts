@@ -76,7 +76,7 @@ const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpda
   "GE-8": "isGE8",
 };
 
-const geColumns = Object.values(geCategoryToFlag);
+const geColumns = Object.values(geCategoryToFlag) as string[];
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -413,7 +413,7 @@ function meetingMapper(
 const allCourseCols = conflictUpdateSetAllCols(websocCourse);
 
 const courseUpdateSet = Object.fromEntries(
-  Object.entries(allCourseCols).filter(([key]) => !(geColumns as string[]).includes(key)),
+  Object.entries(allCourseCols).filter(([key]) => !geColumns.includes(key)),
 );
 
 const doChunkUpsert = async (
