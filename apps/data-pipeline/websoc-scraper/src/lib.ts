@@ -27,7 +27,7 @@ import {
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { conflictUpdateSetAllCols, conflictUpdateSetAllColsExcept } from "@packages/db/utils";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
   baseTenIntOrNull,
   intersectAll,
@@ -50,18 +50,33 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = "97999";
 
-const GE_COLUMNS = [
-  "isGE1A",
-  "isGE1B",
-  "isGE2",
-  "isGE3",
-  "isGE4",
-  "isGE5A",
-  "isGE5B",
-  "isGE6",
-  "isGE7",
-  "isGE8",
+const geCategories = [
+  "GE-1A",
+  "GE-1B",
+  "GE-2",
+  "GE-3",
+  "GE-4",
+  "GE-5A",
+  "GE-5B",
+  "GE-6",
+  "GE-7",
+  "GE-8",
 ] as const;
+
+const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpdate> = {
+  "GE-1A": "isGE1A",
+  "GE-1B": "isGE1B",
+  "GE-2": "isGE2",
+  "GE-3": "isGE3",
+  "GE-4": "isGE4",
+  "GE-5A": "isGE5A",
+  "GE-5B": "isGE5B",
+  "GE-6": "isGE6",
+  "GE-7": "isGE7",
+  "GE-8": "isGE8",
+};
+
+const geColumns = Object.values(geCategoryToFlag);
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -395,6 +410,12 @@ function meetingMapper(
   };
 }
 
+const allCourseCols = conflictUpdateSetAllCols(websocCourse);
+
+const courseUpdateSet = Object.fromEntries(
+  Object.entries(allCourseCols).filter(([key]) => !(geColumns as string[]).includes(key)),
+);
+
 const doChunkUpsert = async (
   db: ReturnType<typeof database>,
   term: Term,
@@ -463,7 +484,7 @@ const doChunkUpsert = async (
           websocCourse.courseNumber,
           websocCourse.courseTitle,
         ],
-        set: conflictUpdateSetAllColsExcept(websocCourse, GE_COLUMNS),
+        set: courseUpdateSet,
       })
       .returning({
         id: websocCourse.id,
@@ -746,32 +767,6 @@ type CourseGEUpdate = {
   isGE6?: boolean;
   isGE7?: boolean;
   isGE8?: boolean;
-};
-
-const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
-
-const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpdate> = {
-  "GE-1A": "isGE1A",
-  "GE-1B": "isGE1B",
-  "GE-2": "isGE2",
-  "GE-3": "isGE3",
-  "GE-4": "isGE4",
-  "GE-5A": "isGE5A",
-  "GE-5B": "isGE5B",
-  "GE-6": "isGE6",
-  "GE-7": "isGE7",
-  "GE-8": "isGE8",
 };
 
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
