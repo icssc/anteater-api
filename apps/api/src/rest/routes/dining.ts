@@ -51,7 +51,7 @@ const eventsRoute = createRoute({
 const batchDishesRoute = createRoute({
   summary: "Retrieve dishes by IDs",
   operationId: "batchDishes",
-  tags: ["Courses"],
+  tags: ["Dining"],
   method: "get",
   path: "/dishes/batch",
   request: { query: batchDishesQuerySchema },
