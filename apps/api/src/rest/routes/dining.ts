@@ -55,7 +55,7 @@ const batchDishesRoute = createRoute({
   method: "get",
   path: "/dishes/batch",
   request: { query: batchDishesQuerySchema },
-  description: "Retrieves courses with the IDs provided",
+  description: "Retrieves dishes with the IDs provided",
   responses: {
     200: {
       content: {
