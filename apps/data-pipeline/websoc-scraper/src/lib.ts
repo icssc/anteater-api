@@ -27,7 +27,7 @@ import {
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { conflictUpdateSetAllCols, conflictUpdateSetAllColsExcept } from "@packages/db/utils";
 import {
   baseTenIntOrNull,
   intersectAll,
@@ -49,6 +49,19 @@ const SECTIONS_PER_CHUNK = 891;
  * These are not associated with any department that is searchable directly through WebSoc.
  */
 const LAST_SECTION_CODE = "97999";
+
+const GE_COLUMNS = [
+  "isGE1A",
+  "isGE1B",
+  "isGE2",
+  "isGE3",
+  "isGE4",
+  "isGE5A",
+  "isGE5B",
+  "isGE6",
+  "isGE7",
+  "isGE8",
+] as const;
 
 export async function getDepts(db: ReturnType<typeof database>) {
   const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
@@ -450,7 +463,7 @@ const doChunkUpsert = async (
           websocCourse.courseNumber,
           websocCourse.courseTitle,
         ],
-        set: conflictUpdateSetAllCols(websocCourse),
+        set: conflictUpdateSetAllColsExcept(websocCourse, GE_COLUMNS),
       })
       .returning({
         id: websocCourse.id,

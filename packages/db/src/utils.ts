@@ -34,3 +34,25 @@ export function conflictUpdateSetAllCols<T extends PgTable>(table: T): PgUpdateS
     return acc;
   }, {});
 }
+
+export function conflictUpdateSetAllColsExcept<
+  T extends PgTable,
+  K extends keyof T["$inferInsert"] & string,
+>(table: T, except: readonly K[]): PgUpdateSetSource<T> {
+  const columns = getTableColumns(table);
+  const { name: tableName } = getTableConfig(table);
+
+  const exceptSet = new Set<string>(except as readonly string[]);
+
+  return Object.entries(columns).reduce((acc: PgUpdateSetSource<T>, [columnName, columnInfo]) => {
+    if (exceptSet.has(columnName)) {
+      return acc;
+    }
+    if (!columnInfo.default && !columnInfo.generated) {
+      acc[columnName as keyof T["$inferInsert"]] = sql.raw(
+        `COALESCE(excluded.${columnInfo.name}, ${tableName}.${columnInfo.name})`,
+      );
+    }
+    return acc;
+  }, {});
+}
