@@ -33,8 +33,13 @@ export const eventSchema = z.object({
       "New year, new vibes. Kick off the celebration with bold Szechuan beef steak, chicken teriyaki dumplings, spicy vegetable lo mein, and more!",
     description: "Description of the event",
   }),
-  start: z.coerce.date(),
-  end: z.coerce.date().nullable(),
+  start: z.coerce.date().openapi({
+    description: "Start date of event",
+    example: "2026-02-18 19:00:00.000000",
+  }),
+  end: z.coerce.date().nullable().openapi({
+    description: "End date of event",
+  }),
   updatedAt: z.coerce.date(),
 });
 
