@@ -29,8 +29,13 @@ export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
   async getUpcomingEvents(input: DiningEventQuery) {
-    // only get events ending at or after the current time
-    const conds = [or(gte(diningEvent.end, sql`NOW()`), isNull(diningEvent.end))];
+    // only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
+    const conds = [
+      or(
+        gte(diningEvent.end, sql`NOW()`),
+        and(isNull(diningEvent.end), gte(diningEvent.start, sql`NOW() - INTERVAL '2 WEEKS'`)),
+      ),
+    ];
 
     if (input.restaurantId) {
       conds.push(eq(diningEvent.restaurantId, input.restaurantId));

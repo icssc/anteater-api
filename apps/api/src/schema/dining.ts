@@ -38,7 +38,7 @@ export const eventSchema = z.object({
     example: "2026-02-18 19:00:00.000000",
   }),
   end: z.coerce.date().nullable().openapi({
-    description: "End date of event",
+    description: "End date of event; indefinite if null",
   }),
   updatedAt: z.coerce.date(),
 });

@@ -29,7 +29,8 @@ const eventsRoute = createRoute({
   method: "get",
   path: "/events",
   request: { query: diningEventsQuerySchema },
-  description: "Retrieves all dining events that end today or later",
+  description:
+    "Retrieves all dining events that end today or later; also returns events with no end date, which are dropped from the payload 2 weeks after their start dates",
   responses: {
     200: {
       content: {
