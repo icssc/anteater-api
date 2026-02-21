@@ -117,7 +117,6 @@ export class DiningService {
       if (r.nutritionInfo?.updatedAt === null) {
         rPun.nutritionInfo = null;
       }
-      // this optional won't ever trigger
       if (r.dietRestriction?.updatedAt === null) {
         rPun.dietRestriction = null;
       }
