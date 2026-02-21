@@ -409,7 +409,7 @@ export class Scraper {
     // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
 
     const chemE = this.parsedPrograms.get("Major in Chemical Engineering") as MajorProgram;
-    chemE[1].requirements = chemE[1].requirements.filter((req) => req.requirementType !== "Spec");
+    // chemE[1].requirements = chemE[1].requirements.filter((req) => req.requirementType !== "Spec");
 
     this.done = true;
   }
