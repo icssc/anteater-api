@@ -51,8 +51,8 @@ type DiningDish @cacheControl(maxAge: 3600) {
   category: String!
   imageUrl: String
   updatedAt: String!
-  dietRestriction: DietRestriction
-  nutritionInfo: NutritionInfo
+  dietRestriction: DietRestriction!
+  nutritionInfo: NutritionInfo!
 }
 
 type DiningEvent @cacheControl(maxAge: 3600) {
