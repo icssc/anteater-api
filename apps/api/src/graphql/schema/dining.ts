@@ -83,17 +83,12 @@ type Restaurant @cacheControl(maxAge: 3600) {
   stations: [Stations!]!
 }
 
-type StationDishMap @cacheControl(maxAge: 3600) {
-  stationId: String! 
-  dishIds: [String!]! 
-}
-
 type Period @cacheControl(maxAge: 3600) {
   id: String! 
   name: String! 
   startTime: String! 
   endTime: String!
-  stations: [StationDishMap!]!
+  stations: JSON!
   updatedAt: String!
 }
 
