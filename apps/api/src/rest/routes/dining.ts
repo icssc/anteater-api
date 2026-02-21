@@ -23,7 +23,7 @@ const diningRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 diningRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=3600" }));
 
 const eventsRoute = createRoute({
-  summary: "Get upcoming dining events",
+  summary: "Get dining events",
   operationId: "getDiningEvents",
   tags: ["Dining"],
   method: "get",
