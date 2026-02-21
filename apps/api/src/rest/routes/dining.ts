@@ -106,7 +106,7 @@ const dishRoute = createRoute({
 });
 
 const datesRoute = createRoute({
-  summary: "Get date range for available dining data",
+  summary: "Get date range of available dining data",
   operationId: "getDiningDates",
   tags: ["Dining"],
   method: "get",
