@@ -71,7 +71,8 @@ async function main() {
         degreeId: degreeType ?? "",
         code,
         name,
-        requirements,
+        requireSpec: requirements.some((x) => x.requirementType === "Spec"),
+        requirements: requirements.filter((x) => x.requirementType !== "Spec"),
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };
     })
