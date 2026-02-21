@@ -26,6 +26,7 @@ export class AuditParser {
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
+    requiresSpecialization: await this.requiresSpecialization(block.ruleArray),
   });
 
   lexOrd = new Intl.Collator().compare;

@@ -98,6 +98,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    * to fulfill the requirements of the program.
    */
   specs: string[];
+  requiresSpecialization: boolean;
 };
 
 /**
