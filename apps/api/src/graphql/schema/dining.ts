@@ -112,8 +112,8 @@ input RestaurantsQuery {
 }
 
 input RestaurantTodayQuery {
-  id: RestaurantId
-  date: String
+  id: RestaurantId!
+  date: String!
 }
 
 extend type Query {
@@ -122,6 +122,6 @@ extend type Query {
   batchDiningDishes(ids: [String!]!): [DiningDish!]!
   diningDates: DiningDates!
   getRestaurants(query: RestaurantsQuery): [Restaurant!]!
-  getRestaurantToday(query: RestaurantTodayQuery): RestaurantToday
+  getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday
 }
 `;
