@@ -32,6 +32,7 @@ async function main() {
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
   const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
+  const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -118,6 +119,21 @@ async function main() {
           {
             id: "CHC4",
             requirements: honorsFourRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    if (honorsTwoRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC2",
+            requirements: honorsTwoRequirementData,
           },
         ])
         .onConflictDoUpdate({
