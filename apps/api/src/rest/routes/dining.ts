@@ -30,7 +30,7 @@ const eventsRoute = createRoute({
   path: "/events",
   request: { query: diningEventsQuerySchema },
   description:
-    "Retrieves all dining events ongoing at the current timestamp. Events with unbounded end time are served for 2 weeks after their start time,",
+    "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with unbounded end time are served for 2 weeks after their start time,",
   responses: {
     200: {
       content: {
