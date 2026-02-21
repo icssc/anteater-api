@@ -134,7 +134,7 @@ export class DiningService {
     return this.getDishesRaw({ where: eq(diningDish.id, input.id) }).then((x) => orNull(x[0]));
   }
 
-  async getPickableDates() {
+  async getDateRange() {
     const result = await this.db
       .select({
         earliest: min(diningPeriod.date),

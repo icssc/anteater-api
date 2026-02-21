@@ -65,7 +65,7 @@ type DiningEvent @cacheControl(maxAge: 3600) {
   updatedAt: String!
 }
 
-type DiningDates @cacheControl(maxAge: 3600) {
+type DiningDateRange @cacheControl(maxAge: 3600) {
   earliest: String
   latest: String
 }
@@ -115,7 +115,7 @@ extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
   diningDish(id: String!): DiningDish!
   batchDiningDishes(ids: [String!]!): [DiningDish!]!
-  diningDates: DiningDates!
+  diningDateRange: DiningDateRange!
   getRestaurants(query: RestaurantsQuery): [Restaurant!]!
   getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday!
 }

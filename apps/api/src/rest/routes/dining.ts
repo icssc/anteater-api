@@ -105,12 +105,12 @@ const dishRoute = createRoute({
   },
 });
 
-const datesRoute = createRoute({
+const dateRangeRoute = createRoute({
   summary: "Get date range of available dining data",
-  operationId: "getDiningDates",
+  operationId: "getDiningDateRange",
   tags: ["Dining"],
   method: "get",
-  path: "/dates",
+  path: "/dateRange",
   description: "Retrieves the earliest and latest dates that have menu information available",
   responses: {
     200: {
@@ -228,9 +228,9 @@ diningRouter.openapi(dishRoute, async (c) => {
   return c.json({ ok: true, data: dishSchema.parse(dish) }, 200);
 });
 
-diningRouter.openapi(datesRoute, async (c) => {
+diningRouter.openapi(dateRangeRoute, async (c) => {
   const service = new DiningService(database(c.env.DB.connectionString));
-  const dates = await service.getPickableDates();
+  const dates = await service.getDateRange();
 
   return c.json({ ok: true, data: diningDatesResponseSchema.parse(dates) }, 200);
 });

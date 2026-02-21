@@ -27,9 +27,9 @@ export const diningResolvers = {
       const service = new DiningService(db);
       return await service.batchGetDishes(ids);
     },
-    diningDates: async (_: unknown, _args: unknown, { db }: GraphQLContext) => {
+    diningDateRange: async (_: unknown, _args: unknown, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getPickableDates();
+      return await service.getDateRange();
     },
     getRestaurants: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
