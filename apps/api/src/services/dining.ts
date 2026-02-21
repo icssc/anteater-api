@@ -33,7 +33,7 @@ export class DiningService {
     const conds = [
       or(
         gte(diningEvent.end, sql`NOW()`),
-        and(isNull(diningEvent.end), gte(diningEvent.start, sql`NOW() - INTERVAL '2 WEEKS'`)),
+        and(isNull(diningEvent.end), gte(diningEvent.updatedAt, sql`NOW() - INTERVAL '2 WEEKS'`)),
       ),
     ];
 
