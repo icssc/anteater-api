@@ -111,17 +111,14 @@ export class DiningService {
       .where(input.where);
 
     return rows.map((r) => {
-      // alias to allow these assignments
-      const rPun = r as z.infer<typeof dishSchema>;
-
       if (r.nutritionInfo?.updatedAt === null) {
-        rPun.nutritionInfo = null;
+        throw new Error(`Dish ${r.id} missing required nutrition info`);
       }
       if (r.dietRestriction?.updatedAt === null) {
-        rPun.dietRestriction = null;
+        throw new Error(`Dish ${r.id} missing required diet restriction info`);
       }
 
-      return rPun;
+      return r as z.infer<typeof dishSchema>;
     });
   }
 
