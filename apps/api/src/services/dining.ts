@@ -135,7 +135,7 @@ export class DiningService {
   }
 
   async getDateRange() {
-    const result = await this.db
+    const [result] = await this.db
       .select({
         earliest: min(diningPeriod.date),
         latest: max(diningPeriod.date),
@@ -143,8 +143,8 @@ export class DiningService {
       .from(diningPeriod);
 
     return {
-      earliest: result[0]?.earliest ?? null,
-      latest: result[0]?.latest ?? null,
+      earliest: orNull(result?.earliest),
+      latest: orNull(result?.latest),
     };
   }
 
