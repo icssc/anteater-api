@@ -118,6 +118,7 @@ export class DiningService {
         throw new Error(`Dish ${r.id} missing required diet restriction info`);
       }
 
+      // drizzle types LEFT JOIN fields as nullable, and as such doesn't provide sufficient type information to prove the left-joined columns exist, despite the guards, so cast here
       return r as z.infer<typeof dishSchema>;
     });
   }
