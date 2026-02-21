@@ -37,7 +37,13 @@ export const diningResolvers = {
     },
     getRestaurantToday: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getRestaurantToday(restaurantTodayQuerySchema.parse(args.query));
+      const data = await service.getRestaurantToday(restaurantTodayQuerySchema.parse(args.query));
+      if (!data) {
+        throw new GraphQLError("Restaurant not found", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      }
+      return data;
     },
   },
 };

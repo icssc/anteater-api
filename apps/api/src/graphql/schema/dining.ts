@@ -118,10 +118,10 @@ input RestaurantTodayQuery {
 
 extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
-  diningDish(id: String!): DiningDish
+  diningDish(id: String!): DiningDish!
   batchDiningDishes(ids: [String!]!): [DiningDish!]!
   diningDates: DiningDates!
   getRestaurants(query: RestaurantsQuery): [Restaurant!]!
-  getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday
+  getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday!
 }
 `;
