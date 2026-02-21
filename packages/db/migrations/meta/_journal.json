@@ -169,6 +169,20 @@
       "when": 1770072497788,
       "tag": "0023_pv_study_rooms",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1771543829558,
+      "tag": "0024_dining",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1771704889386,
+      "tag": "0025_major_specialization_required",
+      "breakpoints": true
     }
   ]
 }

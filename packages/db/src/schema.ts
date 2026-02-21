@@ -8,11 +8,14 @@ import {
   integer,
   json,
   jsonb,
+  numeric,
   pgEnum,
   pgMaterializedView,
   pgTable,
+  primaryKey,
   real,
   text,
+  time,
   timestamp,
   uniqueIndex,
   uuid,
@@ -818,6 +821,164 @@ export const libraryTrafficHistory = pgTable(
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
+
+// dining stuff
+export const diningRestaurant = pgTable("dining_restaurant", {
+  id: varchar("id").primaryKey(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningPeriod = pgTable(
+  "dining_period",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    adobeId: integer("adobe_id").notNull(),
+    date: date("date").notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time").notNull(),
+    name: varchar("name").notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    index().on(table.date),
+    index().on(table.restaurantId),
+  ],
+);
+
+export const diningStation = pgTable(
+  "dining_station",
+  {
+    id: varchar("id").primaryKey(),
+    name: varchar("name").notNull(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [index().on(table.restaurantId)],
+);
+
+export const diningDish = pgTable(
+  "dining_dish",
+  {
+    id: varchar("id").primaryKey(),
+    stationId: varchar("station_id")
+      .notNull()
+      .references(() => diningStation.id, {
+        onDelete: "cascade",
+      }),
+    name: varchar("name").notNull(),
+    description: varchar("description").notNull(),
+    ingredients: varchar("ingredients"),
+    category: varchar("category").notNull(),
+    imageUrl: varchar("image_url"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [index().on(table.stationId)],
+);
+
+export const diningNutritionInfo = pgTable("dining_nutrition_info", {
+  dishId: varchar("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+    }),
+  servingSize: varchar("serving_size"),
+  servingUnit: varchar("serving_unit"),
+  calories: numeric("calories", { precision: 10, scale: 2 }),
+  totalFatG: numeric("total_fat_g", { precision: 10, scale: 2 }),
+  transFatG: numeric("trans_fat_g", { precision: 10, scale: 2 }),
+  saturatedFatG: numeric("saturated_fat_g", { precision: 10, scale: 2 }),
+  cholesterolMg: numeric("cholesterol_mg", { precision: 10, scale: 2 }),
+  sodiumMg: numeric("sodium_mg", { precision: 10, scale: 2 }),
+  totalCarbsG: numeric("total_carbs_g", { precision: 10, scale: 2 }),
+  dietaryFiberG: numeric("dietary_fiber_g", { precision: 10, scale: 2 }),
+  sugarsG: numeric("sugars_g", { precision: 10, scale: 2 }),
+  proteinG: numeric("protein_g", { precision: 10, scale: 2 }),
+  calciumMg: numeric("calcium", { precision: 10, scale: 2 }),
+  ironMg: numeric("iron", { precision: 10, scale: 2 }),
+  vitaminAIU: numeric("vitamin_a", { precision: 10, scale: 2 }),
+  vitaminCIU: numeric("vitamin_c", { precision: 10, scale: 2 }),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDietRestriction = pgTable("dining_diet_restriction", {
+  dishId: varchar("dish_id")
+    .primaryKey()
+    .references(() => diningDish.id, {
+      onDelete: "cascade",
+    }),
+  containsEggs: boolean("contains_eggs").notNull(),
+  containsFish: boolean("contains_fish").notNull(),
+  containsMilk: boolean("contains_milk").notNull(),
+  containsPeanuts: boolean("contains_peanuts").notNull(),
+  containsSesame: boolean("contains_sesame").notNull(),
+  containsShellfish: boolean("contains_shellfish").notNull(),
+  containsSoy: boolean("contains_soy").notNull(),
+  containsTreeNuts: boolean("contains_tree_nuts").notNull(),
+  containsWheat: boolean("contains_wheat").notNull(),
+  isGlutenFree: boolean("is_gluten_free").notNull(),
+  isHalal: boolean("is_halal").notNull(),
+  isKosher: boolean("is_kosher").notNull(),
+  isLocallyGrown: boolean("is_locally_grown").notNull(),
+  isOrganic: boolean("is_organic").notNull(),
+  isVegan: boolean("is_vegan").notNull(),
+  isVegetarian: boolean("is_vegetarian").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningDishToPeriod = pgTable(
+  "dining_dish_to_period",
+  {
+    periodId: uuid("period_id")
+      .notNull()
+      .references(() => diningPeriod.id),
+    dishId: varchar("dish_id")
+      .notNull()
+      .references(() => diningDish.id),
+  },
+  (table) => [
+    {
+      pk: primaryKey({
+        name: "dining_dish_to_period_pk",
+        columns: [table.periodId, table.dishId],
+      }),
+    },
+  ],
+);
+
+export const diningEvent = pgTable(
+  "dining_event",
+  {
+    title: varchar("title").notNull(),
+    image: varchar("image"),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    description: varchar("description"),
+    start: timestamp("start"),
+    end: timestamp("end"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({
+        name: "dining_event_pk",
+        columns: [table.title, table.restaurantId, table.start],
+      }),
+    };
+  },
 );
 
 // Materialized views

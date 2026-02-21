@@ -71,6 +71,10 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
       description:
         "Library traffic data for the UCI Libraries. Data is sourced from the UCI Libraries site (https://www.lib.uci.edu/).",
     },
+    {
+      name: "Dining",
+      description: "Data from UCI Dining via MyDiningHub and Adobe Commerce vendored systems.",
+    },
     { name: "Other" },
   ],
 };
