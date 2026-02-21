@@ -33,7 +33,7 @@ export const diningResolvers = {
     },
     getRestaurants: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getRestaurants(restaurantsQuerySchema.parse(args));
+      return await service.getRestaurants(restaurantsQuerySchema.parse(args.query ?? {}));
     },
     getRestaurantToday: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
