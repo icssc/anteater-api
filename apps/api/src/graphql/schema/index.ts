@@ -4,6 +4,7 @@ import { mergeTypeDefs } from "@graphql-tools/merge";
 import { apExamsSchema } from "./ap-exams";
 import { calendarSchema } from "./calendar";
 import { coursesSchema } from "./courses";
+import { diningSchema } from "./dining";
 import { enrollmentHistorySchema } from "./enrollment-history";
 import { enums } from "./enums";
 import { gradesSchema } from "./grades";
@@ -39,6 +40,7 @@ export const typeDefs = mergeTypeDefs([
   apExamsSchema,
   calendarSchema,
   coursesSchema,
+  diningSchema,
   enrollmentHistorySchema,
   gradesSchema,
   instructorsSchema,
