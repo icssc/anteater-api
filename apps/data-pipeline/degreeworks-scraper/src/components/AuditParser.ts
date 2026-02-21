@@ -26,7 +26,7 @@ export class AuditParser {
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
-    requiresSpecialization: await this.requiresSpecialization(block.ruleArray),
+    specializationRequired: await this.specializationRequired(block.ruleArray),
   });
 
   lexOrd = new Intl.Collator().compare;
@@ -160,7 +160,7 @@ export class AuditParser {
     return filteredClasses;
   }
 
-  async requiresSpecialization(ruleArray: Rule[]) {
+  async specializationRequired(ruleArray: Rule[]) {
     for (const rule of ruleArray) {
       if (
         rule.ifElsePart === "ElsePart" &&

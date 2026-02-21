@@ -1,5 +1,5 @@
 {
-  "id": "ed2af9a4-9d46-4ff5-a107-f752a1ef4ae2",
+  "id": "b6f5eff6-d4a4-413e-841b-efecba276bb7",
   "prevId": "f1b90841-6952-48b7-a547-c974828883b2",
   "version": "7",
   "dialect": "postgresql",
@@ -1799,8 +1799,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "require_spec": {
-          "name": "require_spec",
+        "specialization_required": {
+          "name": "specialization_required",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true

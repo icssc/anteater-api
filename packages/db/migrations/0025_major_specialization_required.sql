@@ -1,1 +1,1 @@
-ALTER TABLE "major" ADD COLUMN "require_spec" boolean NOT NULL;
+ALTER TABLE "major" ADD COLUMN "specialization_required" boolean NOT NULL;

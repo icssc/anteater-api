@@ -400,7 +400,7 @@ export class Scraper {
     const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
     if (x && y && z) {
       x[1].specs = [];
-      x[1].requiresSpecialization = false;
+      x[1].specializationRequired = false;
       x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
@@ -412,7 +412,7 @@ export class Scraper {
     const chemE = this.parsedPrograms.get("Major in Chemical Engineering") as MajorProgram;
 
     if (chemE) {
-      chemE[1].requiresSpecialization = false;
+      chemE[1].specializationRequired = false;
     }
 
     this.done = true;

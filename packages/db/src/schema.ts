@@ -101,7 +101,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    * to fulfill the requirements of the program.
    */
   specs: string[];
-  requiresSpecialization: boolean;
+  specializationRequired: boolean;
 };
 
 /**
@@ -675,7 +675,7 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
-    requireSpec: boolean("require_spec").notNull(),
+    specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
