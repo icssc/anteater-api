@@ -97,8 +97,6 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
   requirements: DegreeWorksRequirement[];
   /**
    * The set of specializations (if any) that this program has.
-   * If this array is not empty, then exactly one specialization must be selected
-   * to fulfill the requirements of the program.
    */
   specs: string[];
   specializationRequired: boolean;
