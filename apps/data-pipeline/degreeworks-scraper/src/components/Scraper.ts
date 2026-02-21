@@ -400,6 +400,7 @@ export class Scraper {
     const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
     if (x && y && z) {
       x[1].specs = [];
+      x[1].requiresSpecialization = false;
       x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
@@ -409,7 +410,10 @@ export class Scraper {
     // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
 
     const chemE = this.parsedPrograms.get("Major in Chemical Engineering") as MajorProgram;
-    // chemE[1].requirements = chemE[1].requirements.filter((req) => req.requirementType !== "Spec");
+
+    if (chemE) {
+      chemE[1].requiresSpecialization = false;
+    }
 
     this.done = true;
   }
