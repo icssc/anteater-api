@@ -161,15 +161,12 @@ export class AuditParser {
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
-    for (const rule of ruleArray) {
-      if (
+    return ruleArray.some((rule) => {
+      return (
         rule.ifElsePart === "ElsePart" &&
         rule.proxyAdvice?.textList.some((x) => AuditParser.specializationMatcher.test(x))
-      ) {
-        return true;
-      }
-    }
-    return false;
+      );
+    });
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {
