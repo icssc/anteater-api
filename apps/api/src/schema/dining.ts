@@ -1,11 +1,12 @@
 import { z } from "@hono/zod-openapi";
 
-export const restaurantIdSchema = z.enum(["anteatery", "brandywine"]);
+export const restaurantIdSchema = z
+  .enum(["anteatery", "brandywine"])
+  .openapi({ example: "anteatery" });
 
 export const diningEventsQuerySchema = z.object({
   restaurantId: restaurantIdSchema.optional().openapi({
     description: "Filter events by restaurant ID",
-    example: "anteatery",
   }),
 });
 
@@ -28,7 +29,6 @@ export const eventSchema = z.object({
   image: z.string().nullable().openapi({ description: "URL to event promotional image" }),
   restaurantId: restaurantIdSchema.openapi({
     description: "Unique identifier for the restaurant hosting this event",
-    example: "anteatery",
   }),
   description: z.string().nullable().openapi({
     example:
@@ -144,7 +144,6 @@ export const diningDatesResponseSchema = z.object({
 export const restaurantsQuerySchema = z.object({
   id: restaurantIdSchema.optional().openapi({
     description: "If present, only return the restaurant with this ID (if it exists)",
-    example: "anteatery",
   }),
 });
 
@@ -171,7 +170,6 @@ export const restaurantsResponseSchema = restaurantSchema
 export const restaurantTodayQuerySchema = z.object({
   id: restaurantIdSchema.openapi({
     description: "Get information on the restaurant with this ID",
-    example: "anteatery",
   }),
   date: z.iso.date().openapi({
     description: "Get information for this day, in the UCI timezone",
