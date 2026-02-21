@@ -382,9 +382,12 @@ export class Scraper {
       }
     }
 
-    // After we match specializations to majors, we insure that majors without any specs don't have a specializationRequirement
+    // After we match specializations to a major
+    // we insure that majors with 0 specs don't require a specialization
     for (const [, [, major]] of this.parsedPrograms) {
-      major.specializationRequired = major.specs.length > 0 ? major.specializationRequired : false;
+      if (major.specs.length === 0) {
+        major.specializationRequired = false;
+      }
     }
 
     this.degreesAwarded = new Map(
