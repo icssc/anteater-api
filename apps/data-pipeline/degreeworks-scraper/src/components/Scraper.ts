@@ -382,6 +382,11 @@ export class Scraper {
       }
     }
 
+    // After we match specializations to majors, we insure that majors without any specs don't have a specializationRequirement
+    for (const [, [, major]] of this.parsedPrograms) {
+      major.specializationRequired = major.specs.length > 0 ? major.specializationRequired : false;
+    }
+
     this.degreesAwarded = new Map(
       Array.from(
         new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
