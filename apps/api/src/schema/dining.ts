@@ -117,14 +117,12 @@ export const dishSchema = z.object({
     description: "A URL to an image of this dish",
   }),
   updatedAt: z.coerce.date(),
-  // almost always present
-  dietRestriction: dietRestrictionSchema
-    .nullable()
-    .openapi({ description: "Dietary restriction and allergen information" }),
-  // almost always present
-  nutritionInfo: nutritionInfoSchema
-    .nullable()
-    .openapi({ description: "Nutritional information per serving" }),
+  dietRestriction: dietRestrictionSchema.openapi({
+    description: "Dietary restriction and allergen information",
+  }),
+  nutritionInfo: nutritionInfoSchema.openapi({
+    description: "Nutritional information per serving",
+  }),
 });
 
 export const diningEventsResponseSchema = z.array(eventSchema);
