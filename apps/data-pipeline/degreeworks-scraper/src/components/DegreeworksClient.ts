@@ -15,7 +15,7 @@ export class DegreeworksClient {
   static async new(
     studentId: string,
     headers: HeadersInit,
-    delay = 1000,
+    delay = 700,
   ): Promise<DegreeworksClient> {
     const dw = new DegreeworksClient(studentId, headers, delay);
     /**
@@ -95,6 +95,7 @@ export class DegreeworksClient {
     school: string,
     majorCode: string,
     college?: string,
+    spec?: string,
   ): Promise<
     | {
         college?: Block;
@@ -113,6 +114,7 @@ export class DegreeworksClient {
         goals: [
           { code: "MAJOR", value: majorCode },
           ...(college ? [{ code: "COLLEGE", value: college }] : []),
+          ...(spec ? [{ code: "SPEC", value: spec }] : []),
         ],
       }),
       headers: this.headers,

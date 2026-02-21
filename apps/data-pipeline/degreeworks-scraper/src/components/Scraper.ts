@@ -37,6 +37,7 @@ export class Scraper {
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
   // both undergrad majors and grad programs; tuple of (school, program)
+  // both undergrad majors and grad programs; key is tuple of (majorName, specID?), value is tuple of (school, program)
   private parsedPrograms = new Map<string, MajorProgram>();
   // (parent major, name, program object)
   private parsedSpecializations = new Map<
@@ -142,15 +143,16 @@ export class Scraper {
       });
   }
 
-  private async scrapePrograms(degrees: Iterable<ProgramTriplet>) {
+  private async scrapePrograms(degrees: Iterable<[ProgramTriplet, string?]>) {
     const ret = new Map<string, MajorProgram>();
-    for (const [schoolCode, majorCode, degreeCode] of degrees) {
+    for (const [[schoolCode, majorCode, degreeCode], specCode] of degrees) {
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
         degreeCode.startsWith("B") ? "U" : "G",
         majorCode,
         schoolCode,
+        specCode,
       );
 
       const majorAudit = audit?.major;
@@ -161,15 +163,14 @@ export class Scraper {
         );
         continue;
       }
-
-      if (ret.has(majorAudit.title)) {
+      if (ret.has([majorAudit.title, specCode].join(";"))) {
         console.log(
-          `Requirements block already exists for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${majorAudit.title}" ${specCode ? `with spec: '${specCode}'` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      ret.set(majorAudit.title, [
+      ret.set([majorAudit.title, specCode].join(";"), [
         audit?.college
           ? await this.ap.parseBlock(
               `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
@@ -180,7 +181,7 @@ export class Scraper {
       ]);
 
       console.log(
-        `Requirements block found and parsed for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        `Requirements block found and parsed for "${majorAudit.title}" ${specCode ? `with spec: ${specCode}` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
     }
     return ret;
@@ -278,7 +279,7 @@ export class Scraper {
     }
 
     console.log("Scraping undergraduate and graduate program requirements");
-    this.parsedPrograms = await this.scrapePrograms(validDegrees);
+    this.parsedPrograms = await this.scrapePrograms(validDegrees.map((d) => [d, undefined]));
 
     this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
@@ -293,6 +294,7 @@ export class Scraper {
     console.log(`loading ${this.specializationCache.size} cached specializations`);
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
+    const foundMajorSpecPairs: [ProgramTriplet, string][] = [];
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
       let specBlock: Block | undefined;
@@ -342,7 +344,14 @@ export class Scraper {
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
         );
 
-        foundMajorAssured.specs.push(specCode);
+        foundMajorSpecPairs.push([
+          [
+            foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
+            foundMajorAssured.code,
+            foundMajorAssured.degreeType,
+          ] as ProgramTriplet,
+          specCode,
+        ]);
 
         this.specializationCache.set(specCode, {
           // we are storing the entire program even though we only need the DegreeWorksProgramId supertype
@@ -382,12 +391,17 @@ export class Scraper {
       }
     }
 
+    this.parsedPrograms = new Map([
+      ...this.parsedPrograms,
+      ...(await this.scrapePrograms(foundMajorSpecPairs)),
+    ]);
+
     this.degreesAwarded = new Map(
       Array.from(
         new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
-
+    // Check that this doesn't break!
     // Post-processing steps.
 
     // As of this commit, the only program which seems to require both of
