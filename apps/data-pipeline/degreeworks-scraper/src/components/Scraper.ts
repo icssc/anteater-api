@@ -394,7 +394,6 @@ export class Scraper {
     // this isn't going to work...
     for (const [, [, major]] of this.parsedPrograms) {
       if (major.specs.length === 0) {
-        console.log(`***major ${major.name} has no specs`);
         major.specializationRequired = false;
       }
     }
