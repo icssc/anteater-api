@@ -161,6 +161,7 @@ export class AuditParser {
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
+    // Heuristics to determines if a major requires a specialization
     return ruleArray.some((rule) => {
       return (
         rule.ifElsePart === "ElsePart" &&
@@ -172,7 +173,6 @@ export class AuditParser {
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
-      // heuristic for matching a specialization requirement
       switch (rule.ruleType) {
         case "Block":
         case "Noncourse":
