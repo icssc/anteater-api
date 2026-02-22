@@ -306,7 +306,14 @@ export class Scraper {
 
         if (got !== null) {
           specBlock = got.block;
-          foundMajor = got.parent;
+          const majorProgram = this.parsedPrograms.get(got.parent.name);
+          if (majorProgram) {
+            foundMajor = majorProgram[1];
+          } else {
+            console.log(
+              `warning: ${specName} (spec code = ${specCode}) is related to ${got.parent.name} in spec cache but no such major exists`,
+            );
+          }
         }
       }
 
