@@ -352,8 +352,6 @@ export class Scraper {
         foundMajorAssured.specs.push(specCode);
 
         this.specializationCache.set(specCode, {
-          // we are storing the entire program even though we only need the DegreeWorksProgramId supertype
-          // however, this is fine because we never read the other fields (we couldn't because of the type system)
           parent: foundMajorAssured,
           block: specBlock,
         });
