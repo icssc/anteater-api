@@ -311,7 +311,7 @@ export class Scraper {
             foundMajor = majorProgram[1];
           } else {
             console.log(
-              `warning: ${specName} (spec code = ${specCode}) is related to ${got.parent.name} in spec cache but no such major exists`,
+              `warning: ${specName} has cached relation to non-existant major, ${got.parent.name} (spec code = ${specCode})`,
             );
           }
         }
@@ -388,7 +388,7 @@ export class Scraper {
     }
 
     // After we match specializations to a major
-    // we insure that majors with 0 specs don't require a specialization
+    // we ensure that majors with 0 specs don't require a specialization
     for (const [, [, major]] of this.parsedPrograms) {
       if (major.specs.length === 0) {
         major.specializationRequired = false;
@@ -408,9 +408,9 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get("Major in Art History") as MajorProgram;
-    const y = this.parsedSpecializations.get("AHGEO")?.[2] as DegreeWorksProgram;
-    const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
+    const x = this.parsedPrograms.get("Major in Art History");
+    const y = this.parsedSpecializations.get("AHGEO")?.[2];
+    const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
       x[1].specs = [];
       x[1].specializationRequired = false;
@@ -422,7 +422,7 @@ export class Scraper {
 
     // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
 
-    const chemE = this.parsedPrograms.get("Major in Chemical Engineering") as MajorProgram;
+    const chemE = this.parsedPrograms.get("Major in Chemical Engineering");
 
     if (chemE) {
       chemE[1].specializationRequired = false;
