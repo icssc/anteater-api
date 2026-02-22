@@ -389,7 +389,6 @@ export class Scraper {
 
     // After we match specializations to a major
     // we insure that majors with 0 specs don't require a specialization
-    // this isn't going to work...
     for (const [, [, major]] of this.parsedPrograms) {
       if (major.specs.length === 0) {
         major.specializationRequired = false;
