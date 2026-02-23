@@ -181,7 +181,7 @@ export class Scraper {
           `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
         ),
-        specId: undefined,
+        specCode: specCode,
       });
 
       console.log(
@@ -201,7 +201,7 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get("Major in Chemistry") as MajorProgram;
+      const inMap = this.parsedPrograms.get("Major in Chemistry;") as MajorProgram;
       return inMap ? [inMap.major] : [];
     }
 
@@ -427,7 +427,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get("Major in Art History");
+    const x = this.parsedPrograms.get("Major in Art History;");
     const y = this.parsedSpecializations.get("AHGEO")?.[2];
     const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
@@ -436,12 +436,14 @@ export class Scraper {
       x.major.requirements = [...x.major.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
-      this.parsedPrograms.set("Major in Art History", x);
+      this.parsedPrograms.delete("Major in Art History;AHPER");
+      this.parsedPrograms.delete("Major in Art History;AHGEO");
+      this.parsedPrograms.set("Major in Art History;", x);
     }
 
     // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
 
-    const chemE = this.parsedPrograms.get("Major in Chemical Engineering");
+    const chemE = this.parsedPrograms.get("Major in Chemical Engineering;");
 
     if (chemE) {
       chemE.major.specializationRequired = false;

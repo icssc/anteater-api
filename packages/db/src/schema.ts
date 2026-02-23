@@ -111,7 +111,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 export type MajorProgram = {
   school: DegreeWorksProgram | undefined;
   major: DegreeWorksProgram;
-  specId: DegreeWorksProgramId | undefined;
+  specCode: string | undefined;
 };
 
 export type DegreeWorksCourseRequirement = {
