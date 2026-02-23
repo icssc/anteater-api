@@ -170,15 +170,19 @@ export class Scraper {
         continue;
       }
 
-      ret.set([majorAudit.title, specCode].join(";"), [
-        audit?.college
+      ret.set([majorAudit.title, specCode].join(";"), {
+        school: audit?.college
           ? await this.ap.parseBlock(
               `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
               audit?.college,
             )
           : undefined,
-        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
-      ]);
+        major: await this.ap.parseBlock(
+          `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
+          majorAudit,
+        ),
+        specId: undefined,
+      });
 
       console.log(
         `Requirements block found and parsed for "${majorAudit.title}" ${specCode ? `with spec: ${specCode}` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
@@ -198,7 +202,7 @@ export class Scraper {
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
       const inMap = this.parsedPrograms.get("Major in Chemistry") as MajorProgram;
-      return inMap ? [inMap[1]] : [];
+      return inMap ? [inMap.major] : [];
     }
 
     // there seems to be a soft convention that specializations are their major code followed by uppercase letters
@@ -210,8 +214,8 @@ export class Scraper {
       const [, maybeMajorCode] = asSuffixedMajorCode;
       return this.parsedPrograms
         .entries()
-        .filter(([_k, [_school, major]]) => major.code === maybeMajorCode)
-        .map(([_k, [_school, major]]) => major)
+        .filter(([_k, { major }]) => major.code === maybeMajorCode)
+        .map(([_k, { major }]) => major)
         .toArray();
     }
 
@@ -310,7 +314,7 @@ export class Scraper {
           specBlock = got.block;
           const majorProgram = this.parsedPrograms.get(`${got.parent.name};`);
           if (majorProgram) {
-            foundMajor = majorProgram[1];
+            foundMajor = majorProgram.major;
           } else {
             console.log(
               `warning: ${specName} has cached relation to non-existant major, ${got.parent.name} (spec code = ${specCode})`,
@@ -404,7 +408,7 @@ export class Scraper {
 
     // After we match specializations to a major
     // we ensure that majors with 0 specs don't require a specialization
-    for (const [, [, major]] of this.parsedPrograms) {
+    for (const [, { major }] of this.parsedPrograms) {
       if (major.specs.length === 0) {
         major.specializationRequired = false;
       }
@@ -412,7 +416,7 @@ export class Scraper {
 
     this.degreesAwarded = new Map(
       Array.from(
-        new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
+        new Set(this.parsedPrograms.entries().map(([, { major }]) => major.degreeType ?? "")),
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
     // Check that this doesn't break!
@@ -427,9 +431,9 @@ export class Scraper {
     const y = this.parsedSpecializations.get("AHGEO")?.[2];
     const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
-      x[1].specs = [];
-      x[1].specializationRequired = false;
-      x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
+      x.major.specs = [];
+      x.major.specializationRequired = false;
+      x.major.requirements = [...x.major.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
       this.parsedPrograms.set("Major in Art History", x);
@@ -440,7 +444,7 @@ export class Scraper {
     const chemE = this.parsedPrograms.get("Major in Chemical Engineering");
 
     if (chemE) {
-      chemE[1].specializationRequired = false;
+      chemE.major.specializationRequired = false;
     }
 
     this.done = true;
