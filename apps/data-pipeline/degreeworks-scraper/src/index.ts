@@ -48,39 +48,43 @@ async function main() {
 
   const majorSpecData = parsedPrograms
     .entries()
-    .map(([k, [college, { name, degreeType, code, requirements, specializationRequired }]]) => {
-      const specCode = k.split(";")[1] !== "" ? `${degreeType}-${k.split(";")[1]}` : undefined;
-      let collegeBlockIndex: number | undefined;
-      if (college?.requirements) {
-        const wouldInsert = { name: college.name, requirements: college.requirements };
-        const existing = collegeBlocks.findIndex((schoolExisting) => {
-          try {
-            assert.deepStrictEqual(schoolExisting, wouldInsert);
-            return true;
-          } catch {
-            return false;
+    .map(
+      ([
+        k,
+        [college, { name, degreeType, code, requirements, specializationRequired }, specCode],
+      ]) => {
+        let collegeBlockIndex: number | undefined;
+        if (college?.requirements) {
+          const wouldInsert = { name: college.name, requirements: college.requirements };
+          const existing = collegeBlocks.findIndex((schoolExisting) => {
+            try {
+              assert.deepStrictEqual(schoolExisting, wouldInsert);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+          if (existing === -1) {
+            collegeBlocks.push(wouldInsert);
+            collegeBlockIndex = collegeBlocks.length - 1;
+          } else {
+            collegeBlockIndex = existing;
           }
-        });
-
-        if (existing === -1) {
-          collegeBlocks.push(wouldInsert);
-          collegeBlockIndex = collegeBlocks.length - 1;
-        } else {
-          collegeBlockIndex = existing;
         }
-      }
 
-      return {
-        id: `${degreeType}-${code}`,
-        degreeId: degreeType ?? "",
-        code,
-        ...(specCode !== undefined ? { specCode } : {}),
-        name,
-        specializationRequired,
-        requirements,
-        ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
-      };
-    })
+        return {
+          id: `${degreeType}-${code}`,
+          degreeId: degreeType ?? "",
+          code,
+          ...(specCode !== undefined ? { specCode } : {}),
+          name,
+          specializationRequired,
+          requirements,
+          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+        };
+      },
+    )
     .toArray();
 
   const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
