@@ -9,12 +9,14 @@ import type {
   ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
+import { and, eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   collegeRequirement,
   degree,
   major,
+  majorRequirement,
+  majorSpecPairToRequirement,
   minor,
   sampleProgramVariation,
   schoolRequirement,
@@ -108,24 +110,29 @@ export class ProgramsService {
       specialization,
     }[programType];
 
-    const [got] = await (programType !== "major"
+    const [got] = await (programType === "major"
       ? this.db
           .select({ id: table.id, name: table.name, requirements: table.requirements })
           .from(table)
+          .where(eq(table.id, query.programId))
       : this.db
           .select({
             id: major.id,
             name: major.name,
-            requirements: major.requirements,
+            requirements: majorRequirement.requirements,
             schoolRequirements: {
               name: collegeRequirement.name,
               requirements: collegeRequirement.requirements,
             },
           })
           .from(major)
+          .where(
+            and(eq(major.id, query.programId), eq(majorSpecPairToRequirement.specId, query.specId)),
+          )
           .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
+          .leftJoin(majorSpecPairToRequirement, eq(major.id, majorSpecPairToRequirement.majorId))
     )
-      .where(eq(table.id, query.programId))
+      .leftJoin(majorRequirement, eq(majorSpecPairToRequirement.requirementId, majorRequirement.id))
       .limit(1);
 
     return orNull(got);
