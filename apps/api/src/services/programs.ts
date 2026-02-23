@@ -104,37 +104,36 @@ export class ProgramsService {
         programType: "specialization";
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
-    const table = {
-      major,
-      minor,
-      specialization,
-    }[programType];
-
-    const [got] = await (programType === "major"
-      ? this.db
-          .select({ id: table.id, name: table.name, requirements: table.requirements })
-          .from(table)
-          .where(eq(table.id, query.programId))
-      : this.db
-          .select({
-            id: major.id,
-            name: major.name,
-            requirements: majorRequirement.requirements,
-            schoolRequirements: {
-              name: collegeRequirement.name,
-              requirements: collegeRequirement.requirements,
-            },
-          })
-          .from(major)
-          .where(
-            and(eq(major.id, query.programId), eq(majorSpecPairToRequirement.specId, query.specId)),
-          )
-          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-          .leftJoin(majorSpecPairToRequirement, eq(major.id, majorSpecPairToRequirement.majorId))
-    )
+    if (programType !== "major") {
+      const table = {
+        minor,
+        specialization,
+      }[programType];
+      const [got] = await this.db
+        .select({ id: table.id, name: table.name, requirements: table.requirements })
+        .from(table)
+        .where(eq(table.id, query.programId))
+        .limit(1);
+      return orNull(got);
+    }
+    const [got] = await this.db
+      .select({
+        id: major.id,
+        name: major.name,
+        requirements: majorRequirement.requirements,
+        schoolRequirement: {
+          name: collegeRequirement.name,
+          requirements: collegeRequirement.requirements,
+        },
+      })
+      .from(major)
+      .where(
+        and(eq(major.id, query.programId), eq(majorSpecPairToRequirement.specId, query.specId)),
+      )
+      .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
+      .leftJoin(majorSpecPairToRequirement, eq(major.id, majorSpecPairToRequirement.majorId))
       .leftJoin(majorRequirement, eq(majorSpecPairToRequirement.requirementId, majorRequirement.id))
       .limit(1);
-
     return orNull(got);
   }
 
