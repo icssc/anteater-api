@@ -351,6 +351,8 @@ export class Scraper {
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,
         );
 
+        foundMajorAssured.specs.push(specCode);
+
         foundMajorSpecPairs.push([
           [
             foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
