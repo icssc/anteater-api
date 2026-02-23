@@ -20,8 +20,8 @@ import {
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
-// (school code, major code, degree code)
-type ProgramTriplet = [string, string, string];
+// (school code, major code, degree code, spec code)
+type ProgramQuadruplet = [string, string, string, string?];
 
 export class Scraper {
   private ap!: AuditParser;
@@ -82,7 +82,7 @@ export class Scraper {
    * * However, we operate under the assumption that every valid triplet is among the ones returned by this method.
    * @private
    */
-  private async discoverValidDegrees(): Promise<ProgramTriplet[]> {
+  private async discoverValidDegrees(): Promise<ProgramQuadruplet[]> {
     const [awardTypes, reports] = await Promise.all([
       fetch("https://www.reg.uci.edu/mdsd/api/lookups/awardTypes").then((r) => r.json()),
       fetch("https://www.reg.uci.edu/mdsd/api/reports", {
@@ -131,7 +131,7 @@ export class Scraper {
       .flatMap((ent) => {
         const withMatchedDegree = this.findDwNameFor(awardTypesMap, ent)
           .map((dwName) => [ent.school.schoolCode, ent.major.majorCode, dwName])
-          .toArray() as ProgramTriplet[];
+          .toArray() as ProgramQuadruplet[];
 
         if (withMatchedDegree.length === 0) {
           console.log(
@@ -143,9 +143,9 @@ export class Scraper {
       });
   }
 
-  private async scrapePrograms(degrees: Iterable<[ProgramTriplet, string?]>) {
+  private async scrapePrograms(degrees: Iterable<ProgramQuadruplet>) {
     const ret = new Map<string, MajorProgram>();
-    for (const [[schoolCode, majorCode, degreeCode], specCode] of degrees) {
+    for (const [schoolCode, majorCode, degreeCode, specCode] of degrees) {
       const audit = await this.dw.getMajorAudit(
         degreeCode,
         // bachelor's degrees probably get an abbreviation starting with B
@@ -279,7 +279,7 @@ export class Scraper {
     }
 
     console.log("Scraping undergraduate and graduate program requirements");
-    this.parsedPrograms = await this.scrapePrograms(validDegrees.map((d) => [d, undefined]));
+    this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
     this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
@@ -294,7 +294,7 @@ export class Scraper {
     console.log(`loading ${this.specializationCache.size} cached specializations`);
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
-    const foundMajorSpecPairs: [ProgramTriplet, string][] = [];
+    const foundMajorSpecPairs: ProgramQuadruplet[] = [];
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {
       let specBlock: Block | undefined;
@@ -308,7 +308,7 @@ export class Scraper {
 
         if (got !== null) {
           specBlock = got.block;
-          const majorProgram = this.parsedPrograms.get(got.parent.name);
+          const majorProgram = this.parsedPrograms.get(`${got.parent.name};`);
           if (majorProgram) {
             foundMajor = majorProgram[1];
           } else {
@@ -354,13 +354,11 @@ export class Scraper {
         foundMajorAssured.specs.push(specCode);
 
         foundMajorSpecPairs.push([
-          [
-            foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
-            foundMajorAssured.code,
-            foundMajorAssured.degreeType,
-          ] as ProgramTriplet,
+          foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
+          foundMajorAssured.code,
+          foundMajorAssured.degreeType,
           specCode,
-        ]);
+        ] as ProgramQuadruplet);
 
         this.specializationCache.set(specCode, {
           parent: foundMajorAssured,
