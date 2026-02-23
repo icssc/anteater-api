@@ -104,10 +104,10 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * (school requirement, major requirement, spec code) triplet, because school requirements can vary by major
+ * (school, major) pair, because school requirements can vary by major
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
-export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram, string | undefined];
+export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";

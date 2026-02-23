@@ -183,13 +183,6 @@
       "when": 1771706013738,
       "tag": "0025_major_specialization_required",
       "breakpoints": true
-    },
-    {
-      "idx": 26,
-      "version": "7",
-      "when": 1771828829229,
-      "tag": "0026_polymorphic majors",
-      "breakpoints": true
     }
   ]
 }

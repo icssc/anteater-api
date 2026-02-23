@@ -163,14 +163,14 @@ export class Scraper {
         );
         continue;
       }
-      if (ret.has(majorAudit.title)) {
+      if (ret.has([majorAudit.title, specCode].join(";"))) {
         console.log(
           `Requirements block already exists for "${majorAudit.title}" ${specCode ? `with spec: '${specCode}'` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
 
-      ret.set(majorAudit.title, [
+      ret.set([majorAudit.title, specCode].join(";"), [
         audit?.college
           ? await this.ap.parseBlock(
               `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
@@ -178,7 +178,6 @@ export class Scraper {
             )
           : undefined,
         await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
-        specCode,
       ]);
 
       console.log(
