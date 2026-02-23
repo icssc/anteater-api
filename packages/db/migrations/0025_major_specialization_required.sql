@@ -1,0 +1,1 @@
+ALTER TABLE "major" ADD COLUMN "specialization_required" boolean NOT NULL;

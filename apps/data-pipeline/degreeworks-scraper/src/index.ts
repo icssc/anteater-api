@@ -48,7 +48,7 @@ async function main() {
 
   const majorSpecData = parsedPrograms
     .entries()
-    .map(([k, [college, { name, degreeType, code, requirements }]]) => {
+    .map(([k, [college, { name, degreeType, code, requirements, specializationRequired }]]) => {
       const specCode = k.split(";")[1] !== "" ? `${degreeType}-${k.split(";")[1]}` : undefined;
       let collegeBlockIndex: number | undefined;
       if (college?.requirements) {
@@ -76,8 +76,8 @@ async function main() {
         code,
         ...(specCode !== undefined ? { specCode } : {}),
         name,
-        requireSpec: requirements.some((x) => x.requirementType === "Spec"),
-        requirements: requirements.filter((x) => x.requirementType !== "Spec"),
+        specializationRequired,
+        requirements,
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };
     })
