@@ -95,7 +95,7 @@ export class DegreeworksClient {
     school: string,
     majorCode: string,
     college?: string,
-    spec?: string,
+    specCode?: string,
   ): Promise<
     | {
         college?: Block;
@@ -114,7 +114,7 @@ export class DegreeworksClient {
         goals: [
           { code: "MAJOR", value: majorCode },
           ...(college ? [{ code: "COLLEGE", value: college }] : []),
-          ...(spec ? [{ code: "SPEC", value: spec }] : []),
+          ...(specCode ? [{ code: "SPEC", value: specCode }] : []),
         ],
       }),
       headers: this.headers,
