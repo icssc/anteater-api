@@ -149,7 +149,6 @@ async function main() {
           set: conflictUpdateSetAllCols(schoolRequirement),
         });
     }
-    console.log("Updated GE and UC req");
 
     if (honorsFourRequirementData) {
       await tx
@@ -165,13 +164,11 @@ async function main() {
           set: conflictUpdateSetAllCols(schoolRequirement),
         });
     }
-    console.log("Updated School Req");
 
     await tx
       .insert(degree)
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
-    console.log("Updated Degree Data");
 
     // we need to determine the db ID of school blocks and update major objects accordingly first
     const collegeBlockIds = await tx
@@ -183,7 +180,6 @@ async function main() {
       })
       .returning({ id: collegeRequirement.id })
       .then((rows) => rows.map(({ id }) => id));
-    console.log("Updated college requirements");
 
     const majorRequirementBlockIds = await tx
       .insert(majorRequirement)
@@ -194,7 +190,6 @@ async function main() {
       })
       .returning({ id: majorRequirement.id })
       .then((rows) => rows.map(({ id }) => id));
-    console.log("Update Major Requirements");
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
@@ -202,7 +197,6 @@ async function main() {
           collegeBlockIds[majorObj.collegeBlockIndex];
       }
     }
-    console.log("Set college Req on majorData");
 
     for (const majorSpecObj of majorSpecToRequirementData) {
       if (majorSpecObj.majorRequirementBlockIndex !== undefined) {
@@ -210,17 +204,14 @@ async function main() {
           majorRequirementBlockIds[majorSpecObj.majorRequirementBlockIndex];
       }
     }
-    console.log("Set majorRequirement Id on majorSpecToRequirementData");
     await tx
       .insert(major)
       .values(majorData)
       .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
-    console.log("Updated Major");
     await tx
       .insert(minor)
       .values(minorData)
       .onConflictDoUpdate({ target: minor.id, set: conflictUpdateSetAllCols(minor) });
-    console.log("Updated Minors");
     await tx
       .insert(specialization)
       .values(specData)
@@ -228,7 +219,6 @@ async function main() {
         target: specialization.id,
         set: conflictUpdateSetAllCols(specialization),
       });
-    console.log("Updated Specs");
 
     await tx
       .insert(majorSpecPairToRequirement)
@@ -237,7 +227,6 @@ async function main() {
         target: majorSpecPairToRequirement.id,
         set: conflictUpdateSetAllCols(majorSpecPairToRequirement),
       });
-    console.log("Updated Major Spec pair to Requirements table");
   });
   exit(0);
 }
