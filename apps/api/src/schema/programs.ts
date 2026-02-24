@@ -30,7 +30,7 @@ export const majorRequirementsQuerySchema = z.object({
     description: "A major ID to query requirements for",
     example: "BS-201",
   }),
-  specId: programIdBase.openapi({
+  specializationId: programIdBase.nullable().openapi({
     description:
       "fetch major requirement when taking associated specialization with this ID, if provided, ",
     example: "BS-201A",
