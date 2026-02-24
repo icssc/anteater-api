@@ -15,7 +15,7 @@ export class DegreeworksClient {
   static async new(
     studentId: string,
     headers: HeadersInit,
-    delay = 700,
+    delay = 1000,
   ): Promise<DegreeworksClient> {
     const dw = new DegreeworksClient(studentId, headers, delay);
     /**
