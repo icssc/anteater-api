@@ -36,8 +36,7 @@ export class Scraper {
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
-  // both undergrad majors and grad programs; tuple of (school, program)
-  // both undergrad majors and grad programs; key is tuple of (majorName, specID?), value is tuple of (school, program)
+  // both undergrad majors and grad programs; key of 'majorName;specCode?' maps to tuple of (school, program)
   private parsedPrograms = new Map<string, MajorProgram>();
   // (parent major, name, program object)
   private parsedSpecializations = new Map<
@@ -400,7 +399,6 @@ export class Scraper {
       }
     }
 
-    // These two blocks might conflict!
     this.parsedPrograms = new Map([
       ...this.parsedPrograms,
       ...(await this.scrapePrograms(foundMajorSpecPairs)),
@@ -419,7 +417,6 @@ export class Scraper {
         new Set(this.parsedPrograms.entries().map(([, { major }]) => major.degreeType ?? "")),
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
-    // Check that this doesn't break!
     // Post-processing steps.
 
     // As of this commit, the only program which seems to require both of
@@ -440,14 +437,6 @@ export class Scraper {
       this.parsedPrograms.delete("Major in Art History;AHGEO");
       this.parsedPrograms.set("Major in Art History;", x);
     }
-
-    // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
-
-    // const chemE = this.parsedPrograms.get("Major in Chemical Engineering;");
-
-    // if (chemE) {
-    //   chemE.major.specializationRequired = false;
-    // }
 
     this.done = true;
   }
