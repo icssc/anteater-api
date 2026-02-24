@@ -161,11 +161,19 @@ export class AuditParser {
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
-    // Heuristics to determines if a major requires a specialization
+    // We infer whether a major requires a specialization by searching for a
+    // conditional rule that matches specific specialization related words.
+
+    // chemE has false positive because of text list wording and must be handled
+    const chemETextList = [
+      "16 units of approved technical electives or",
+      "contact advisor to select a specialization.",
+    ];
     return ruleArray.some((rule) => {
       return (
         rule.ifElsePart === "ElsePart" &&
-        rule.proxyAdvice?.textList.some((x) => AuditParser.specializationMatcher.test(x))
+        rule.proxyAdvice?.textList.some((x) => AuditParser.specializationMatcher.test(x)) &&
+        !rule.proxyAdvice?.textList.every((x, i) => x === chemETextList[i])
       );
     });
   }

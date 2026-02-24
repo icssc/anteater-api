@@ -420,14 +420,6 @@ export class Scraper {
       this.parsedPrograms.set("Major in Art History", x);
     }
 
-    // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
-
-    const chemE = this.parsedPrograms.get("Major in Chemical Engineering");
-
-    if (chemE) {
-      chemE[1].specializationRequired = false;
-    }
-
     this.done = true;
   }
   get() {
