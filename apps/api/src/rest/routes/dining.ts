@@ -250,11 +250,11 @@ diningRouter.openapi(restaurantTodayRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new DiningService(database(c.env.DB.connectionString));
 
-  const data = restaurantTodayResponseSchema.parse(await service.getRestaurantToday(query));
+  const data = await service.getRestaurantToday(query);
   if (!data) {
-    return c.json({ ok: false, message: "Restaurant not found" }, 404);
+    return c.json({ ok: false, message: "No data for this day" }, 404);
   }
-  return c.json({ ok: true, data: data }, 200);
+  return c.json({ ok: true, data: restaurantTodayResponseSchema.parse(data) }, 200);
 });
 
 export { diningRouter };
