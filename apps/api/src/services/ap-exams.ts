@@ -17,7 +17,6 @@ function buildQuery(query: z.infer<typeof apExamsQuerySchema>) {
   return and(...conds);
 }
 
-// TODO: unify with array in extract layer (data importer)
 const geCategoryToColumn = {
   "GE-1A": "ge1aCoursesGranted",
   "GE-1B": "ge1bCoursesGranted",

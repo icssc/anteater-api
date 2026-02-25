@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { cursorBaseSchema, skipBaseSchema, takeBaseSchema } from "./base";
 
 export const instructorsPathSchema = z.object({
   ucinetid: z
@@ -13,7 +14,7 @@ export const batchInstructorsQuerySchema = z.object({
     .openapi({ example: "mikes,klefstad" }),
 });
 
-export const instructorsQuerySchema = z.object({
+const instructorsQuerySchemaBase = z.object({
   nameContains: z.string().optional().openapi({
     description: "A substring to search for in instructor name(s) (case-insensitive)",
     example: "Shindler",
@@ -26,52 +27,31 @@ export const instructorsQuerySchema = z.object({
     description: "A substring to search for in instructor department name(s) (case-insensitive)",
     example: "Science",
   }),
-  take: z.coerce
-    .number()
-    .lte(100, "Page size must be less than or equal to 100")
-    .default(100)
-    .openapi({
-      description:
-        "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
-      example: 100,
-    }),
-  skip: z.coerce.number().default(0).openapi({
+});
+
+const instructorsQueryTake = takeBaseSchema.openapi({
+  description:
+    "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+  example: 100,
+});
+
+export const instructorsQuerySchema = instructorsQuerySchemaBase.extend({
+  take: instructorsQueryTake,
+  skip: skipBaseSchema.openapi({
     description:
       "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
     example: 0,
   }),
 });
 
-export const instructorsByCursorQuerySchema = z.object({
-  nameContains: z.string().optional().openapi({
-    description: "A substring to search for in instructor name(s) (case-insensitive)",
-    example: "Shindler",
-  }),
-  titleContains: z.string().optional().openapi({
-    description: "A substring to search for in instructor title(s) (case-insensitive)",
-    example: "Associate",
-  }),
-  departmentContains: z.string().optional().openapi({
-    description: "A substring to search for in instructor department name(s) (case-insensitive)",
-    example: "Science",
-  }),
-  cursor: z
-    .string()
-    .optional()
+export const instructorsByCursorQuerySchema = instructorsQuerySchemaBase.extend({
+  cursor: cursorBaseSchema
     .openapi({
       description:
         "Pagination cursor based on instructor UCInetID. Use the `nextCursor` value from previous response to fetch next page of results",
     })
     .openapi({ example: "mikes" }),
-  take: z.coerce
-    .number()
-    .lte(100, "Page size must be less than or equal to 100")
-    .default(100)
-    .openapi({
-      description:
-        "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
-      example: 100,
-    }),
+  take: instructorsQueryTake,
 });
 
 export const instructorPreviewSchema = z.object({
@@ -94,15 +74,6 @@ export const coursePreviewWithTermsSchema = z.object({
   terms: z.string().array(),
 });
 
-export const instructorSchema = z.object({
-  ucinetid: z.string().openapi({ example: "mikes" }),
-  name: z.string().openapi({ example: "Michael Shindler" }),
-  title: z.string().openapi({ example: "Associate Professor of Teaching" }),
-  email: z.string().email().or(z.literal("")).openapi({ example: "mikes@uci.edu" }),
-  department: z.string().openapi({ example: "Computer Science" }),
-  shortenedNames: z
-    .string()
-    .array()
-    .openapi({ example: ["SHINDLER, M."] }),
+export const instructorSchema = instructorPreviewSchema.extend({
   courses: coursePreviewWithTermsSchema.array(),
 });

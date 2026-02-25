@@ -2,13 +2,14 @@ import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
   batchInstructorsQuerySchema,
-  cursorResponseSchema,
-  errorSchema,
   instructorSchema,
   instructorsByCursorQuerySchema,
   instructorsPathSchema,
   instructorsQuerySchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
 } from "$schema";
 import { InstructorsService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -30,22 +31,9 @@ const batchInstructorsRoute = createRoute({
   request: { query: batchInstructorsQuerySchema },
   description: "Retrieves instructors with the UCINetIDs provided.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(instructorSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(instructorSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -58,24 +46,10 @@ const instructorByIdRoute = createRoute({
   request: { params: instructorsPathSchema },
   description: "Retrieves an instructor by their UCInetID.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(instructorSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Instructor not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(instructorSchema),
+    404: response404("Instructor not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -88,22 +62,9 @@ const instructorsByFiltersRoute = createRoute({
   request: { query: instructorsQuerySchema },
   description: "Retrieves instructors matching the given filters.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(instructorSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(instructorSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -116,20 +77,9 @@ const instructorsByCursorRoute = createRoute({
   request: { query: instructorsByCursorQuerySchema },
   description: "Retrieves instructors matching the given filters with cursor-based pagination.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: cursorResponseSchema(instructorSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(instructorSchema.array(), true),
+    422: response422(),
+    500: response500(),
   },
 });
 

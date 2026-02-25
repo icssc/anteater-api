@@ -1,8 +1,9 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
-  errorSchema,
-  responseSchema,
+  response200,
+  response422,
+  response500,
   websocDepartmentsQuerySchema,
   websocDepartmentsResponseSchema,
   websocQuerySchema,
@@ -24,20 +25,9 @@ const websocRoute = createRoute({
   description: "Retrieves WebSoc data satisfying the given parameters.",
   request: { query: websocQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(websocResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(websocResponseSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -49,22 +39,9 @@ const websocTermsRoute = createRoute({
   path: "/terms",
   description: "Retrieve all terms currently available on WebSoc.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(websocTermResponseSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(websocTermResponseSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -77,22 +54,9 @@ const websocDepartmentsRoute = createRoute({
   description: "Retrieve departments which have appeared on WebSoc.",
   request: { query: websocDepartmentsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(websocDepartmentsResponseSchema),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(websocDepartmentsResponseSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 
