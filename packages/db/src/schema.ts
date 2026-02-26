@@ -97,10 +97,9 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
   requirements: DegreeWorksRequirement[];
   /**
    * The set of specializations (if any) that this program has.
-   * If this array is not empty, then exactly one specialization must be selected
-   * to fulfill the requirements of the program.
    */
   specs: string[];
+  specializationRequired: boolean;
 };
 
 /**
@@ -674,6 +673,7 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
+    specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },

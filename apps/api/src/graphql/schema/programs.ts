@@ -14,6 +14,7 @@ type MajorPreview implements ProgramPreview @cacheControl(maxAge: 86400) {
     name: String!
     type: String!
     division: ProgramDivision!
+    specializationRequired: Boolean!
     specializations: [String!]!
 }
 

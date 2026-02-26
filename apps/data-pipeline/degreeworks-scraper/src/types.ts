@@ -1,9 +1,15 @@
-import type { DegreeWorksProgramId } from "@packages/db/schema";
+import type { DegreeWorksProgram } from "@packages/db/schema";
 
 /**
  * The base type for all `Rule` objects.
  */
-export type RuleBase = { label: string };
+export type RuleBase = {
+  label: string;
+  ifElsePart?: "IfPart" | "ElsePart";
+  proxyAdvice?: {
+    textList: string[];
+  };
+};
 /**
  * A group of `numberOfRules` rules,
  * of which `numberOfGroups` must be satisfied
@@ -121,6 +127,6 @@ export type DWMappingResponse<T extends string> = {
 
 // this is the data we cache on a specialization, if it is valid
 export type SpecializationCache = {
-  parent: DegreeWorksProgramId;
+  parent: DegreeWorksProgram;
   block: Block;
 };

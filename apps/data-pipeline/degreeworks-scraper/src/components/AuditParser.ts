@@ -10,6 +10,8 @@ import { course } from "@packages/db/schema";
 
 export class AuditParser {
   private static readonly specOrOtherMatcher = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
+  private static readonly specializationMatcher =
+    /specialization|concentration|emphasis|area|track|major/i;
   private static readonly electiveMatcher = /ELECTIVE @+/;
   private static readonly wildcardMatcher = /\w@/;
   private static readonly rangeMatcher = /-\w+/;
@@ -24,6 +26,7 @@ export class AuditParser {
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
+    specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
   });
 
   lexOrd = new Intl.Collator().compare;
@@ -155,6 +158,16 @@ export class AuditParser {
       }
     }
     return filteredClasses;
+  }
+
+  async checkSpecializationIsRequired(ruleArray: Rule[]) {
+    // Heuristics to determines if a major requires a specialization
+    return ruleArray.some((rule) => {
+      return (
+        rule.ifElsePart === "ElsePart" &&
+        rule.proxyAdvice?.textList.some((x) => AuditParser.specializationMatcher.test(x))
+      );
+    });
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {

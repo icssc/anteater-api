@@ -46,6 +46,7 @@ export class ProgramsService {
       .select({
         id: majorSpecialization.id,
         name: majorSpecialization.name,
+        specializationRequired: major.specializationRequired,
         specializations: majorSpecialization.specializations,
         type: degree.name,
         division: degree.division,

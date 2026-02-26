@@ -306,7 +306,14 @@ export class Scraper {
 
         if (got !== null) {
           specBlock = got.block;
-          foundMajor = got.parent;
+          const majorProgram = this.parsedPrograms.get(got.parent.name);
+          if (majorProgram) {
+            foundMajor = majorProgram[1];
+          } else {
+            console.log(
+              `warning: ${specName} has cached relation to non-existant major, ${got.parent.name} (spec code = ${specCode})`,
+            );
+          }
         }
       }
 
@@ -345,8 +352,6 @@ export class Scraper {
         foundMajorAssured.specs.push(specCode);
 
         this.specializationCache.set(specCode, {
-          // we are storing the entire program even though we only need the DegreeWorksProgramId supertype
-          // however, this is fine because we never read the other fields (we couldn't because of the type system)
           parent: foundMajorAssured,
           block: specBlock,
         });
@@ -382,6 +387,14 @@ export class Scraper {
       }
     }
 
+    // After we match specializations to a major
+    // we ensure that majors with 0 specs don't require a specialization
+    for (const [, [, major]] of this.parsedPrograms) {
+      if (major.specs.length === 0) {
+        major.specializationRequired = false;
+      }
+    }
+
     this.degreesAwarded = new Map(
       Array.from(
         new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
@@ -395,15 +408,24 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get("Major in Art History") as MajorProgram;
-    const y = this.parsedSpecializations.get("AHGEO")?.[2] as DegreeWorksProgram;
-    const z = this.parsedSpecializations.get("AHPER")?.[2] as DegreeWorksProgram;
+    const x = this.parsedPrograms.get("Major in Art History");
+    const y = this.parsedSpecializations.get("AHGEO")?.[2];
+    const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
       x[1].specs = [];
+      x[1].specializationRequired = false;
       x[1].requirements = [...x[1].requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
       this.parsedPrograms.set("Major in Art History", x);
+    }
+
+    // Chemical Engineering is falsely marked as requiring a specialization (pr#295)
+
+    const chemE = this.parsedPrograms.get("Major in Chemical Engineering");
+
+    if (chemE) {
+      chemE[1].specializationRequired = false;
     }
 
     this.done = true;
