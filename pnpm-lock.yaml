@@ -497,6 +497,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../stdlib
       drizzle-orm:
         specifier: 0.36.0
         version: 0.36.0(@cloudflare/workers-types@4.20241230.0)(@types/react@19.2.7)(postgres@3.4.5)(react@19.2.3)
@@ -558,7 +561,7 @@ packages:
   '@apollo/server@4.11.0':
     resolution: {integrity: sha512-SWDvbbs0wl2zYhKG6aGLxwTJ72xpqp0awb2lotNpfezd9VcAvzaUizzKQqocephin2uMoaA8MguoyBmgtPzNWw==}
     engines: {node: '>=14.16.0'}
-    deprecated: Apollo Server v4 is deprecated and will transition to end-of-life on January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
+    deprecated: Apollo Server v4 is end-of-life since January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
     peerDependencies:
       graphql: ^16.6.0
 
