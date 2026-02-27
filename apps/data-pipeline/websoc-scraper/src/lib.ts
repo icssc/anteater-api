@@ -382,12 +382,7 @@ const courseUpdateSet = Object.fromEntries(
   Object.entries(allCourseCols).filter(([key]) => !geColumns.includes(key)),
 );
 
-const doChunkUpsert = async (
-  db: ReturnType<typeof database>,
-  term: Term,
-  resp: WebsocResponse,
-  department: string | null,
-) =>
+const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: WebsocResponse) =>
   await db.transaction(async (tx) => {
     const updatedAt = new Date();
     const schools = await tx
@@ -824,7 +819,7 @@ async function ingestChunk(
       sectionCodes: codeRangePretty,
       cancelledCourses: "Include",
     }).then(normalizeResponse);
-    if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
+    if (resp.schools.length) await doChunkUpsert(db, term, resp);
     await sleep(1000);
   } catch (e) {
     // this isn't necessarily fatal; it's possible that we would have gotten more than 900 sections, which is disallowed
