@@ -77,7 +77,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
-    conditionalCourses: z.array(courseWithConditionSchema),
+    conditionalCourses: z.array(courseWithConditionSchema).default([]),
   })
   .openapi({
     description:
@@ -101,7 +101,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
-    conditionalCourses: z.array(courseWithConditionSchema),
+    conditionalCourses: z.array(courseWithConditionSchema).default([]),
   })
   .openapi({
     description:
