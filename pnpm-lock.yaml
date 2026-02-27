@@ -378,6 +378,9 @@ importers:
       '@packages/stdlib':
         specifier: workspace:*
         version: link:../../../packages/stdlib
+      '@types/node':
+        specifier: 22.9.3
+        version: 22.9.3
       cheerio:
         specifier: 1.0.0
         version: 1.0.0
