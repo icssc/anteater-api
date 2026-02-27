@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { terms } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -58,6 +59,15 @@ export const programRequirementBaseSchema = z.object({
   }),
 });
 
+export const courseWithConditionSchema = z.object({
+  courseId: z.string(),
+  condition: z.object({
+    operator: z.enum(["<", "<=", "=", ">", ">=", "<>"]),
+    year: z.number().int(),
+    term: z.enum(terms),
+  }),
+});
+
 export const programCourseRequirementSchema = programRequirementBaseSchema
   .extend({
     requirementType: z.literal("Course"),
@@ -67,6 +77,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    conditionalCourses: z.array(courseWithConditionSchema),
   })
   .openapi({
     description:
@@ -90,6 +101,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    conditionalCourses: z.array(courseWithConditionSchema),
   })
   .openapi({
     description:
