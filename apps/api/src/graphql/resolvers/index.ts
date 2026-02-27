@@ -12,10 +12,9 @@ import { searchResolvers } from "$graphql/resolvers/search";
 import { studyRoomsResolvers } from "$graphql/resolvers/study-rooms";
 import { websocResolvers } from "$graphql/resolvers/websoc";
 import { weekResolvers } from "$graphql/resolvers/week";
-import { mergeResolvers } from "@graphql-tools/merge";
 import { diningResolvers } from "./dining";
 
-export const resolvers = mergeResolvers([
+export const resolvers = [
   apExamResolvers,
   calendarResolvers,
   coursesResolvers,
@@ -31,4 +30,4 @@ export const resolvers = mergeResolvers([
   websocResolvers,
   weekResolvers,
   studyRoomsResolvers,
-]);
+];
