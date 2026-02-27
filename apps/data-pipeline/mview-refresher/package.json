@@ -13,6 +13,6 @@
     "@packages/db": "workspace:*"
   },
   "devDependencies": {
-    "wrangler": "4.59.1"
+    "wrangler": "4.69.0"
   }
 }
