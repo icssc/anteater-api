@@ -14,7 +14,6 @@ import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
-  course,
   websocCourse,
   websocDepartment,
   websocInstructor,
@@ -36,7 +35,6 @@ import {
   parseStartAndEndTimes,
   sleep,
 } from "@packages/stdlib";
-import { load } from "cheerio";
 
 /**
  * WebSoc allows us to scrape up to 900 sections per chunk.
@@ -48,7 +46,7 @@ const SECTIONS_PER_CHUNK = 891;
  * Section codes 98000-99999 are reserved for Study Abroad and Registrar testing.
  * These are not associated with any department that is searchable directly through WebSoc.
  */
-const LAST_SECTION_CODE = "97999";
+const LAST_SECTION_CODE = 97999;
 
 const geCategories = [
   "GE-1A",
@@ -78,44 +76,12 @@ const geCategoryToFlag: Record<(typeof geCategories)[number], keyof CourseGEUpda
 
 const geColumns = Object.values(geCategoryToFlag) as string[];
 
-export async function getDepts(db: ReturnType<typeof database>) {
-  const response = await fetch("https://www.reg.uci.edu/perl/WebSoc").then((x) => x.text());
-
-  const $ = load(response);
-
-  const termsFromWebsoc = $("form")
-    .eq(1)
-    .find("select")
-    .eq(2)
-    .text()
-    .replace(/\t/g, "")
-    .replace(/ {4}/g, "")
-    .split("\n")
-    .map((x) =>
-      x
-        .split(".")
-        .filter((y) => y !== " ")
-        .map((y) => y.trim()),
-    )
-    .filter((x) => x[0].length)
-    .map((x) => (x.length === 1 ? "ALL" : x[0]))
-    .filter((x) => x !== "ALL");
-
-  const termsFromDb = await db
-    .select({ department: course.department })
-    .from(course)
-    .then((rows) => Array.from(new Set(rows.map((row) => row.department))));
-
-  return Array.from(new Set(termsFromWebsoc.concat(termsFromDb))).toSorted();
-}
-
 async function getTermsToScrape(db: ReturnType<typeof database>) {
   const now = new Date();
   return db
     .select({
       name: calendarTerm.id,
       lastScraped: websocMeta.lastScraped,
-      lastDeptScraped: websocMeta.lastDeptScraped,
     })
     .from(calendarTerm)
     .leftJoin(websocMeta, eq(websocMeta.name, calendarTerm.id))
@@ -697,7 +663,6 @@ const doChunkUpsert = async (
     const websocMetaValues = {
       name: termToName(term),
       lastScraped: updatedAt,
-      lastDeptScraped: department,
     };
     await tx
       .insert(websocMeta)
@@ -811,105 +776,72 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(`Updated GE data for ${updates.size} courses`);
 }
 
-export async function scrapeTerm(
-  db: ReturnType<typeof database>,
-  term: Term,
-  departments: string[],
-) {
+export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
   const sectionCodeBounds = await db
-    .execute(
-      sql<Array<{ section_code: string }>>`
+    .execute<{ section_code: number }>(
+      sql<{ section_code: number }>`
     SELECT section_code FROM (
-        SELECT LPAD(section_code::TEXT, 5, '0') AS section_code,
+        SELECT section_code,
         (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
         FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
     )
-    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0 OR MOD(rownum, ${SECTIONS_PER_CHUNK}) = 1;
+    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 1;
   `,
     )
     .then((xs) => xs.map((x) => x.section_code));
-  if (departments.length) {
-    console.log(`Resuming scraping run at department ${departments[0]}.`);
-    for (const department of departments) {
-      console.log(`Scraping department ${department}`);
-      const resp = await request(term, {
-        department,
-        cancelledCourses: "Include",
-      }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
-      await sleep(1000);
-    }
-  } else if (!sectionCodeBounds.length) {
-    console.log("This term has never been scraped before. Falling back to department-wise scrape.");
-    for (const department of await getDepts(db)) {
-      console.log(`Scraping department ${department}`);
-      const resp = await request(term, {
-        department,
-        cancelledCourses: "Include",
-      }).then(normalizeResponse);
-      if (resp.schools.length) await doChunkUpsert(db, term, resp, department);
-      await sleep(1000);
-    }
-  } else {
-    console.log("Performing chunk-wise scrape.");
-    for (let i = 0; i < sectionCodeBounds.length; i += 2) {
-      const lower = sectionCodeBounds[i] as `${number}`;
-      const upper = (sectionCodeBounds[i + 1] ?? LAST_SECTION_CODE) as `${number}`;
-      await ingestChunk(db, term, lower, upper);
-    }
+
+  console.log("Performing chunk-wise scrape.");
+  let lastKnownCode = 0;
+  for (const bound of sectionCodeBounds) {
+    await ingestChunk(db, term, lastKnownCode + 1, bound);
+    lastKnownCode = bound;
   }
+
+  if (lastKnownCode < LAST_SECTION_CODE) {
+    await ingestChunk(db, term, lastKnownCode + 1, LAST_SECTION_CODE);
+  }
+
   await scrapeGEsForTerm(db, term);
-  const lastScraped = new Date();
-  const values = { name, lastScraped, lastDeptScraped: null };
-  await db.transaction(async (tx) => {
-    await tx
-      .insert(websocMeta)
-      .values(values)
-      .onConflictDoUpdate({ target: websocMeta.name, set: values });
-  });
+  const values = { name, lastScraped: new Date() };
+  await db
+    .insert(websocMeta)
+    .values(values)
+    .onConflictDoUpdate({ target: websocMeta.name, set: values });
 }
 
 async function ingestChunk(
   db: ReturnType<typeof database>,
   term: Term,
-  lower: `${number}`,
-  upper: `${number}`,
+  lower: number,
+  upper: number,
 ) {
-  const sectionCodes = `${lower}-${upper}`;
-  console.log(`Scraping chunk ${sectionCodes}`);
+  const codeRangePretty = `${lower.toString().padStart(5, "0")}-${upper.toString().padStart(5, "0")}`;
+  console.log(`Scraping chunk ${codeRangePretty}`);
   try {
     const resp = await request(term, {
-      sectionCodes,
+      sectionCodes: codeRangePretty,
       cancelledCourses: "Include",
     }).then(normalizeResponse);
     if (resp.schools.length) await doChunkUpsert(db, term, resp, null);
     await sleep(1000);
   } catch (e) {
-    /*
-     assuming network, etc. conditions are fine, we have more than 900 sections here
-     this means we somehow overran our 1% tolerance
-     that's okay; we can be suboptimal this time so we get all the sections that exist.
-     we're going to recompute the chunks at the start of the next scrape,
-     so that one will run optimally, given no such failure occurs again
-
-     we're going to bisect this chunk and try the two halves separately; eventually,
-     we'll have <= 900 valid sections in a chunk and we'll be in the clear
-    */
-    const lowerInt = Number.parseInt(lower, 10);
-    const upperInt = Number.parseInt(upper, 10);
-    const rangeLength = upperInt - lowerInt + 1;
+    // this isn't necessarily fatal; it's possible that we would have gotten more than 900 sections, which is disallowed
+    // let's just try again here; after the first scrape of this term, we'll get the code ranges right >95% of the time
+    const rangeLength = upper - lower + 1;
     if (rangeLength < 900) {
       // okay, no way this was a chunk overrun
       throw e;
     }
 
-    console.log(`Chunk ${sectionCodes} failed (probably too large); bisecting and trying again...`);
+    console.log(
+      `Chunk ${codeRangePretty} failed (probably too large); bisecting and trying again...`,
+    );
 
-    const middleInt = lowerInt + Math.floor((upperInt - lowerInt) / 2);
-    await ingestChunk(db, term, lower, middleInt.toString().padStart(5, "0") as `${number}`);
-    await ingestChunk(db, term, (middleInt + 1).toString().padStart(5, "0") as `${number}`, upper);
+    const middle = lower + Math.floor((upper - lower) / 2);
+    await ingestChunk(db, term, lower, middle);
+    await ingestChunk(db, term, middle + 1, upper);
   }
 }
 
@@ -917,15 +849,10 @@ export async function doScrape(db: ReturnType<typeof database>) {
   console.log("websoc-scraper starting");
   const termsInDatabase = await getTermsToScrape(db);
   console.log(termsInDatabase);
-  const term = termsInDatabase.find((x) => x.lastDeptScraped !== null) ?? termsInDatabase[0];
+  const term = termsInDatabase[0];
   if (term?.name) {
     try {
-      const departments = await getDepts(db);
-      await scrapeTerm(
-        db,
-        nameToTerm(term.name),
-        term?.lastDeptScraped ? departments.slice(departments.indexOf(term.lastDeptScraped)) : [],
-      );
+      await scrapeTerm(db, nameToTerm(term.name));
     } catch (e) {
       console.error(e);
     }
