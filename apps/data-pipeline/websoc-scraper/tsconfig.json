@@ -2,7 +2,11 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "types": ["./worker-configuration.d.ts", "./.wrangler/types/runtime.d.ts"],
+    "types": [
+      "./worker-configuration.d.ts",
+      "./.wrangler/types/runtime.d.ts",
+      "node"
+    ],
     "paths": {
       "$lib": ["./src/lib.ts"]
     }
