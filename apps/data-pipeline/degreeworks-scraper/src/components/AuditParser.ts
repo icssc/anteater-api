@@ -2,9 +2,11 @@ import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
+  CourseWithCondition,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 
@@ -99,6 +101,21 @@ export class AuditParser {
       .limit(1);
   }
 
+  parseDWTerm(raw: string) {
+    const [yearStr, seasonStr] = raw.split(" ");
+    const year = Number.parseInt(yearStr, 10);
+    const mapping: Record<string, Term> = {
+      FALL: "Fall",
+      WINTER: "Winter",
+      SPRING: "Spring",
+      SUMMER1: "Summer1",
+      SUMMER10WK: "Summer10wk",
+      SUMMER2: "Summer2",
+    };
+    const term = mapping[seasonStr];
+    return { year, term };
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -138,6 +155,8 @@ export class AuditParser {
 
   filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
     let filteredClasses = structuredClone(classes);
+    const conditionalCourses: CourseWithCondition[] = [];
+
     for (const withClause of withArray) {
       switch (withClause.code) {
         case "DWCREDIT":
@@ -150,11 +169,29 @@ export class AuditParser {
             ),
           );
           break;
+        case "DWTERM": {
+          // we assume each condition only comes with one term.
+          // e.g "valueList":["2025 SPRING"]
+          const parsed = this.parseDWTerm(withClause.valueList[0]);
+          for (const c of filteredClasses) {
+            conditionalCourses.push({
+              courseId: c.id,
+              condition: {
+                operator: withClause.operator,
+                year: parsed.year,
+                term: parsed.term,
+              },
+            });
+          }
+          // remove courses with conditions from the courses array
+          filteredClasses = [];
+          break;
+        }
         // There may be more withArray Codes that can be applied here to filter out courses
         // see https://github.com/icssc/anteater-api/pull/286
       }
     }
-    return filteredClasses;
+    return { courses: filteredClasses, conditionalCourses };
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {
@@ -171,17 +208,27 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const toInclude: [string, typeof course.$inferSelect][] = await Promise.all(
-            includedCourses.map(([x, withArray]) =>
+          const resolvedCourses: {
+            classes: (typeof course.$inferSelect)[];
+            withArray: WithClause[];
+          }[] = await Promise.all(
+            includedCourses.map(([courseId, withArray]) =>
               this.normalizeCourseId
-                .bind(this)(x)
-                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+                .bind(this)(courseId)
+                .then((classes) => ({ classes, withArray })),
             ),
-          ).then((x) =>
-            x
-              .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
-              .map((y) => [y.id, y]),
           );
+          const conditionalCourses: CourseWithCondition[] = [];
+          const toInclude: [string, typeof course.$inferSelect][] = resolvedCourses
+            .flatMap(({ classes, withArray }) => {
+              const { courses, conditionalCourses: cc } = this.filterThroughWithArray(
+                classes,
+                withArray,
+              );
+              conditionalCourses.push(...cc);
+              return courses;
+            })
+            .map((c) => [c.id, c]);
 
           const excludedCourses: [string, WithClause[]][] =
             rule.requirement.except?.courseArray.map((x) => [
@@ -197,7 +244,9 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .flatMap(
+                  ([classes, withArray]) => this.filterThroughWithArray(classes, withArray).courses,
+                )
                 .map((y) => y.id),
             ),
           );
@@ -215,6 +264,7 @@ export class AuditParser {
               requirementType: "Course",
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
+              conditionalCourses,
             });
           } else if (rule.requirement.creditsBegin) {
             ret.push({
@@ -222,6 +272,7 @@ export class AuditParser {
               requirementType: "Unit",
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
+              conditionalCourses,
             });
           }
           break;

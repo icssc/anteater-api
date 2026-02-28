@@ -11,6 +11,7 @@ import {
 } from "$schema";
 import { ProgramsService } from "$services";
 import type { z } from "@hono/zod-openapi";
+import type { CourseWithCondition } from "@packages/db/schema";
 import { GraphQLError } from "graphql/error";
 
 export const programResolvers = {
@@ -85,6 +86,14 @@ export const programResolvers = {
         });
       return res;
     },
+  },
+  ProgramCourseRequirement: {
+    conditionalCourses: (x: { conditionalCourses?: CourseWithCondition[] }) =>
+      x.conditionalCourses ?? [],
+  },
+  ProgramUnitRequirement: {
+    conditionalCourses: (x: { conditionalCourses?: CourseWithCondition[] }) =>
+      x.conditionalCourses ?? [],
   },
   ProgramRequirement: {
     // x outside this typehint is malformed data; meh

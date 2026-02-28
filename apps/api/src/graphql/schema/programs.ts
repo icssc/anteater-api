@@ -32,11 +32,23 @@ interface ProgramRequirementBase {
     label: String!
 }
 
+type TermCondition {
+    operator: String!
+    year: Int!
+    term: Term!
+}
+
+type CourseWithCondition {
+    courseId: String!
+    condition: TermCondition!
+}
+
 type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
     label: String!
     requirementType: String!
     courseCount: Int!
     courses: [String!]!
+    conditionalCourses: [CourseWithCondition!]!
 }
 
 type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -44,6 +56,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
     requirementType: String!
     unitCount: Int!
     courses: [String!]!
+    conditionalCourses: [CourseWithCondition!]!
 }
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {

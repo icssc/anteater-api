@@ -109,16 +109,27 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
  */
 export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
+export type CourseWithCondition = {
+  courseId: string;
+  condition: {
+    operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
+    year: number;
+    term: Term;
+  };
+};
+
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  conditionalCourses: CourseWithCondition[];
 };
 
 export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  conditionalCourses: CourseWithCondition[];
 };
 
 export type DegreeWorksGroupRequirement = {
