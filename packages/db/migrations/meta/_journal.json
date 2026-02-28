@@ -176,6 +176,13 @@
       "when": 1771543829558,
       "tag": "0024_dining",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1772176152078,
+      "tag": "0025_websoc_meta_drop_last_dept_scraped",
+      "breakpoints": true
     }
   ]
 }
