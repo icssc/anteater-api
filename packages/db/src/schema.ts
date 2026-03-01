@@ -104,10 +104,9 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * (school, major, spec) tuple, because school requirements can vary by major and major can vary by specialization
+ * school requirements can vary by major and major requirements can vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
-// export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram, DegreeWorksProgramId | undefined];
 export type MajorProgram = {
   school: DegreeWorksProgram | undefined;
   major: DegreeWorksProgram;
