@@ -162,9 +162,10 @@ export class AuditParser {
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
     // We infer whether a major requires a specialization by searching for a
-    // conditional rule with text that matches 'specialization' adjacent words.
+    // conditional rule with text that matches 'specialization' like words.
 
-    // False positive on B.S. ChemE must be hardcoded out.
+    // Hard-code out false positive on B.S. ChemE, because the requirement can be fulfilled with 16 units
+    // instead.
     const chemETextList = [
       "16 units of approved technical electives or",
       "contact advisor to select a specialization.",
