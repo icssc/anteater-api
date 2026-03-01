@@ -316,7 +316,7 @@ export class Scraper {
             foundMajor = majorProgram.major;
           } else {
             console.log(
-              `warning: ${specName} has cached relation to non-existant major, ${got.parent.name} (spec code = ${specCode})`,
+              `warning: ${specName} has cached relation to non-existent major, ${got.parent.name} (spec code = ${specCode})`,
             );
           }
         }
