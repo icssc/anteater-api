@@ -19,6 +19,6 @@
   },
   "devDependencies": {
     "domhandler": "5.0.3",
-    "wrangler": "4.69.0"
+    "wrangler": "4.0.0"
   }
 }
