@@ -110,7 +110,7 @@ export class ProgramsService {
           id: major.id,
           name: major.name,
           requirements: majorRequirement.requirements,
-          schoolRequirement: {
+          schoolRequirements: {
             name: collegeRequirement.name,
             requirements: collegeRequirement.requirements,
           },
