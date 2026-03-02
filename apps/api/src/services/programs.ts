@@ -9,7 +9,7 @@ import type {
   ugradRequirementsQuerySchema,
 } from "$schema";
 import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
+import { and, eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   collegeRequirement,
@@ -117,7 +117,12 @@ export class ProgramsService {
         })
         .from(major)
         .where(
-          sql`major.id = ${query.programId} AND (${query.specializationId === null} OR major_spec_pair_to_requirement.spec_id = ${query.specializationId})`,
+          and(
+            sql`major.id=${query.programId}`,
+            query.specializationId
+              ? sql`major_spec_pair_to_requirement.spec_id = ${query.specializationId}`
+              : undefined,
+          ),
         )
         .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
         .leftJoin(majorSpecPairToRequirement, eq(major.id, majorSpecPairToRequirement.majorId))
