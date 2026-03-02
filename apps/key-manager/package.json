@@ -31,7 +31,7 @@
     "next-auth": "5.0.0-beta.25",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-hook-form": "7.67.0",
+    "react-hook-form": "7.71.2",
     "sst": "3.17.25",
     "tailwind-merge": "2.5.4",
     "tailwindcss-animate": "1.0.7",

@@ -396,7 +396,7 @@ importers:
         version: 1.7.2
       '@hookform/resolvers':
         specifier: 5.2.2
-        version: 5.2.2(react-hook-form@7.67.0(react@19.2.3))
+        version: 5.2.2(react-hook-form@7.71.2(react@19.2.3))
       '@paralleldrive/cuid2':
         specifier: 2.2.2
         version: 2.2.2
@@ -455,8 +455,8 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
       react-hook-form:
-        specifier: 7.67.0
-        version: 7.67.0(react@19.2.3)
+        specifier: 7.71.2
+        version: 7.71.2(react@19.2.3)
       sst:
         specifier: 3.17.25
         version: 3.17.25
@@ -4152,8 +4152,8 @@ packages:
     peerDependencies:
       react: ^19.2.3
 
-  react-hook-form@7.67.0:
-    resolution: {integrity: sha512-E55EOwKJHHIT/I6J9DmQbCWToAYSw9nN5R57MZw9rMtjh+YQreMDxRLfdjfxQbiJ3/qbg3Z02wGzBX4M+5fMtQ==}
+  react-hook-form@7.71.2:
+    resolution: {integrity: sha512-1CHvcDYzuRUNOflt4MOq3ZM46AronNJtQ1S7tnX6YN4y72qhgiUItpacZUAQ0TyWYci3yz1X+rXaSxiuEm86PA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -5656,10 +5656,10 @@ snapshots:
       hono: 4.10.7
       zod: 4.1.13
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.67.0(react@19.2.3))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.71.2(react@19.2.3))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.67.0(react@19.2.3)
+      react-hook-form: 7.71.2(react@19.2.3)
 
   '@icssc/libwebsoc-next@1.1.1':
     dependencies:
@@ -8079,7 +8079,7 @@ snapshots:
       react: 19.2.3
       scheduler: 0.27.0
 
-  react-hook-form@7.67.0(react@19.2.3):
+  react-hook-form@7.71.2(react@19.2.3):
     dependencies:
       react: 19.2.3
 
