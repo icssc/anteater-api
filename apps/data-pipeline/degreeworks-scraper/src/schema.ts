@@ -14,6 +14,13 @@ export const withClauseSchema = z.object({
   valueList: z.array(z.string()),
 });
 
+export const courseSchema = z.object({
+  discipline: z.string(),
+  number: z.string(),
+  numberEnd: z.string().optional(),
+  withArray: z.array(withClauseSchema).optional(),
+});
+
 export const rewardTypeSchema = z.object({
   degreeCode: z.string(),
   degreeShort: z.string(),
