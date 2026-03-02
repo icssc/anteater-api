@@ -91,6 +91,7 @@ export type RuleSubset = {
 };
 export type Rule = RuleBase &
   (RuleGroup | RuleCourse | RuleIfStmt | RuleBlock | RuleNoncourse | RuleMarker | RuleSubset);
+
 export type Block = {
   requirementType: string;
   requirementValue: string;
