@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+export const withClauseSchema = z.object({
+  code: z.enum([
+    "DWCREDITS",
+    "DWCREDIT",
+    "DWLOCATION",
+    "DWTERM",
+    "DWTITLE",
+    "DWGRADETYPE",
+    "DWPASSFAIL",
+  ]),
+  operator: z.enum(["<", "<=", "=", ">", ">=", "<>"]),
+  valueList: z.array(z.string()),
+});
+
 export const rewardTypeSchema = z.object({
   degreeCode: z.string(),
   degreeShort: z.string(),
