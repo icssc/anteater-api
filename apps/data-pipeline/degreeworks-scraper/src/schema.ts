@@ -108,8 +108,23 @@ export const blockSchema = z.object({
   ruleArray: z.array(ruleSchema),
 });
 
+// UndergraduateRequirements interface is not made into an equivalent Zod schema since it's made from already parsed Block objects
+
 export const dwAuditOKResponseSchema = z.object({
   blockArray: z.array(blockSchema),
+});
+
+export const degreeWorksProgramIdSchema = z.object({
+  school: z.enum(["U", "G"]),
+  programType: z.enum(["COLLEGE", "MAJOR", "MINOR", "SPEC"]),
+  code: z.string(),
+  degreeType: z.string().optional(),
+});
+
+// this is stored locally and read, but can still be validated since it is being loaded from a file
+export const specializationCacheSchema = z.object({
+  parent: degreeWorksProgramIdSchema,
+  block: blockSchema,
 });
 
 export const rewardTypeSchema = z.object({
