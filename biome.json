@@ -15,7 +15,9 @@
       "**/*.json",
       "**/.next/**",
       "**/.sst/**",
-      "**/dist/**"
+      "**/dist/**",
+      "**/cloudflare-env.d.ts",
+      "**/.open-next/**"
     ]
   },
   "formatter": {
