@@ -16,7 +16,7 @@ declare module "next-auth" {
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth(async (req) => {
+export const { handlers, signIn, signOut, auth } = NextAuth(async (_req) => {
   const cf = getCloudflareContext();
   const db = database(cf.env.USERS_DB.connectionString);
 
