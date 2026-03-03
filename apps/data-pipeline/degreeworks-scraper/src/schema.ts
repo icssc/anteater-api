@@ -108,6 +108,10 @@ export const blockSchema = z.object({
   ruleArray: z.array(ruleSchema),
 });
 
+export const DWAuditOKResponseSchema = z.object({
+  blockArray: z.array(blockSchema),
+});
+
 export const rewardTypeSchema = z.object({
   degreeCode: z.string(),
   degreeShort: z.string(),
