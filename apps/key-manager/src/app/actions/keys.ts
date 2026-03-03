@@ -85,30 +85,43 @@ export async function getUserApiKeys() {
   return keys;
 }
 
+export type CreateUserApiKeyResult =
+  | {
+      ok: false;
+      error: string;
+    }
+  | {
+      ok: true;
+      key: string;
+      keyData: KeyData;
+    };
+
 /**
  * Create the authed user's API key
  */
-export async function createUserApiKey(keyData: CreateKeyFormValues) {
+export async function createUserApiKey(
+  keyData: CreateKeyFormValues,
+): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
 
   const session = await auth();
   if (!session || !session.user?.id || !session.user?.email) {
-    throw new Error("Unauthorized");
+    return { ok: false, error: "Unauthorized" };
   }
 
   if (session.user.email.split("@")[1] !== "uci.edu") {
-    throw new Error("User must have an @uci.edu email address");
+    return { ok: false, error: "User must have an @uci.edu email address" };
   }
 
   const userKeys = await getUserKeysNames(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
-    throw new Error("User at max API key limit");
+    return { ok: false, error: "User at max API key limit" };
   }
 
   const key = await createUserKeyHelper(session.user.id, validatedKeyData);
 
-  return { key, keyData: validatedKeyData };
+  return { ok: true, key, keyData: validatedKeyData };
 }
 
 /**
