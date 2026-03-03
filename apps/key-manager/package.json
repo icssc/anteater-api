@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "check:types": "tsc -p ./tsconfig.json -noEmit",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "opennextjs-cloudflare build && dotenv -- opennextjs-cloudflare deploy",
     "dev": "next dev",
     "postinstall": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "migrate": "dotenv -- tsx src/db/migrate.ts",
