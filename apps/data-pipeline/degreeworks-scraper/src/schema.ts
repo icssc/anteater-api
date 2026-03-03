@@ -101,6 +101,13 @@ export const ruleSchema: z.ZodType<Rule> = z.discriminatedUnion("ruleType", [
   ruleSubsetSchema,
 ]);
 
+export const blockSchema = z.object({
+  requirementType: z.string(),
+  requirementValue: z.string(),
+  title: z.string(),
+  ruleArray: z.array(ruleSchema),
+});
+
 export const rewardTypeSchema = z.object({
   degreeCode: z.string(),
   degreeShort: z.string(),
