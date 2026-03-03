@@ -1,3 +1,4 @@
+import type { Rule } from "$types";
 import { z } from "zod";
 
 export const withClauseSchema = z.object({
@@ -20,6 +21,85 @@ export const courseSchema = z.object({
   numberEnd: z.string().optional(),
   withArray: z.array(withClauseSchema).optional(),
 });
+
+export const ruleBaseSchema = z.object({
+  label: z.string(),
+});
+
+export const ruleGroupSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Group"),
+  requirement: z.object({
+    numberOfGroups: z.string(),
+    numberOfRules: z.string(),
+  }),
+  ruleArray: z.lazy(() => z.array(ruleSchema)),
+});
+
+export const ruleCourseSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Course"),
+  requirement: z.object({
+    creditsBegin: z.string().optional(),
+    classesBegin: z.string().optional(),
+    courseArray: z.array(courseSchema),
+    except: z
+      .object({
+        courseArray: z.array(courseSchema),
+      })
+      .optional(),
+  }),
+});
+
+export const ruleIfStmtSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("IfStmt"),
+  requirement: z.object({
+    ifPart: z.object({
+      ruleArray: z.lazy(() => z.array(ruleSchema)),
+    }),
+    elsePart: z
+      .object({
+        ruleArray: z.lazy(() => z.array(ruleSchema)),
+      })
+      .optional(),
+  }),
+});
+
+export const ruleBlockSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Block"),
+  requirement: z.object({
+    numBlocks: z.string(),
+    type: z.string(),
+    value: z.string(),
+  }),
+});
+
+export const ruleNoncourseSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Noncourse"),
+  requirement: z.object({
+    numNoncourses: z.string(),
+    code: z.string(),
+  }),
+});
+
+// this is marked as a guess in the types file since it's unclear what it actually is
+export const ruleMarkerSchema = ruleBaseSchema.extend({
+  ruleType: z.enum(["Complete", "Incomplete"]),
+});
+
+export const ruleSubsetSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Subset"),
+  ruleArray: z.array(z.lazy(() => ruleSchema)),
+});
+
+// explicit type annotation to avoid circular reference issues with zod
+export const ruleSchema: z.ZodType<Rule> = z.discriminatedUnion("ruleType", [
+  ruleGroupSchema,
+  ruleCourseSchema,
+  ruleIfStmtSchema,
+  ruleBlockSchema,
+  ruleNoncourseSchema,
+  ruleMarkerSchema,
+  ruleSubsetSchema,
+]);
 
 export const rewardTypeSchema = z.object({
   degreeCode: z.string(),
