@@ -108,7 +108,7 @@ export const blockSchema = z.object({
   ruleArray: z.array(ruleSchema),
 });
 
-export const DWAuditOKResponseSchema = z.object({
+export const dwAuditOKResponseSchema = z.object({
   blockArray: z.array(blockSchema),
 });
 
