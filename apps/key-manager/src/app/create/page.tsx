@@ -57,10 +57,10 @@ const CreateKey = () => {
     if (result.ok) {
       setKey(key);
       setIsDialogOpen(true);
-      setIsCreating(false);
     } else {
       setError(result.error);
     }
+    setIsCreating(false);
   }
 
   const handleDialogClose = (isOpen: boolean) => {
