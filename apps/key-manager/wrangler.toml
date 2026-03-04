@@ -16,5 +16,4 @@ binding = "ASSETS"
 
 [[hyperdrive]]
 binding = "USERS_DB"
-#NEED HYPERDRIVE TO API DB
-id = "b44e53ed222a40d79241b9a6e6ed54cb"
+id = "891f9443f6924f71a3eebe6e761525a9"
