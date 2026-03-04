@@ -1,6 +1,6 @@
 {
-  "id": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
-  "prevId": "169622b6-bb25-46af-9384-cb3825533964",
+  "id": "f1b90841-6952-48b7-a547-c974828883b2",
+  "prevId": "b1dd1ce5-36ad-4ce8-a66d-02dd8630ce63",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -628,6 +628,687 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_diet_restriction": {
+      "name": "dining_diet_restriction",
+      "schema": "",
+      "columns": {
+        "dish_id": {
+          "name": "dish_id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "contains_eggs": {
+          "name": "contains_eggs",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_fish": {
+          "name": "contains_fish",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_milk": {
+          "name": "contains_milk",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_peanuts": {
+          "name": "contains_peanuts",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_sesame": {
+          "name": "contains_sesame",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_shellfish": {
+          "name": "contains_shellfish",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_soy": {
+          "name": "contains_soy",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_tree_nuts": {
+          "name": "contains_tree_nuts",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contains_wheat": {
+          "name": "contains_wheat",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_gluten_free": {
+          "name": "is_gluten_free",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_halal": {
+          "name": "is_halal",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_kosher": {
+          "name": "is_kosher",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_locally_grown": {
+          "name": "is_locally_grown",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_organic": {
+          "name": "is_organic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_vegan": {
+          "name": "is_vegan",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_vegetarian": {
+          "name": "is_vegetarian",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_diet_restriction_dish_id_dining_dish_id_fk": {
+          "name": "dining_diet_restriction_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_diet_restriction",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_dish": {
+      "name": "dining_dish",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "station_id": {
+          "name": "station_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ingredients": {
+          "name": "ingredients",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dining_dish_station_id_index": {
+          "name": "dining_dish_station_id_index",
+          "columns": [
+            {
+              "expression": "station_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dining_dish_station_id_dining_station_id_fk": {
+          "name": "dining_dish_station_id_dining_station_id_fk",
+          "tableFrom": "dining_dish",
+          "tableTo": "dining_station",
+          "columnsFrom": ["station_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_dish_to_period": {
+      "name": "dining_dish_to_period",
+      "schema": "",
+      "columns": {
+        "period_id": {
+          "name": "period_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dish_id": {
+          "name": "dish_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_dish_to_period_period_id_dining_period_id_fk": {
+          "name": "dining_dish_to_period_period_id_dining_period_id_fk",
+          "tableFrom": "dining_dish_to_period",
+          "tableTo": "dining_period",
+          "columnsFrom": ["period_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dining_dish_to_period_dish_id_dining_dish_id_fk": {
+          "name": "dining_dish_to_period_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_dish_to_period",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_event": {
+      "name": "dining_event",
+      "schema": "",
+      "columns": {
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "restaurant_id": {
+          "name": "restaurant_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_event_restaurant_id_dining_restaurant_id_fk": {
+          "name": "dining_event_restaurant_id_dining_restaurant_id_fk",
+          "tableFrom": "dining_event",
+          "tableTo": "dining_restaurant",
+          "columnsFrom": ["restaurant_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "dining_event_pk": {
+          "name": "dining_event_pk",
+          "columns": ["title", "restaurant_id", "start"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_nutrition_info": {
+      "name": "dining_nutrition_info",
+      "schema": "",
+      "columns": {
+        "dish_id": {
+          "name": "dish_id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "serving_size": {
+          "name": "serving_size",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "serving_unit": {
+          "name": "serving_unit",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calories": {
+          "name": "calories",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_fat_g": {
+          "name": "total_fat_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trans_fat_g": {
+          "name": "trans_fat_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "saturated_fat_g": {
+          "name": "saturated_fat_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cholesterol_mg": {
+          "name": "cholesterol_mg",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sodium_mg": {
+          "name": "sodium_mg",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_carbs_g": {
+          "name": "total_carbs_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dietary_fiber_g": {
+          "name": "dietary_fiber_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sugars_g": {
+          "name": "sugars_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_g": {
+          "name": "protein_g",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calcium": {
+          "name": "calcium",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iron": {
+          "name": "iron",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vitamin_a": {
+          "name": "vitamin_a",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vitamin_c": {
+          "name": "vitamin_c",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dining_nutrition_info_dish_id_dining_dish_id_fk": {
+          "name": "dining_nutrition_info_dish_id_dining_dish_id_fk",
+          "tableFrom": "dining_nutrition_info",
+          "tableTo": "dining_dish",
+          "columnsFrom": ["dish_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_period": {
+      "name": "dining_period",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "adobe_id": {
+          "name": "adobe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "restaurant_id": {
+          "name": "restaurant_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dining_period_adobe_id_date_restaurant_id_index": {
+          "name": "dining_period_adobe_id_date_restaurant_id_index",
+          "columns": [
+            {
+              "expression": "adobe_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dining_period_date_index": {
+          "name": "dining_period_date_index",
+          "columns": [
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dining_period_restaurant_id_index": {
+          "name": "dining_period_restaurant_id_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dining_period_restaurant_id_dining_restaurant_id_fk": {
+          "name": "dining_period_restaurant_id_dining_restaurant_id_fk",
+          "tableFrom": "dining_period",
+          "tableTo": "dining_restaurant",
+          "columnsFrom": ["restaurant_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_restaurant": {
+      "name": "dining_restaurant",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dining_station": {
+      "name": "dining_station",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "restaurant_id": {
+          "name": "restaurant_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dining_station_restaurant_id_index": {
+          "name": "dining_station_restaurant_id_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dining_station_restaurant_id_dining_restaurant_id_fk": {
+          "name": "dining_station_restaurant_id_dining_restaurant_id_fk",
+          "tableFrom": "dining_station",
+          "tableTo": "dining_restaurant",
+          "columnsFrom": ["restaurant_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

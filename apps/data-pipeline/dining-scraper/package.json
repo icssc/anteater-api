@@ -1,8 +1,7 @@
 {
-  "name": "@apps/study-location-scraper",
+  "name": "@apps/peterplate-scraper",
   "version": "0.0.0",
   "private": true,
-  "description": "Scraper for study locations on campus",
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
@@ -13,12 +12,11 @@
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.0.0",
-    "cross-fetch": "4.0.0",
-    "zod": "4.1.13"
+    "date-fns": "^3.0.0",
+    "winston": "3.15.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
-    "domhandler": "5.0.3",
     "wrangler": "3.99.0"
   }
 }

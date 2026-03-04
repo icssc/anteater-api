@@ -344,36 +344,49 @@ function generateGEs(rawCourse: string[]) {
     geText: "",
   };
   if (!maybeGEText?.startsWith("(")) return res;
-  res.geText = maybeGEText;
-  if (res.geText.match(/\bI[Aa]\b/)) {
+  if (maybeGEText.match(/\bI[Aa]\b/)) {
     res.isGE1A = true;
   }
-  if (res.geText.match(/\bI[Bb]\b/)) {
+  if (maybeGEText.match(/\bI[Bb]\b/)) {
     res.isGE1B = true;
   }
-  if (res.geText.match(/\bII\b/)) {
+  if (maybeGEText.match(/\bII\b/)) {
     res.isGE2 = true;
   }
-  if (res.geText.match(/\bIII\b/)) {
+  if (maybeGEText.match(/\bIII\b/)) {
     res.isGE3 = true;
   }
-  if (res.geText.match(/\bIV\b/)) {
+  if (maybeGEText.match(/\bIV\b/)) {
     res.isGE4 = true;
   }
-  if (res.geText.match(/\bV\.?[Aa]\b/)) {
+  if (maybeGEText.match(/\bV\.?[Aa]\b/)) {
     res.isGE5A = true;
   }
-  if (res.geText.match(/\bV\.?[Bb]\b/)) {
+  if (maybeGEText.match(/\bV\.?[Bb]\b/)) {
     res.isGE5B = true;
   }
-  if (res.geText.match(/\bVI\b/)) {
+  if (maybeGEText.match(/\bVI\b/)) {
     res.isGE6 = true;
   }
-  if (res.geText.match(/\bVII\b/)) {
+  if (maybeGEText.match(/\bVII\b/)) {
     res.isGE7 = true;
   }
-  if (res.geText.match(/\bVIII\b/)) {
+  if (maybeGEText.match(/\bVIII\b/)) {
     res.isGE8 = true;
+  }
+  if (
+    res.isGE1A ||
+    res.isGE1B ||
+    res.isGE2 ||
+    res.isGE3 ||
+    res.isGE4 ||
+    res.isGE5A ||
+    res.isGE5B ||
+    res.isGE6 ||
+    res.isGE7 ||
+    res.isGE8
+  ) {
+    res.geText = maybeGEText;
   }
   return res;
 }

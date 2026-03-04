@@ -25,14 +25,16 @@ export const slotSchema = z.object({
 
 export const studyRoomSchema = z.object({
   id: z.string().openapi({
-    description: "The ID of this study room, internal to the UCI Libraries system",
-    example: "44670",
+    description:
+      "The ID of this study room taken from the external booking system. " +
+      "UCI Libraries IDs are numeric, while PV IDs are UUIDs.",
+    examples: ["44670", "fa1db88e-1cf9-4441-8e2f-0ae693add526"],
   }),
   name: z.string().openapi({
     description: "A human-readable name for this room",
     example: "Science 471",
   }),
-  capacity: z.number().int().openapi({
+  capacity: z.number().int().nullable().openapi({
     description: "The stated capacity in persons of this room",
     example: 4,
   }),
@@ -48,7 +50,7 @@ export const studyRoomSchema = z.object({
     description: "Additional data about this room, specifically for directions to the room",
     example: "Located on the main level of Gateway Study Center.",
   }),
-  techEnhanced: z.boolean().openapi({
+  techEnhanced: z.boolean().nullable().openapi({
     description:
       "Whether this room is tech enhanced, typically indicating the presence of an external monitor, AC outlets, and/or a PC.",
     example: true,

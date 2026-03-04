@@ -1,9 +1,4 @@
 /// <reference path="./.sst/platform/config.d.ts" />
-import { z } from "zod";
-
-const { AWS_ACM_CERTIFICATE_ARN, CLOUDFLARE_DNS_ZONE_ID } = z
-  .object({ AWS_ACM_CERTIFICATE_ARN: z.string(), CLOUDFLARE_DNS_ZONE_ID: z.string() })
-  .parse(process.env);
 
 export default $config({
   app() {
@@ -11,15 +6,24 @@ export default $config({
       name: "key-manager",
       removal: "remove",
       home: "aws",
-      providers: { cloudflare: "5.43.0" },
     };
   },
   async run() {
     new sst.aws.Nextjs("key-manager", {
       domain: {
         name: "dashboard.anteaterapi.com",
-        cert: AWS_ACM_CERTIFICATE_ARN,
-        dns: sst.cloudflare.dns({ zone: CLOUDFLARE_DNS_ZONE_ID }),
+        dns: sst.cloudflare.dns(),
+      },
+      environment: {
+        USERS_DB_URL: process.env.USERS_DB_URL,
+        CLOUDFLARE_KV_NAMESPACE_ID: process.env.CLOUDFLARE_KV_NAMESPACE_ID,
+        CLOUDFLARE_DEFAULT_ACCOUNT_ID: process.env.CLOUDFLARE_DEFAULT_ACCOUNT_ID,
+        CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
+        AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+        AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+        AUTH_SECRET: process.env.AUTH_SECRET,
+        AUTH_TRUST_HOST: "true",
+        AUTH_URL: "https://dashboard.anteaterapi.com",
       },
     });
   },
