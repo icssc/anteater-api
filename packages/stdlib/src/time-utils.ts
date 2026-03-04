@@ -17,10 +17,7 @@ export const parseStartAndEndTimes = (time: string) => {
   startTime = (Number.parseInt(startTimeHour, 10) % 12) * 60 + Number.parseInt(startTimeMinute, 10);
   const [endTimeHour, endTimeMinute] = endTimeString.split(":");
   endTime = (Number.parseInt(endTimeHour, 10) % 12) * 60 + Number.parseInt(endTimeMinute, 10);
-  if (endTimeMinute.includes("p")) {
-    startTime += 12 * 60;
-    endTime += 12 * 60;
-  }
-  if (startTime > endTime) startTime -= 12 * 60;
+  if (endTimeMinute.includes("p") && startTime <= endTime) startTime += 12 * 60;
+  if (startTime > endTime) endTime += 12 * 60;
   return { startTime, endTime };
 };
