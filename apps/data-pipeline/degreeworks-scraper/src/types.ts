@@ -66,6 +66,15 @@ export type RuleBlock = {
   ruleType: "Block";
   requirement: { numBlocks: string; type: string; value: string };
 };
+
+/**
+ * Honestly idk yet
+ */
+export type RuleBlocktype = {
+  ruleType: "Blocktype";
+  requirement: { numBlocktypes: string; type: string };
+};
+
 /**
  * A rule that is not a course.
  * This seems to be only used by Engineering majors

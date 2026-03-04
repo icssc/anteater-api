@@ -72,6 +72,14 @@ export const ruleBlockSchema = ruleBaseSchema.extend({
   }),
 });
 
+export const ruleBlocktypeSchema = ruleBaseSchema.extend({
+  ruleType: z.literal("Blocktype"),
+  requirement: z.object({
+    numBlocktypes: z.string(),
+    type: z.string(),
+  }),
+});
+
 export const ruleNoncourseSchema = ruleBaseSchema.extend({
   ruleType: z.literal("Noncourse"),
   requirement: z.object({
@@ -82,7 +90,7 @@ export const ruleNoncourseSchema = ruleBaseSchema.extend({
 
 // this is marked as a guess in the types file since it's unclear what it actually is
 export const ruleMarkerSchema = ruleBaseSchema.extend({
-  ruleType: z.enum(["Complete", "Incomplete"]),
+  ruleType: z.enum(["Complete"]),
 });
 
 export const ruleSubsetSchema = ruleBaseSchema.extend({
@@ -96,6 +104,7 @@ export const ruleSchema: z.ZodType<Rule> = z.discriminatedUnion("ruleType", [
   ruleCourseSchema,
   ruleIfStmtSchema,
   ruleBlockSchema,
+  ruleBlocktypeSchema,
   ruleNoncourseSchema,
   ruleMarkerSchema,
   ruleSubsetSchema,
@@ -113,6 +122,8 @@ export const blockSchema = z.object({
 export const dwAuditOKResponseSchema = z.object({
   blockArray: z.array(blockSchema),
 });
+
+// export const dwMappingResponseSchema = z.object({})
 
 export const degreeWorksProgramIdSchema = z.object({
   school: z.enum(["U", "G"]),
