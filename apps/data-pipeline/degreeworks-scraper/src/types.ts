@@ -99,7 +99,16 @@ export type RuleSubset = {
   ruleArray: Rule[];
 };
 export type Rule = RuleBase &
-  (RuleGroup | RuleCourse | RuleIfStmt | RuleBlock | RuleNoncourse | RuleMarker | RuleSubset);
+  (
+    | RuleGroup
+    | RuleCourse
+    | RuleIfStmt
+    | RuleBlock
+    | RuleBlocktype
+    | RuleNoncourse
+    | RuleMarker
+    | RuleSubset
+  );
 
 export type Block = {
   requirementType: string;
