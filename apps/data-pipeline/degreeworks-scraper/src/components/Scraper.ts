@@ -22,6 +22,8 @@ const JWT_HEADER_PREFIX_LENGTH = 7;
 
 // (school code, major code, degree code, spec code)
 type ProgramQuadruplet = [string, string, string, string?];
+// 'majorName;specCode'. If no specialization is taken, 'majorName;'
+type MajorSpecId = `${string};${string}`;
 
 export class Scraper {
   private ap!: AuditParser;
@@ -36,8 +38,7 @@ export class Scraper {
   private done = false;
   private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
-  // both undergrad majors and grad programs; key of 'majorName;specCode?' maps to tuple of (school, program)
-  private parsedPrograms = new Map<string, MajorProgram>();
+  private parsedPrograms = new Map<MajorSpecId, MajorProgram>();
   // (parent major, name, program object)
   private parsedSpecializations = new Map<
     string,
@@ -54,6 +55,10 @@ export class Scraper {
         "M.MGMT.": "M.I.M.",
       }?.[input] ?? input
     );
+  }
+
+  private asMajorSpecId(majorName: string, specCode?: string): MajorSpecId {
+    return `${majorName};${specCode}`;
   }
 
   private findDwNameFor(
@@ -143,7 +148,7 @@ export class Scraper {
   }
 
   private async scrapePrograms(degrees: Iterable<ProgramQuadruplet>) {
-    const ret = new Map<string, MajorProgram>();
+    const ret = new Map<MajorSpecId, MajorProgram>();
     for (const [schoolCode, majorCode, degreeCode, specCode] of degrees) {
       const audit = await this.dw.getMajorAudit(
         degreeCode,
@@ -162,14 +167,14 @@ export class Scraper {
         );
         continue;
       }
-      if (ret.has([majorAudit.title, specCode].join(";"))) {
+      if (ret.has(this.asMajorSpecId(majorAudit.title, specCode))) {
         console.log(
           `Requirements block already exists for "${majorAudit.title}" ${specCode ? `with spec: '${specCode}'` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
         );
         continue;
       }
-
-      ret.set([majorAudit.title, specCode].join(";"), {
+      console.log(`setting ret with key ${this.asMajorSpecId(majorAudit.title, specCode)}`);
+      ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
         school: audit?.college
           ? await this.ap.parseBlock(
               `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
@@ -200,7 +205,9 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get("Major in Chemistry;") as MajorProgram;
+      const inMap = this.parsedPrograms.get(
+        this.asMajorSpecId("Major in Chemistry"),
+      ) as MajorProgram;
       return inMap ? [inMap.major] : [];
     }
 
@@ -424,7 +431,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get("Major in Art History;");
+    const x = this.parsedPrograms.get(this.asMajorSpecId("Major in Art History"));
     const y = this.parsedSpecializations.get("AHGEO")?.[2];
     const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
@@ -433,9 +440,9 @@ export class Scraper {
       x.major.requirements = [...x.major.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
-      this.parsedPrograms.delete("Major in Art History;AHPER");
-      this.parsedPrograms.delete("Major in Art History;AHGEO");
-      this.parsedPrograms.set("Major in Art History;", x);
+      this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHPER"));
+      this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHGEO"));
+      this.parsedPrograms.set(this.asMajorSpecId("Major in Art History"), x);
     }
 
     this.done = true;
