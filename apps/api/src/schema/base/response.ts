@@ -31,6 +31,7 @@ export function response200<T extends z.ZodTypeAny>(
   } as const;
 }
 
+// Also used for 400 responses
 export function response404(description: string) {
   return {
     content: { "application/json": { schema: errorSchema } },
