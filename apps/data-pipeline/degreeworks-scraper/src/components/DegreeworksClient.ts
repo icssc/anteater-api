@@ -169,6 +169,9 @@ export class DegreeworksClient {
       return undefined;
     }
     const json = parsed.data;
+    return json.blockArray.find(
+      (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
+    );
   }
 
   async getSpecAudit(
@@ -203,6 +206,11 @@ export class DegreeworksClient {
       return undefined;
     }
     const json = parsed.data;
+    return json.blockArray.find(
+      (x) =>
+        (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
+        x.requirementValue === specCode,
+    );
   }
 
   async getMapping<T extends string>(path: T): Promise<Map<string, string>> {
