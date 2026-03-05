@@ -329,7 +329,7 @@ export class Scraper {
 
         if (got !== null) {
           specBlock = got.block;
-          const majorProgram = this.parsedPrograms.get(`${got.parent.name};`);
+          const majorProgram = this.parsedPrograms.get(this.asMajorSpecId(got.parent.name));
           if (majorProgram) {
             foundMajor = majorProgram.major;
           } else {
