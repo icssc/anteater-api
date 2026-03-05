@@ -118,9 +118,9 @@ export class ProgramsService {
         .from(major)
         .where(
           and(
-            sql`major.id=${query.programId}`,
+            eq(major.id, query.programId),
             query.specializationId
-              ? sql`major_spec_pair_to_requirement.spec_id = ${query.specializationId}`
+              ? eq(majorSpecPairToRequirement.specId, query.specializationId)
               : undefined,
           ),
         )
