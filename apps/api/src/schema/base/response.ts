@@ -17,12 +17,20 @@ export function responseSchema<T extends z.ZodType>(data: T, isCursor = false) {
   });
 }
 
-export function response200<T extends z.ZodTypeAny>(data: T, isCursor = false) {
+export function response200<T extends z.ZodTypeAny>(
+  data: T,
+  { isCursor = false }: { isCursor?: boolean } = {},
+) {
   return {
-    content: { "application/json": { schema: responseSchema(data, isCursor) } },
+    content: {
+      "application/json": {
+        schema: responseSchema(data, isCursor),
+      },
+    },
     description: "Successful operation",
   } as const;
 }
+
 export function response404(description: string) {
   return {
     content: { "application/json": { schema: errorSchema } },

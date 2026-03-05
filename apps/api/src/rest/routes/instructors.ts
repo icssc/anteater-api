@@ -77,7 +77,7 @@ const instructorsByCursorRoute = createRoute({
   request: { query: instructorsByCursorQuerySchema },
   description: "Retrieves instructors matching the given filters with cursor-based pagination.",
   responses: {
-    200: response200(instructorSchema.array(), true),
+    200: response200(instructorSchema.array(), { isCursor: true }),
     422: response422(),
     500: response500(),
   },
