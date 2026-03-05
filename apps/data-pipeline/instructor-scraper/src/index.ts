@@ -294,7 +294,10 @@ async function main() {
           shortNamesToUcinetids.set(uniqueName, [instructor.ucinetid]);
         }
 
+        // map is used to avoid ucinet collisions
         ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
+
+        // skips the instructor not found logic
         isolatedInstructor = true;
 
         break;

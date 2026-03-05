@@ -609,9 +609,7 @@ const doChunkUpsert = async (
         websocSectionToInstructor.sectionId,
         sectionsToInstructors
           .keys()
-          .map((key) => {
-            return sections.get(key);
-          })
+          .map((key) => sections.get(key))
           .filter(notNull)
           .toArray(),
       ),

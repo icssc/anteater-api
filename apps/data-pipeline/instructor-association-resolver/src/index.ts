@@ -18,7 +18,6 @@ import winston from "winston";
 // which is in the old format (LAST_NAME, FIRST_INITIAL) as opposed to the new format (NAME DELIMETER SCHOOL DELIMETER)
 // we can't just drop the whole table and repopulate it since there's important historical connections we want to maintain
 // so this resolver attempts to identify the instructor's newly formatted entry in the instructor table and update it accordingly
-// - Hayden K.
 
 //! If you need to run this resolver after the original migration of instructors, make sure to update this list
 //! with new schools/names.
