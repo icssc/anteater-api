@@ -172,19 +172,19 @@ export class Scraper {
 
       const majorAudit = audit?.major;
 
+      const specIdentifier = specCode ? `with spec: ${specCode} ` : "";
+      const majorIdentifier = `(majorCode = ${majorCode}, degree = ${degreeCode})`;
+
       if (!majorAudit) {
-        console.log(
-          `Requirements block not found (majorCode = ${majorCode}, degree = ${degreeCode})`,
-        );
+        console.log(`Requirements block not found ${majorIdentifier}`);
         continue;
       }
       if (ret.has(this.asMajorSpecId(majorAudit.title, specCode))) {
         console.log(
-          `Requirements block already exists for "${majorAudit.title}" ${specCode ? `with spec: '${specCode}'` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
+          `Requirements block already exists for "${majorAudit.title}" ${specIdentifier}${majorIdentifier}`,
         );
         continue;
       }
-      console.log(`setting ret with key ${this.asMajorSpecId(majorAudit.title, specCode)}`);
       ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
         school: audit?.college
           ? await this.ap.parseBlock(
@@ -200,7 +200,7 @@ export class Scraper {
       });
 
       console.log(
-        `Requirements block found and parsed for "${majorAudit.title}" ${specCode ? `with spec: ${specCode}` : ""} (majorCode = ${majorCode}, degree = ${degreeCode})`,
+        `Requirements block found and parsed for "${majorAudit.title}" ${specIdentifier}${majorIdentifier}`,
       );
     }
     return ret;
