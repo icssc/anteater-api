@@ -182,9 +182,12 @@ async function main() {
 
   let indx = 0;
 
-  for (let { name, department } of names) {
+  for (const nm of names) {
     indx++;
     logger.info(indx);
+
+    let name = nm.name;
+    const department = nm.department;
 
     const uniqueName = name;
     const delimIndex = name.indexOf(INSTRUCTOR_DELIMETER);
