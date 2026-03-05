@@ -88,7 +88,7 @@ export const ruleNoncourseSchema = ruleBaseSchema.extend({
   }),
 });
 
-// this is marked as a guess in the types file since it's unclear what it actually is
+// seems to be verified to be either "Complete" or "Incomplete"
 export const ruleMarkerSchema = ruleBaseSchema.extend({
   ruleType: z.enum(["Complete", "Incomplete"]),
 });
