@@ -417,10 +417,9 @@ export class Scraper {
       }
     }
 
-    this.parsedPrograms = new Map([
-      ...this.parsedPrograms,
-      ...(await this.scrapePrograms(foundMajorSpecPairs)),
-    ]);
+    for (const [majorSpecId, majorProgram] of await this.scrapePrograms(foundMajorSpecPairs)) {
+      this.parsedPrograms.set(majorSpecId, majorProgram);
+    }
 
     // After we match specializations to a major
     // we ensure that majors with 0 specs don't require a specialization
