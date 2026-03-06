@@ -4,11 +4,12 @@ import {
   aggregateGradeByCourseSchema,
   aggregateGradeByOfferingSchema,
   aggregateGradesSchema,
-  errorSchema,
   gradesOptionsSchema,
   gradesQuerySchema,
   rawGradeSchema,
-  responseSchema,
+  response200,
+  response422,
+  response500,
 } from "$schema";
 import { GradesService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -25,20 +26,9 @@ const rawGradesRoute = createRoute({
   request: { query: gradesQuerySchema },
   description: "Retrieves raw grades data for the given parameters.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(rawGradeSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(rawGradeSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -51,20 +41,9 @@ const gradesOptionsRoute = createRoute({
   request: { query: gradesQuerySchema },
   description: "Retrieves a set of further possible filters for the given parameters.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(gradesOptionsSchema) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(gradesOptionsSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -78,20 +57,9 @@ const aggregateGradesRoute = createRoute({
   description:
     "Retrieves grades aggregated by section and the set of sections that are included in this aggregation.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(aggregateGradesSchema) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(aggregateGradesSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -105,22 +73,9 @@ const aggregateGradesByCourseRoute = createRoute({
   description:
     "Retrieves grades aggregated by course and the set of courses that are included in this aggregation.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(aggregateGradeByCourseSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(aggregateGradeByCourseSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -134,22 +89,9 @@ const aggregateGradesByOfferingRoute = createRoute({
   description:
     "Retrieves grades aggregated by offering, which is a course and the instructor who taught it, and the set of courses that are included in this aggregation.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(aggregateGradeByOfferingSchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(aggregateGradeByOfferingSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
