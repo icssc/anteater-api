@@ -80,7 +80,7 @@ const dateRangeRoute = createRoute({
   description: "Retrieves the earliest and latest dates that have menu information available",
   responses: {
     200: response200(diningDatesResponseSchema),
-    404: response404("Dish not found"),
+    404: response404("Date range not found"),
     422: response422(),
     500: response500(),
   },
