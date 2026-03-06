@@ -1,0 +1,17 @@
+{
+  "name": "@apps/instructor-association-resolver",
+  "version": "0.0.0",
+  "description": "Resolver for mismatched section associations for instructors with matching names",
+  "license": "ISC",
+  "author": "Hayden Karp",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
+    "winston": "3.15.0"
+  }
+}
