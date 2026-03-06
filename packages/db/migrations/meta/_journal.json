@@ -176,6 +176,13 @@
       "when": 1771543829558,
       "tag": "0024_dining",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1771709968945,
+      "tag": "0025_enrollment_created_at_timestamp",
+      "breakpoints": true
     }
   ]
 }
