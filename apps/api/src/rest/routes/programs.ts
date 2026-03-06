@@ -50,7 +50,7 @@ const minorsRoute = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/minors",
-  description: "List all available majors in UCI's current catalogue.",
+  description: "List all available minors in UCI's current catalogue.",
   request: { query: minorsQuerySchema },
   responses: {
     200: response200(minorsResponseSchema),
@@ -65,7 +65,7 @@ const specializationsRoute = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/specializations",
-  description: "List all available majors in UCI's current catalogue.",
+  description: "List all available specializations in UCI's current catalogue.",
   request: { query: specializationsQuerySchema },
   responses: {
     200: response200(specializationsResponseSchema),
