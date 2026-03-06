@@ -123,7 +123,12 @@ export const dwAuditOKResponseSchema = z.object({
   blockArray: z.array(blockSchema),
 });
 
-// export const dwMappingResponseSchema = z.object({})
+export const dwMappingResponseSchema = <T extends string>(key: T) =>
+  z.object({
+    _embedded: z.object({
+      [key]: z.array(z.object({ key: z.string(), description: z.string() })),
+    }),
+  });
 
 export const degreeWorksProgramIdSchema = z.object({
   school: z.enum(["U", "G"]),
