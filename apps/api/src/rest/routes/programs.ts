@@ -134,7 +134,7 @@ const ugradRequirements = createRoute({
   request: { query: ugradRequirementsQuerySchema },
   responses: {
     200: response200(ugradRequirementsResponseSchema),
-    404: response404("Specialization not found"),
+    404: response404("Undergraduate requirements not found"),
     422: response422(),
     500: response500(),
   },
