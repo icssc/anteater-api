@@ -187,6 +187,9 @@ export const majorsResponseSchema = z.array(
     division: z.literal("Undergraduate").or(z.literal("Graduate")).openapi({
       description: "The division in which this major is offered",
     }),
+    specializationRequired: z.boolean().openapi({
+      description: "Whether a specialization must be completed to complete this degree",
+    }),
     specializations: z.array(z.string()).openapi({
       description:
         "The ID(s) of specialization(s) associated with this major; if any are present, one is mandatory for this major.",

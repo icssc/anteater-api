@@ -7,8 +7,10 @@ import {
   diningEventsResponseSchema,
   dishQuerySchema,
   dishSchema,
-  errorSchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
   restaurantsQuerySchema,
@@ -32,20 +34,9 @@ const eventsRoute = createRoute({
   description:
     "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with null end time are served for 2 weeks after their removal from the underlying data source,",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(diningEventsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(diningEventsResponseSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -58,20 +49,9 @@ const batchDishesRoute = createRoute({
   request: { query: batchDishesQuerySchema },
   description: "Retrieves dishes with the IDs provided",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(dishSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(dishSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -84,24 +64,10 @@ const dishRoute = createRoute({
   request: { params: dishQuerySchema },
   description: "Retrieves a single dish with nutrition and dietary restriction information",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(dishSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Dish not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(dishSchema),
+    404: response404("Dish not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -113,24 +79,10 @@ const dateRangeRoute = createRoute({
   path: "/dateRange",
   description: "Retrieves the earliest and latest dates that have menu information available",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(diningDatesResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Dish not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(diningDatesResponseSchema),
+    404: response404("Date range not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -144,24 +96,10 @@ const restaurantsRoute = createRoute({
   description:
     "Retrieve restaurants and associated stations. These are expected to change very infrequently, if at all.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(restaurantsResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Restaurant not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(restaurantsResponseSchema),
+    404: response404("Restaurant not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -175,24 +113,10 @@ const restaurantTodayRoute = createRoute({
   description:
     "Retrieve state for one restaurant on one day, e.g. menus and dishes. These will vary between days.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(restaurantTodayResponseSchema) },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Restaurant not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(restaurantTodayResponseSchema),
+    404: response404("Restaurant not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
