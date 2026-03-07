@@ -1,8 +1,9 @@
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
-  errorSchema,
-  responseSchema,
+  response200,
+  response404,
+  response500,
   sampleProgramsQuerySchema,
   sampleProgramsResponseSchema,
 } from "$schema";
@@ -21,22 +22,9 @@ const sampleProgramsRoute = createRoute({
   description: "List sample programs in UCI's current catalogue.",
   request: { query: sampleProgramsQuerySchema },
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(sampleProgramsResponseSchema),
-        },
-      },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Sample program data not found",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(sampleProgramsResponseSchema),
+    404: response404("Sample program data not found"),
+    500: response500(),
   },
 });
 
