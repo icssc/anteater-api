@@ -1,6 +1,8 @@
 import { z } from "@hono/zod-openapi";
 import type { PrerequisiteTree } from "@packages/db/schema";
+import { cursorBaseSchema, skipBaseSchema, takeBaseSchema } from "./base";
 import { instructorPreviewSchema } from "./instructors";
+import { geCategories } from "./lib";
 
 export const inputCourseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 
@@ -8,24 +10,13 @@ export const inputCourseLevelSchema = z.enum(inputCourseLevels, {
   error: "If provided, 'courseLevel' must be 'LowerDiv', 'UpperDiv', or 'Graduate'",
 });
 
-export const inputGECategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
-
 export const outputCourseLevels = [
   "Lower Division (1-99)",
   "Upper Division (100-199)",
   "Graduate/Professional Only (200+)",
 ] as const;
+
+const inputGECategories = geCategories;
 
 export const outputGECategories = [
   "GE Ia: Lower Division Writing",
@@ -92,16 +83,12 @@ export const coursesQuerySchema = z.object({
         "If provided, 'geCategory' must be one of 'GE-1A', 'GE-1B', 'GE-2', 'GE-3', 'GE-4', 'GE-5A', 'GE-5B', 'GE-6', 'GE-7', or 'GE-8'",
     })
     .optional(),
-  take: z.coerce
-    .number()
-    .lte(100, "Page size must be less than or equal to 100")
-    .default(100)
-    .openapi({
-      description:
-        "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
-      example: 100,
-    }),
-  skip: z.coerce.number().default(0).openapi({
+  take: takeBaseSchema.openapi({
+    description:
+      "Limits the number of results to return. Use with 'skip' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
+    example: 100,
+  }),
+  skip: skipBaseSchema.openapi({
     description:
       "Skip this many results before beginning to return results. Use with 'take' for pagination: 'skip' specifies how many results to skip before returning 'take' results",
     example: 0,
@@ -142,19 +129,15 @@ export const coursesByCursorQuerySchema = z.object({
     example: "programming",
   }),
   geCategory: z.enum(inputGECategories).optional(),
-  cursor: z.string().optional().openapi({
+  cursor: cursorBaseSchema.openapi({
     description:
       "Pagination cursor based on course id. Use the `nextCursor` value from previous response to fetch next page of results",
   }),
-  take: z.coerce
-    .number()
-    .lte(100, "Page size must be less than or equal to 100")
-    .default(100)
-    .openapi({
-      description:
-        "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
-      example: 100,
-    }),
+  take: takeBaseSchema.openapi({
+    description:
+      "Limits the number of results to return. Use with 'cursor' for cursor-based pagination",
+    example: 100,
+  }),
 });
 
 export const prerequisiteSchema = z.union([

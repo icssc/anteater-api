@@ -1,9 +1,11 @@
 import { defaultHook } from "$hooks";
 import {
-  errorSchema,
   libraryTrafficQuerySchema,
   libraryTrafficSchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
 } from "$schema";
 import { LibraryTrafficService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -20,24 +22,10 @@ const libraryTrafficRoute = createRoute({
   request: { query: libraryTrafficQuerySchema },
   description: "Retrieves latest library occupancy metrics for specific locations",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(libraryTrafficSchema) },
-      },
-      description: "Successful operation",
-    },
-    400: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "No matching data found for provided parameters",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(libraryTrafficSchema),
+    400: response404("No matching data found for provided parameters"),
+    422: response422(),
+    500: response500(),
   },
 });
 
