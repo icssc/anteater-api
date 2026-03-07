@@ -3,8 +3,9 @@ import { productionCache } from "$middleware";
 import {
   enrollmentHistoryQuerySchema,
   enrollmentHistorySchema,
-  errorSchema,
-  responseSchema,
+  response200,
+  response422,
+  response500,
 } from "$schema";
 import { EnrollmentHistoryService } from "$services";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -24,22 +25,9 @@ const enrollmentHistoryRoute = createRoute({
   description:
     "Retrieves historical enrollment data for the given parameters. Granular history arrays only available for recent terms.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(enrollmentHistorySchema.array()),
-        },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(enrollmentHistorySchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 

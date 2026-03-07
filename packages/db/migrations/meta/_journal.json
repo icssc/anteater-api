@@ -180,8 +180,15 @@
     {
       "idx": 25,
       "version": "7",
-      "when": 1772176152078,
-      "tag": "0025_websoc_meta_drop_last_dept_scraped",
+      "when": 1772871872701,
+      "tag": "0025_major_specialization_required",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1772913287245,
+      "tag": "0026_websoc_meta_drop_last_dept_scraped",
       "breakpoints": true
     }
   ]
