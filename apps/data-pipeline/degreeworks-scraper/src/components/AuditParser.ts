@@ -9,10 +9,12 @@ import type {
 import { course } from "@packages/db/schema";
 
 export class AuditParser {
-  private static readonly specOrOtherMatcher = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
-  private static readonly electiveMatcher = /ELECTIVE @+/;
-  private static readonly wildcardMatcher = /\w@/;
-  private static readonly rangeMatcher = /-\w+/;
+  private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
+  private static readonly SPECIALIZATION_ADJACENT_REGEX =
+    /specialization|concentration|emphasis|area|track|major/i;
+  private static readonly ELECTIVE_REGEX = /ELECTIVE @+/;
+  private static readonly WILDCARD_REGEX = /\w@/;
+  private static readonly RANGE_REGEX = /-\w+/;
 
   constructor(private readonly db: ReturnType<typeof database>) {
     console.log("[AuditParser.new] AuditParser initialized");
@@ -24,6 +26,7 @@ export class AuditParser {
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
+    specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
   });
 
   lexOrd = new Intl.Collator().compare;
@@ -55,13 +58,13 @@ export class AuditParser {
 
   async normalizeCourseId(courseIdLike: string) {
     // "ELECTIVE @" is typically used as a pseudo-course and can be safely ignored.
-    if (courseIdLike.match(AuditParser.electiveMatcher)) return [];
+    if (courseIdLike.match(AuditParser.ELECTIVE_REGEX)) return [];
     const [department, courseNumber] = courseIdLike.split(" ");
     if (courseNumber === "@") {
       // Department-wide wildcards.
       return this.db.select().from(course).where(eq(course.shortenedDept, department));
     }
-    if (courseNumber.match(AuditParser.wildcardMatcher)) {
+    if (courseNumber.match(AuditParser.WILDCARD_REGEX)) {
       // Wildcard course numbers.
       return await this.db
         .select()
@@ -76,7 +79,7 @@ export class AuditParser {
           ),
         );
     }
-    if (courseNumber.match(AuditParser.rangeMatcher)) {
+    if (courseNumber.match(AuditParser.RANGE_REGEX)) {
       // Course number ranges.
       const [minCourseNumber, maxCourseNumber] = courseNumber.split("-");
       return await this.db
@@ -155,6 +158,25 @@ export class AuditParser {
       }
     }
     return filteredClasses;
+  }
+
+  async checkSpecializationIsRequired(ruleArray: Rule[]) {
+    // We infer whether a major requires a specialization by searching for a
+    // conditional rule with text that matches words related to "specialization."
+
+    // Hard-code exclusion for B.S. ChemE, because the requirement can instead be
+    // fulfilled with 16 units.
+    const chemETextList = [
+      "16 units of approved technical electives or",
+      "contact advisor to select a specialization.",
+    ];
+    return ruleArray.some((rule) => {
+      return (
+        rule.ifElsePart === "ElsePart" &&
+        rule.proxyAdvice?.textList.some((x) => AuditParser.SPECIALIZATION_ADJACENT_REGEX.test(x)) &&
+        !rule.proxyAdvice?.textList.every((x, i) => x === chemETextList[i])
+      );
+    });
   }
 
   async ruleArrayToRequirements(ruleArray: Rule[]) {
