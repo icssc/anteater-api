@@ -1,6 +1,6 @@
-import type { Block, DWMappingResponse, UndergraduateRequirements } from "$types";
+import type { Block, UndergraduateRequirements } from "$types";
 import fetch from "cross-fetch";
-import { dwAuditOKResponseSchema } from "src/schema";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "src/schema";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
@@ -218,7 +218,8 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWMappingResponse<T> = await res.json();
+    const raw = await res.json();
+    const json = dwMappingResponseSchema(path).parse(raw);
     return new Map(json._embedded[path].map((x) => [x.key, x.description]));
   }
 
