@@ -218,9 +218,9 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const raw = await res.json();
-    const json = dwMappingResponseSchema(path).parse(raw);
-    return new Map(json._embedded[path].map((x) => [x.key, x.description]));
+    const json = await res.json();
+    const parsed = dwMappingResponseSchema(path).parse(json);
+    return new Map(parsed._embedded[path].map((x) => [x.key, x.description]));
   }
 
   getCatalogYear() {
