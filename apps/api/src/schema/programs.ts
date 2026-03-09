@@ -193,7 +193,7 @@ export const majorsResponseSchema = z.array(
       description: "The division in which this major is offered",
     }),
     specializationRequired: z.boolean().openapi({
-      description: "Whether a specialization must be completed to complete this major",
+      description: "Whether a specialization must be completed to complete this degree",
     }),
     specializations: z.array(z.string()).openapi({
       description:
