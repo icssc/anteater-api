@@ -708,7 +708,6 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
-    // requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
 );

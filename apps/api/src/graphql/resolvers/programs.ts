@@ -21,7 +21,7 @@ export const programResolvers = {
       const res = await service.getMajorRequirements(parsedArgs);
       if (!res)
         throw new GraphQLError(
-          `Major ${parsedArgs.programId} with Specialization ${parsedArgs.specializationId} not found`,
+          `No requirements found for major ${parsedArgs.programId}${parsedArgs.specializationId ? ` with specialization ${parsedArgs.specializationId}` : ""}.`,
           {
             extensions: { code: "NOT_FOUND" },
           },
