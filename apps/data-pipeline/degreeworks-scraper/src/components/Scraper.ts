@@ -196,7 +196,7 @@ export class Scraper {
           `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
         ),
-        specCode: specCode,
+        specCode,
       });
 
       console.log(
@@ -216,9 +216,7 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get(
-        this.asMajorSpecId("Major in Chemistry"),
-      ) as MajorProgram;
+      const inMap = this.parsedPrograms.get(this.asMajorSpecId("Major in Chemistry"));
       return inMap ? [inMap.major] : [];
     }
 

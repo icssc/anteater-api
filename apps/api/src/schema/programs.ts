@@ -32,7 +32,7 @@ export const majorRequirementsQuerySchema = z.object({
   }),
   specializationId: programIdBase.optional().openapi({
     description:
-      "fetch major requirements when taking the specialization with this ID, if provided; providing no specialization when one is required results in unspecified behavior and is deprecated",
+      "if provided, fetch major requirements given this specialization; providing no specialization when one is required has unspecified behavior",
     example: "BS-201A",
   }),
 });

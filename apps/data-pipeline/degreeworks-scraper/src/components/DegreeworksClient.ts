@@ -88,14 +88,15 @@ export class DegreeworksClient {
    * @param degree a degree code, e.g. "BS"
    * @param school this corresponds to the UCI notion of division, e.g. "U" or "G"
    * @param majorCode a major code
+   * @param specCode a specialization code
    * @param college this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
    */
   async getMajorAudit(
     degree: string,
     school: string,
     majorCode: string,
-    college?: string,
     specCode?: string,
+    college?: string,
   ): Promise<
     | {
         college?: Block;
