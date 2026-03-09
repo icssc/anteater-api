@@ -189,7 +189,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
         {
           ok: false,
           message:
-            "Couldn't find major requirements associated with taking this major and specialization; check your IDs?",
+            "Couldn't find major requirements associated with this major and specialization; check your IDs?",
         },
         404,
       );
