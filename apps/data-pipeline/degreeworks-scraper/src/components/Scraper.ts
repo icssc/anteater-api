@@ -26,8 +26,8 @@ type ProgramCodes = {
   majorCode: string;
   specCode?: string;
 };
-// 'majorName;specCode'. If no specialization is taken, 'majorName;undefined'
-type MajorSpecId = `${string};${string}`;
+// 'majorName;specCode'. If no specialization is taken, simply 'majorName'
+type MajorSpecId = string | `${string};${string}`;
 
 export class Scraper {
   private ap!: AuditParser;
@@ -62,7 +62,7 @@ export class Scraper {
   }
 
   private asMajorSpecId(majorName: string, specCode?: string): MajorSpecId {
-    return `${majorName};${specCode}`;
+    return specCode ? `${majorName};${specCode}` : majorName;
   }
 
   private findDwNameFor(
