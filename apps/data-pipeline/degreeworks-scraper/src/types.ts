@@ -68,7 +68,7 @@ export type RuleBlock = {
 };
 
 /**
- * Honestly idk yet
+ * The structure of this rule is not fully understood and is plausibly incomplete.
  */
 export type RuleBlocktype = {
   ruleType: "Blocktype";
