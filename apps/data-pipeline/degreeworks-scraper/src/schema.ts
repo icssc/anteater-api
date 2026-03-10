@@ -24,6 +24,8 @@ export const courseSchema = z.object({
 
 export const ruleBaseSchema = z.object({
   label: z.string(),
+  ifElsePart: z.enum(["IfPart", "ElsePart"]).optional(),
+  proxyAdvice: z.object({ textList: z.array(z.string()) }).optional(),
 });
 
 export const ruleGroupSchema = ruleBaseSchema.extend({
@@ -129,7 +131,7 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
-export const degreeWorksProgramIdSchema = z.object({
+export const degreeWorksProgramSchema = z.object({
   school: z.enum(["U", "G"]),
   programType: z.enum(["COLLEGE", "MAJOR", "MINOR", "SPEC"]),
   code: z.string(),
@@ -138,7 +140,7 @@ export const degreeWorksProgramIdSchema = z.object({
 
 // this is stored locally and read, but can still be validated since it is being loaded from a file
 export const specializationCacheSchema = z.object({
-  parent: degreeWorksProgramIdSchema,
+  parent: degreeWorksProgramSchema,
   block: blockSchema,
 });
 
