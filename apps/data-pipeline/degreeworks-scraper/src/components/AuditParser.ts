@@ -1,4 +1,4 @@
-import { createHash } from "node:domain";
+import { createHash } from "node:crypto";
 import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
@@ -16,7 +16,7 @@ export class AuditParser {
   private static readonly ELECTIVE_REGEX = /ELECTIVE @+/;
   private static readonly WILDCARD_REGEX = /\w@/;
   private static readonly RANGE_REGEX = /-\w+/;
-  
+
   private requirementIdMap = new Map<string, string>();
 
   constructor(private readonly db: ReturnType<typeof database>) {
