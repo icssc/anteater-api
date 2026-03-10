@@ -15,7 +15,8 @@
       "**/*.json",
       "**/.next/**",
       "**/.sst/**",
-      "**/dist/**"
+      "**/dist/**",
+      "**/worker-configuration.d.ts"
     ]
   },
   "formatter": {
