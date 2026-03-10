@@ -1,6 +1,7 @@
 import type { Block, UndergraduateRequirements } from "$types";
 import fetch from "cross-fetch";
 import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "src/schema";
+import type { z } from "zod";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
@@ -45,6 +46,24 @@ export class DegreeworksClient {
       .join("&");
   }
 
+  private async parseResponse<T>(
+    res: Response,
+    schema: z.ZodType<T>,
+    // for logging messages
+    label: string,
+  ): Promise<T | undefined> {
+    const raw = await res.json().catch(() => null);
+    if (!raw) return undefined;
+
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      return undefined;
+    }
+
+    return parsed.data;
+  }
+
   async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
     const params = DegreeworksClient.formatQueryParams({
       studentId: this.studentId,
@@ -59,14 +78,8 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const raw = await res.json().catch(() => null);
-    if (!raw) return undefined;
-    const parsed = dwAuditOKResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("[DegreeworksClient] Unexpected audit response shape:", parsed.error.issues);
-      return undefined;
-    }
-    const json = parsed.data;
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     // "DEGREE" block doesn't contain any material requirements, "SCHOOL" block has what we need
     const ucRequirements = json.blockArray.find((b) => b.requirementType === "SCHOOL");
@@ -124,14 +137,8 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const raw = await res.json().catch(() => null);
-    if (!raw) return undefined;
-    const parsed = dwAuditOKResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("[DegreeworksClient] Unexpected audit response shape:", parsed.error.issues);
-      return undefined;
-    }
-    const json = parsed.data;
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     return {
       college: json.blockArray.find(
@@ -161,14 +168,9 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const raw = await res.json().catch(() => null);
-    if (!raw) return undefined;
-    const parsed = dwAuditOKResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("[DegreeworksClient] Unexpected audit response shape:", parsed.error.issues);
-      return undefined;
-    }
-    const json = parsed.data;
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
     return json.blockArray.find(
       (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
     );
@@ -198,14 +200,9 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const raw = await res.json().catch(() => null);
-    if (!raw) return undefined;
-    const parsed = dwAuditOKResponseSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("[DegreeworksClient] Unexpected audit response shape:", parsed.error.issues);
-      return undefined;
-    }
-    const json = parsed.data;
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
     return json.blockArray.find(
       (x) =>
         (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
