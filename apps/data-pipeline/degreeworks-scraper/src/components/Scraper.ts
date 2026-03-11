@@ -229,7 +229,12 @@ export class Scraper {
       return;
     }
 
-    const { UC: ucRequirements, GE: geRequirements, CHC4: honorsFourRequirements } = ugradReqs;
+    const {
+      UC: ucRequirements,
+      GE: geRequirements,
+      CHC4: honorsFourRequirements,
+      CHC2: honorsTwoRequirements,
+    } = ugradReqs;
     this.parsedUgradRequirements.set(
       "UC",
       await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
@@ -243,12 +248,19 @@ export class Scraper {
         "CHC4",
         await this.ap.ruleArrayToRequirements(honorsFourRequirements.ruleArray),
       );
+      console.log("Saved 4-year CHC requirements.");
+    } else if (honorsTwoRequirements) {
+      this.parsedUgradRequirements.set(
+        "CHC2",
+        await this.ap.ruleArrayToRequirements(honorsTwoRequirements.ruleArray),
+      );
+      console.log("Saved 2-year CHC requirements.");
     } else {
       console.warn(
         "no access to honors requirements; retry scrape from honors-enrolled account to get this information",
       );
     }
-    console.log("Fetched university, GE, and 4-year honors requirements");
+    console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
 
     this.degrees = await this.dw.getMapping("degrees");
     console.log(`Fetched ${this.degrees.size} degrees`);
