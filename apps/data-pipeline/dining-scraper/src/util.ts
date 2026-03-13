@@ -32,8 +32,8 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     }
 
     const [dayRangeStr, timeRangeStr] = parts;
-    let openTime = "00:00";
-    let closeTime = "00:00";
+    let openTime = null;
+    let closeTime = null;
 
     // Only parse the range if it isn't "off"
     if (timeRangeStr !== "off") {
