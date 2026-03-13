@@ -14,8 +14,8 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     Sa: 6,
   };
 
-  const openingTime: string[] = new Array(7).fill("");
-  const closingTime: string[] = new Array(7).fill("");
+  const openingTime: string[] | null = new Array(7).fill("");
+  const closingTime: string[] | null = new Array(7).fill("");
 
   const timeBlocks = hoursString
     .split(";")
