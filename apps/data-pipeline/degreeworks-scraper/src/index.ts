@@ -32,6 +32,7 @@ async function main() {
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
   const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
+  const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -127,6 +128,21 @@ async function main() {
         });
     }
 
+    if (honorsTwoRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC2",
+            requirements: honorsTwoRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
     await tx
       .insert(degree)
       .values(degreeData)
@@ -137,7 +153,7 @@ async function main() {
       .insert(collegeRequirement)
       .values(collegeBlocks)
       .onConflictDoUpdate({
-        target: collegeRequirement.requirements,
+        target: collegeRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(collegeRequirement),
       })
       .returning({ id: collegeRequirement.id })
