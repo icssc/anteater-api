@@ -16,7 +16,7 @@ import {
   degree,
   major,
   majorRequirement,
-  majorSpecPairToRequirement,
+  majorSpecializationToRequirement,
   minor,
   sampleProgramVariation,
   schoolRequirement,
@@ -120,15 +120,18 @@ export class ProgramsService {
           and(
             eq(major.id, query.programId),
             query.specializationId
-              ? eq(majorSpecPairToRequirement.specId, query.specializationId)
+              ? eq(majorSpecializationToRequirement.specId, query.specializationId)
               : undefined,
           ),
         )
         .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-        .leftJoin(majorSpecPairToRequirement, eq(major.id, majorSpecPairToRequirement.majorId))
+        .leftJoin(
+          majorSpecializationToRequirement,
+          eq(major.id, majorSpecializationToRequirement.majorId),
+        )
         .leftJoin(
           majorRequirement,
-          eq(majorSpecPairToRequirement.requirementId, majorRequirement.id),
+          eq(majorSpecializationToRequirement.requirementId, majorRequirement.id),
         )
         .limit(1);
       return orNull(got);

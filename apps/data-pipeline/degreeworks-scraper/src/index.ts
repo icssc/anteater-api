@@ -7,7 +7,7 @@ import {
   degree,
   major,
   majorRequirement,
-  majorSpecPairToRequirement,
+  majorSpecializationToRequirement,
   minor,
   schoolRequirement,
   specialization,
@@ -200,7 +200,7 @@ async function main() {
 
     for (const majorSpecObj of majorSpecToRequirementData) {
       if (majorSpecObj.majorRequirementBlockIndex !== undefined) {
-        (majorSpecObj as typeof majorSpecPairToRequirement.$inferInsert).requirementId =
+        (majorSpecObj as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
           majorRequirementBlockIds[majorSpecObj.majorRequirementBlockIndex];
       }
     }
@@ -221,11 +221,11 @@ async function main() {
       });
 
     await tx
-      .insert(majorSpecPairToRequirement)
+      .insert(majorSpecializationToRequirement)
       .values(majorSpecToRequirementData)
       .onConflictDoUpdate({
-        target: majorSpecPairToRequirement.id,
-        set: conflictUpdateSetAllCols(majorSpecPairToRequirement),
+        target: majorSpecializationToRequirement.id,
+        set: conflictUpdateSetAllCols(majorSpecializationToRequirement),
       });
   });
   exit(0);

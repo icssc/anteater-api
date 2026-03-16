@@ -669,14 +669,14 @@ export const collegeRequirement = pgTable("college_requirement", {
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
 });
 
-export const majorSpecPairToRequirement = pgTable("major_spec_pair_to_requirement", {
+export const majorSpecializationToRequirement = pgTable("major_specialization_to_requirement", {
   id: varchar("id")
     .primaryKey()
     .generatedAlwaysAs((): SQL => {
       return sql`
-        CASE WHEN ${majorSpecPairToRequirement.specId} IS NOT NULL
-        THEN ${majorSpecPairToRequirement.majorId} || '+' || ${majorSpecPairToRequirement.specId}
-        ELSE ${majorSpecPairToRequirement.majorId}
+        CASE WHEN ${majorSpecializationToRequirement.specId} IS NOT NULL
+        THEN ${majorSpecializationToRequirement.majorId} || '+' || ${majorSpecializationToRequirement.specId}
+        ELSE ${majorSpecializationToRequirement.majorId}
         END`;
     }),
   majorId: varchar("major_id")
