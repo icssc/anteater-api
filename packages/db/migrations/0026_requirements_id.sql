@@ -1,0 +1,3 @@
+ALTER TABLE "college_requirement" DROP CONSTRAINT "college_requirement_requirements_unique";--> statement-breakpoint
+ALTER TABLE "college_requirement" ADD COLUMN "requirements_hash" bigint GENERATED ALWAYS AS (jsonb_hash_extended(requirements, 0)) STORED;--> statement-breakpoint
+ALTER TABLE "college_requirement" ADD CONSTRAINT "college_requirement_requirements_hash_unique" UNIQUE("requirements_hash");

@@ -1,6 +1,6 @@
 {
-  "id": "c0f62b68-af2c-4377-bf84-83a14454c844",
-  "prevId": "da957085-a63b-4d42-bf25-b386e1c70ca2",
+  "id": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
+  "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3201,12 +3201,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
-        },
-        "last_dept_scraped": {
-          "name": "last_dept_scraped",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
