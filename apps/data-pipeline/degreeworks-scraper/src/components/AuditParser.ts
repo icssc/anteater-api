@@ -128,7 +128,7 @@ export class AuditParser {
     return requirementId;
   }
 
-  parseDWTerm(raw: string) {
+  static parseDWTerm(raw: string) {
     const [yearStr, seasonStr] = raw.split(" ");
     const year = Number.parseInt(yearStr, 10);
     const mapping: Record<string, Term> = {
@@ -143,7 +143,7 @@ export class AuditParser {
     return { year, term };
   }
 
-  termToOrdinal(year: number, term: Term): number {
+  static termToOrdinal(year: number, term: Term): number {
     const termOrder: Record<Term, number> = {
       Fall: 0,
       Winter: 1,
@@ -155,16 +155,16 @@ export class AuditParser {
     return year * 10 + termOrder[term];
   }
 
-  getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
     const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
     const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
     return {
-      min: this.termToOrdinal(startYear, "Fall"),
-      max: this.termToOrdinal(endYear, "Summer2"),
+      min: AuditParser.termToOrdinal(startYear, "Fall"),
+      max: AuditParser.termToOrdinal(endYear, "Summer2"),
     };
   }
 
-  canSchoolYearSatisfyDWTerm(
+  static canSchoolYearSatisfyDWTerm(
     operator: WithClause["operator"],
     dwtermOrdinal: number,
     schoolYearMin: number,
@@ -244,13 +244,13 @@ export class AuditParser {
           break;
         case "DWTERM": {
           const { min: schoolYearMin, max: schoolYearMax } =
-            this.getSchoolYearTermRange(catalogYear);
+            AuditParser.getSchoolYearTermRange(catalogYear);
 
           // use boolean OR for the conditions
           const canSatisfy = withClause.valueList.some((dwtermRaw) => {
-            const { year, term } = this.parseDWTerm(dwtermRaw);
-            const dwtermOrdinal = this.termToOrdinal(year, term);
-            return this.canSchoolYearSatisfyDWTerm(
+            const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
+            const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
+            return AuditParser.canSchoolYearSatisfyDWTerm(
               withClause.operator,
               dwtermOrdinal,
               schoolYearMin,
@@ -385,7 +385,7 @@ export class AuditParser {
             requirementId,
             requirementType,
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements: await this.ruleArrayToRequirements(rule.ruleArray, catalogYear),
+            requirements,
           });
           break;
         }
@@ -403,7 +403,7 @@ export class AuditParser {
                 requirementId,
                 requirementType,
                 requirementCount: 1,
-                requirements: await this.ruleArrayToRequirements(rules, catalogYear),
+                requirements,
               });
             } else if (rules.length === 1) {
               ret.push(...(await this.ruleArrayToRequirements(rules, catalogYear)));
