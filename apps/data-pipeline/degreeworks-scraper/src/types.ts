@@ -107,6 +107,7 @@ export type Block = {
   requirementValue: string;
   title: string;
   ruleArray: Rule[];
+  catalogYear: string;
 };
 
 export interface UndergraduateRequirements {

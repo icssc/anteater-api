@@ -6,6 +6,7 @@ import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 
@@ -26,7 +27,7 @@ export class AuditParser {
   parseBlock = async (blockId: string, block: Block): Promise<DegreeWorksProgram> => ({
     ...this.parseBlockId(blockId),
     name: block.title,
-    requirements: await this.ruleArrayToRequirements(block.ruleArray),
+    requirements: await this.ruleArrayToRequirements(block.ruleArray, block.catalogYear),
     // populate later; we cannot determine specializations on the spot
     specs: [],
     specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
@@ -127,6 +128,31 @@ export class AuditParser {
     return requirementId;
   }
 
+  parseDWTerm(raw: string) {
+    const [yearStr, seasonStr] = raw.split(" ");
+    const year = Number.parseInt(yearStr, 10);
+    const mapping: Record<string, Term> = {
+      FALL: "Fall",
+      WINTER: "Winter",
+      SPRING: "Spring",
+      SUMMER1: "Summer1",
+      SUMMER10WK: "Summer10wk",
+      SUMMER2: "Summer2",
+    };
+    const term = mapping[seasonStr];
+    return { year, term };
+  }
+
+  isDWTermInSchoolYear(dwtermYear: number, term: Term, catalogYear: string): boolean {
+    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
+    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
+
+    const isFallTermInStartYear = term === "Fall" && dwtermYear === startYear;
+    const isOtherTermInEndYear = term !== "Fall" && dwtermYear === endYear;
+
+    return isFallTermInStartYear || isOtherTermInEndYear;
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -164,8 +190,13 @@ export class AuditParser {
     }
   }
 
-  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
+  filterThroughWithArray(
+    classes: (typeof course.$inferSelect)[],
+    withArray: WithClause[],
+    catalogYear: string,
+  ) {
     let filteredClasses = structuredClone(classes);
+
     for (const withClause of withArray) {
       switch (withClause.code) {
         case "DWCREDIT":
@@ -178,6 +209,17 @@ export class AuditParser {
             ),
           );
           break;
+        case "DWTERM": {
+          // we assume each condition only comes with one term.
+          // e.g "valueList":["2025 SPRING"]
+          const { year, term } = this.parseDWTerm(withClause.valueList[0]);
+
+          // Remove all courses if the term doesn't fall within the school year
+          if (!this.isDWTermInSchoolYear(year, term, catalogYear)) {
+            filteredClasses = [];
+          }
+          break;
+        }
         // There may be more withArray Codes that can be applied here to filter out courses
         // see https://github.com/icssc/anteater-api/pull/286
       }
@@ -204,7 +246,7 @@ export class AuditParser {
     });
   }
 
-  async ruleArrayToRequirements(ruleArray: Rule[]) {
+  async ruleArrayToRequirements(ruleArray: Rule[], catalogYear: string) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
@@ -218,17 +260,21 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const toInclude: [string, typeof course.$inferSelect][] = await Promise.all(
-            includedCourses.map(([x, withArray]) =>
+          const resolvedCourses: {
+            classes: (typeof course.$inferSelect)[];
+            withArray: WithClause[];
+          }[] = await Promise.all(
+            includedCourses.map(([courseId, withArray]) =>
               this.normalizeCourseId
-                .bind(this)(x)
-                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+                .bind(this)(courseId)
+                .then((classes) => ({ classes, withArray })),
             ),
-          ).then((x) =>
-            x
-              .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
-              .map((y) => [y.id, y]),
           );
+          const toInclude: [string, typeof course.$inferSelect][] = resolvedCourses
+            .flatMap(({ classes, withArray }) =>
+              this.filterThroughWithArray(classes, withArray, catalogYear),
+            )
+            .map((c) => [c.id, c]);
 
           const excludedCourses: [string, WithClause[]][] =
             rule.requirement.except?.courseArray.map((x) => [
@@ -244,7 +290,9 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .flatMap(([classes, withArray]) =>
+                  this.filterThroughWithArray(classes, withArray, catalogYear),
+                )
                 .map((y) => y.id),
             ),
           );
@@ -286,7 +334,7 @@ export class AuditParser {
         case "Group": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, catalogYear);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
@@ -294,7 +342,7 @@ export class AuditParser {
             requirementId,
             requirementType,
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements,
+            requirements: await this.ruleArrayToRequirements(rule.ruleArray, catalogYear),
           });
           break;
         }
@@ -304,7 +352,7 @@ export class AuditParser {
             if (rules.length > 1) {
               const label = "Select 1 of the following";
               const requirementType = "Group";
-              const requirements = await this.ruleArrayToRequirements(rules);
+              const requirements = await this.ruleArrayToRequirements(rules, catalogYear);
               const contentsSalt = requirements.map((req) => req.requirementId).join("_");
               const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
@@ -312,10 +360,10 @@ export class AuditParser {
                 requirementId,
                 requirementType,
                 requirementCount: 1,
-                requirements,
+                requirements: await this.ruleArrayToRequirements(rules, catalogYear),
               });
             } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(rules)));
+              ret.push(...(await this.ruleArrayToRequirements(rules, catalogYear)));
             }
           }
           break;
@@ -336,7 +384,7 @@ export class AuditParser {
         case "Subset": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, catalogYear);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({

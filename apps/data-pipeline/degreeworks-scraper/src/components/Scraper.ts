@@ -237,16 +237,19 @@ export class Scraper {
     } = ugradReqs;
     this.parsedUgradRequirements.set(
       "UC",
-      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
+      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray, ucRequirements.catalogYear),
     );
     this.parsedUgradRequirements.set(
       "GE",
-      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray),
+      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray, geRequirements.catalogYear),
     );
     if (honorsFourRequirements) {
       this.parsedUgradRequirements.set(
         "CHC4",
-        await this.ap.ruleArrayToRequirements(honorsFourRequirements.ruleArray),
+        await this.ap.ruleArrayToRequirements(
+          honorsFourRequirements.ruleArray,
+          honorsFourRequirements.catalogYear,
+        ),
       );
       console.log("Saved 4-year CHC requirements.");
     } else if (honorsTwoRequirements) {
