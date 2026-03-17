@@ -255,7 +255,10 @@ export class Scraper {
     } else if (honorsTwoRequirements) {
       this.parsedUgradRequirements.set(
         "CHC2",
-        await this.ap.ruleArrayToRequirements(honorsTwoRequirements.ruleArray),
+        await this.ap.ruleArrayToRequirements(
+          honorsTwoRequirements.ruleArray,
+          honorsTwoRequirements.catalogYear,
+        ),
       );
       console.log("Saved 2-year CHC requirements.");
     } else {
