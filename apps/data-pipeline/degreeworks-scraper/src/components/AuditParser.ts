@@ -143,14 +143,47 @@ export class AuditParser {
     return { year, term };
   }
 
-  isDWTermInSchoolYear(dwtermYear: number, term: Term, catalogYear: string): boolean {
+  termToOrdinal(year: number, term: Term): number {
+    const termOrder: Record<Term, number> = {
+      Fall: 0,
+      Winter: 1,
+      Spring: 2,
+      Summer1: 3,
+      Summer10wk: 4,
+      Summer2: 5,
+    };
+    return year * 10 + termOrder[term];
+  }
+
+  getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
     const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
     const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
+    return {
+      min: this.termToOrdinal(startYear, "Fall"),
+      max: this.termToOrdinal(endYear, "Summer2"),
+    };
+  }
 
-    const isFallTermInStartYear = term === "Fall" && dwtermYear === startYear;
-    const isOtherTermInEndYear = term !== "Fall" && dwtermYear === endYear;
-
-    return isFallTermInStartYear || isOtherTermInEndYear;
+  canSchoolYearSatisfyDWTerm(
+    operator: WithClause["operator"],
+    dwtermOrdinal: number,
+    schoolYearMin: number,
+    schoolYearMax: number,
+  ): boolean {
+    switch (operator) {
+      case "=":
+        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
+      case "<":
+        return schoolYearMin < dwtermOrdinal;
+      case "<=":
+        return schoolYearMin <= dwtermOrdinal;
+      case ">":
+        return schoolYearMax > dwtermOrdinal;
+      case ">=":
+        return schoolYearMax >= dwtermOrdinal;
+      case "<>":
+        return true;
+    }
   }
 
   /**
@@ -210,12 +243,22 @@ export class AuditParser {
           );
           break;
         case "DWTERM": {
-          // we assume each condition only comes with one term.
-          // e.g "valueList":["2025 SPRING"]
-          const { year, term } = this.parseDWTerm(withClause.valueList[0]);
+          const { min: schoolYearMin, max: schoolYearMax } =
+            this.getSchoolYearTermRange(catalogYear);
 
-          // Remove all courses if the term doesn't fall within the school year
-          if (!this.isDWTermInSchoolYear(year, term, catalogYear)) {
+          // use boolean OR for the conditions
+          const canSatisfy = withClause.valueList.some((dwtermRaw) => {
+            const { year, term } = this.parseDWTerm(dwtermRaw);
+            const dwtermOrdinal = this.termToOrdinal(year, term);
+            return this.canSchoolYearSatisfyDWTerm(
+              withClause.operator,
+              dwtermOrdinal,
+              schoolYearMin,
+              schoolYearMax,
+            );
+          });
+
+          if (!canSatisfy) {
             filteredClasses = [];
           }
           break;
