@@ -24,6 +24,7 @@ export const courseSchema = z.object({
 
 export const ruleBaseSchema = z.object({
   label: z.string(),
+  labelTag: z.string().optional(),
   ifElsePart: z.enum(["IfPart", "ElsePart"]).optional(),
   proxyAdvice: z.object({ textList: z.array(z.string()) }).optional(),
 });
