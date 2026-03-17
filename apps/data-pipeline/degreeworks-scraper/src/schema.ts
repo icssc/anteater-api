@@ -1,6 +1,9 @@
 import type { Rule } from "$types";
 import { z } from "zod";
 
+/**
+ * a specification for course range for unit req, etc.
+ */
 export const withClauseSchema = z.object({
   code: z.enum([
     "DWCREDITS",
@@ -15,6 +18,9 @@ export const withClauseSchema = z.object({
   valueList: z.array(z.string()),
 });
 
+/**
+ * An object that represents a (range of) course(s).
+ */
 export const courseSchema = z.object({
   discipline: z.string(),
   number: z.string(),
@@ -144,6 +150,7 @@ export const degreeWorksProgramSchema = z.object({
 });
 
 // this is stored locally and read, but can still be validated since it is being loaded from a file
+// this is the data we cache on a specialization, if it is valid
 export const specializationCacheSchema = z.object({
   parent: degreeWorksProgramSchema,
   block: blockSchema,
