@@ -145,12 +145,12 @@ export class AuditParser {
 
   static termToOrdinal(year: number, term: Term): number {
     const termOrder: Record<Term, number> = {
-      Fall: 0,
-      Winter: 1,
-      Spring: 2,
-      Summer1: 3,
-      Summer10wk: 4,
-      Summer2: 5,
+      Winter: 0,
+      Spring: 1,
+      Summer1: 2,
+      Summer10wk: 3,
+      Summer2: 4,
+      Fall: 5,
     };
     return year * 10 + termOrder[term];
   }
