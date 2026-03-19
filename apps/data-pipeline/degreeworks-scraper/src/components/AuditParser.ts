@@ -20,14 +20,17 @@ export class AuditParser {
 
   private requirementIdMap = new Map<string, string>();
 
-  constructor(private readonly db: ReturnType<typeof database>) {
+  constructor(
+    private readonly db: ReturnType<typeof database>,
+    private readonly catalogYear: string,
+  ) {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
   parseBlock = async (blockId: string, block: Block): Promise<DegreeWorksProgram> => ({
     ...this.parseBlockId(blockId),
     name: block.title,
-    requirements: await this.ruleArrayToRequirements(block.ruleArray, block.catalogYear),
+    requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
     specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
@@ -223,11 +226,7 @@ export class AuditParser {
     }
   }
 
-  filterThroughWithArray(
-    classes: (typeof course.$inferSelect)[],
-    withArray: WithClause[],
-    catalogYear: string,
-  ) {
+  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
     let filteredClasses = structuredClone(classes);
 
     // We assume withArray elements are ANDed
@@ -246,8 +245,9 @@ export class AuditParser {
           );
           break;
         case "DWTERM": {
-          const { min: schoolYearMin, max: schoolYearMax } =
-            AuditParser.getSchoolYearTermRange(catalogYear);
+          const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
+            this.catalogYear,
+          );
 
           // valueList contains specific term(s) from the DWTERM constraint
           // Courses pass this filter only if at least one term in the current
@@ -294,7 +294,7 @@ export class AuditParser {
     });
   }
 
-  async ruleArrayToRequirements(ruleArray: Rule[], catalogYear: string) {
+  async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
@@ -319,9 +319,7 @@ export class AuditParser {
             ),
           );
           const toInclude: [string, typeof course.$inferSelect][] = resolvedCourses
-            .flatMap(({ classes, withArray }) =>
-              this.filterThroughWithArray(classes, withArray, catalogYear),
-            )
+            .flatMap(({ classes, withArray }) => this.filterThroughWithArray(classes, withArray))
             .map((c) => [c.id, c]);
 
           const excludedCourses: [string, WithClause[]][] =
@@ -338,9 +336,7 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) =>
-                  this.filterThroughWithArray(classes, withArray, catalogYear),
-                )
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
                 .map((y) => y.id),
             ),
           );
@@ -382,7 +378,7 @@ export class AuditParser {
         case "Group": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, catalogYear);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
@@ -400,7 +396,7 @@ export class AuditParser {
             if (rules.length > 1) {
               const label = "Select 1 of the following";
               const requirementType = "Group";
-              const requirements = await this.ruleArrayToRequirements(rules, catalogYear);
+              const requirements = await this.ruleArrayToRequirements(rules);
               const contentsSalt = requirements.map((req) => req.requirementId).join("_");
               const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
@@ -411,7 +407,7 @@ export class AuditParser {
                 requirements,
               });
             } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(rules, catalogYear)));
+              ret.push(...(await this.ruleArrayToRequirements(rules)));
             }
           }
           break;
@@ -432,7 +428,7 @@ export class AuditParser {
         case "Subset": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, catalogYear);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({

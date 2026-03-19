@@ -237,28 +237,22 @@ export class Scraper {
     } = ugradReqs;
     this.parsedUgradRequirements.set(
       "UC",
-      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray, ucRequirements.catalogYear),
+      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
     );
     this.parsedUgradRequirements.set(
       "GE",
-      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray, geRequirements.catalogYear),
+      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray),
     );
     if (honorsFourRequirements) {
       this.parsedUgradRequirements.set(
         "CHC4",
-        await this.ap.ruleArrayToRequirements(
-          honorsFourRequirements.ruleArray,
-          honorsFourRequirements.catalogYear,
-        ),
+        await this.ap.ruleArrayToRequirements(honorsFourRequirements.ruleArray),
       );
       console.log("Saved 4-year CHC requirements.");
     } else if (honorsTwoRequirements) {
       this.parsedUgradRequirements.set(
         "CHC2",
-        await this.ap.ruleArrayToRequirements(
-          honorsTwoRequirements.ruleArray,
-          honorsTwoRequirements.catalogYear,
-        ),
+        await this.ap.ruleArrayToRequirements(honorsTwoRequirements.ruleArray),
       );
       console.log("Saved 2-year CHC requirements.");
     } else {
@@ -463,8 +457,8 @@ export class Scraper {
       Origin: "https://reg.uci.edu",
     };
     const scraper = new Scraper();
-    scraper.ap = new AuditParser(db);
     scraper.dw = await DegreeworksClient.new(studentId, headers);
+    scraper.ap = new AuditParser(db, scraper.dw.getCatalogYear());
     return scraper;
   }
 }
