@@ -308,19 +308,19 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const resolvedCourses: {
-            classes: (typeof course.$inferSelect)[];
-            withArray: WithClause[];
-          }[] = await Promise.all(
-            includedCourses.map(([courseId, withArray]) =>
-              this.normalizeCourseId
-                .bind(this)(courseId)
-                .then((classes) => ({ classes, withArray })),
+          const toInclude: Map<string, typeof course.$inferSelect> = new Map(
+            await Promise.all(
+              includedCourses.map(([x, withArray]) =>
+                this.normalizeCourseId
+                  .bind(this)(x)
+                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+              ),
+            ).then((x) =>
+              x
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .map((y) => [y.id, y]),
             ),
           );
-          const toInclude: [string, typeof course.$inferSelect][] = resolvedCourses
-            .flatMap(({ classes, withArray }) => this.filterThroughWithArray(classes, withArray))
-            .map((c) => [c.id, c]);
 
           const excludedCourses: [string, WithClause[]][] =
             rule.requirement.except?.courseArray.map((x) => [
