@@ -132,17 +132,17 @@ export class AuditParser {
   }
 
   static parseDWTerm(raw: string) {
-    const [yearStr, seasonStr] = raw.split(" ");
+    const [yearStr, termStr] = raw.split(" ");
     const year = Number.parseInt(yearStr, 10);
-    const mapping: Record<string, Term> = {
+    const mapping = {
       FALL: "Fall",
       WINTER: "Winter",
       SPRING: "Spring",
       SUMMER1: "Summer1",
       SUMMER10WK: "Summer10wk",
       SUMMER2: "Summer2",
-    };
-    const term = mapping[seasonStr];
+    } as const;
+    const term = mapping[termStr as keyof typeof mapping];
     return { year, term };
   }
 
