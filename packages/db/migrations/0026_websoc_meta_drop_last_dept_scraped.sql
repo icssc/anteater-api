@@ -1,1 +1,0 @@
-ALTER TABLE "websoc_meta" DROP COLUMN IF EXISTS "last_dept_scraped";
