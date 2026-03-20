@@ -782,7 +782,7 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
         (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
         FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
     )
-    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 1;
+    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0;
   `,
     )
     .then((xs) => xs.map((x) => x.section_code));
