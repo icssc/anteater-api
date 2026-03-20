@@ -657,8 +657,8 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
       });
     const websocMetaValues = {
       name: termToName(term),
-      // update this on every scrape so that, even if we partially fail for this term,
-      // the next scraping attempt will try another term (if such another candidate term exists)
+      // update this on every scrape so that, even if we partially fail to scrape this term,
+      // the next scraping attempt will try another term first (if such another candidate term exists)
       // before retrying this one
       lastScraped: updatedAt,
     };
