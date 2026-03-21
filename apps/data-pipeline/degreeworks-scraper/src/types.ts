@@ -82,7 +82,7 @@ export type RuleNoncourse = {
 /**
  * A rule which can be marked as complete by an advisor, e.g. the Entry Level Writing Requirement
  * or the fulfillment of GE VIII (foreign language) via high school credit.
- * Structly has been verified preliminarily, but hasn't been rigorously tested and may be incomplete.
+ * Structure has been verified preliminarily, but hasn't been rigorously tested and may be incomplete.
  */
 export type RuleMarker = {
   ruleType: "Complete" | "Incomplete";
