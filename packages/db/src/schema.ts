@@ -103,7 +103,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * school requirements can vary by major and major requirements can vary by specialization
+ * Complete major requirements are the concatenation between school requirements that may vary by major and major requirements that may vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
 export type MajorProgram = {
