@@ -166,23 +166,20 @@ export class Scraper {
         // bachelor's degrees probably get an abbreviation starting with B
         degreeCode.startsWith("B") ? "U" : "G",
         majorCode,
-        schoolCode,
         specCode,
+        schoolCode,
       );
-
       const majorAudit = audit?.major;
 
-      const specIdentifier = specCode ? `with spec: ${specCode} ` : "";
-      const majorIdentifier = `(majorCode = ${majorCode}, degree = ${degreeCode})`;
+      const specLogInfo = specCode ? ` specCode = ${specCode}` : "";
+      const majorLogInfo = `(majorCode = ${majorCode}, degree = ${degreeCode}${specLogInfo})`;
 
       if (!majorAudit) {
-        console.log(`Requirements block not found ${majorIdentifier}`);
+        console.log(`Requirements block not found ${majorLogInfo}`);
         continue;
       }
       if (ret.has(this.asMajorSpecId(majorAudit.title, specCode))) {
-        console.log(
-          `Requirements block already exists for "${majorAudit.title}" ${specIdentifier}${majorIdentifier}`,
-        );
+        console.log(`Requirements block already exists for "${majorAudit.title}" ${majorLogInfo}`);
         continue;
       }
       ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
@@ -199,9 +196,7 @@ export class Scraper {
         specCode,
       });
 
-      console.log(
-        `Requirements block found and parsed for "${majorAudit.title}" ${specIdentifier}${majorIdentifier}`,
-      );
+      console.log(`Requirements block found and parsed for "${majorAudit.title}" ${majorLogInfo}`);
     }
     return ret;
   }
