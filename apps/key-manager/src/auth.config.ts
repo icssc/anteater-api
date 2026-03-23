@@ -9,4 +9,5 @@ const { AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET } = z
 
 export default {
   providers: [Google({ clientId: AUTH_GOOGLE_ID, clientSecret: AUTH_GOOGLE_SECRET })],
+  trustHost: true,
 } satisfies NextAuthConfig;
