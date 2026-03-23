@@ -50,4 +50,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy Key Manager/Dashboard
-        run: pnpm --filter "./apps/key-manager/**" run deploy
+        run: |
+          echo "${{ secrets.AUTH_GOOGLE_ID }}" | wrangler secret put AUTH_GOOGLE_ID
+          echo "${{ secrets.AUTH_GOOGLE_SECRET }}" | wrangler secret put AUTH_GOOGLE_SECRET
+          echo "${{ secrets.AUTH_SECRET }}" | wrangler secret put AUTH_SECRET
+          pnpm --filter "./apps/key-manager/**" run deploy

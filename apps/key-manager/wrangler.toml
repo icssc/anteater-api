@@ -21,3 +21,8 @@ id = "891f9443f6924f71a3eebe6e761525a9"
 [[routes]]
 pattern = "dashboard.anteaterapi.com"
 custom_domain = true
+
+[secrets]
+AUTH_GOOGLE_ID = ""
+AUTH_GOOGLE_SECRET = ""
+AUTH_SECRET = ""
