@@ -72,4 +72,8 @@ jobs:
         run: pnpm --filter "./apps/data-pipeline/**" run deploy
 
       - name: Deploy Key Manager/Dashboard
-        run: pnpm --filter "./apps/key-manager/**" run deploy
+        run: |
+          echo "${{ secrets.AUTH_GOOGLE_ID }}" | pnpm exec wrangler secret put AUTH_GOOGLE_ID
+          echo "${{ secrets.AUTH_GOOGLE_SECRET }}" | pnpm exec wrangler secret put AUTH_GOOGLE_SECRET
+          echo "${{ secrets.AUTH_SECRET }}" | pnpm exec wrangler secret put AUTH_SECRET
+          pnpm --filter "./apps/key-manager/**" run deploy
