@@ -9,7 +9,7 @@
     "dev": "next dev",
     "postinstall": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "migrate": "dotenv -- tsx src/db/migrate.ts",
-    "preview": "opennextjs-cloudflare build && dotenv -- opennextjs-cloudflare preview"
+    "preview": "opennextjs-cloudflare build && dotenv -- opennextjs-cloudflare preview --port 3000"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "1.7.2",
