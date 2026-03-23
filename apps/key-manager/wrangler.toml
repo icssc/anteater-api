@@ -14,6 +14,9 @@ enabled = true
 directory = ".open-next/assets"
 binding = "ASSETS"
 
+[vars]
+CF_ENV = "prod"
+
 [[hyperdrive]]
 binding = "USERS_DB"
 id = "891f9443f6924f71a3eebe6e761525a9"
