@@ -71,4 +71,4 @@ jobs:
         run: pnpm --filter "./apps/data-pipeline/**" run deploy
 
       - name: Deploy Key Manager/Dashboard if present
-        run: pnpm --filter "./apps/key-manager/**" run deploy --route dashboard.anteaterapi.com
+        run: pnpm --filter "./apps/key-manager/**" run deploy
