@@ -70,5 +70,5 @@ jobs:
       - name: Deploy ETL pipeline to production
         run: pnpm --filter "./apps/data-pipeline/**" run deploy
 
-      - name: Deploy Key Manager/Dashboard if present
+      - name: Deploy Key Manager/Dashboard
         run: pnpm --filter "./apps/key-manager/**" run deploy
