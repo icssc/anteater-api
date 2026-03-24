@@ -28,6 +28,9 @@ export const courseSchema = z.object({
   withArray: z.array(withClauseSchema).optional(),
 });
 
+/**
+ * The base type for all `Rule` objects.
+ */
 export const ruleBaseSchema = z.object({
   label: z.string(),
   labelTag: z.string(),
@@ -48,6 +51,10 @@ export const ruleGroupSchema = ruleBaseSchema.extend({
   ruleArray: z.lazy(() => z.array(ruleSchema)),
 });
 
+/**
+ * A rule that is fulfilled by taking `creditsBegin` units
+ * and/or `classesBegin` courses from the `courseArray`.
+ */
 export const ruleCourseSchema = ruleBaseSchema.extend({
   ruleType: z.literal("Course"),
   requirement: z.object({
@@ -76,6 +83,9 @@ export const ruleIfStmtSchema = ruleBaseSchema.extend({
   }),
 });
 
+/**
+ * A rule that refers to another block (typically a major mandating a specialization or school-wide requirements).
+ */
 export const ruleBlockSchema = ruleBaseSchema.extend({
   ruleType: z.literal("Block"),
   requirement: z.object({
@@ -85,6 +95,9 @@ export const ruleBlockSchema = ruleBaseSchema.extend({
   }),
 });
 
+/**
+ * The structure of this rule is not fully understood and is plausibly incomplete.
+ */
 export const ruleBlocktypeSchema = ruleBaseSchema.extend({
   ruleType: z.literal("Blocktype"),
   requirement: z.object({
@@ -93,6 +106,11 @@ export const ruleBlocktypeSchema = ruleBaseSchema.extend({
   }),
 });
 
+/**
+ * A rule that is not a course.
+ * This seems to be only used by Engineering majors
+ * that have a design unit requirement.
+ */
 export const ruleNoncourseSchema = ruleBaseSchema.extend({
   ruleType: z.literal("Noncourse"),
   requirement: z.object({
@@ -101,6 +119,11 @@ export const ruleNoncourseSchema = ruleBaseSchema.extend({
   }),
 });
 
+/**
+ * A rule which can be marked as complete by an advisor, e.g. the Entry Level Writing Requirement
+ * or the fulfillment of GE VIII (foreign language) via high school credit.
+ * Structure has been verified preliminarily, but hasn't been rigorously tested and may be incomplete.
+ */
 export const ruleMarkerSchema = ruleBaseSchema.extend({
   ruleType: z.enum(["Complete", "Incomplete"]),
 });
