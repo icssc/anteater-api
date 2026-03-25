@@ -398,8 +398,8 @@ importers:
         specifier: 5.2.2
         version: 5.2.2(react-hook-form@7.72.0(react@19.2.4))
       '@opennextjs/cloudflare':
-        specifier: ^1.17.1
-        version: 1.17.1(next@16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.76.0)
+        specifier: ^1.17.3
+        version: 1.17.3(next@16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.76.0)
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -2997,8 +2997,8 @@ packages:
     peerDependencies:
       next: ~15.0.8 || ~15.1.12 || ~15.2.9 || ~15.3.9 || ~15.4.11 || ~15.5.10 || ~16.0.11 || ^16.1.5
 
-  '@opennextjs/cloudflare@1.17.1':
-    resolution: {integrity: sha512-TtmjhXUEpSbnb9kgr7IQtmlQugOeX0cHiLc/e6NYAnmqQVro3yN49WvzaclSGFZod/lJFW7pOJ0NGT6JpqypAw==}
+  '@opennextjs/cloudflare@1.17.3':
+    resolution: {integrity: sha512-BQT8R/CEqrZS2sYydJ6uqv3U+yZAxbTeDUfgqQIlOnhu3wDPsB/QuuUBBseWOZiOdZ8gLegK6F2SLKia74Nv6g==}
     hasBin: true
     peerDependencies:
       next: ~15.0.8 || ~15.1.12 || ~15.2.9 || ~15.3.9 || ~15.4.11 || ~15.5.10 || ~16.0.11 || ^16.1.5
@@ -4453,10 +4453,6 @@ packages:
 
   dotenv@16.4.5:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
-    engines: {node: '>=12'}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
   dreamopt@0.8.0:
@@ -7466,7 +7462,7 @@ snapshots:
   '@dotenvx/dotenvx@1.31.0':
     dependencies:
       commander: 11.1.0
-      dotenv: 16.6.1
+      dotenv: 16.4.5
       eciesjs: 0.4.18
       execa: 5.1.1
       fdir: 6.5.0(picomatch@4.0.3)
@@ -8696,7 +8692,7 @@ snapshots:
       - aws-crt
       - supports-color
 
-  '@opennextjs/cloudflare@1.17.1(next@16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.76.0)':
+  '@opennextjs/cloudflare@1.17.3(next@16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.76.0)':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
@@ -9730,7 +9726,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 18.19.130
+      '@types/node': 22.9.3
       form-data: 4.0.5
 
   '@types/node@18.19.130':
@@ -10243,8 +10239,6 @@ snapshots:
   dotenv-expand@10.0.0: {}
 
   dotenv@16.4.5: {}
-
-  dotenv@16.6.1: {}
 
   dreamopt@0.8.0:
     dependencies:
