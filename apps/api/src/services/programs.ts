@@ -120,7 +120,7 @@ export class ProgramsService {
           and(
             eq(major.id, query.programId),
             query.specializationId
-              ? eq(majorSpecializationToRequirement.specId, query.specializationId)
+              ? eq(majorSpecializationToRequirement.specializationId, query.specializationId)
               : undefined,
           ),
         )

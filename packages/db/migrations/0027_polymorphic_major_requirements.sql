@@ -5,12 +5,12 @@ CREATE TABLE IF NOT EXISTS "major_requirement" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "major_specialization_to_requirement" (
 	"id" varchar PRIMARY KEY GENERATED ALWAYS AS (
-        CASE WHEN "major_specialization_to_requirement"."spec_id" IS NOT NULL
-        THEN "major_specialization_to_requirement"."major_id" || '+' || "major_specialization_to_requirement"."spec_id"
+        CASE WHEN "major_specialization_to_requirement"."specialization_id" IS NOT NULL
+        THEN "major_specialization_to_requirement"."major_id" || '+' || "major_specialization_to_requirement"."specialization_id"
         ELSE "major_specialization_to_requirement"."major_id"
         END) STORED NOT NULL,
 	"major_id" varchar NOT NULL,
-	"spec_id" varchar,
+	"specialization_id" varchar,
 	"requirement_id" bigint
 );
 --> statement-breakpoint
@@ -21,7 +21,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "major_specialization_to_requirement" ADD CONSTRAINT "major_specialization_to_requirement_spec_id_specialization_id_fk" FOREIGN KEY ("spec_id") REFERENCES "public"."specialization"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "major_specialization_to_requirement" ADD CONSTRAINT "major_specialization_to_requirement_specialization_id_specialization_id_fk" FOREIGN KEY ("specialization_id") REFERENCES "public"."specialization"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

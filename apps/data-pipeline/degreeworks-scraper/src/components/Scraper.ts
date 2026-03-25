@@ -7,6 +7,7 @@ import type {
   DegreeWorksProgramId,
   DegreeWorksRequirement,
   MajorProgram,
+  ProgramCodes,
 } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -20,12 +21,6 @@ import {
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
-type ProgramCodes = {
-  schoolCode: string;
-  degreeCode: string;
-  majorCode: string;
-  specCode?: string;
-};
 // 'majorName;specCode'. If no specialization is taken, simply 'majorName'
 type MajorSpecId = string | `${string};${string}`;
 
@@ -61,7 +56,7 @@ export class Scraper {
     );
   }
 
-  private asMajorSpecId(majorName: string, specCode?: string): MajorSpecId {
+  private asMajorSpecId(majorName: string, specCode: string | undefined): MajorSpecId {
     return specCode ? `${majorName};${specCode}` : majorName;
   }
 
@@ -141,9 +136,10 @@ export class Scraper {
           .map(
             (dwName) =>
               ({
-                schoolCode: ent.school.schoolCode,
+                collegeCode: ent.school.schoolCode,
                 majorCode: ent.major.majorCode,
                 degreeCode: dwName,
+                schoolCode: dwName.startsWith("B") ? "U" : "G",
               }) as ProgramCodes,
           )
           .toArray();
@@ -160,15 +156,9 @@ export class Scraper {
 
   private async scrapePrograms(degrees: Iterable<ProgramCodes>) {
     const ret = new Map<MajorSpecId, MajorProgram>();
-    for (const { schoolCode, majorCode, degreeCode, specCode } of degrees) {
-      const audit = await this.dw.getMajorAudit(
-        degreeCode,
-        // bachelor's degrees probably get an abbreviation starting with B
-        degreeCode.startsWith("B") ? "U" : "G",
-        majorCode,
-        specCode,
-        schoolCode,
-      );
+    for (const degree of degrees) {
+      const { collegeCode, majorCode, degreeCode, specCode } = degree;
+      const audit = await this.dw.getMajorAudit(degree);
       const majorAudit = audit?.major;
 
       const specLogInfo = specCode ? ` specCode = ${specCode}` : "";
@@ -183,14 +173,14 @@ export class Scraper {
         continue;
       }
       ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
-        school: audit?.college
+        college: audit?.college
           ? await this.ap.parseBlock(
-              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
+              `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
               audit?.college,
             )
           : undefined,
         major: await this.ap.parseBlock(
-          `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
+          `${collegeCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
         ),
         specCode,
@@ -211,7 +201,7 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get(this.asMajorSpecId("Major in Chemistry"));
+      const inMap = this.parsedPrograms.get(this.asMajorSpecId("Major in Chemistry", undefined));
       return inMap ? [inMap.major] : [];
     }
 
@@ -284,6 +274,9 @@ export class Scraper {
 
     console.log("[Scraper] discovering valid degrees");
     const validDegrees = await this.discoverValidDegrees();
+    const majorToCollegeCode = new Map(
+      validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
+    );
 
     this.minorPrograms = new Set((await this.dw.getMapping("minors")).keys());
     console.log(`Fetched ${this.minorPrograms.size} minor programs`);
@@ -334,7 +327,9 @@ export class Scraper {
 
         if (got !== null) {
           specBlock = got.block;
-          const majorProgram = this.parsedPrograms.get(this.asMajorSpecId(got.parent.name));
+          const majorProgram = this.parsedPrograms.get(
+            this.asMajorSpecId(got.parent.name, undefined),
+          );
           if (majorProgram) {
             foundMajor = majorProgram.major;
           } else {
@@ -381,10 +376,11 @@ export class Scraper {
 
         foundMajorSpecPairs.push({
           schoolCode: foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
-          degreeCode: foundMajorAssured.degreeType,
+          collegeCode: majorToCollegeCode.get(foundMajorAssured.code),
+          degreeCode: foundMajorAssured.degreeType as string,
           majorCode: foundMajorAssured.code,
           specCode,
-        } as ProgramCodes);
+        });
 
         this.specializationCache.set(specCode, {
           parent: foundMajorAssured,
@@ -446,7 +442,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get(this.asMajorSpecId("Major in Art History"));
+    const x = this.parsedPrograms.get(this.asMajorSpecId("Major in Art History", undefined));
     const y = this.parsedSpecializations.get("AHGEO")?.[2];
     const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
@@ -457,7 +453,7 @@ export class Scraper {
       this.parsedSpecializations.delete("AHPER");
       this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHPER"));
       this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHGEO"));
-      this.parsedPrograms.set(this.asMajorSpecId("Major in Art History"), x);
+      this.parsedPrograms.set(this.asMajorSpecId("Major in Art History", undefined), x);
     }
 
     this.done = true;

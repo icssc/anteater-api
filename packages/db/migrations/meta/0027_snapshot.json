@@ -1,5 +1,5 @@
 {
-  "id": "ccc196dc-0591-4a1d-ab1d-968b95b909e7",
+  "id": "bb475fb7-83d2-4347-abc1-3d3def577e53",
   "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
   "version": "7",
   "dialect": "postgresql",
@@ -1919,7 +1919,7 @@
           "primaryKey": true,
           "notNull": true,
           "generated": {
-            "as": "\n        CASE WHEN \"major_specialization_to_requirement\".\"spec_id\" IS NOT NULL\n        THEN \"major_specialization_to_requirement\".\"major_id\" || '+' || \"major_specialization_to_requirement\".\"spec_id\"\n        ELSE \"major_specialization_to_requirement\".\"major_id\"\n        END",
+            "as": "\n        CASE WHEN \"major_specialization_to_requirement\".\"specialization_id\" IS NOT NULL\n        THEN \"major_specialization_to_requirement\".\"major_id\" || '+' || \"major_specialization_to_requirement\".\"specialization_id\"\n        ELSE \"major_specialization_to_requirement\".\"major_id\"\n        END",
             "type": "stored"
           }
         },
@@ -1929,8 +1929,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "spec_id": {
-          "name": "spec_id",
+        "specialization_id": {
+          "name": "specialization_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
@@ -1953,11 +1953,11 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "major_specialization_to_requirement_spec_id_specialization_id_fk": {
-          "name": "major_specialization_to_requirement_spec_id_specialization_id_fk",
+        "major_specialization_to_requirement_specialization_id_specialization_id_fk": {
+          "name": "major_specialization_to_requirement_specialization_id_specialization_id_fk",
           "tableFrom": "major_specialization_to_requirement",
           "tableTo": "specialization",
-          "columnsFrom": ["spec_id"],
+          "columnsFrom": ["specialization_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"

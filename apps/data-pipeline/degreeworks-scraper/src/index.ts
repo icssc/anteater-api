@@ -51,7 +51,7 @@ async function main() {
     .values()
     .map(
       ({
-        school: college,
+        college,
         major: { name, degreeType, code, requirements, specializationRequired },
         specCode,
       }) => {
@@ -79,7 +79,7 @@ async function main() {
           id: `${degreeType}-${code}`,
           degreeId: degreeType ?? "",
           code,
-          ...(specCode !== undefined ? { specId: `${degreeType}-${specCode}` } : {}),
+          ...(specCode !== undefined ? { specializationId: `${degreeType}-${specCode}` } : {}),
           name,
           specializationRequired,
           requirements,
@@ -90,7 +90,7 @@ async function main() {
     .toArray();
 
   const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
-  const majorSpecToRequirementData = majorSpecData.map(({ id, specId, requirements }) => {
+  const majorSpecToRequirementData = majorSpecData.map(({ id, specializationId, requirements }) => {
     const wouldInsert = { requirements };
     let majorRequirementBlockIndex: number | undefined = undefined;
     const existing = majorRequirementBlocks.findIndex((req) => {
@@ -109,12 +109,12 @@ async function main() {
     }
     return {
       majorId: id,
-      specId,
+      specializationId,
       majorRequirementBlockIndex,
     };
   });
 
-  const majorData = majorSpecData.filter(({ specId }) => specId === undefined);
+  const majorData = majorSpecData.filter(({ specializationId }) => specializationId === undefined);
 
   const minorData = parsedMinorPrograms
     .values()

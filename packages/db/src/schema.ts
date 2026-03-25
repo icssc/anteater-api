@@ -103,11 +103,27 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * Complete major requirements are the concatenation between school requirements that may vary by major and major requirements that may vary by specialization
+ * Information nessessary to find complete major requirements
+ * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
+ * @param degreeCode a degree code, e.g. "BS"
+ * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
+ * @param majorCode a major code
+ * @param specCode a specialization code
+ */
+export type ProgramCodes = {
+  schoolCode: string;
+  degreeCode: string;
+  collegeCode?: string;
+  majorCode: string;
+  specCode?: string;
+};
+
+/**
+ * college requirements can vary by major and major requirements can vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
 export type MajorProgram = {
-  school: DegreeWorksProgram | undefined;
+  college: DegreeWorksProgram | undefined;
   major: DegreeWorksProgram;
   specCode: string | undefined;
 };
@@ -679,28 +695,24 @@ export const majorSpecializationToRequirement = pgTable("major_specialization_to
     .primaryKey()
     .generatedAlwaysAs((): SQL => {
       return sql`
-        CASE WHEN ${majorSpecializationToRequirement.specId} IS NOT NULL
-        THEN ${majorSpecializationToRequirement.majorId} || '+' || ${majorSpecializationToRequirement.specId}
+        CASE WHEN ${majorSpecializationToRequirement.specializationId} IS NOT NULL
+        THEN ${majorSpecializationToRequirement.majorId} || '+' || ${majorSpecializationToRequirement.specializationId}
         ELSE ${majorSpecializationToRequirement.majorId}
         END`;
     }),
   majorId: varchar("major_id")
     .notNull()
     .references(() => major.id),
-  specId: varchar("spec_id").references(() => specialization.id),
+  specializationId: varchar("specialization_id").references(() => specialization.id),
   requirementId: bigint("requirement_id", { mode: "bigint" }).references(() => majorRequirement.id),
 });
 
-export const majorRequirement = pgTable(
-  "major_requirement",
-  {
-    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-    id: bigint("id", { mode: "bigint" })
-      .primaryKey()
-      .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
-  },
-  (table) => [],
-);
+export const majorRequirement = pgTable("major_requirement", {
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+});
 
 export const major = pgTable(
   "major",
