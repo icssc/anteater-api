@@ -1,4 +1,5 @@
 import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
+import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
 
 export class DegreeworksClient {
@@ -28,7 +29,11 @@ export class DegreeworksClient {
      */
     const currentYear = new Date().getUTCFullYear();
     dw.catalogYear = `${currentYear}${currentYear + 1}`;
-    const dataThisYear = await dw.getMajorAudit("BS", "U", "201");
+    const dataThisYear = await dw.getMajorAudit({
+      degreeCode: "BS",
+      schoolCode: "U",
+      majorCode: "201",
+    });
     if (!dataThisYear?.major) {
       dw.catalogYear = `${currentYear - 1}${currentYear}`;
     }
@@ -93,18 +98,13 @@ export class DegreeworksClient {
     };
   }
 
-  /**
-   * @param degree a degree code, e.g. "BS"
-   * @param school this corresponds to the UCI notion of division, e.g. "U" or "G"
-   * @param majorCode a major code
-   * @param college this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
-   */
-  async getMajorAudit(
-    degree: string,
-    school: string,
-    majorCode: string,
-    college?: string,
-  ): Promise<
+  async getMajorAudit({
+    degreeCode,
+    schoolCode,
+    majorCode,
+    specCode,
+    collegeCode,
+  }: ProgramCodes): Promise<
     | {
         college?: Block;
         major?: Block;
@@ -115,13 +115,14 @@ export class DegreeworksClient {
       method: "POST",
       body: JSON.stringify({
         catalogYear: this.catalogYear,
-        degree,
-        school,
+        degree: degreeCode,
+        school: schoolCode,
         studentId: this.studentId,
         classes: [],
         goals: [
           { code: "MAJOR", value: majorCode },
-          ...(college ? [{ code: "COLLEGE", value: college }] : []),
+          ...(collegeCode ? [{ code: "COLLEGE", value: collegeCode }] : []),
+          ...(specCode ? [{ code: "SPEC", value: specCode }] : []),
         ],
       }),
       headers: this.headers,
@@ -135,7 +136,7 @@ export class DegreeworksClient {
 
     return {
       college: json.blockArray.find(
-        (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
+        (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
       ),
       major: json.blockArray.find(
         (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
