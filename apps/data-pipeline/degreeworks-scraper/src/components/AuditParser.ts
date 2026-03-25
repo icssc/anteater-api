@@ -6,6 +6,7 @@ import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 
@@ -19,7 +20,10 @@ export class AuditParser {
 
   private requirementIdMap = new Map<string, string>();
 
-  constructor(private readonly db: ReturnType<typeof database>) {
+  constructor(
+    private readonly db: ReturnType<typeof database>,
+    private readonly catalogYear: string,
+  ) {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
@@ -127,6 +131,64 @@ export class AuditParser {
     return requirementId;
   }
 
+  static parseDWTerm(raw: string) {
+    const [yearStr, termStr] = raw.split(" ");
+    const year = Number.parseInt(yearStr, 10);
+    const mapping = {
+      FALL: "Fall",
+      WINTER: "Winter",
+      SPRING: "Spring",
+      SUMMER1: "Summer1",
+      SUMMER10WK: "Summer10wk",
+      SUMMER2: "Summer2",
+    } as const;
+    const term = mapping[termStr as keyof typeof mapping];
+    return { year, term };
+  }
+
+  static termToOrdinal(year: number, term: Term): number {
+    const termOrder: Record<Term, number> = {
+      Winter: 0,
+      Spring: 1,
+      Summer1: 2,
+      Summer10wk: 3,
+      Summer2: 4,
+      Fall: 5,
+    };
+    return year * 10 + termOrder[term];
+  }
+
+  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
+    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
+    return {
+      min: AuditParser.termToOrdinal(startYear, "Fall"),
+      max: AuditParser.termToOrdinal(endYear, "Summer2"),
+    };
+  }
+
+  static canSchoolYearSatisfyDWTerm(
+    operator: WithClause["operator"],
+    dwtermOrdinal: number,
+    schoolYearMin: number,
+    schoolYearMax: number,
+  ): boolean {
+    switch (operator) {
+      case "=":
+        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
+      case "<":
+        return schoolYearMin < dwtermOrdinal;
+      case "<=":
+        return schoolYearMin <= dwtermOrdinal;
+      case ">":
+        return schoolYearMax > dwtermOrdinal;
+      case ">=":
+        return schoolYearMax >= dwtermOrdinal;
+      case "<>":
+        return !(dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax);
+    }
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -166,6 +228,10 @@ export class AuditParser {
 
   filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
     let filteredClasses = structuredClone(classes);
+
+    // We assume withArray elements are ANDed
+    // If examples of non-empty connector fields or multiple withArray
+    // elements with the same code arise, that may help confirm or deny
     for (const withClause of withArray) {
       switch (withClause.code) {
         case "DWCREDIT":
@@ -178,6 +244,30 @@ export class AuditParser {
             ),
           );
           break;
+        case "DWTERM": {
+          const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
+            this.catalogYear,
+          );
+
+          // valueList contains specific term(s) from the DWTERM constraint
+          // Courses pass this filter only if at least one term in the current
+          // catalog year satisfies the DWTERM predicate
+          const canSatisfy = withClause.valueList.some((dwtermRaw) => {
+            const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
+            const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
+            return AuditParser.canSchoolYearSatisfyDWTerm(
+              withClause.operator,
+              dwtermOrdinal,
+              schoolYearMin,
+              schoolYearMax,
+            );
+          });
+
+          if (!canSatisfy) {
+            filteredClasses = [];
+          }
+          break;
+        }
         // There may be more withArray Codes that can be applied here to filter out courses
         // see https://github.com/icssc/anteater-api/pull/286
       }
