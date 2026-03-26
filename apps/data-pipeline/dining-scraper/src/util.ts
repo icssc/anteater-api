@@ -14,8 +14,8 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     Sa: 6,
   };
 
-  const openingTime: string[] = new Array(7).fill("");
-  const closingTime: string[] = new Array(7).fill("");
+  const openingTime: (string | null)[] = new Array(7).fill("");
+  const closingTime: (string | null)[] = new Array(7).fill("");
 
   const timeBlocks = hoursString
     .split(";")
@@ -31,67 +31,41 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
       continue;
     }
 
-    const [dayRangeStr, timeRangeStr] = parts; // "Mo-Fr", "07:15-11:00 OR off"
+    const [dayRangeStr, timeRangeStr] = parts;
+    let openTime = null;
+    let closeTime = null;
 
-    if (!dayRangeStr || !timeRangeStr) {
-      continue;
-    }
-
-    // If the timeRange is off, then we need not do anything (it is not open)
-    if (timeRangeStr === "off") {
-      continue;
-    }
-
-    const [openTime, closeTime] = timeRangeStr.split("-"); // "07:15", "11:00"
-
-    if (!openTime || !closeTime) {
-      console.warn(`[parseOpeningHours]: Skipping block with incomplete time range: ${block}`);
-      continue;
+    // Only parse the range if it isn't "off"
+    if (timeRangeStr !== "off") {
+      const times = timeRangeStr.split("-");
+      if (times.length < 2) {
+        console.warn(`[parseOpeningHours]: Incomplete time range: ${block}`);
+        continue;
+      }
+      [openTime, closeTime] = times;
     }
 
     const dayIndices: number[] = [];
 
     // Case: Day Range (e.g., "Mo-Fr")
     if (dayRangeStr.includes("-")) {
-      const dayParts = dayRangeStr.split("-");
-
-      if (dayParts.length < 2) {
-        console.warn(
-          `[parseOpeningHours]: Skipping block with malformed day range: ${dayRangeStr}}`,
-        );
-        continue;
-      }
-
-      const startDay = dayParts[0];
-      const endDay = dayParts[1];
-
-      if (!startDay || !endDay) {
-        continue;
-      }
-
+      const [startDay, endDay] = dayRangeStr.split("-");
       const startIndex = DAY_MAP[startDay];
       const endIndex = DAY_MAP[endDay];
 
       if (startIndex === undefined || endIndex === undefined) {
-        console.warn(`Skipping block with unknown day range: ${dayRangeStr}`);
+        console.warn(`Skipping unknown day range: ${dayRangeStr}`);
         continue;
       }
 
-      // handles if date range wraps around (i.e. Mo-Su)
-      if (startIndex <= endIndex) {
-        for (let i = startIndex; i <= endIndex; i++) {
-          dayIndices.push(i);
-        }
-      } else {
-        for (let i = startIndex; i < 7; i++) {
-          dayIndices.push(i);
-        }
-        for (let i = 0; i <= endIndex; i++) {
-          dayIndices.push(i);
-        }
+      // Logic to handle wrap-around (e.g., Fr-Mo)
+      let curr = startIndex;
+      while (curr !== endIndex) {
+        dayIndices.push(curr);
+        curr = (curr + 1) % 7;
       }
+      dayIndices.push(endIndex);
     } else {
-      // Case: Single Day (e.g., "Mo")
       const singleIndex = DAY_MAP[dayRangeStr];
       if (singleIndex !== undefined) {
         dayIndices.push(singleIndex);
