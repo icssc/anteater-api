@@ -1,5 +1,7 @@
-import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
+import type { Block, UndergraduateRequirements } from "$types";
 import fetch from "cross-fetch";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "src/schema";
+import type { z } from "zod";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
@@ -44,6 +46,24 @@ export class DegreeworksClient {
       .join("&");
   }
 
+  private async parseResponse<T>(
+    res: Response,
+    schema: z.ZodType<T>,
+    // for logging messages
+    label: string,
+  ): Promise<T | undefined> {
+    const raw = await res.json().catch(() => null);
+    if (!raw) return undefined;
+
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      return undefined;
+    }
+
+    return parsed.data;
+  }
+
   async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
     const params = DegreeworksClient.formatQueryParams({
       studentId: this.studentId,
@@ -58,10 +78,8 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    if ("error" in json) {
-      return;
-    }
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     // "DEGREE" block doesn't contain any material requirements, "SCHOOL" block has what we need
     const ucRequirements = json.blockArray.find((b) => b.requirementType === "SCHOOL");
@@ -127,11 +145,9 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
 
-    if ("error" in json) {
-      return undefined;
-    }
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     return {
       college: json.blockArray.find(
@@ -160,12 +176,13 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    return "error" in json
-      ? undefined
-      : json.blockArray.find(
-          (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
-        );
+
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
+    return json.blockArray.find(
+      (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
+    );
   }
 
   async getSpecAudit(
@@ -191,14 +208,15 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    return "error" in json
-      ? undefined
-      : json.blockArray.find(
-          (x) =>
-            (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
-            x.requirementValue === specCode,
-        );
+
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
+    return json.blockArray.find(
+      (x) =>
+        (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
+        x.requirementValue === specCode,
+    );
   }
 
   async getMapping<T extends string>(path: T): Promise<Map<string, string>> {
@@ -206,8 +224,9 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWMappingResponse<T> = await res.json();
-    return new Map(json._embedded[path].map((x) => [x.key, x.description]));
+    const json = await res.json();
+    const parsed = dwMappingResponseSchema(path).parse(json);
+    return new Map(parsed._embedded[path].map((x) => [x.key, x.description]));
   }
 
   getCatalogYear() {
