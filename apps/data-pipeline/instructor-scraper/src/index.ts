@@ -180,14 +180,9 @@ async function main() {
   const shortNamesToUcinetids = new Map<string, Array<string | null>>();
   const ucinetidToInstructorObject = new Map<string, typeof instructor.$inferInsert>();
 
-  let indx = 0;
-
-  for (const nm of names) {
-    indx++;
-    logger.info(indx);
-
-    let name = nm.name;
-    const department = nm.department;
+  for (const row of names) {
+    let name = row.name;
+    const department = row.department;
 
     const uniqueName = name;
     const delimIndex = name.indexOf(INSTRUCTOR_DELIMETER);
@@ -254,7 +249,7 @@ async function main() {
 
     logger.warn("Found multiple entries for this instructor; attempting to narrow search.");
 
-    let isolatedInstructor = false;
+    let uniquelyResolvedInstructor = false;
 
     for (const keyword of FILTER_KEYWORDS.concat(
       !department ? [] : FILTER_KEYWORDS.map((s) => `${s} ${department.toLowerCase()}`),
@@ -301,7 +296,7 @@ async function main() {
         ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
 
         // skips the instructor not found logic
-        isolatedInstructor = true;
+        uniquelyResolvedInstructor = true;
 
         break;
       }
@@ -315,7 +310,7 @@ async function main() {
       }
     }
 
-    if (isolatedInstructor) {
+    if (uniquelyResolvedInstructor) {
       continue;
     }
 
