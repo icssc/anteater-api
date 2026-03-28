@@ -23,7 +23,8 @@ export const parseStartAndEndTimes = (time: string) => {
   const [endTimeHour, endTimeMinute] = endTimeString.split(":");
   endTime = (Number.parseInt(endTimeHour, 10) % 12) * 60 + Number.parseInt(endTimeMinute, 10);
   if (endTimeMinute.includes("p")) {
-    // Ending in PM: if start < end (both PM) shift both by 12 hours, otherwise just shift end
+    // Ending in PM: if start < end, shift both times forward by 12 hours since both
+    // are PM, otherwise just shift end time forward because end is PM and start is AM
     if (startTime < endTime) startTime += 12 * 60;
     endTime += 12 * 60;
   } else if (startTime > endTime) {
