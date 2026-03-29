@@ -190,6 +190,13 @@
       "when": 1773306141597,
       "tag": "0026_requirements_id",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1774754214675,
+      "tag": "0027_degreeworks_catalog_years",
+      "breakpoints": true
     }
   ]
 }
