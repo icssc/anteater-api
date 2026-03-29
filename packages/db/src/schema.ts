@@ -659,7 +659,7 @@ export const dwDegree = pgTable("dw_degree", {
 export const dwSchool = pgTable(
   "dw_school",
   {
-    id: varchar("id").primaryKey(),
+    id: varchar("id").notNull(),
     catalogYear: varchar("catalog_year").notNull(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },

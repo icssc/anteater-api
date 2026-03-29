@@ -1,5 +1,5 @@
 {
-  "id": "afc31baf-6d81-414c-848f-5c0d88c095ea",
+  "id": "dee2161e-2087-4002-8f86-6cb0abafa8be",
   "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
   "version": "7",
   "dialect": "postgresql",
@@ -1584,7 +1584,7 @@
         "id": {
           "name": "id",
           "type": "varchar",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "catalog_year": {
