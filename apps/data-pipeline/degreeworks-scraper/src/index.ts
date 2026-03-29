@@ -116,7 +116,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchool.id,
+          target: [dwSchool.id, dwSchool.catalogYear],
           set: conflictUpdateSetAllCols(dwSchool),
         });
     }
@@ -132,7 +132,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchool.id,
+          target: [dwSchool.id, dwSchool.catalogYear],
           set: conflictUpdateSetAllCols(dwSchool),
         });
     }
@@ -148,7 +148,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchool.id,
+          target: [dwSchool.id, dwSchool.catalogYear],
           set: conflictUpdateSetAllCols(dwSchool),
         });
     }
