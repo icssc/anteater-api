@@ -15,8 +15,8 @@ import { GraphQLError } from "graphql/error";
 
 export const programResolvers = {
   Query: {
-    major: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = majorRequirementsQuerySchema.parse(args?.query);
+    major: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = majorRequirementsQuerySchema.parse(args.query);
       const service = new ProgramsService(db);
       const res = await service.getMajorRequirements(parsedArgs);
       if (!res)
@@ -25,8 +25,8 @@ export const programResolvers = {
         });
       return res;
     },
-    minor: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = minorRequirementsQuerySchema.parse(args?.query);
+    minor: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = minorRequirementsQuerySchema.parse(args.query);
       const service = new ProgramsService(db);
       const res = await service.getMinorRequirements(parsedArgs);
       if (!res)
@@ -35,8 +35,8 @@ export const programResolvers = {
         });
       return res;
     },
-    specialization: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = specializationRequirementsQuerySchema.parse(args?.query);
+    specialization: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = specializationRequirementsQuerySchema.parse(args.query);
       const service = new ProgramsService(db);
       const res = await service.getSpecializationRequirements(parsedArgs);
       if (!res)
@@ -75,8 +75,8 @@ export const programResolvers = {
         });
       return res;
     },
-    ugradRequirements: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
-      const parsedArgs = ugradRequirementsQuerySchema.parse(args?.query);
+    ugradRequirements: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const parsedArgs = ugradRequirementsQuerySchema.parse(args.query);
       const service = new ProgramsService(db);
       const res = await service.getUgradRequirements(parsedArgs);
       if (!res)
