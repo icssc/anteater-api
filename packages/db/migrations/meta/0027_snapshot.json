@@ -1,5 +1,5 @@
 {
-  "id": "6370d8f0-9f12-495d-93d3-e4f6666bd8e6",
+  "id": "afc31baf-6d81-414c-848f-5c0d88c095ea",
   "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
   "version": "7",
   "dialect": "postgresql",
@@ -1600,7 +1600,29 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dw_school_id_catalog_year_index": {
+          "name": "dw_school_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

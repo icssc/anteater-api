@@ -656,11 +656,15 @@ export const dwDegree = pgTable("dw_degree", {
   division: division("division").notNull(),
 });
 
-export const dwSchool = pgTable("dw_school", {
-  id: varchar("id").primaryKey(),
-  catalogYear: varchar("catalog_year").notNull(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-});
+export const dwSchool = pgTable(
+  "dw_school",
+  {
+    id: varchar("id").primaryKey(),
+    catalogYear: varchar("catalog_year").notNull(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.id, table.catalogYear)],
+);
 
 export const dwCollegeRequirement = pgTable("dw_college_requirement", {
   id: bigint("id", { mode: "bigint" })
