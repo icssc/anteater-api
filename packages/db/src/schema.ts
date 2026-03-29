@@ -663,7 +663,7 @@ export const dwSchool = pgTable(
     catalogYear: varchar("catalog_year").notNull(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [uniqueIndex().on(table.id, table.catalogYear)],
+  (table) => [uniqueIndex().on(table.id, table.catalogYear), index().on(table.catalogYear)],
 );
 
 export const dwCollegeRequirement = pgTable("dw_college_requirement", {
