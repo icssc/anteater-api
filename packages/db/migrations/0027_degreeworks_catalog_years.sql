@@ -34,8 +34,6 @@ ALTER TABLE "dw_specialization" DROP CONSTRAINT "specialization_major_id_major_i
 DROP INDEX IF EXISTS "major_degree_id_index";--> statement-breakpoint
 DROP INDEX IF EXISTS "major_college_requirement_index";--> statement-breakpoint
 DROP INDEX IF EXISTS "specialization_major_id_index";--> statement-breakpoint
-ALTER TABLE "dw_college_requirement" ALTER COLUMN "id" SET DATA TYPE bigint;--> statement-breakpoint
-ALTER TABLE "dw_college_requirement" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
 ALTER TABLE "dw_college_requirement" drop column "id";--> statement-breakpoint
 ALTER TABLE "dw_college_requirement" ADD COLUMN "id" bigint PRIMARY KEY GENERATED ALWAYS AS (('x' || substr(md5(name), 1, 16))::bit(64)::bigint # jsonb_hash_extended(requirements, 0)) STORED NOT NULL;--> statement-breakpoint
 ALTER TABLE "dw_school" ALTER COLUMN "requirements" SET DATA TYPE jsonb;--> statement-breakpoint
