@@ -180,7 +180,16 @@ export class ProgramsService {
         requirements: dwSchool.requirements,
       })
       .from(dwSchool)
-      .where(eq(dwSchool.id, query.id))
+      .where(
+        and(
+          eq(dwSchool.id, query.id),
+          eq(
+            dwSchool.catalogYear,
+            query.catalogYear ??
+              this.db.select({ m: max(dwSchool.catalogYear).as("m") }).from(dwSchool),
+          ),
+        ),
+      )
       .limit(1);
 
     return orNull(got);
