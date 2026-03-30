@@ -10,19 +10,19 @@ export default async function LogIn() {
   return (
     <div className="flex items-center justify-center flex-0">
       <Card>
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle>Sign in to manage API keys</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-1.5">
           <Button
             type="submit"
             onClick={async () => {
               "use server";
-              await signIn("google");
+              await signIn("icssc");
             }}
             className={"w-full"}
           >
-            Sign in with Google
+            Sign in with ICSSC
           </Button>
         </CardContent>
       </Card>

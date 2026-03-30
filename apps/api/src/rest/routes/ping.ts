@@ -1,5 +1,5 @@
 import { defaultHook } from "$hooks";
-import { errorSchema, responseSchema } from "$schema";
+import { response200, response500 } from "$schema";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 
 const pingRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
@@ -13,18 +13,8 @@ const pingRoute = createRoute({
   description:
     "An endpoint for testing your connectivity to the REST API. This endpoint is never cached, so you can also use it to check your remaining request quota.",
   responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: responseSchema(z.literal<string>("Pong!")),
-        },
-      },
-      description: "Successful operation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(z.literal<string>("Pong!")),
+    500: response500(),
   },
 });
 

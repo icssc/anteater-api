@@ -53,14 +53,14 @@ const CreateKey = () => {
 
   async function onSubmit(values: CreateKeyFormValues) {
     setIsCreating(true);
-    try {
-      const { key } = await createUserApiKey(values);
+    const result = await createUserApiKey(values);
+    if (result.ok) {
       setKey(key);
       setIsDialogOpen(true);
-      setIsCreating(false);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred while creating the key.");
+    } else {
+      setError(result.error);
     }
+    setIsCreating(false);
   }
 
   const handleDialogClose = (isOpen: boolean) => {
