@@ -46,6 +46,7 @@ export type WithClause = {
     | "DWTITLE"
     | "DWGRADETYPE"
     | "DWPASSFAIL";
+  connector: "" | "AND" | "OR";
   operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
   valueList: string[];
 };

@@ -226,53 +226,62 @@ export class AuditParser {
     }
   }
 
+  private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
+    switch (withClause.code) {
+      case "DWCREDIT":
+      case "DWCREDITS":
+        return this.parseUnitRestrictionOperator(withClause.operator)(
+          Number.parseInt(c.minUnits, 10),
+          Number.parseInt(c.maxUnits, 10),
+          withClause.valueList,
+        );
+      case "DWTERM": {
+        const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
+          this.catalogYear,
+        );
+        // valueList contains specific term(s) from the DWTERM constraint
+        // Courses pass this filter only if at least one term in the current
+        // catalog year satisfies a DWTERM predicate
+        return withClause.valueList.some((dwtermRaw) => {
+          const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
+          const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
+          return AuditParser.canSchoolYearSatisfyDWTerm(
+            withClause.operator,
+            dwtermOrdinal,
+            schoolYearMin,
+            schoolYearMax,
+          );
+        });
+      }
+      // There may be more withArray Codes that can be applied here to filter out courses
+      // see https://github.com/icssc/anteater-api/pull/286
+      default:
+        return true;
+    }
+  }
+
   filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
-    let filteredClasses = structuredClone(classes);
+    // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
+    const orGroups: WithClause[][] = [];
+    let currentGroup: WithClause[] = [];
 
-    // We assume withArray elements are ANDed
-    // If examples of non-empty connector fields or multiple withArray
-    // elements with the same code arise, that may help confirm or deny
     for (const withClause of withArray) {
-      switch (withClause.code) {
-        case "DWCREDIT":
-        case "DWCREDITS":
-          filteredClasses = filteredClasses.filter((c) =>
-            this.parseUnitRestrictionOperator(withClause.operator)(
-              Number.parseInt(c.minUnits, 10),
-              Number.parseInt(c.maxUnits, 10),
-              withClause.valueList,
-            ),
-          );
-          break;
-        case "DWTERM": {
-          const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
-            this.catalogYear,
-          );
-
-          // valueList contains specific term(s) from the DWTERM constraint
-          // Courses pass this filter only if at least one term in the current
-          // catalog year satisfies the DWTERM predicate
-          const canSatisfy = withClause.valueList.some((dwtermRaw) => {
-            const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
-            const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
-            return AuditParser.canSchoolYearSatisfyDWTerm(
-              withClause.operator,
-              dwtermOrdinal,
-              schoolYearMin,
-              schoolYearMax,
-            );
-          });
-
-          if (!canSatisfy) {
-            filteredClasses = [];
-          }
-          break;
+      if (withClause.connector === "OR") {
+        if (currentGroup.length > 0) {
+          orGroups.push(currentGroup);
         }
-        // There may be more withArray Codes that can be applied here to filter out courses
-        // see https://github.com/icssc/anteater-api/pull/286
+        currentGroup = [withClause];
+      } else {
+        currentGroup.push(withClause);
       }
     }
-    return filteredClasses;
+    if (currentGroup.length > 0) {
+      orGroups.push(currentGroup);
+    }
+
+    return structuredClone(classes).filter((c) =>
+      orGroups.some((group) => group.every((clause) => this.classMatchesWithClause(c, clause))),
+    );
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
