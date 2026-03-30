@@ -324,19 +324,16 @@ async function main() {
     }
   }
 
-  const uciNetList = Array.from(shortNamesToUcinetids).flatMap(
-    ([websocInstructorName, ucinetIds]) =>
-      ucinetIds.map((instructorUcinetid) => ({
-        instructorUcinetid,
-        websocInstructorName,
-      })),
-  );
-
-  const filtered = uciNetList.filter(
-    (v, i) =>
-      uciNetList.findIndex((c) => c.instructorUcinetid === v.instructorUcinetid) === i &&
-      v.instructorUcinetid !== "student",
-  );
+  const uciNetIds = [
+    ...new Set(
+      Array.from(shortNamesToUcinetids).flatMap(([websocInstructorName, ucinetIds]) =>
+        ucinetIds.map((instructorUcinetid) => ({
+          instructorUcinetid,
+          websocInstructorName,
+        })),
+      ),
+    ),
+  ].filter((v, i) => v.instructorUcinetid !== "student");
 
   await db.transaction(async (tx) => {
     await tx
@@ -348,7 +345,7 @@ async function main() {
       });
     await tx
       .insert(instructorToWebsocInstructor)
-      .values(filtered)
+      .values(uciNetIds)
       .onConflictDoUpdate({
         target: [
           instructorToWebsocInstructor.instructorUcinetid,
