@@ -7,6 +7,8 @@ import type {
   ruleCourseSchema,
   ruleMarkerSchema,
   ruleNoncourseSchema,
+  specializationCacheSchema,
+  withClauseSchema,
 } from "./schema";
 
 /**
@@ -47,6 +49,10 @@ export type Rule = z.infer<typeof ruleBaseSchema> &
   );
 
 export type Block = z.infer<typeof blockSchema>;
+
+export type WithClause = z.infer<typeof withClauseSchema>;
+
+export type SpecializationCache = z.infer<typeof specializationCacheSchema>;
 
 export interface UndergraduateRequirements {
   // university of california-wide requirements, expressed in UCI coursework

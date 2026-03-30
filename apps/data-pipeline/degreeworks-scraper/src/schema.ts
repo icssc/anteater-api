@@ -165,7 +165,9 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
+// partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({
+  name: z.string(),
   school: z.enum(["U", "G"]),
   programType: z.enum(["COLLEGE", "MAJOR", "MINOR", "SPEC"]),
   code: z.string(),
