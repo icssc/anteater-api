@@ -33,7 +33,7 @@ export const courseSchema = z.object({
  */
 export const ruleBaseSchema = z.object({
   label: z.string(),
-  labelTag: z.string(),
+  labelTag: z.string().optional(),
   ruleId: z.string(),
   ruleType: z.string(),
   nodeId: z.string(),
