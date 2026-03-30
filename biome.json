@@ -16,7 +16,9 @@
       "**/.next/**",
       "**/.sst/**",
       "**/dist/**",
-      "**/worker-configuration.d.ts"
+      "**/worker-configuration.d.ts",
+      "**/cloudflare-env.d.ts",
+      "**/.open-next/**"
     ]
   },
   "formatter": {
