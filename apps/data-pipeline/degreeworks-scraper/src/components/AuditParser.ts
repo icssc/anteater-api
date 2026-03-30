@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
@@ -9,10 +10,14 @@ import type {
 import { course } from "@packages/db/schema";
 
 export class AuditParser {
-  private static readonly specOrOtherMatcher = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
-  private static readonly electiveMatcher = /ELECTIVE @+/;
-  private static readonly wildcardMatcher = /\w@/;
-  private static readonly rangeMatcher = /-\w+/;
+  private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
+  private static readonly SPECIALIZATION_ADJACENT_REGEX =
+    /specialization|concentration|emphasis|area|track|major/i;
+  private static readonly ELECTIVE_REGEX = /ELECTIVE @+/;
+  private static readonly WILDCARD_REGEX = /\w@/;
+  private static readonly RANGE_REGEX = /-\w+/;
+
+  private requirementIdMap = new Map<string, string>();
 
   constructor(private readonly db: ReturnType<typeof database>) {
     console.log("[AuditParser.new] AuditParser initialized");
@@ -24,6 +29,7 @@ export class AuditParser {
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     // populate later; we cannot determine specializations on the spot
     specs: [],
+    specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
   });
 
   lexOrd = new Intl.Collator().compare;
@@ -55,13 +61,13 @@ export class AuditParser {
 
   async normalizeCourseId(courseIdLike: string) {
     // "ELECTIVE @" is typically used as a pseudo-course and can be safely ignored.
-    if (courseIdLike.match(AuditParser.electiveMatcher)) return [];
+    if (courseIdLike.match(AuditParser.ELECTIVE_REGEX)) return [];
     const [department, courseNumber] = courseIdLike.split(" ");
     if (courseNumber === "@") {
       // Department-wide wildcards.
       return this.db.select().from(course).where(eq(course.shortenedDept, department));
     }
-    if (courseNumber.match(AuditParser.wildcardMatcher)) {
+    if (courseNumber.match(AuditParser.WILDCARD_REGEX)) {
       // Wildcard course numbers.
       return await this.db
         .select()
@@ -76,7 +82,7 @@ export class AuditParser {
           ),
         );
     }
-    if (courseNumber.match(AuditParser.rangeMatcher)) {
+    if (courseNumber.match(AuditParser.RANGE_REGEX)) {
       // Course number ranges.
       const [minCourseNumber, maxCourseNumber] = courseNumber.split("-");
       return await this.db
@@ -97,6 +103,28 @@ export class AuditParser {
       .from(course)
       .where(eq(course.id, `${department}${courseNumber}`))
       .limit(1);
+  }
+
+  generateRequirementId(requirementType: string, contentsSalt: string): string {
+    const requirementObjectStr = JSON.stringify({
+      requirementType,
+      contentsSalt,
+    });
+
+    const requirementId = createHash("md5")
+      .update(requirementObjectStr)
+      .digest("base64url")
+      .slice(0, 10);
+
+    const existingRequirementObjectStr = this.requirementIdMap.has(requirementId)
+      ? this.requirementIdMap.get(requirementId)
+      : null;
+    if (existingRequirementObjectStr && existingRequirementObjectStr !== requirementObjectStr) {
+      console.error("Collision detected between two requirementIds");
+    }
+    this.requirementIdMap.set(requirementId, requirementObjectStr);
+
+    return requirementId;
   }
 
   /**
@@ -157,6 +185,25 @@ export class AuditParser {
     return filteredClasses;
   }
 
+  async checkSpecializationIsRequired(ruleArray: Rule[]) {
+    // We infer whether a major requires a specialization by searching for a
+    // conditional rule with text that matches words related to "specialization."
+
+    // Hard-code exclusion for B.S. ChemE, because the requirement can instead be
+    // fulfilled with 16 units.
+    const chemETextList = [
+      "16 units of approved technical electives or",
+      "contact advisor to select a specialization.",
+    ];
+    return ruleArray.some((rule) => {
+      return (
+        rule.ifElsePart === "ElsePart" &&
+        rule.proxyAdvice?.textList.some((x) => AuditParser.SPECIALIZATION_ADJACENT_REGEX.test(x)) &&
+        !rule.proxyAdvice?.textList.every((x, i) => x === chemETextList[i])
+      );
+    });
+  }
+
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
@@ -171,16 +218,18 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const toInclude: [string, typeof course.$inferSelect][] = await Promise.all(
-            includedCourses.map(([x, withArray]) =>
-              this.normalizeCourseId
-                .bind(this)(x)
-                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+          const toInclude: Map<string, typeof course.$inferSelect> = new Map(
+            await Promise.all(
+              includedCourses.map(([x, withArray]) =>
+                this.normalizeCourseId
+                  .bind(this)(x)
+                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+              ),
+            ).then((x) =>
+              x
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .map((y) => [y.id, y]),
             ),
-          ).then((x) =>
-            x
-              .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
-              .map((y) => [y.id, y]),
           );
 
           const excludedCourses: [string, WithClause[]][] =
@@ -210,16 +259,26 @@ export class AuditParser {
             )
             .map(([x]) => x);
           if (rule.requirement.classesBegin) {
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Course";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Course",
+              label,
+              requirementId,
+              requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
           } else if (rule.requirement.creditsBegin) {
+            const label = AuditParser.suppressLabelPolymorphism(rule.label);
+            const requirementType = "Unit";
+            const contentsSalt = courses.join("_");
+            const requirementId = this.generateRequirementId(requirementType, contentsSalt);
             ret.push({
-              label: AuditParser.suppressLabelPolymorphism(rule.label),
-              requirementType: "Unit",
+              label,
+              requirementId,
+              requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
             });
@@ -227,11 +286,17 @@ export class AuditParser {
           break;
         }
         case "Group": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
+            label,
+            requirementId,
+            requirementType,
             requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
-            requirements: await this.ruleArrayToRequirements(rule.ruleArray),
+            requirements,
           });
           break;
         }
@@ -239,11 +304,17 @@ export class AuditParser {
           const rules = this.flattenIfStmt([rule]);
           if (!rules.some((x) => x.ruleType === "Block")) {
             if (rules.length > 1) {
+              const label = "Select 1 of the following";
+              const requirementType = "Group";
+              const requirements = await this.ruleArrayToRequirements(rules);
+              const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+              const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
-                label: "Select 1 of the following",
-                requirementType: "Group",
+                label,
+                requirementId,
+                requirementType,
                 requirementCount: 1,
-                requirements: await this.ruleArrayToRequirements(rules),
+                requirements,
               });
             } else if (rules.length === 1) {
               ret.push(...(await this.ruleArrayToRequirements(rules)));
@@ -252,17 +323,28 @@ export class AuditParser {
           break;
         }
         case "Complete":
-        case "Incomplete":
+        case "Incomplete": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Marker";
+          const contentsSalt = label;
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Marker",
+            label,
+            requirementId,
+            requirementType,
           });
           break;
+        }
         case "Subset": {
+          const label = AuditParser.suppressLabelPolymorphism(rule.label);
+          const requirementType = "Group";
           const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const contentsSalt = requirements.map((req) => req.requirementId).join("_");
+          const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
-            label: AuditParser.suppressLabelPolymorphism(rule.label),
-            requirementType: "Group",
+            label,
+            requirementId,
+            requirementType,
             requirementCount: Object.keys(requirements).length,
             requirements,
           });

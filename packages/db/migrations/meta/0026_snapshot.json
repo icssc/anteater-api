@@ -1,6 +1,6 @@
 {
-  "id": "da957085-a63b-4d42-bf25-b386e1c70ca2",
-  "prevId": "f1b90841-6952-48b7-a547-c974828883b2",
+  "id": "c0f62b68-af2c-4377-bf84-83a14454c844",
+  "prevId": "da957085-a63b-4d42-bf25-b386e1c70ca2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -329,16 +329,26 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "requirements_hash": {
+          "name": "requirements_hash",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "college_requirement_requirements_unique": {
-          "name": "college_requirement_requirements_unique",
+        "college_requirement_requirements_hash_unique": {
+          "name": "college_requirement_requirements_hash_unique",
           "nullsNotDistinct": false,
-          "columns": ["requirements"]
+          "columns": ["requirements_hash"]
         }
       },
       "policies": {},

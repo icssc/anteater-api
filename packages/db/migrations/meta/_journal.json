@@ -180,8 +180,22 @@
     {
       "idx": 25,
       "version": "7",
-      "when": 1772593979074,
-      "tag": "0025_fix_missing_instructor_data",
+      "when": 1772871872701,
+      "tag": "0025_major_specialization_required",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1773306141597,
+      "tag": "0026_requirements_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1774835782725,
+      "tag": "0027_fix_missing_instructor_data",
       "breakpoints": true
     }
   ]
