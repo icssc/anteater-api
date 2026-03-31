@@ -1,0 +1,30 @@
+name: Publish libwebsoc-next Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish.yml
+      - packages/public/libwebsoc-next/package.json
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-and-pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish libwebsoc-next
+        working-directory: packages/public/libwebsoc-next
+        run: pnpm publish --no-git-checks
