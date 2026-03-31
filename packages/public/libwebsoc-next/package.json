@@ -13,8 +13,8 @@
     "check:types": "tsc -p ./tsconfig.json -noEmit"
   },
   "dependencies": {
-    "cheerio": "1.0.0",
-    "cross-fetch": "4.0.0",
+    "cheerio": "1.2.0",
+    "cross-fetch": "4.1.0",
     "fast-xml-parser": "4.5.0"
   },
   "devDependencies": {
