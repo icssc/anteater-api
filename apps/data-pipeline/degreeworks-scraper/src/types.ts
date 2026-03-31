@@ -46,6 +46,7 @@ export type WithClause = {
     | "DWTITLE"
     | "DWGRADETYPE"
     | "DWPASSFAIL";
+  connector: "" | "AND" | "OR";
   operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
   valueList: string[];
 };
@@ -107,6 +108,7 @@ export type Block = {
   requirementValue: string;
   title: string;
   ruleArray: Rule[];
+  catalogYear: string;
 };
 
 export interface UndergraduateRequirements {

@@ -194,8 +194,15 @@
     {
       "idx": 27,
       "version": "7",
-      "when": 1774764272060,
-      "tag": "0027_degreeworks_catalog_years",
+      "when": 1773634820227,
+      "tag": "0027_websoc_meta_drop_last_dept_scraped",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1774917673784,
+      "tag": "0028_degreeworks_catalog_years",
       "breakpoints": true
     }
   ]

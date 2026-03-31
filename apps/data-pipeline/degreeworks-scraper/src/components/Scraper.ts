@@ -458,8 +458,8 @@ export class Scraper {
       Origin: "https://reg.uci.edu",
     };
     const scraper = new Scraper();
-    scraper.ap = new AuditParser(db);
     scraper.dw = await DegreeworksClient.new(studentId, headers);
+    scraper.ap = new AuditParser(db, scraper.dw.getCatalogYear());
     return scraper;
   }
 }

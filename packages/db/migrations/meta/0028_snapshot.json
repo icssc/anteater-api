@@ -1,6 +1,6 @@
 {
-  "id": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
-  "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
+  "id": "a6438189-3420-44c8-adc6-b3e33a6a85de",
+  "prevId": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -307,54 +307,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.college_requirement": {
-      "name": "college_requirement",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requirements_hash": {
-          "name": "requirements_hash",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false,
-          "generated": {
-            "as": "jsonb_hash_extended(requirements, 0)",
-            "type": "stored"
-          }
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "college_requirement_requirements_hash_unique": {
-          "name": "college_requirement_requirements_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["requirements_hash"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.course": {
       "name": "course",
       "schema": "",
@@ -605,38 +557,6 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.degree": {
-      "name": "degree",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "division": {
-          "name": "division",
-          "type": "division",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -1325,6 +1245,541 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.dw_college_requirement": {
+      "name": "dw_college_requirement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "generated": {
+            "as": "('x' || substr(md5(name), 1, 16))::bit(64)::bigint # jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_degree": {
+      "name": "dw_degree",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "division": {
+          "name": "division",
+          "type": "division",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_major": {
+      "name": "dw_major",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "degree_id": {
+          "name": "degree_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_major_degree_id_index": {
+          "name": "dw_major_degree_id_index",
+          "columns": [
+            {
+              "expression": "degree_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dw_major_degree_id_dw_degree_id_fk": {
+          "name": "dw_major_degree_id_dw_degree_id_fk",
+          "tableFrom": "dw_major",
+          "tableTo": "dw_degree",
+          "columnsFrom": ["degree_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_major_requirement": {
+      "name": "dw_major_requirement",
+      "schema": "",
+      "columns": {
+        "program_id": {
+          "name": "program_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_year": {
+          "name": "catalog_year",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "specialization_required": {
+          "name": "specialization_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "college_requirement": {
+          "name": "college_requirement",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_major_requirement_program_id_catalog_year_index": {
+          "name": "dw_major_requirement_program_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "program_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dw_major_requirement_catalog_year_index": {
+          "name": "dw_major_requirement_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dw_major_requirement_program_id_dw_major_id_fk": {
+          "name": "dw_major_requirement_program_id_dw_major_id_fk",
+          "tableFrom": "dw_major_requirement",
+          "tableTo": "dw_major",
+          "columnsFrom": ["program_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dw_major_requirement_college_requirement_dw_college_requirement_id_fk": {
+          "name": "dw_major_requirement_college_requirement_dw_college_requirement_id_fk",
+          "tableFrom": "dw_major_requirement",
+          "tableTo": "dw_college_requirement",
+          "columnsFrom": ["college_requirement"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_minor": {
+      "name": "dw_minor",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_minor_requirement": {
+      "name": "dw_minor_requirement",
+      "schema": "",
+      "columns": {
+        "program_id": {
+          "name": "program_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_year": {
+          "name": "catalog_year",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_minor_requirement_program_id_catalog_year_index": {
+          "name": "dw_minor_requirement_program_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "program_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dw_minor_requirement_catalog_year_index": {
+          "name": "dw_minor_requirement_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dw_minor_requirement_program_id_dw_minor_id_fk": {
+          "name": "dw_minor_requirement_program_id_dw_minor_id_fk",
+          "tableFrom": "dw_minor_requirement",
+          "tableTo": "dw_minor",
+          "columnsFrom": ["program_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_school": {
+      "name": "dw_school",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_year": {
+          "name": "catalog_year",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_school_id_catalog_year_index": {
+          "name": "dw_school_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dw_school_catalog_year_index": {
+          "name": "dw_school_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_specialization": {
+      "name": "dw_specialization",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "major_id": {
+          "name": "major_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_specialization_major_id_index": {
+          "name": "dw_specialization_major_id_index",
+          "columns": [
+            {
+              "expression": "major_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dw_specialization_major_id_dw_major_id_fk": {
+          "name": "dw_specialization_major_id_dw_major_id_fk",
+          "tableFrom": "dw_specialization",
+          "tableTo": "dw_major",
+          "columnsFrom": ["major_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dw_specialization_requirement": {
+      "name": "dw_specialization_requirement",
+      "schema": "",
+      "columns": {
+        "program_id": {
+          "name": "program_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_year": {
+          "name": "catalog_year",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dw_specialization_requirement_program_id_catalog_year_index": {
+          "name": "dw_specialization_requirement_program_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "program_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dw_specialization_requirement_catalog_year_index": {
+          "name": "dw_specialization_requirement_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dw_specialization_requirement_program_id_dw_specialization_id_fk": {
+          "name": "dw_specialization_requirement_program_id_dw_specialization_id_fk",
+          "tableFrom": "dw_specialization_requirement",
+          "tableTo": "dw_specialization",
+          "columnsFrom": ["program_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.instructor": {
       "name": "instructor",
       "schema": "",
@@ -1781,142 +2236,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.major": {
-      "name": "major",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "degree_id": {
-          "name": "degree_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "code": {
-          "name": "code",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "specialization_required": {
-          "name": "specialization_required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "college_requirement": {
-          "name": "college_requirement",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "major_degree_id_index": {
-          "name": "major_degree_id_index",
-          "columns": [
-            {
-              "expression": "degree_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "major_college_requirement_index": {
-          "name": "major_college_requirement_index",
-          "columns": [
-            {
-              "expression": "college_requirement",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "major_degree_id_degree_id_fk": {
-          "name": "major_degree_id_degree_id_fk",
-          "tableFrom": "major",
-          "tableTo": "degree",
-          "columnsFrom": ["degree_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "major_college_requirement_college_requirement_id_fk": {
-          "name": "major_college_requirement_college_requirement_id_fk",
-          "tableFrom": "major",
-          "tableTo": "college_requirement",
-          "columnsFrom": ["college_requirement"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.minor": {
-      "name": "minor",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.prerequisite": {
       "name": "prerequisite",
       "schema": "",
@@ -2068,94 +2387,6 @@
           "columnsFrom": ["program_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.school_requirement": {
-      "name": "school_requirement",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.specialization": {
-      "name": "specialization",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "major_id": {
-          "name": "major_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "specialization_major_id_index": {
-          "name": "specialization_major_id_index",
-          "columns": [
-            {
-              "expression": "major_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "specialization_major_id_major_id_fk": {
-          "name": "specialization_major_id_major_id_fk",
-          "tableFrom": "specialization",
-          "tableTo": "major",
-          "columnsFrom": ["major_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
