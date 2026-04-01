@@ -574,17 +574,13 @@ const doChunkUpsert = async (
     const instructorsToInsert = Array.from(new Set(sectionsToInstructors.values())).flatMap(
       (names) =>
         names.map((name) => {
+          const instructorDataParts = name.split(INSTRUCTOR_DELIMETER);
+
           return {
-            identifier: name.substring(0, name.indexOf(INSTRUCTOR_DELIMETER)),
-            name: name.substring(
-              0,
-              name.lastIndexOf(INSTRUCTOR_DELIMETER) + INSTRUCTOR_DELIMETER.length,
-            ),
-            school: name.substring(
-              name.indexOf(INSTRUCTOR_DELIMETER) + INSTRUCTOR_DELIMETER.length,
-              name.lastIndexOf(INSTRUCTOR_DELIMETER),
-            ),
-            department: name.substring(name.lastIndexOf(INSTRUCTOR_DELIMETER, name.length) + 3),
+            identifier: instructorDataParts[0],
+            name: `${instructorDataParts[0]}${INSTRUCTOR_DELIMETER}${instructorDataParts[1]}${INSTRUCTOR_DELIMETER}`,
+            school: instructorDataParts[1],
+            department: instructorDataParts[2],
             updatedAt,
           };
         }),
