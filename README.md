@@ -1,4 +1,4 @@
-# Anteater API
+# Anteater API - FOOBAR
 
 ## ℹ️ About
 
