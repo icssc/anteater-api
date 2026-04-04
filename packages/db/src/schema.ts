@@ -649,59 +649,101 @@ export const instructorToWebsocInstructor = pgTable(
 
 // DegreeWorks data tables
 
-export const degree = pgTable("degree", {
+export const dwDegree = pgTable("dw_degree", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
   division: division("division").notNull(),
 });
 
-export const schoolRequirement = pgTable("school_requirement", {
-  id: varchar("id").primaryKey(),
-  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-});
+export const dwSchool = pgTable(
+  "dw_school",
+  {
+    id: varchar("id").notNull(),
+    catalogYear: varchar("catalog_year").notNull(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.id, table.catalogYear), index().on(table.catalogYear)],
+);
 
-export const collegeRequirement = pgTable("college_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const dwCollegeRequirement = pgTable("dw_college_requirement", {
+  id: bigint("id", { mode: "bigint" })
+    .generatedAlwaysAs(
+      sql`('x' || substr(md5(name), 1, 16))::bit(64)::bigint # jsonb_hash_extended(requirements, 0)`,
+    )
+    .primaryKey()
+    .notNull(),
   name: varchar("name").notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  requirementsHash: bigint("requirements_hash", { mode: "bigint" })
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-    .unique(),
 });
 
-export const major = pgTable(
-  "major",
+export const dwMajor = pgTable(
+  "dw_major",
   {
     id: varchar("id").primaryKey(),
     degreeId: varchar("degree_id")
-      .references(() => degree.id)
+      .references(() => dwDegree.id)
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
-    specializationRequired: boolean("specialization_required").notNull(),
-    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
+  (table) => [index().on(table.degreeId)],
 );
 
-export const minor = pgTable("minor", {
+export const dwMajorRequirement = pgTable(
+  "dw_major_requirement",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwMajor.id),
+    catalogYear: varchar("catalog_year").notNull(),
+    specializationRequired: boolean("specialization_required").notNull(),
+    collegeRequirement: bigint("college_requirement", { mode: "bigint" }).references(
+      () => dwCollegeRequirement.id,
+    ),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
+);
+
+export const dwMinor = pgTable("dw_minor", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
-  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
-export const specialization = pgTable(
-  "specialization",
+export const dwMinorRequirement = pgTable(
+  "dw_minor_requirement",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwMinor.id),
+    catalogYear: varchar("catalog_year").notNull(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
+);
+
+export const dwSpecialization = pgTable(
+  "dw_specialization",
   {
     id: varchar("id").primaryKey(),
     majorId: varchar("major_id")
-      .references(() => major.id)
+      .references(() => dwMajor.id)
       .notNull(),
     name: varchar("name").notNull(),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.majorId)],
+);
+
+export const dwSpecializationRequirement = pgTable(
+  "dw_specialization_requirement",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwSpecialization.id),
+    catalogYear: varchar("catalog_year").notNull(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
 );
 
 // Misc. tables

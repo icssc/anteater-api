@@ -437,6 +437,7 @@ export class Scraper {
   get() {
     if (!this.done) throw new Error("This scraper instance has not yet finished its run.");
     return {
+      catalogYear: this.dw.getCatalogYear(),
       parsedUgradRequirements: this.parsedUgradRequirements,
       parsedMinorPrograms: this.parsedMinorPrograms,
       parsedPrograms: this.parsedPrograms,
