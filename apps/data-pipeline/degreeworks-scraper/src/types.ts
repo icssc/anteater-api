@@ -21,6 +21,7 @@ export type RuleGroup = {
   requirement: { numberOfGroups: string; numberOfRules: string };
   ruleArray: Rule[];
 };
+
 /**
  * A rule that has different requirements depending on some boolean condition.
  * This seems to be used to denote all specializations that can be applied to a major.

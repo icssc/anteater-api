@@ -14,6 +14,7 @@ export const withClauseSchema = z.object({
     "DWGRADETYPE",
     "DWPASSFAIL",
   ]),
+  connector: z.enum(["", "AND", "OR"]),
   operator: z.enum(["<", "<=", "=", ">", ">=", "<>"]),
   valueList: z.array(z.string()),
 });
@@ -150,6 +151,7 @@ export const blockSchema = z.object({
   requirementValue: z.string(),
   title: z.string(),
   ruleArray: z.array(ruleSchema),
+  catalogYear: z.string(),
 });
 
 // UndergraduateRequirements interface is not made into an equivalent Zod schema since it's made from already parsed Block objects
