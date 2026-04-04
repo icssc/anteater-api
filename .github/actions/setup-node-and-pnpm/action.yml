@@ -18,7 +18,7 @@ runs:
       uses: pnpm/action-setup@v2
       with:
         run_install: false
-        version: 10
+        version: 10.26.0
     - name: Get pnpm store directory
       id: pnpm-cache
       shell: bash

@@ -16,3 +16,5 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - workerd
+
+blockExoticSubdeps: true
