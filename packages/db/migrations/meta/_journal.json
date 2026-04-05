@@ -190,13 +190,6 @@
       "when": 1773306141597,
       "tag": "0026_requirements_id",
       "breakpoints": true
-    },
-    {
-      "idx": 27,
-      "version": "7",
-      "when": 1774466860626,
-      "tag": "0027_polymorphic_major_requirements",
-      "breakpoints": true
     }
   ]
 }
