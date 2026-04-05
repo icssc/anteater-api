@@ -12,7 +12,7 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import { type RestaurantId, allergens, dietaryPreferences, restaurantIDToURL } from "./model.ts";
+import { allergens, dietaryPreferences, type RestaurantId, restaurantIDToURL } from "./model.ts";
 import { findCurrentlyActiveSchedule } from "./util.ts";
 
 /**

@@ -1,9 +1,8 @@
-import type { larcQuerySchema, larcResponseSchema, larcSectionSchema } from "$schema";
 import type { database } from "@packages/db";
-import { eq, getTableColumns, gte, ilike, lte } from "@packages/db/drizzle";
-import { and } from "@packages/db/drizzle";
+import { and, eq, getTableColumns, gte, ilike, lte } from "@packages/db/drizzle";
 import { larcSection, websocCourse } from "@packages/db/schema";
 import type { z } from "zod";
+import type { larcQuerySchema, larcResponseSchema, larcSectionSchema } from "$schema";
 import { buildDaysOfWeekQuery, buildMultiCourseNumberQuery } from "./util.ts";
 
 type LarcSessionServiceInput = z.infer<typeof larcQuerySchema>;

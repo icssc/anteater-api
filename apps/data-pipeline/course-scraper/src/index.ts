@@ -1,5 +1,4 @@
-import { existsSync, statSync, writeFileSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
@@ -16,8 +15,8 @@ import {
 import { orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
-import { hasChildren } from "domhandler";
 import type { Element as DomElement } from "domhandler";
+import { hasChildren } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
@@ -589,9 +588,7 @@ const isCoursePrereqWithId =
  * and adds the other course to the appropriate subtree of the course's prerequisite tree.
  * Since 32A appears only in OR-clauses of courses' prereq trees, this should be a simple change.
  */
-async function patchH32(meta: {
-  db: ReturnType<typeof database>;
-}) {
+async function patchH32(meta: { db: ReturnType<typeof database> }) {
   const { db } = meta;
   const courses = await db
     .select({ id: course.id, prerequisiteTree: course.prerequisiteTree })

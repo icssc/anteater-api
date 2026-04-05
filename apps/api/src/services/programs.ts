@@ -1,13 +1,3 @@
-import type {
-  majorRequirementsQuerySchema,
-  majorsQuerySchema,
-  minorRequirementsQuerySchema,
-  minorsQuerySchema,
-  sampleProgramsQuerySchema,
-  specializationRequirementsQuerySchema,
-  specializationsQuerySchema,
-  ugradRequirementsQuerySchema,
-} from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, max, sql } from "@packages/db/drizzle";
 import {
@@ -25,6 +15,16 @@ import {
 } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type {
+  majorRequirementsQuerySchema,
+  majorsQuerySchema,
+  minorRequirementsQuerySchema,
+  minorsQuerySchema,
+  sampleProgramsQuerySchema,
+  specializationRequirementsQuerySchema,
+  specializationsQuerySchema,
+  ugradRequirementsQuerySchema,
+} from "$schema";
 
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}

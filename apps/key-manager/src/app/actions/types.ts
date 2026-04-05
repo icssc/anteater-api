@@ -1,4 +1,4 @@
-import { type KeyData, accessControlledResources } from "@packages/key-types";
+import { accessControlledResources, type KeyData } from "@packages/key-types";
 import { z } from "zod";
 
 export const createKeySchema = z

@@ -1,8 +1,8 @@
+import type React from "react";
+import type { UseFormReturn } from "react-hook-form";
 import type { CreateKeyFormValues } from "@/app/actions/types";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type React from "react";
-import type { UseFormReturn } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;

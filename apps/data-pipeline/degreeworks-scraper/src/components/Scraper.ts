@@ -1,6 +1,4 @@
 import * as fs from "node:fs/promises";
-import { AuditParser, DegreeworksClient } from "$components";
-import type { Block, SpecializationCache } from "$types";
 import type { database } from "@packages/db";
 import type {
   DegreeWorksProgram,
@@ -11,6 +9,8 @@ import type {
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 import type { z } from "zod";
+import { AuditParser, DegreeworksClient } from "$components";
+import type { Block, SpecializationCache } from "$types";
 import {
   type reportSchema,
   reportsResponseSchema,

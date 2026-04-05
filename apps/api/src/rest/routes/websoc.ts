@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -11,8 +13,6 @@ import {
   websocTermResponseSchema,
 } from "$schema";
 import { WebsocService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const websocRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

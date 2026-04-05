@@ -1,3 +1,11 @@
+import type { database } from "@packages/db";
+import type { SQL } from "@packages/db/drizzle";
+import { and, eq, gte, ilike, inArray, lt } from "@packages/db/drizzle";
+import type { CourseLevel, course } from "@packages/db/schema";
+import { courseView } from "@packages/db/schema";
+import { isTrue } from "@packages/db/utils";
+import { orNull } from "@packages/stdlib";
+import type { z } from "zod";
 import type {
   coursePreviewSchema,
   courseSchema,
@@ -7,14 +15,6 @@ import type {
   outputCourseLevels,
 } from "$schema";
 import { outputGECategories } from "$schema";
-import type { database } from "@packages/db";
-import type { SQL } from "@packages/db/drizzle";
-import { and, eq, gte, ilike, inArray, lt } from "@packages/db/drizzle";
-import type { CourseLevel, course } from "@packages/db/schema";
-import { courseView } from "@packages/db/schema";
-import { isTrue } from "@packages/db/utils";
-import { orNull } from "@packages/stdlib";
-import type { z } from "zod";
 import { buildUnitBoundsQuery } from "./util.ts";
 
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;

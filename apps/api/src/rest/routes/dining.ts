@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -11,14 +13,12 @@ import {
   response404,
   response422,
   response500,
-  restaurantTodayQuerySchema,
-  restaurantTodayResponseSchema,
   restaurantsQuerySchema,
   restaurantsResponseSchema,
+  restaurantTodayQuerySchema,
+  restaurantTodayResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const diningRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

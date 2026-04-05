@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -12,8 +14,6 @@ import {
   response500,
 } from "$schema";
 import { InstructorsService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const instructorsRouter = new OpenAPIHono<{ Bindings: Env }>({
   defaultHook,
@@ -138,4 +138,4 @@ instructorsCursorRouter.openapi(instructorsByCursorRoute, async (c) => {
   );
 });
 
-export { instructorsRouter, instructorsCursorRouter };
+export { instructorsCursorRouter, instructorsRouter };

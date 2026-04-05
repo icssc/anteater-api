@@ -1,14 +1,5 @@
-import type {
-  diningEventsQuerySchema,
-  dishQuerySchema,
-  dishSchema,
-  restaurantTodayQuerySchema,
-  restaurantTodayResponseSchema,
-  restaurantsQuerySchema,
-  restaurantsResponseSchema,
-} from "$schema";
 import type { database } from "@packages/db";
-import { type SQL, and, eq, gte, inArray, isNull, max, min, or, sql } from "@packages/db/drizzle";
+import { and, eq, gte, inArray, isNull, max, min, or, type SQL, sql } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -21,6 +12,15 @@ import {
 } from "@packages/db/schema";
 import { getFromMapOrThrow, orNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type {
+  diningEventsQuerySchema,
+  dishQuerySchema,
+  dishSchema,
+  restaurantsQuerySchema,
+  restaurantsResponseSchema,
+  restaurantTodayQuerySchema,
+  restaurantTodayResponseSchema,
+} from "$schema";
 
 type DiningDishQuery = z.infer<typeof dishQuerySchema>;
 type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;

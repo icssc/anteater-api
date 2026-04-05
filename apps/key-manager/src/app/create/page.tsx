@@ -1,5 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, ChevronLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { createUserApiKey } from "@/app/actions/keys";
 import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
 import NameField from "@/components/key/form/NameField";
@@ -14,13 +21,6 @@ import { Button } from "@/components/ui/button";
 import ButtonSpinner from "@/components/ui/button-spinner";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ChevronLeft } from "lucide-react";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 
 const CreateKey = () => {
   const { data: session } = useSession();

@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { exit } from "node:process";
-import { Scraper } from "$components";
 import { database } from "@packages/db";
+import type { Division } from "@packages/db/schema";
 import {
   dwCollegeRequirement,
   dwDegree,
@@ -13,8 +13,8 @@ import {
   dwSpecialization,
   dwSpecializationRequirement,
 } from "@packages/db/schema";
-import type { Division } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { Scraper } from "$components";
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -92,7 +92,7 @@ async function main() {
 
   const specData = parsedSpecializations
     .values()
-    .map(([majorId, specName, { name, degreeType, code, requirements }]) => ({
+    .map(([majorId, specName, { degreeType, code, requirements }]) => ({
       id: `${degreeType}-${code}`,
       name: specName,
       majorId: `${majorId.degreeType}-${majorId.code}`,

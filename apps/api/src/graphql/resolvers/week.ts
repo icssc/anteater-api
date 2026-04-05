@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { weekQuerySchema } from "$schema";
 import { WeekService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const weekResolvers = {
   Query: {
