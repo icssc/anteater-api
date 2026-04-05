@@ -103,10 +103,30 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * (school, major) pair, because school requirements can vary by major
+ * Information nessessary to find complete major requirements
+ * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
+ * @param degreeCode a degree code, e.g. "BS"
+ * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
+ * @param majorCode a major code
+ * @param specCode a specialization code
+ */
+export type ProgramCodes = {
+  schoolCode: string;
+  degreeCode: string;
+  collegeCode?: string;
+  majorCode: string;
+  specCode?: string;
+};
+
+/**
+ * college requirements can vary by major and major requirements can vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
-export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
+export type MajorProgram = {
+  college?: DegreeWorksProgram;
+  major: DegreeWorksProgram;
+  specCode?: string;
+};
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
@@ -669,6 +689,27 @@ export const collegeRequirement = pgTable("college_requirement", {
     .unique(),
 });
 
+export const majorSpecializationToRequirement = pgTable(
+  "major_specialization_to_requirement",
+  {
+    majorId: varchar("major_id")
+      .notNull()
+      .references(() => major.id),
+    specializationId: varchar("specialization_id").references(() => specialization.id),
+    requirementId: bigint("requirement_id", { mode: "bigint" }).references(
+      () => majorRequirement.id,
+    ),
+  },
+  (table) => [uniqueIndex().on(table.majorId, table.specializationId)],
+);
+
+export const majorRequirement = pgTable("major_requirement", {
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+});
+
 export const major = pgTable(
   "major",
   {
@@ -680,7 +721,6 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
 );

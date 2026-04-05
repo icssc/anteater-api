@@ -20,9 +20,12 @@ export const programResolvers = {
       const service = new ProgramsService(db);
       const res = await service.getMajorRequirements(parsedArgs);
       if (!res)
-        throw new GraphQLError(`Major ${parsedArgs.programId} not found`, {
-          extensions: { code: "NOT_FOUND" },
-        });
+        throw new GraphQLError(
+          `No requirements found for major ${parsedArgs.programId}${parsedArgs.specializationId ? ` with specialization ${parsedArgs.specializationId}` : ""}.`,
+          {
+            extensions: { code: "NOT_FOUND" },
+          },
+        );
       return res;
     },
     minor: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {

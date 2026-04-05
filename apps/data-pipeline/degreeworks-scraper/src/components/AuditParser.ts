@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
@@ -9,6 +8,7 @@ import type {
   Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
+import type { Block, Rule, WithClause } from "$types";
 
 export class AuditParser {
   private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;

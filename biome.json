@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -14,12 +14,12 @@
       "!**/*.yml",
       "!**/*.yaml",
       "!**/*.json",
-      "!**/.next/**",
-      "!**/.sst/**",
-      "!**/dist/**",
+      "!**/.next/",
+      "!**/.sst/",
+      "!**/dist/",
       "!**/worker-configuration.d.ts",
       "!**/cloudflare-env.d.ts",
-      "!**/.open-next/**"
+      "!**/.open-next/"
     ]
   },
   "formatter": {
