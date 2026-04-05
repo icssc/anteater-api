@@ -1,6 +1,6 @@
 import { dirname, join } from "node:path";
-import { exit } from "node:process";
 import * as process from "node:process";
+import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { database } from "./index";

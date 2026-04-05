@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { exit } from "node:process";
-import { Scraper } from "$components";
 import { database } from "@packages/db";
+import type { Division } from "@packages/db/schema";
 import {
   collegeRequirement,
   degree,
@@ -10,8 +10,8 @@ import {
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
-import type { Division } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { Scraper } from "$components";
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");

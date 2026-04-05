@@ -39,12 +39,20 @@
           "level": "error",
           "fix": "safe"
         }
+      },
+      "suspicious": {
+        "noUnknownAtRules": "info"
       }
     }
   },
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

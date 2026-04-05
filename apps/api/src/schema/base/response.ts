@@ -1,5 +1,5 @@
-import { errorSchema } from "$schema";
 import { z } from "@hono/zod-openapi";
+import { errorSchema } from "$schema";
 
 export function responseSchema<T extends z.ZodType>(data: T, isCursor = false) {
   const dataSchema = isCursor

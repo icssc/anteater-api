@@ -1,15 +1,15 @@
-import type {
-  courseSchema,
-  instructorSchema,
-  searchQuerySchema,
-  searchResponseSchema,
-} from "$schema";
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
 import { and, asc, desc, inArray, or, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
+import type {
+  courseSchema,
+  instructorSchema,
+  searchQuerySchema,
+  searchResponseSchema,
+} from "$schema";
 import type { CoursesService } from "./courses";
 import type { InstructorsService } from "./instructors";
 import { buildCourseLevelQuery, buildGEQuery, buildUnitBoundsQuery } from "./util.ts";

@@ -1,4 +1,3 @@
-import type { aggregateGradesSchema, gradesQuerySchema, rawGradeSchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, avg, eq, gt, inArray, or, sql, sum } from "@packages/db/drizzle";
 import {
@@ -8,6 +7,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
+import type { aggregateGradesSchema, gradesQuerySchema, rawGradeSchema } from "$schema";
 
 import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
@@ -31,7 +31,7 @@ function buildQuery(input: GradesServiceInput) {
     conditions.push(eq(websocCourse.courseNumber, input.courseNumber));
   }
   if (input.sectionCode) {
-    conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode)));
+    conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode, 10)));
   }
   conditions.push(...buildCourseLevelQuery(websocCourse, input.division));
   conditions.push(...buildGEQuery(websocCourse, input.ge));

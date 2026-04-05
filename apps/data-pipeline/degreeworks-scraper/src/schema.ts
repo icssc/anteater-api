@@ -1,5 +1,5 @@
-import type { Rule } from "$types";
 import { z } from "zod";
+import type { Rule } from "$types";
 
 /**
  * a specification for course range for unit req, etc.

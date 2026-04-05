@@ -1,8 +1,8 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { response200, response422, response500, weekQuerySchema, weekSchema } from "$schema";
 import { WeekService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const weekRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
