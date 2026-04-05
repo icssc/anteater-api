@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
+    "include": [
       "**",
       "!**/*.md",
       "!**/*.toml",
@@ -29,7 +29,7 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assists": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
