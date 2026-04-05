@@ -11,7 +11,8 @@ import { course } from "@packages/db/schema";
 import type { Block, Rule, WithClause } from "$types";
 
 export class AuditParser {
-  private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
+  // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
+  // private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
   private static readonly SPECIALIZATION_ADJACENT_REGEX =
     /specialization|concentration|emphasis|area|track|major/i;
   private static readonly ELECTIVE_REGEX = /ELECTIVE @+/;
@@ -210,17 +211,17 @@ export class AuditParser {
     // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
     switch (operatorLike) {
       case "<":
-        return (minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
       case "<=":
-        return (minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
       case "=":
         return (minUnit, maxUnit, valueList) =>
           minUnit <= Number.parseInt(valueList[0], 10) &&
           Number.parseInt(valueList[0], 10) <= maxUnit;
       case ">":
-        return (minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
       case ">=":
-        return (minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
       default:
         return () => false;
     }
