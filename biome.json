@@ -29,7 +29,6 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
-  "assists": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -39,6 +38,9 @@
           "level": "error",
           "fix": "safe"
         }
+      },
+      "style": {
+        "useSortedImports": "error"
       }
     }
   },
