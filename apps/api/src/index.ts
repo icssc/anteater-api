@@ -1,3 +1,8 @@
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
+import { Scalar } from "@scalar/hono-api-reference";
+import { cors } from "hono/cors";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { graphqlRouter } from "$graphql";
 import { defaultHook } from "$hooks";
 import {
@@ -11,11 +16,6 @@ import {
 } from "$middleware";
 import { restRouter } from "$rest";
 import type { ErrorSchema } from "$schema";
-import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { Scalar } from "@scalar/hono-api-reference";
-import { cors } from "hono/cors";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

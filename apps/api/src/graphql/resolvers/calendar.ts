@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { calendarQuerySchema } from "$schema";
 import { CalendarService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const calendarResolvers = {
   Query: {

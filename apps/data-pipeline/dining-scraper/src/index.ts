@@ -1,6 +1,6 @@
 import { exit } from "node:process";
-import { doScrape } from "$lib";
 import { database } from "@packages/db";
+import { doScrape } from "$lib";
 
 async function main() {
   const url = process.env.DB_URL;

@@ -1,14 +1,14 @@
-import type {
-  instructorSchema,
-  instructorsByCursorQuerySchema,
-  instructorsQuerySchema,
-} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL } from "@packages/db/drizzle";
 import { and, eq, gte, ilike, inArray } from "@packages/db/drizzle";
 import { instructorView } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type {
+  instructorSchema,
+  instructorsByCursorQuerySchema,
+  instructorsQuerySchema,
+} from "$schema";
 
 type InstructorsServiceInput = z.infer<typeof instructorsQuerySchema>;
 

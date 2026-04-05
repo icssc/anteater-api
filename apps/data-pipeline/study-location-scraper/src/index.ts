@@ -1,6 +1,6 @@
 import { exit } from "node:process";
-import { doLibraryScrape } from "$lib";
 import { database } from "@packages/db";
+import { doLibraryScrape } from "$lib";
 import { doPVScrape } from "./pv";
 
 async function main() {

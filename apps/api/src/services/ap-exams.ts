@@ -1,9 +1,8 @@
-import type { apExamsQuerySchema, apExamsRewardSchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, getTableColumns, sql } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
-
 import type { z } from "zod";
+import type { apExamsQuerySchema, apExamsRewardSchema } from "$schema";
 
 function buildQuery(query: z.infer<typeof apExamsQuerySchema>) {
   const conds = [];
