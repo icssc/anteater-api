@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { exit } from "node:process";
-import { Scraper } from "$components";
 import { database } from "@packages/db";
+import type { Division } from "@packages/db/schema";
 import {
   collegeRequirement,
   degree,
@@ -12,8 +12,8 @@ import {
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
-import type { Division } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { Scraper } from "$components";
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -92,7 +92,7 @@ async function main() {
   const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
   const majorSpecToRequirementData = majorSpecData.map(({ id, specializationId, requirements }) => {
     const wouldInsert = { requirements };
-    let majorRequirementBlockIndex: number | undefined = undefined;
+    let majorRequirementBlockIndex: number | undefined;
     const existing = majorRequirementBlocks.findIndex((req) => {
       try {
         assert.deepEqual(wouldInsert, req);
@@ -240,7 +240,10 @@ async function main() {
       .insert(majorSpecializationToRequirement)
       .values(majorSpecToRequirementData)
       .onConflictDoUpdate({
-        target: majorSpecializationToRequirement.id,
+        target: [
+          majorSpecializationToRequirement.majorId,
+          majorSpecializationToRequirement.specializationId,
+        ],
         set: conflictUpdateSetAllCols(majorSpecializationToRequirement),
       });
   });

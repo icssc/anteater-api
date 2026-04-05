@@ -123,9 +123,9 @@ export type ProgramCodes = {
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
 export type MajorProgram = {
-  college: DegreeWorksProgram | undefined;
+  college?: DegreeWorksProgram;
   major: DegreeWorksProgram;
-  specCode: string | undefined;
+  specCode?: string;
 };
 
 export type DegreeWorksCourseRequirement = {

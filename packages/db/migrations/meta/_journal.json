@@ -197,6 +197,13 @@
       "when": 1773634820227,
       "tag": "0027_websoc_meta_drop_last_dept_scraped",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775413115387,
+      "tag": "0028_polymorphic_major_requirements",
+      "breakpoints": true
     }
   ]
 }
