@@ -12,9 +12,9 @@
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "date-fns": "^3.0.0",
-    "winston": "3.15.0",
-    "zod": "^4.1.13"
+    "date-fns": "4.1.0",
+    "winston": "3.19.0",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "wrangler": "4.0.0"

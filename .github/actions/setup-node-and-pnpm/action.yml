@@ -11,13 +11,14 @@ runs:
     - name: Setup Node.js environment
       uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4
       with:
-        node-version: 22.11.0
+        node-version: 22.22.2
+        registry-url: https://registry.npmjs.org
 
     - name: Install pnpm
       uses: pnpm/action-setup@v2
       with:
         run_install: false
-        version: 10
+        version: 10.26.0
     - name: Get pnpm store directory
       id: pnpm-cache
       shell: bash
