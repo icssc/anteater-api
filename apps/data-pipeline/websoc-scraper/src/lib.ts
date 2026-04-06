@@ -736,14 +736,26 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
   for (const ge of geCategories) {
     console.log(`Scraping GE ${ge}`);
-    const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
-    const courses = resp.schools.flatMap((school) =>
-      school.departments.flatMap((dept) =>
-        dept.courses.map(
-          (course) => `${course.deptCode},${course.courseNumber},${course.courseTitle}`,
+    let courses: string[] = [];
+    try {
+      const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
+      courses = resp.schools.flatMap((school) =>
+        school.departments.flatMap((dept) =>
+          dept.courses.map(
+            (course) => `${course.deptCode},${course.courseNumber},${course.courseTitle}`,
+          ),
         ),
-      ),
-    );
+      );
+      if (courses.length === 0) {
+        console.warn(`[GE ${ge}] empty response - 0 courses returned`);
+      } else {
+        console.log(`[GE ${ge}] found ${courses.length} courses`);
+      }
+    } catch (e) {
+      console.error(`[GE ${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
+      continue;
+    }
+
     for (const course of courses) {
       const update = updates.get(course);
       if (update) {
