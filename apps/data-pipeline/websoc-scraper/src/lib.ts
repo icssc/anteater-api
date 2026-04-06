@@ -734,6 +734,7 @@ type CourseGEUpdate = {
 
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
+  const outcomes: Record<string, "success" | "empty" | "error"> = {};
   for (const ge of geCategories) {
     console.log(`Scraping GE ${ge}`);
     let courses: string[] = [];
@@ -747,13 +748,15 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
         ),
       );
       if (courses.length === 0) {
+        outcomes[ge] = "empty";
         console.warn(`[GE ${ge}] empty response - 0 courses returned`);
       } else {
+        outcomes[ge] = "success";
         console.log(`[GE ${ge}] found ${courses.length} courses`);
       }
     } catch (e) {
+      outcomes[ge] = "error";
       console.error(`[GE ${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
-      continue;
     }
 
     for (const course of courses) {
@@ -766,6 +769,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
     await sleep(1000);
   }
+  console.log(`[GE scrape] outcomes for ${termToName(term)}:`, outcomes);
   await db.transaction(async (tx) => {
     for (const [course, update] of updates) {
       const [deptCode, courseNumber, courseTitle] = course.split(",", 3);
