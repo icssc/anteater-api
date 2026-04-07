@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { exit } from "node:process";
-import { Scraper } from "$components";
 import { database } from "@packages/db";
+import type { Division } from "@packages/db/schema";
 import {
   collegeRequirement,
   degree,
@@ -10,8 +10,8 @@ import {
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
-import type { Division } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { Scraper } from "$components";
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -32,6 +32,7 @@ async function main() {
   const ucRequirementData = parsedUgradRequirements.get("UC");
   const geRequirementData = parsedUgradRequirements.get("GE");
   const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
+  const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -45,7 +46,7 @@ async function main() {
   const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
   const majorData = parsedPrograms
     .values()
-    .map(([college, { name, degreeType, code, requirements }]) => {
+    .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
       let collegeBlockIndex: number | undefined;
       if (college?.requirements) {
         const wouldInsert = { name: college.name, requirements: college.requirements };
@@ -71,6 +72,7 @@ async function main() {
         degreeId: degreeType ?? "",
         code,
         name,
+        specializationRequired,
         requirements,
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };
@@ -84,7 +86,7 @@ async function main() {
 
   const specData = parsedSpecializations
     .values()
-    .map(([majorId, specName, { name, degreeType, code, requirements }]) => ({
+    .map(([majorId, specName, { degreeType, code, requirements }]) => ({
       id: `${degreeType}-${code}`,
       name: specName,
       majorId: `${majorId.degreeType}-${majorId.code}`,
@@ -126,6 +128,21 @@ async function main() {
         });
     }
 
+    if (honorsTwoRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC2",
+            requirements: honorsTwoRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
     await tx
       .insert(degree)
       .values(degreeData)
@@ -136,7 +153,7 @@ async function main() {
       .insert(collegeRequirement)
       .values(collegeBlocks)
       .onConflictDoUpdate({
-        target: collegeRequirement.requirements,
+        target: collegeRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(collegeRequirement),
       })
       .returning({ id: collegeRequirement.id })

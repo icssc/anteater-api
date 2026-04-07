@@ -1,13 +1,13 @@
-import DeleteKey from "@/components/key/DeleteKey";
-import DisplayKey from "@/components/key/view/DisplayKey";
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { KeyData } from "@packages/key-types";
 import { GlobeIcon, LockIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import type { SetStateAction } from "react";
+import DeleteKey from "@/components/key/DeleteKey";
+import DisplayKey from "@/components/key/view/DisplayKey";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   apiKey: string;

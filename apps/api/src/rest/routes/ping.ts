@@ -1,6 +1,6 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { defaultHook } from "$hooks";
 import { response200, response500 } from "$schema";
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 
 const pingRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

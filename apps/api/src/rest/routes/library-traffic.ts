@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import {
   libraryTrafficQuerySchema,
@@ -8,8 +10,6 @@ import {
   response500,
 } from "$schema";
 import { LibraryTrafficService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

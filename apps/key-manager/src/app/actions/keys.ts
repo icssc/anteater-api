@@ -1,6 +1,9 @@
 "use server";
 
 import { createHash } from "node:crypto";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { KeyData } from "@packages/key-types";
+import { createId } from "@paralleldrive/cuid2";
 import {
   type CreateKeyFormValues,
   createKeyTransform,
@@ -8,16 +11,6 @@ import {
 } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
-import type { KeyData } from "@packages/key-types";
-import { createId } from "@paralleldrive/cuid2";
-import Cloudflare from "cloudflare";
-import { z } from "zod";
-
-const { CLOUDFLARE_KV_NAMESPACE_ID, CLOUDFLARE_DEFAULT_ACCOUNT_ID } = z
-  .object({ CLOUDFLARE_KV_NAMESPACE_ID: z.string(), CLOUDFLARE_DEFAULT_ACCOUNT_ID: z.string() })
-  .parse(process.env);
-
-const cf = new Cloudflare();
 
 const getUserPrefix = (userId: string) => createHash("sha256").update(userId).digest("base64url");
 
@@ -37,9 +30,7 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   const type = key._type === "publishable" ? "pk" : "sk";
   const completeKey = `${prefix}.${type}.${uniqueId}`;
 
-  await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, completeKey, {
-    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
-    value: JSON.stringify(key),
+  await getCloudflareContext().env.API_KEYS.put(completeKey, JSON.stringify(key), {
     metadata: "{}",
   });
 
@@ -48,21 +39,17 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
 
 export const getUserKeysNames = async (id: string) => {
   const prefix = getUserPrefix(id);
-  const listResult = await cf.kv.namespaces.keys.list(CLOUDFLARE_KV_NAMESPACE_ID, {
-    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
+  const listResult = await getCloudflareContext().env.API_KEYS.list({
     prefix,
     limit: MAX_API_KEYS,
   });
 
-  return listResult.result.map((key) => key.name);
+  return listResult.keys.map((key) => key.name);
 };
 
 export const getUserApiKeyData = async (key: string) => {
-  return JSON.parse(
-    await cf.kv.namespaces.values
-      .get(CLOUDFLARE_KV_NAMESPACE_ID, key, { account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID })
-      .then((r) => r.text()),
-  );
+  const text = await getCloudflareContext().env.API_KEYS.get(key);
+  return text ? JSON.parse(text) : undefined;
 };
 
 /**
@@ -89,7 +76,7 @@ const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> =
  */
 export async function getUserApiKeys() {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -97,30 +84,43 @@ export async function getUserApiKeys() {
   return keys;
 }
 
+export type CreateUserApiKeyResult =
+  | {
+      ok: false;
+      error: string;
+    }
+  | {
+      ok: true;
+      key: string;
+      keyData: KeyData;
+    };
+
 /**
  * Create the authed user's API key
  */
-export async function createUserApiKey(keyData: CreateKeyFormValues) {
+export async function createUserApiKey(
+  keyData: CreateKeyFormValues,
+): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
 
   const session = await auth();
-  if (!session || !session.user?.id || !session.user?.email) {
-    throw new Error("Unauthorized");
+  if (!session?.user?.id || !session.user?.email) {
+    return { ok: false, error: "Unauthorized" };
   }
 
   if (session.user.email.split("@")[1] !== "uci.edu") {
-    throw new Error("User must have an @uci.edu email address");
+    return { ok: false, error: "User must have an @uci.edu email address" };
   }
 
   const userKeys = await getUserKeysNames(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
-    throw new Error("User at max API key limit");
+    return { ok: false, error: "User at max API key limit" };
   }
 
   const key = await createUserKeyHelper(session.user.id, validatedKeyData);
 
-  return { key, keyData: validatedKeyData };
+  return { ok: true, key, keyData: validatedKeyData };
 }
 
 /**
@@ -128,7 +128,7 @@ export async function createUserApiKey(keyData: CreateKeyFormValues) {
  */
 export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -140,9 +140,7 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
     throw new Error("API key does not exist on user");
   }
 
-  await cf.kv.namespaces.values.update(CLOUDFLARE_KV_NAMESPACE_ID, key, {
-    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
-    value: JSON.stringify(keyData),
+  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData), {
     metadata: "{}",
   });
 
@@ -154,7 +152,7 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
  */
 export async function deleteUserApiKey(key: string) {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -164,7 +162,5 @@ export async function deleteUserApiKey(key: string) {
     throw new Error("API key does not exist on user");
   }
 
-  await cf.kv.namespaces.values.delete(CLOUDFLARE_KV_NAMESPACE_ID, key, {
-    account_id: CLOUDFLARE_DEFAULT_ACCOUNT_ID,
-  });
+  await getCloudflareContext().env.API_KEYS.delete(key);
 }

@@ -7,16 +7,16 @@
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
-    "postinstall": "wrangler types --x-include-runtime",
+    "postinstall": "wrangler types",
     "start": "dotenv -e ../../../.env -- tsx src/index.ts"
   },
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.0.0",
-    "cross-fetch": "4.0.0"
+    "cheerio": "1.2.0",
+    "cross-fetch": "4.1.0"
   },
   "devDependencies": {
-    "wrangler": "3.99.0"
+    "wrangler": "4.0.0"
   }
 }
