@@ -182,6 +182,13 @@ export class Scraper {
       console.log(
         `Requirements block found and parsed for "${majorAudit.title}" (majorCode = ${majorCode}, degree = ${degreeCode})`,
       );
+      // const justPut = ret.get(majorAudit.title)!;
+      // if (justPut[1].code === undefined) {
+      //   console.log(`\x1b[31mCODE IS UNDEFINED`);
+      // }
+      // console.log(
+      //   `log: ${justPut[1].name}, ${justPut[1].code}, \n ${JSON.stringify(justPut[1].qualifiers, null, 2)}`
+      // )
     }
     return ret;
   }
@@ -356,6 +363,7 @@ export class Scraper {
 
       if (specBlock) {
         const foundMajorAssured = foundMajor as DegreeWorksProgram;
+        console.log(JSON.stringify(foundMajorAssured, null, 2));
         console.log(
           `Specialization "${specName}" (specCode = ${specCode}) found to be associated with ` +
             `(majorCode = ${foundMajorAssured.code}, degree = ${foundMajorAssured.degreeType})`,

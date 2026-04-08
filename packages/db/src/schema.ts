@@ -95,6 +95,7 @@ export type DegreeWorksProgramId = {
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
   requirements: DegreeWorksRequirement[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
   /**
    * The set of specializations (if any) that this program has.
    */
@@ -112,12 +113,14 @@ export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
 };
 
 export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
 };
 
 export type DegreeWorksGroupRequirement = {
@@ -142,6 +145,19 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksGroupRequirement
     | DegreeWorksMarkerRequirement
   );
+
+export type DegreeWorksNonExclusivityQualifier = {
+  qualifierType: "Nonexclusive";
+  appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
+};
+
+export type DegreeWorksExclusivityQualifier = {
+  qualifierType: "Exclusive";
+};
+
+export type DegreeWorksRequirementQualifier =
+  | DegreeWorksNonExclusivityQualifier
+  | DegreeWorksExclusivityQualifier;
 
 export type APCoursesGrantedTree =
   | {

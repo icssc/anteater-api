@@ -2,13 +2,15 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
+  DegreeWorksNonExclusivityQualifier,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  DegreeWorksRequirementQualifier,
   Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
-import type { Block, Rule, WithClause } from "$types";
+import type { Block, QualifierClause, Rule, WithClause } from "$types";
 
 export class AuditParser {
   // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
@@ -32,6 +34,9 @@ export class AuditParser {
     ...this.parseBlockId(blockId),
     name: block.title,
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
+    ...(block.header?.qualifierArray
+      ? { qualifier: await this.parseQualifiers(block.header.qualifierArray) }
+      : {}),
     // populate later; we cannot determine specializations on the spot
     specs: [],
     specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
@@ -304,6 +309,43 @@ export class AuditParser {
     });
   }
 
+  async parseQualifiers(qualifierArray: QualifierClause[]) {
+    const qualifiers: Map<QualifierClause["name"], DegreeWorksRequirementQualifier> = new Map<
+      QualifierClause["name"],
+      DegreeWorksRequirementQualifier
+    >();
+    for (const qualifier of qualifierArray) {
+      switch (qualifier.name) {
+        case "NONEXCLUSIVE": {
+          if (!qualifiers.has("NONEXCLUSIVE")) {
+            qualifiers.set("NONEXCLUSIVE", {
+              qualifierType: "Nonexclusive",
+              appliedBlocks: [],
+            });
+          }
+
+          const nonExclusiveQualifier = qualifiers.get(
+            "NONEXCLUSIVE",
+          ) as DegreeWorksNonExclusivityQualifier;
+
+          const newBlockIds =
+            qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
+          for (const blockId in newBlockIds) {
+            nonExclusiveQualifier.appliedBlocks.push(blockId); // still need to count courses
+          }
+          break;
+        }
+        case "EXCLUSIVE":
+          if (!qualifiers.has("EXCLUSIVE")) {
+            qualifiers.set("EXCLUSIVE", {
+              qualifierType: "Exclusive",
+            });
+          }
+      }
+    }
+    return qualifiers.values().toArray();
+  }
+
   async ruleArrayToRequirements(ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
@@ -358,6 +400,12 @@ export class AuditParser {
                 : this.lexOrd(a.department, b.department),
             )
             .map(([x]) => x);
+
+          const qualifiers = rule.requirement.qualifierArray
+            ? await this.parseQualifiers(rule.requirement.qualifierArray)
+            : [];
+          const hasQualifiers = qualifiers.length !== 0;
+
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
             const requirementType = "Course";
@@ -367,6 +415,7 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
+              ...(hasQualifiers ? qualifiers : {}),
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
@@ -379,6 +428,7 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
+              ...(hasQualifiers ? qualifiers : {}),
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
             });

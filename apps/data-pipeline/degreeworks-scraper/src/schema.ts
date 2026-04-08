@@ -20,6 +20,36 @@ export const withClauseSchema = z.object({
 });
 
 /**
+ * A specification on requirement or block for course exclusivity, max course count, etc
+ */
+
+export const qualifierClauseSchema = z.object({
+  name: z.enum([
+    "HIGHPRIORITY",
+    "LOWPRIORITY",
+    "LOWESTPRIORITY",
+    "MAXTERM",
+    "MINPERDISC",
+    "MAXPERDISC",
+    "MINSPREAD",
+    "NONEXCLUSIVE",
+    "EXCLUSIVE",
+    "MAXPASSFAIL",
+    "CLASSESCREDITS",
+    "MINGPA",
+    "MINGRADE",
+    "MINCLASS",
+    "MAXCLASS",
+    "MINCREDIT",
+    "MAXCREDIT",
+    "STANDALONEBLOCK",
+  ]),
+  class: z.string().optional(),
+  text: z.string(),
+  subTextList: z.array(z.string()).optional(),
+});
+
+/**
  * An object that represents a (range of) course(s).
  */
 export const courseSchema = z.object({
@@ -62,6 +92,7 @@ export const ruleCourseSchema = ruleBaseSchema.extend({
     creditsBegin: z.string().optional(),
     classesBegin: z.string().optional(),
     courseArray: z.array(courseSchema),
+    qualifierArray: z.array(qualifierClauseSchema).optional(),
     except: z
       .object({
         courseArray: z.array(courseSchema),
@@ -151,7 +182,14 @@ export const blockSchema = z.object({
   requirementValue: z.string(),
   title: z.string(),
   ruleArray: z.array(ruleSchema),
+  header: z
+    .object({
+      qualifierArray: z.array(qualifierClauseSchema).optional(),
+    })
+    .optional(),
   catalogYear: z.string(),
+  //
+  //
 });
 
 // UndergraduateRequirements interface is not made into an equivalent Zod schema since it's made from already parsed Block objects
