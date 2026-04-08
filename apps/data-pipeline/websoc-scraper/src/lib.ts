@@ -749,14 +749,14 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
       );
       if (courses.length === 0) {
         outcomes[ge] = "empty";
-        console.warn(`[GE ${ge}] empty response - 0 courses returned`);
+        console.warn(`[${ge}] empty response - 0 courses returned`);
       } else {
         outcomes[ge] = "success";
-        console.log(`[GE ${ge}] found ${courses.length} courses`);
+        console.log(`[${ge}] found ${courses.length} courses`);
       }
     } catch (e) {
       outcomes[ge] = "error";
-      console.error(`[GE ${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
+      console.error(`[${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
     }
 
     for (const course of courses) {
@@ -817,7 +817,12 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     await ingestChunk(db, term, lastKnownCode + 1, LAST_SECTION_CODE);
   }
 
-  await scrapeGEsForTerm(db, term);
+  try {
+    await scrapeGEsForTerm(db, term);
+  } catch (e) {
+    console.error(`[scrapeTerm] scrapeGEsForTerm failed for term ${termToName(term)}`, e);
+    throw e;
+  }
   const values = { name, lastScraped: new Date() };
   await db
     .insert(websocMeta)
