@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
+  CourseConstraint,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
@@ -318,6 +319,7 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
+          const creditClausesById = new Map<string, WithClause[]>();
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
             await Promise.all(
               includedCourses.map(([x, withArray]) =>
@@ -327,7 +329,16 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .flatMap(([classes, withArray]) => {
+                  const filtered = this.filterThroughWithArray(classes, withArray);
+                  const creditClauses = withArray.filter(
+                    (w) => w.code === "DWCREDIT" || w.code === "DWCREDITS",
+                  );
+                  if (creditClauses.length > 0) {
+                    for (const c of filtered) creditClausesById.set(c.id, creditClauses);
+                  }
+                  return filtered;
+                })
                 .map((y) => [y.id, y]),
             ),
           );
@@ -358,6 +369,22 @@ export class AuditParser {
                 : this.lexOrd(a.department, b.department),
             )
             .map(([x]) => x);
+
+          const courseConstraints: Record<string, CourseConstraint[]> = Object.fromEntries(
+            courses
+              .filter((id) => creditClausesById.has(id))
+              .map((id) => [
+                id,
+                creditClausesById.get(id)!.map((w) => ({
+                  type: "unit",
+                  connector: w.connector,
+                  operator: w.operator,
+                  units: Number.parseInt(w.valueList[0], 10),
+                })),
+              ]),
+          );
+          const hasCourseConstraints = Object.keys(courseConstraints).length > 0;
+
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
             const requirementType = "Course";
@@ -369,6 +396,7 @@ export class AuditParser {
               requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
+              ...(hasCourseConstraints && { courseConstraints }),
             });
           } else if (rule.requirement.creditsBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -381,6 +409,7 @@ export class AuditParser {
               requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
+              ...(hasCourseConstraints && { courseConstraints }),
             });
           }
           break;
