@@ -202,7 +202,7 @@ export class AuditParser {
   }
 
   parseUnitRestrictionOperator(
-    operatorLike: string,
+    operatorLike: WithClause["operator"],
   ): (minUnit: number, maxUnit: number, valueList: string[]) => boolean {
     // for > and >= operations, we use a loose interpretation for variable unit courses
     // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
@@ -223,9 +223,40 @@ export class AuditParser {
         return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
       case ">=":
         return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
-      default:
-        return () => false;
+      case "<>":
+        return (minUnit, maxUnit, valueList) =>
+          !(
+            minUnit === Number.parseInt(valueList[0], 10) &&
+            maxUnit === Number.parseInt(valueList[0], 10)
+          );
     }
+  }
+
+  private isUnitConstraintAlwaysSatisfied(
+    c: typeof course.$inferSelect,
+    creditClauses: WithClause[],
+  ): boolean {
+    const minUnits = Number.parseInt(c.minUnits, 10);
+    const maxUnits = Number.parseInt(c.maxUnits, 10);
+    return creditClauses.every((w) => {
+      const value = Number.parseInt(w.valueList[0], 10);
+      switch (w.operator) {
+        case "<":
+          return maxUnits < value;
+        case "<=":
+          return maxUnits <= value;
+        case "=":
+          return minUnits === value && maxUnits === value;
+        case ">":
+          return minUnits > value;
+        case ">=":
+          return minUnits >= value;
+        case "<>":
+          return value < minUnits || value > maxUnits;
+        default:
+          return false;
+      }
+    });
   }
 
   private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
@@ -335,7 +366,11 @@ export class AuditParser {
                     (w) => w.code === "DWCREDIT" || w.code === "DWCREDITS",
                   );
                   if (creditClauses.length > 0) {
-                    for (const c of filtered) creditClausesById.set(c.id, creditClauses);
+                    for (const c of filtered) {
+                      if (!this.isUnitConstraintAlwaysSatisfied(c, creditClauses)) {
+                        creditClausesById.set(c.id, creditClauses);
+                      }
+                    }
                   }
                   return filtered;
                 })

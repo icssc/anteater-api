@@ -55,7 +55,7 @@ export const ugradRequirementsQuerySchema = z.object({
 const unitConstraintSchema = z.object({
   type: z.literal("unit"),
   connector: z.enum(["", "AND", "OR"]),
-  operator: z.string(),
+  operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
   units: z.number(),
 });
 
