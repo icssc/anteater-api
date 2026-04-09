@@ -262,6 +262,8 @@ export class AuditParser {
   }
 
   filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
+    if (withArray.length === 0) return structuredClone(classes);
+
     // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
     const orGroups: WithClause[][] = [];
     let currentGroup: WithClause[] = [];
