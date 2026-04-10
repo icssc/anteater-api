@@ -52,6 +52,20 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const qualifierTypes = ["Nonexclusive", "Exclusive"];
+
+export const qualifierBaseSchema = z.object({
+  qualifierType: z.enum(qualifierTypes),
+});
+
+export const nonExclusiveQualifierSchema = qualifierBaseSchema.extend({
+  appliedBlocks: z
+    .array(z.string())
+    .openapi("The blocks which courses taken for this requirement can share with"),
+});
+
+export const qualifierSchema = z.union([nonExclusiveQualifierSchema]);
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -66,6 +80,9 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     requirementType: z.literal("Course"),
     courseCount: z.number().int().nonnegative().openapi({
       description: "The number of courses from this set demanded by this requirement.",
+    }),
+    qualifiers: z.array(qualifierSchema).optional().openapi({
+      description: "Qualifiers for this requirement",
     }),
     courses: z
       .array(z.string())
@@ -254,6 +271,7 @@ export const programRequirementsResponseSchema = z.object({
   name: z.string().openapi({
     description: "Human name for this program",
   }),
+  header: z.array(qualifierSchema).optional(),
   requirements: z.array(programRequirementSchema).openapi({
     description:
       "The set of of requirements for this program; a course, unit, or group requirement as follows:",

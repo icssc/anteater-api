@@ -95,7 +95,7 @@ export type DegreeWorksProgramId = {
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
   requirements: DegreeWorksRequirement[];
-  qualifiers?: DegreeWorksRequirementQualifier[];
+  header?: DegreeWorksRequirementQualifier[];
   /**
    * The set of specializations (if any) that this program has.
    */
@@ -673,12 +673,14 @@ export const degree = pgTable("degree", {
 
 export const schoolRequirement = pgTable("school_requirement", {
   id: varchar("id").primaryKey(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   requirementsHash: bigint("requirements_hash", { mode: "bigint" })
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
@@ -696,6 +698,7 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
+    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
@@ -704,6 +707,7 @@ export const major = pgTable(
 export const minor = pgTable("minor", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
@@ -715,6 +719,7 @@ export const specialization = pgTable(
       .references(() => major.id)
       .notNull(),
     name: varchar("name").notNull(),
+    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.majorId)],

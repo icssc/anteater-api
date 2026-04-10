@@ -35,7 +35,7 @@ export class AuditParser {
     name: block.title,
     requirements: await this.ruleArrayToRequirements(block.ruleArray),
     ...(block.header?.qualifierArray
-      ? { qualifier: await this.parseQualifiers(block.header.qualifierArray) }
+      ? { header: await this.parseQualifiers(block.header.qualifierArray) }
       : {}),
     // populate later; we cannot determine specializations on the spot
     specs: [],
@@ -332,7 +332,7 @@ export class AuditParser {
 
           const newBlockIds =
             qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
-          for (const blockId in newBlockIds) {
+          for (const blockId of newBlockIds) {
             nonExclusiveQualifier.appliedBlocks.push(blockId); // still need to count courses
           }
           break;
@@ -417,7 +417,7 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
-              ...(hasQualifiers ? qualifiers : {}),
+              ...(hasQualifiers && { qualifiers }),
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
             });
@@ -430,7 +430,7 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
-              ...(hasQualifiers ? qualifiers : {}),
+              ...(hasQualifiers && { qualifiers }),
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
             });
