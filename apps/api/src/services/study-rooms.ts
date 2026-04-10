@@ -33,7 +33,7 @@ export class StudyRoomsService {
               END,
               'isAvailable', ${studyRoomSlot.isAvailable}
             )
-            END), ARRAY[]::JSONB[]), NULL)`.as("slots"),
+            END ORDER BY ${studyRoomSlot.start}), ARRAY[]::JSONB[]), NULL)`.as("slots"),
       })
       .from(studyRoom)
       .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
