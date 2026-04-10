@@ -17,6 +17,10 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
   const openingTime: (string | null)[] = new Array(7).fill("");
   const closingTime: (string | null)[] = new Array(7).fill("");
 
+  // If we receive an empty string, that is equivalent to saying "this
+  // meal doesn't happen all week", which we specify here for parsing
+  if (hoursString === "") hoursString = "Mo-Su off";
+
   const timeBlocks = hoursString
     .split(";")
     .map((s) => s.trim())
@@ -34,8 +38,7 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     const [dayRangeStr, timeRangeStr] = parts;
     let openTime = null;
     let closeTime = null;
-
-    // Parse if the dining location is open that day ("off" indicates a closed location)
+    // Parse time range if the particular meal is being served today
     if (timeRangeStr !== "off") {
       const times = timeRangeStr.split("-");
       if (times.length < 2) {
