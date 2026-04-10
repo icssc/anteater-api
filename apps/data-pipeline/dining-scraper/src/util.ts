@@ -35,7 +35,7 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     let openTime = null;
     let closeTime = null;
 
-    // Only parse the range if it isn't "off"
+    // Parse if the dining location is open that day ("off" indicates a closed location)
     if (timeRangeStr !== "off") {
       const times = timeRangeStr.split("-");
       if (times.length < 2) {
