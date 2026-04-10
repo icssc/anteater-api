@@ -14,8 +14,8 @@ export function parseOpeningHours(hoursString: string): [WeekTimes, WeekTimes] {
     Sa: 6,
   };
 
-  const openingTime: (string | null)[] = new Array(7).fill("");
-  const closingTime: (string | null)[] = new Array(7).fill("");
+  const openingTime: (string | null)[] = new Array(7).fill(null);
+  const closingTime: (string | null)[] = new Array(7).fill(null);
 
   // If we receive an empty string, that is equivalent to saying "this
   // meal doesn't happen all week", which we specify here for parsing
