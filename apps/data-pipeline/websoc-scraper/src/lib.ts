@@ -732,6 +732,24 @@ type CourseGEUpdate = {
   isGE8?: boolean;
 };
 
+async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
+  return db
+    .select({
+      "GE-1A": sql<number>`count(*) filter (where ${websocCourse.isGE1A})`,
+      "GE-1B": sql<number>`count(*) filter (where ${websocCourse.isGE1B})`,
+      "GE-2": sql<number>`count(*) filter (where ${websocCourse.isGE2})`,
+      "GE-3": sql<number>`count(*) filter (where ${websocCourse.isGE3})`,
+      "GE-4": sql<number>`count(*) filter (where ${websocCourse.isGE4})`,
+      "GE-5A": sql<number>`count(*) filter (where ${websocCourse.isGE5A})`,
+      "GE-5B": sql<number>`count(*) filter (where ${websocCourse.isGE5B})`,
+      "GE-6": sql<number>`count(*) filter (where ${websocCourse.isGE6})`,
+      "GE-7": sql<number>`count(*) filter (where ${websocCourse.isGE7})`,
+      "GE-8": sql<number>`count(*) filter (where ${websocCourse.isGE8})`,
+    })
+    .from(websocCourse)
+    .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)));
+}
+
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
   const outcomes: Record<string, "success" | "empty" | "error"> = {};
