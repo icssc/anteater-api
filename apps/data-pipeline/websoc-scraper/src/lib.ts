@@ -747,7 +747,8 @@ async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
       "GE-8": sql<number>`count(*) filter (where ${websocCourse.isGE8})`,
     })
     .from(websocCourse)
-    .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)));
+    .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)))
+    .then((rows) => rows[0]);
 }
 
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
