@@ -52,19 +52,18 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
-export const qualifierTypes = ["Nonexclusive", "Exclusive"];
-
-export const qualifierBaseSchema = z.object({
-  qualifierType: z.enum(qualifierTypes),
+export const exclusiveQualifierSchema = z.object({
+  qualifierType: z.literal("Exclusive"),
 });
 
-export const nonExclusiveQualifierSchema = qualifierBaseSchema.extend({
+export const nonExclusiveQualifierSchema = z.object({
+  qualifierType: z.literal("NonExclusive"),
   appliedBlocks: z
     .array(z.string())
-    .openapi("The blocks which courses taken for this requirement can share with"),
+    .openapi("The ids of blocks that can share courses with this requirement"),
 });
 
-export const qualifierSchema = z.union([nonExclusiveQualifierSchema]);
+export const qualifierSchema = z.union([exclusiveQualifierSchema, nonExclusiveQualifierSchema]);
 
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({

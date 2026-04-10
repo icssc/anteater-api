@@ -321,7 +321,7 @@ export class AuditParser {
         case "NONEXCLUSIVE": {
           if (!qualifiers.has("NONEXCLUSIVE")) {
             qualifiers.set("NONEXCLUSIVE", {
-              qualifierType: "Nonexclusive",
+              qualifierType: "NonExclusive",
               appliedBlocks: [],
             });
           }

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Rule } from "$types";
-import { qualifierBaseSchema } from "../../../api/src/schema/programs";
 
 /**
  * a specification for course range for unit req, etc.
@@ -24,29 +23,8 @@ export const withClauseSchema = z.object({
  * A specification on requirement or block for course exclusivity, max course count, etc
  */
 
-const qualifierTypes = [
-  "HIGHPRIORITY",
-  "LOWPRIORITY",
-  "LOWESTPRIORITY",
-  "MAXTERM",
-  "MINPERDISC",
-  "MAXPERDISC",
-  "MINSPREAD",
-  "NONEXCLUSIVE",
-  "EXCLUSIVE",
-  "MAXPASSFAIL",
-  "CLASSESCREDITS",
-  "MINGPA",
-  "MINGRADE",
-  "MINCLASS",
-  "MAXCLASS",
-  "MINCREDIT",
-  "MAXCREDIT",
-  "STANDALONEBLOCK",
-];
-
 export const qualifierClauseBaseSchema = z.object({
-  name: z.enum(qualifierTypes),
+  name: z.string(),
   text: z.string(),
   subTextList: z.array(z.string()).optional(),
 });
@@ -55,7 +33,7 @@ export const qualifierNonExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("NONEXCLUSIVE"),
 });
 
-export const qualifierExclusiveSchema = qualifierBaseSchema.extend({
+export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("EXCLUSIVE"),
 });
 

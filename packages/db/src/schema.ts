@@ -147,7 +147,7 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
   );
 
 export type DegreeWorksNonExclusivityQualifier = {
-  qualifierType: "Nonexclusive";
+  qualifierType: "NonExclusive";
   appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
 };
 
