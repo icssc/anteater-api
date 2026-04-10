@@ -754,6 +754,10 @@ async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
   const outcomes: Record<string, "success" | "empty" | "error"> = {};
+
+  const before = await getGECountsFromDB(db, term);
+  console.log(`[GE scrape] DB counts BEFORE for ${termToName(term)}:`, before);
+
   for (const ge of geCategories) {
     console.log(`Scraping GE ${ge}`);
     let courses: string[] = [];
@@ -807,6 +811,9 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
   });
   console.log(`Updated GE data for ${updates.size} courses`);
+
+  const after = await getGECountsFromDB(db, term);
+  console.log(`[GE scrape] DB counts AFTER for ${termToName(term)}:`, after);
 }
 
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
