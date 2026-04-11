@@ -44,6 +44,7 @@ export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
 export const qualifierClauseSchema = z.union([
   qualifierNonExclusiveSchema,
   qualifierExclusiveSchema,
+  qualifierClauseBaseSchema, // kept in to prevent zod from screaming when encountering an unknown code
 ]);
 
 /**

@@ -107,6 +107,9 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       .int()
       .nonnegative()
       .openapi({ description: "The number of units needed for this requirement." }),
+    qualifiers: z.array(qualifierSchema).optional().openapi({
+      description: "Qualifiers for this requirement",
+    }),
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
