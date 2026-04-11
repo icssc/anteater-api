@@ -90,10 +90,13 @@ export async function updateRestaurant(
     const dateString = format(dateToFetch, "yyyy-MM-dd");
 
     // Get relevant meal periods for the day to upsert into periods table
-    const relevantMealPeriods = currentSchedule.mealPeriods.filter(
-      (mealPeriod) =>
-        mealPeriod.openHours[dayOfWeekToFetch] && mealPeriod.closeHours[dayOfWeekToFetch],
-    );
+    const relevantMealPeriods = currentSchedule.mealPeriods.filter((mealPeriod) => {
+      const open = mealPeriod.openHours[dayOfWeekToFetch];
+      const close = mealPeriod.closeHours[dayOfWeekToFetch];
+
+      // If either open or close time is empty, skip the meal period (null is allowed)
+      return !(open === "" || close === "");
+    });
 
     const periodsOnDay = new Set<number>();
     for (const period of relevantMealPeriods) {
@@ -105,8 +108,8 @@ export async function updateRestaurant(
         date: dateString,
         restaurantId,
         name: period.name,
-        startTime: period.openHours[dayOfWeekToFetch] ?? "",
-        endTime: period.closeHours[dayOfWeekToFetch] ?? "",
+        startTime: period.openHours[dayOfWeekToFetch],
+        endTime: period.closeHours[dayOfWeekToFetch],
         updatedAt,
       } satisfies typeof diningPeriod.$inferInsert;
 
