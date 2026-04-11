@@ -95,6 +95,7 @@ export type DegreeWorksProgramId = {
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
   requirements: DegreeWorksRequirement[];
+  header?: DegreeWorksRequirementQualifier[];
   /**
    * The set of specializations (if any) that this program has.
    */
@@ -112,12 +113,14 @@ export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
 };
 
 export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
 };
 
 export type DegreeWorksGroupRequirement = {
@@ -142,6 +145,19 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksGroupRequirement
     | DegreeWorksMarkerRequirement
   );
+
+export type DegreeWorksNonExclusivityQualifier = {
+  qualifierType: "NonExclusive";
+  appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
+};
+
+export type DegreeWorksExclusivityQualifier = {
+  qualifierType: "Exclusive";
+};
+
+export type DegreeWorksRequirementQualifier =
+  | DegreeWorksNonExclusivityQualifier
+  | DegreeWorksExclusivityQualifier;
 
 export type APCoursesGrantedTree =
   | {
@@ -657,12 +673,14 @@ export const degree = pgTable("degree", {
 
 export const schoolRequirement = pgTable("school_requirement", {
   id: varchar("id").primaryKey(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   requirementsHash: bigint("requirements_hash", { mode: "bigint" })
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
@@ -680,6 +698,7 @@ export const major = pgTable(
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
+    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
@@ -688,6 +707,7 @@ export const major = pgTable(
 export const minor = pgTable("minor", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
+  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
@@ -699,6 +719,7 @@ export const specialization = pgTable(
       .references(() => major.id)
       .notNull(),
     name: varchar("name").notNull(),
+    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.majorId)],
