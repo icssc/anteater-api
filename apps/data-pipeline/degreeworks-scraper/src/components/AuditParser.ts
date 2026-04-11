@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
+  CourseConstraint,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
@@ -159,35 +160,18 @@ export class AuditParser {
     return year * 10 + termOrder[term];
   }
 
-  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+  static schoolYearTerms(catalogYear: string): number[] {
     const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
-    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
-    return {
-      min: AuditParser.termToOrdinal(startYear, "Fall"),
-      max: AuditParser.termToOrdinal(endYear, "Summer2"),
-    };
-  }
-
-  static canSchoolYearSatisfyDWTerm(
-    operator: WithClause["operator"],
-    dwtermOrdinal: number,
-    schoolYearMin: number,
-    schoolYearMax: number,
-  ): boolean {
-    switch (operator) {
-      case "=":
-        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
-      case "<":
-        return schoolYearMin < dwtermOrdinal;
-      case "<=":
-        return schoolYearMin <= dwtermOrdinal;
-      case ">":
-        return schoolYearMax > dwtermOrdinal;
-      case ">=":
-        return schoolYearMax >= dwtermOrdinal;
-      case "<>":
-        return !(dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax);
-    }
+    // protect against cases like 20262026
+    const endYear = startYear + 1;
+    return [
+      AuditParser.termToOrdinal(startYear, "Fall"),
+      AuditParser.termToOrdinal(endYear, "Winter"),
+      AuditParser.termToOrdinal(endYear, "Spring"),
+      AuditParser.termToOrdinal(endYear, "Summer1"),
+      AuditParser.termToOrdinal(endYear, "Summer10wk"),
+      AuditParser.termToOrdinal(endYear, "Summer2"),
+    ];
   }
 
   /**
@@ -200,58 +184,75 @@ export class AuditParser {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
 
-  parseUnitRestrictionOperator(
-    operatorLike: string,
-  ): (minUnit: number, maxUnit: number, valueList: string[]) => boolean {
-    // for > and >= operations, we use a loose interpretation for variable unit courses
-    // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
-    // be taken for 3 or 4 units and meet the withClause requirement
-    // for < and <= which appear to be only in exception lists, we use a strict interpretation
-    // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
-    // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
-    switch (operatorLike) {
+  private static satisfies(
+    value: number,
+    operator: WithClause["operator"],
+    target: number,
+  ): boolean {
+    switch (operator) {
       case "<":
-        return (_minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
+        return value < target;
       case "<=":
-        return (_minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
+        return value <= target;
       case "=":
-        return (minUnit, maxUnit, valueList) =>
-          minUnit <= Number.parseInt(valueList[0], 10) &&
-          Number.parseInt(valueList[0], 10) <= maxUnit;
+        return value === target;
       case ">":
-        return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
+        return value > target;
       case ">=":
-        return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
-      default:
-        return () => false;
+        return value >= target;
+      case "<>":
+        return value !== target;
     }
+  }
+
+  private possibleUnitsForCourse(c: typeof course.$inferSelect): number[] {
+    const minUnits = Number.parseInt(c.minUnits, 10);
+    const maxUnits = Number.parseInt(c.maxUnits, 10);
+    return Array.from({ length: maxUnits - minUnits + 1 }, (_, i) => minUnits + i);
+  }
+
+  private isUnitConstraintAlwaysSatisfied(
+    c: typeof course.$inferSelect,
+    creditClauses: WithClause[],
+  ): boolean {
+    const units = this.possibleUnitsForCourse(c);
+    return creditClauses.every((w) => {
+      const value = Number.parseInt(w.valueList[0], 10);
+      return units.every((u) => AuditParser.satisfies(u, w.operator, value));
+    });
   }
 
   private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
     switch (withClause.code) {
       case "DWCREDIT":
-      case "DWCREDITS":
-        return this.parseUnitRestrictionOperator(withClause.operator)(
-          Number.parseInt(c.minUnits, 10),
-          Number.parseInt(c.maxUnits, 10),
-          withClause.valueList,
-        );
+      case "DWCREDITS": {
+        // for > and >= operations, we use a loose interpretation for variable unit courses
+        // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
+        // be taken for 3 or 4 units and meet the withClause requirement
+        // for < and <= which appear to be only in exception lists, we use a strict interpretation
+        // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
+        // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
+        const value = Number.parseInt(withClause.valueList[0], 10);
+        const units = this.possibleUnitsForCourse(c);
+        const isStrict = withClause.operator === "<" || withClause.operator === "<=";
+        return isStrict
+          ? units.every((u) => AuditParser.satisfies(u, withClause.operator, value))
+          : units.some((u) => AuditParser.satisfies(u, withClause.operator, value));
+      }
       case "DWTERM": {
-        const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
-          this.catalogYear,
-        );
-        // valueList contains specific term(s) from the DWTERM constraint
-        // Courses pass this filter only if at least one term in the current
-        // catalog year satisfies a DWTERM predicate
+        // valueList contains specific term(s) from the DWTERM constraint.
+        // Include the course if some term in the current catalog year satisfies
+        // some target term predicate (i.e. the course is offered in a matching
+        // term during the catalog year).
+        const terms = AuditParser.schoolYearTerms(this.catalogYear);
+        // For <>, require every term in the school year to satisfy t !== target
+        const isStrict = withClause.operator === "<>";
         return withClause.valueList.some((dwtermRaw) => {
           const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
-          const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
-          return AuditParser.canSchoolYearSatisfyDWTerm(
-            withClause.operator,
-            dwtermOrdinal,
-            schoolYearMin,
-            schoolYearMax,
-          );
+          const target = AuditParser.termToOrdinal(year, term);
+          return isStrict
+            ? terms.every((t) => AuditParser.satisfies(t, withClause.operator, target))
+            : terms.some((t) => AuditParser.satisfies(t, withClause.operator, target));
         });
       }
       // There may be more withArray Codes that can be applied here to filter out courses
@@ -320,6 +321,7 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
+          const creditClausesById = new Map<string, WithClause[]>();
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
             await Promise.all(
               includedCourses.map(([x, withArray]) =>
@@ -329,7 +331,20 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .flatMap(([classes, withArray]) => {
+                  const filtered = this.filterThroughWithArray(classes, withArray);
+                  const creditClauses = withArray.filter(
+                    (w) => w.code === "DWCREDIT" || w.code === "DWCREDITS",
+                  );
+                  if (creditClauses.length > 0) {
+                    for (const c of filtered) {
+                      if (!this.isUnitConstraintAlwaysSatisfied(c, creditClauses)) {
+                        creditClausesById.set(c.id, creditClauses);
+                      }
+                    }
+                  }
+                  return filtered;
+                })
                 .map((y) => [y.id, y]),
             ),
           );
@@ -360,6 +375,22 @@ export class AuditParser {
                 : this.lexOrd(a.department, b.department),
             )
             .map(([x]) => x);
+
+          const courseConstraints: Record<string, CourseConstraint[]> = Object.fromEntries(
+            courses
+              .filter((id) => creditClausesById.has(id))
+              .map((id) => [
+                id,
+                creditClausesById.get(id)!.map((w) => ({
+                  type: "unit",
+                  connector: w.connector,
+                  operator: w.operator,
+                  units: Number.parseInt(w.valueList[0], 10),
+                })),
+              ]),
+          );
+          const hasCourseConstraints = Object.keys(courseConstraints).length > 0;
+
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
             const requirementType = "Course";
@@ -371,6 +402,7 @@ export class AuditParser {
               requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
+              ...(hasCourseConstraints && { courseConstraints }),
             });
           } else if (rule.requirement.creditsBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -383,6 +415,7 @@ export class AuditParser {
               requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
+              ...(hasCourseConstraints && { courseConstraints }),
             });
           }
           break;
