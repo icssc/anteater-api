@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import {
   response200,
@@ -9,8 +11,6 @@ import {
   studyRoomsQuerySchema,
 } from "$schema";
 import { StudyRoomsService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const studyRoomsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

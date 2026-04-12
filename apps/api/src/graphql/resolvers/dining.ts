@@ -1,11 +1,11 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
   diningEventsQuerySchema,
-  restaurantTodayQuerySchema,
   restaurantsQuerySchema,
+  restaurantTodayQuerySchema,
 } from "$schema";
 import { DiningService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const diningResolvers = {
   Query: {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/layout/Header";
-import { SessionProvider } from "next-auth/react";
 import { Inter } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import type React from "react";
+import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
   title: "Key Manager",

@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { libraryTrafficQuerySchema, libraryTrafficSchema } from "$schema";
 import { LibraryTrafficService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const libraryTrafficResolvers = {
   Query: {

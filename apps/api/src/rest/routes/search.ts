@@ -1,6 +1,7 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
-import { productionCache } from "$middleware";
-import { accessController } from "$middleware";
+import { accessController, productionCache } from "$middleware";
 import {
   response200,
   response422,
@@ -9,8 +10,6 @@ import {
   searchResponseSchema,
 } from "$schema";
 import { CoursesService, InstructorsService, SearchService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const searchRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 

@@ -1,6 +1,6 @@
+import { mergeTypeDefs } from "@graphql-tools/merge";
 import { catalogueSchema } from "$graphql/schema/catalogue.ts";
 import { programsSchema } from "$graphql/schema/programs.ts";
-import { mergeTypeDefs } from "@graphql-tools/merge";
 import { apExamsSchema } from "./ap-exams";
 import { calendarSchema } from "./calendar";
 import { coursesSchema } from "./courses";

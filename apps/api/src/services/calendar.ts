@@ -1,9 +1,9 @@
-import type { calendarQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import { calendarTerm } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type { calendarQuerySchema } from "$schema";
 
 const toDateString = (d: Date): string => d.toISOString().split("T")[0];
 
