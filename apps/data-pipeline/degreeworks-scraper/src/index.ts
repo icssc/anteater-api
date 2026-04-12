@@ -194,31 +194,47 @@ async function main() {
         target: collegeRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(collegeRequirement),
       })
-      .returning({ id: collegeRequirement.id })
-      .then((rows) => rows.map(({ id }) => id));
+      .returning({ id: collegeRequirement.id, block: collegeRequirement.requirements });
+    //.then((rows) => rows.flatMap(({ id, block }) => [id, block])) as [string, DegreeWorksRequirement[]][];
 
-    const majorRequirementBlockIds = await tx
+    const majorRequirementBlockWithIds = await tx
       .insert(majorRequirement)
       .values(majorRequirementBlocks)
       .onConflictDoUpdate({
         target: majorRequirement.id,
         set: conflictUpdateSetAllCols(majorRequirement),
       })
-      .returning({ id: majorRequirement.id })
-      .then((rows) => rows.map(({ id }) => id));
+      .returning({ id: majorRequirement.id, block: majorRequirement.requirements });
+    //.then((rows) => rows.map(({ id, block }) =>  { return{id, block}}));
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).collegeRequirement =
-          collegeBlockIds[majorObj.collegeBlockIndex];
+        (majorObj as typeof major.$inferInsert).collegeRequirement = collegeBlockIds.find(
+          ({ id, block }) => {
+            try {
+              assert.deepStrictEqual(block, collegeBlocks[majorObj.collegeBlockIndex!]);
+              return true;
+            } catch {
+              return false;
+            }
+          },
+        )?.id;
       }
     }
 
     for (const majorSpecObj of majorSpecToRequirementData) {
-      if (majorSpecObj.majorRequirementBlockIndex !== undefined) {
-        (majorSpecObj as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
-          majorRequirementBlockIds[majorSpecObj.majorRequirementBlockIndex];
-      }
+      (majorSpecObj as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
+        majorRequirementBlockWithIds.find(({ id, block }) => {
+          try {
+            assert.deepStrictEqual(
+              block,
+              majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex],
+            );
+            return true;
+          } catch {
+            return false;
+          }
+        })?.id;
     }
     await tx
       .insert(major)

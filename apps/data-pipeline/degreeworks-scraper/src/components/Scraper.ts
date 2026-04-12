@@ -418,6 +418,8 @@ export class Scraper {
       }
     }
 
+    // Requirements in the majorBlock can change upon taking a specialization, so we must scrape the
+    // major block taken with each specialization.
     for (const [majorSpecId, majorProgram] of await this.scrapePrograms(foundMajorSpecPairs)) {
       this.parsedPrograms.set(majorSpecId, majorProgram);
     }

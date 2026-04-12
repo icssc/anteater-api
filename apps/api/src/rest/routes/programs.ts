@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -22,8 +24,6 @@ import {
   ugradRequirementsResponseSchema,
 } from "$schema";
 import { ProgramsService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const programsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -80,7 +80,9 @@ const majorRequirements = createRoute({
   tags: ["Programs"],
   method: "get",
   path: "/major",
-  description: "Retrieve course requirements for a major in UCI's current catalogue.",
+  description:
+    "Retrieve course requirements for a major in UCI's current catalogue. Note that these are the requirements for the major itself; " +
+    "if this major has specializations and one is taken, its requirements apply as well",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: response200(majorRequirementsResponseSchema),
