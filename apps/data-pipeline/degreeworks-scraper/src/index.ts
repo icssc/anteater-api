@@ -187,7 +187,7 @@ async function main() {
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
 
     // we need to determine the db ID of school blocks and update major objects accordingly first
-    const collegeBlockIds = await tx
+    const collegeBlockWithIds = await tx
       .insert(collegeRequirement)
       .values(collegeBlocks)
       .onConflictDoUpdate({
@@ -195,7 +195,6 @@ async function main() {
         set: conflictUpdateSetAllCols(collegeRequirement),
       })
       .returning({ id: collegeRequirement.id, block: collegeRequirement.requirements });
-    //.then((rows) => rows.flatMap(({ id, block }) => [id, block])) as [string, DegreeWorksRequirement[]][];
 
     const majorRequirementBlockWithIds = await tx
       .insert(majorRequirement)
@@ -205,11 +204,10 @@ async function main() {
         set: conflictUpdateSetAllCols(majorRequirement),
       })
       .returning({ id: majorRequirement.id, block: majorRequirement.requirements });
-    //.then((rows) => rows.map(({ id, block }) =>  { return{id, block}}));
 
     for (const majorObj of majorData) {
       if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).collegeRequirement = collegeBlockIds.find(
+        (majorObj as typeof major.$inferInsert).collegeRequirement = collegeBlockWithIds.find(
           ({ id, block }) => {
             try {
               assert.deepStrictEqual(block, collegeBlocks[majorObj.collegeBlockIndex!]);
