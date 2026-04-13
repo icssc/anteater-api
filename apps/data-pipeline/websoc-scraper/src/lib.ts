@@ -794,6 +794,20 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   }
   console.log(`[GE scrape] outcomes for ${termToName(term)}:`, outcomes);
   await db.transaction(async (tx) => {
+    // reset all flags to false for categories that didn't error
+    const resetSet: Partial<CourseGEUpdate> = {};
+    for (const ge of geCategories) {
+      if (outcomes[ge] !== "error") {
+        resetSet[geCategoryToFlag[ge]] = false;
+      }
+    }
+    if (Object.keys(resetSet).length > 0) {
+      await tx
+        .update(websocCourse)
+        .set(resetSet)
+        .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)));
+    }
+
     for (const [course, update] of updates) {
       const [deptCode, courseNumber, courseTitle] = course.split(",", 3);
       await tx
