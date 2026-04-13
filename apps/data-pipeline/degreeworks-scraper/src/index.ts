@@ -226,7 +226,7 @@ async function main() {
           try {
             assert.deepStrictEqual(
               block,
-              majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex],
+              majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex].requirements,
             );
             return true;
           } catch {
