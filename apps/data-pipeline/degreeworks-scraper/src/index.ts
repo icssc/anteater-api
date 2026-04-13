@@ -210,7 +210,7 @@ async function main() {
         (majorObj as typeof major.$inferInsert).collegeRequirement = collegeBlockWithIds.find(
           ({ id, block }) => {
             try {
-              assert.deepStrictEqual(block, collegeBlocks[majorObj.collegeBlockIndex!]);
+              assert.deepStrictEqual(block, collegeBlocks[majorObj.collegeBlockIndex as number]);
               return true;
             } catch {
               return false;
