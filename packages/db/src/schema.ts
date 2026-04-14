@@ -1038,18 +1038,6 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
             END
           ), NULL)
           `.as("terms"),
-      syllabi: sql<{ year: string; quarter: string; instructorNames: string[]; url: string }[]>`
-          ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT
-            CASE WHEN ${websocSection.webURL} IS NULL OR ${websocSection.webURL} = ''
-            THEN NULL
-            ELSE JSONB_BUILD_OBJECT(
-              'year', ${websocSection.year},
-              'quarter', ${websocSection.quarter},
-              'url', ${websocSection.webURL}
-            )
-            END
-          ), ARRAY[]::JSONB[]), NULL)
-          `.as("syllabi"),
       instructors: sql`
         ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT
           CASE WHEN ${instructor.ucinetid} IS NULL THEN NULL

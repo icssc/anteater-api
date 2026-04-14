@@ -6,12 +6,6 @@ type CoursePreview @cacheControl(maxAge: 86400) {
     courseNumber: String!
 }
 
-type Syllabus @cacheControl(maxAge: 86400) {
-    year: String!
-    quarter: String!
-    url: String!
-}
-
 type Course @cacheControl(maxAge: 86400) {
     id: String!
     department: String!
@@ -39,7 +33,6 @@ type Course @cacheControl(maxAge: 86400) {
     geList: [String!]!
     geText: String!
     terms: [String!]!
-    syllabi: [Syllabus!]!
 }
 
 type CoursesByCursor {

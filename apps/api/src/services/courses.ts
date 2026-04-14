@@ -13,7 +13,6 @@ import type {
   coursesQuerySchema,
   instructorPreviewSchema,
   outputCourseLevels,
-  syllabusSchema,
 } from "$schema";
 import { outputGECategories } from "$schema";
 import { buildUnitBoundsQuery } from "./util.ts";
@@ -54,21 +53,18 @@ type RawCourse = typeof course.$inferSelect & {
   dependencies: unknown;
   instructors: unknown;
   terms: string[];
-  syllabi: unknown;
 };
 
 const transformCourse = ({
   prerequisites,
   dependencies,
   instructors,
-  syllabi,
   ...course
 }: RawCourse): CoursesServiceOutput => ({
   ...course,
   prerequisites: prerequisites as z.infer<typeof coursePreviewSchema>[],
   dependencies: dependencies as z.infer<typeof coursePreviewSchema>[],
   instructors: instructors as z.infer<typeof instructorPreviewSchema>[],
-  syllabi: syllabi as z.infer<typeof syllabusSchema>[],
   minUnits: Number.parseFloat(course.minUnits),
   maxUnits: Number.parseFloat(course.maxUnits),
   courseLevel: mapCourseLevel(course.courseLevel),
