@@ -141,7 +141,7 @@ export async function updateRestaurant(
       const currentPeriodWeekly = await fetchMenuWeekView(today, restaurantId, periodAdobeId);
 
       if (!currentPeriodWeekly) {
-        console.log(`Skipping period ${periodAdobeId}, period is null.`);
+        console.log(`Skipping period ${periodAdobeId}, period dishes field is null.`);
         return;
       }
 
