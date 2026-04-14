@@ -185,7 +185,7 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
         example: "11:00:00",
       }),
       endTime: z.iso.time().nullable().openapi({
-        description: "The end time of a period, or null if it doesn't happen that day",
+        description: "The end time of a period, or null if not served on this day",
         example: "14:30:00",
       }),
       stationToDishes: z.record(
