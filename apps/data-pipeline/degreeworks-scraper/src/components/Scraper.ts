@@ -1,13 +1,16 @@
 import * as fs from "node:fs/promises";
-import type { database } from "@packages/db";
+import { database } from "@packages/db";
 import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
   MajorProgram,
 } from "@packages/db/schema";
+import { schoolRequirement } from "@packages/db/schema";
+import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
+import sortKeys from "sort-keys";
 import type { z } from "zod";
 import { AuditParser, DegreeworksClient } from "$components";
 import type { Block, SpecializationCache } from "$types";
@@ -22,6 +25,8 @@ const JWT_HEADER_PREFIX_LENGTH = 7;
 
 // (school code, major code, degree code)
 type ProgramTriplet = [string, string, string];
+
+const deepSortArray = <T extends unknown[]>(array: T): T => sortKeys(array, { deep: true });
 
 export class Scraper {
   private ap!: AuditParser;
@@ -221,7 +226,11 @@ export class Scraper {
 
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
+    const url = process.env.DB_URL;
+    const db = database(url);
     console.log("[Scraper] degreeworks-scraper starting");
+
+    const dbUgradReqs = await db.select().from(schoolRequirement);
 
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
@@ -260,6 +269,16 @@ export class Scraper {
         "no access to honors requirements; retry scrape from honors-enrolled account to get this information",
       );
     }
+
+    // const ucDiff = diffString(dbUgradReqs, ugradReqs.UC);
+    const ucDiff = diffString(dbUgradReqs, ugradReqs);
+    if (!ucDiff.length) {
+      console.log("No difference found between database and scraped data for UC requirements.");
+    } else {
+      console.log("Difference between database and scraped sample program data:");
+      console.log(ucDiff);
+    }
+
     console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
 
     this.degrees = await this.dw.getMapping("degrees");
