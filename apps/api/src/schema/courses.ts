@@ -208,6 +208,15 @@ export const coursePreviewSchema = z.object({
   courseNumber: z.string().openapi({ example: "161" }),
 });
 
+export const syllabusSchema = z.object({
+  year: z.string().openapi({ example: "2024" }),
+  quarter: z.string().openapi({ example: "Fall" }),
+  url: z.string().openapi({
+    example:
+      "https://canvas.eee.uci.edu/courses/sis_course_id:CourseSpace-Section-F24-12345/assignments/syllabus",
+  }),
+});
+
 export const courseSchema = z.object({
   id: z.string().openapi({ example: "I&CSCI45C" }),
   department: z.string().openapi({ example: "I&C SCI" }),
@@ -237,4 +246,5 @@ export const courseSchema = z.object({
   geList: z.enum(outputGECategories).array(),
   geText: z.string(),
   terms: z.string().array(),
+  syllabi: syllabusSchema.array(),
 });
