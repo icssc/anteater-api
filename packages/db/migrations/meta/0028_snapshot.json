@@ -1,5 +1,5 @@
 {
-  "id": "75ad79c1-0191-4c93-b37d-eaca329c6185",
+  "id": "5051d43d-a0be-4208-a414-13b45703350a",
   "prevId": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
   "version": "7",
   "dialect": "postgresql",
@@ -1929,32 +1929,10 @@
           "name": "requirement_id",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
-      "indexes": {
-        "major_specialization_to_requirement_major_id_specialization_id_index": {
-          "name": "major_specialization_to_requirement_major_id_specialization_id_index",
-          "columns": [
-            {
-              "expression": "major_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "specialization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "major_specialization_to_requirement_major_id_major_id_fk": {
           "name": "major_specialization_to_requirement_major_id_major_id_fk",
@@ -1985,7 +1963,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "major_specialization_to_requirement_major_id_specialization_id_unique": {
+          "name": "major_specialization_to_requirement_major_id_specialization_id_unique",
+          "nullsNotDistinct": true,
+          "columns": ["major_id", "specialization_id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

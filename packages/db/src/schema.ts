@@ -18,6 +18,7 @@ import {
   text,
   time,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -696,11 +697,11 @@ export const majorSpecializationToRequirement = pgTable(
       .notNull()
       .references(() => major.id),
     specializationId: varchar("specialization_id").references(() => specialization.id),
-    requirementId: bigint("requirement_id", { mode: "bigint" }).references(
-      () => majorRequirement.id,
-    ),
+    requirementId: bigint("requirement_id", { mode: "bigint" })
+      .notNull()
+      .references(() => majorRequirement.id),
   },
-  (table) => [uniqueIndex().on(table.majorId, table.specializationId)],
+  (table) => [unique().on(table.majorId, table.specializationId).nullsNotDistinct()],
 );
 
 export const majorRequirement = pgTable("major_requirement", {
