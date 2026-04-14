@@ -25,15 +25,15 @@ export class StudyRoomsService {
           sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
             ELSE JSONB_BUILD_OBJECT(
               'studyRoomId', ${studyRoomSlot.studyRoomId},
-              'start', TO_JSON(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles'),
-              'end', TO_JSON(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles'),
+              'start', TO_CHAR((${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"+00:00"'),
+              'end', TO_CHAR((${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"+00:00"'),
               'url', CASE
                 WHEN ${studyRoom.url} IS NOT NULL THEN ${studyRoom.url}
-                ELSE 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || TO_CHAR(${studyRoomSlot.start}::timestamptz at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times'
+                ELSE 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || TO_CHAR((${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times'
               END,
               'isAvailable', ${studyRoomSlot.isAvailable}
             )
-            END), ARRAY[]::JSONB[]), NULL)`.as("slots"),
+            END ORDER BY ${studyRoomSlot.start}), ARRAY[]::JSONB[]), NULL)`.as("slots"),
       })
       .from(studyRoom)
       .leftJoin(studyRoomSlot, eq(studyRoom.id, studyRoomSlot.studyRoomId))
@@ -47,8 +47,6 @@ export class StudyRoomsService {
   }
 
   async getStudyRooms(input: StudyRoomsServiceInput) {
-    await this.db.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
-
     const conditions = [];
     if (input.location) conditions.push(eq(studyRoom.location, input.location));
     if (input.capacityMin) conditions.push(gte(studyRoom.capacity, input.capacityMin));
@@ -59,10 +57,7 @@ export class StudyRoomsService {
       conditions.push(
         or(
           ...input.dates.map((date) =>
-            eq(
-              sql`(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles')::DATE`,
-              sql`${date.toISOString()}::DATE`,
-            ),
+            eq(sql`${studyRoomSlot.start}::DATE`, sql`${date.toISOString()}::DATE`),
           ),
         ),
       );
@@ -73,12 +68,12 @@ export class StudyRoomsService {
             and(
               // 1. the end time must be later than the lower bound of the user-specified range; otherwise, the slot is certainly too early
               gt(
-                sql`(${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles')::TIME`,
+                sql`${studyRoomSlot.end}::TIME`,
                 sql`(${lower.getUTCHours().toString().padStart(2, "0")} || ${lower.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
               ),
               // 2. the start time must be earlier than the upper bound of the user-specified range; otherwise, the slot is certainly too late
               lt(
-                sql`(${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles')::TIME`,
+                sql`${studyRoomSlot.start}::TIME`,
                 sql`(${upper.getUTCHours().toString().padStart(2, "0")} || ${upper.getUTCMinutes().toString().padStart(2, "0")})::TIME`,
               ),
             ),
