@@ -47,6 +47,7 @@ async function main() {
 
   const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
 
+  console.log(`parsed programs length: ${parsedPrograms.size}`);
   const majorSpecData = parsedPrograms
     .values()
     .map(
@@ -88,34 +89,39 @@ async function main() {
       },
     )
     .toArray();
+  console.log(`major spec data length: ${majorSpecData.length}`);
 
   const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
-  const majorSpecToRequirementData = majorSpecData.map(({ id, specializationId, requirements }) => {
-    const wouldInsert = { requirements };
-    let majorRequirementBlockIndex: number | undefined;
-    const existing = majorRequirementBlocks.findIndex((req) => {
-      try {
-        assert.deepEqual(wouldInsert, req);
-        return true;
-      } catch {
-        return false;
+  const majorSpecToRequirementIndexData = majorSpecData.map(
+    ({ id, specializationId, requirements }) => {
+      const wouldInsert = { requirements };
+      let majorRequirementBlockIndex: number | undefined;
+      const existing = majorRequirementBlocks.findIndex((req) => {
+        try {
+          assert.deepEqual(wouldInsert, req);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      if (existing === -1) {
+        majorRequirementBlocks.push(wouldInsert);
+        majorRequirementBlockIndex = majorRequirementBlocks.length - 1;
+      } else {
+        majorRequirementBlockIndex = existing;
       }
-    });
-    if (existing === -1) {
-      majorRequirementBlocks.push(wouldInsert);
-      majorRequirementBlockIndex = majorRequirementBlocks.length - 1;
-    } else {
-      majorRequirementBlockIndex = existing;
-    }
-    return {
-      majorId: id,
-      specializationId,
-      majorRequirementBlockIndex,
-    };
-  });
+      return {
+        majorId: id,
+        specializationId,
+        majorRequirementBlockIndex,
+      };
+    },
+  );
+
+  console.log(`major spec to requirement length: ${majorSpecToRequirementIndexData.length}`);
 
   const majorData = majorSpecData.filter(({ specializationId }) => specializationId === undefined);
-
+  console.log(`major data length: ${majorData.length}`);
   const minorData = parsedMinorPrograms
     .values()
     .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
@@ -219,21 +225,41 @@ async function main() {
         )?.id;
       }
     }
-
-    for (const majorSpecObj of majorSpecToRequirementData) {
-      (majorSpecObj as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
-        majorRequirementBlockWithIds.find(({ id, block }) => {
+    const majorSpecToRequirementData = majorSpecToRequirementIndexData.map(
+      ({ majorId, specializationId, majorRequirementBlockIndex }) => {
+        const requirementId = majorRequirementBlockWithIds.find(({ block }) => {
           try {
             assert.deepStrictEqual(
               block,
-              majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex].requirements,
+              majorRequirementBlocks[majorRequirementBlockIndex].requirements,
             );
             return true;
           } catch {
             return false;
           }
-        })?.id;
-    }
+        })!.id;
+        return {
+          majorId,
+          specializationId,
+          requirementId,
+        };
+      },
+    );
+    // for (const majorSpecObj of majorSpecToRequirementData) {
+    //   (majorSpecObj as unknown as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
+    //     majorRequirementBlockWithIds.find(({ id, block }) => {
+    //       try {
+    //         assert.deepStrictEqual(
+    //           block,
+    //           majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex].requirements,
+    //         );
+    //         return true;
+    //       } catch {
+    //         return false;
+    //       }
+    //     })!.id;
+    // }
+    console.log(`major spec to requirement length: ${majorSpecToRequirementData.length}`);
     await tx
       .insert(major)
       .values(majorData)
