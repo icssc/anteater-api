@@ -6,7 +6,7 @@ import type {
   DegreeWorksRequirement,
   MajorProgram,
 } from "@packages/db/schema";
-import { schoolRequirement } from "@packages/db/schema";
+import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
 import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -230,8 +230,6 @@ export class Scraper {
     const db = database(url);
     console.log("[Scraper] degreeworks-scraper starting");
 
-    const dbUgradReqs = await db.select().from(schoolRequirement);
-
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
       console.log("Can't get undergrad reqs...");
@@ -270,13 +268,15 @@ export class Scraper {
       );
     }
 
-    // const ucDiff = diffString(dbUgradReqs, ugradReqs.UC);
-    const ucDiff = diffString(dbUgradReqs, ugradReqs);
-    if (!ucDiff.length) {
-      console.log("No difference found between database and scraped data for UC requirements.");
+    const dbUgradReqs = await db.select().from(schoolRequirement);
+    const ugradReqsDiff = diffString(dbUgradReqs, ugradReqs);
+    if (!ugradReqsDiff.length) {
+      console.log(
+        "No difference found between database and scraped data for undergraduate requirements.",
+      );
     } else {
-      console.log("Difference between database and scraped sample program data:");
-      console.log(ucDiff);
+      console.log("Difference between database and scraped undergraduate requirements data:");
+      console.log(ugradReqsDiff);
     }
 
     console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
@@ -308,8 +308,32 @@ export class Scraper {
       );
     }
 
+    // TODO: parsed minors string diff
+    const dbMinors = await db.select().from(minor);
+    const scrapedMinors = Array.from(this.parsedMinorPrograms.values());
+    const minorsDiff = diffString(deepSortArray(dbMinors), deepSortArray(scrapedMinors));
+    if (!minorsDiff.length) {
+      console.log("No difference found between database and scraped data for minor programs.");
+    } else {
+      console.log("Difference between database and scraped minor programs data:");
+      console.log(minorsDiff);
+    }
+
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
+
+    // TODO: parsed programs (majors) string diff
+    const dbMajors = await db.select().from(major);
+    const scrapedMajors = Array.from(this.parsedPrograms.values()).map(
+      ([, majorBlock]) => majorBlock,
+    );
+    const majorsDiff = diffString(deepSortArray(dbMajors), deepSortArray(scrapedMajors));
+    if (!majorsDiff.length) {
+      console.log("No difference found between database and scraped data for major programs.");
+    } else {
+      console.log("Difference between database and scraped major programs data:");
+      console.log(majorsDiff);
+    }
 
     this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
@@ -418,6 +442,22 @@ export class Scraper {
       }
     }
 
+    // TODO: specializations string diff
+    const dbSpecializations = await db.select().from(specialization);
+    const scrapedSpecializations = Array.from(this.parsedSpecializations.values()).map(
+      ([, , specBlock]) => specBlock,
+    );
+    const specsDiff = diffString(
+      deepSortArray(dbSpecializations),
+      deepSortArray(scrapedSpecializations),
+    );
+    if (!specsDiff.length) {
+      console.log("No difference found between database and scraped data for specializations.");
+    } else {
+      console.log("Difference between database and scraped specializations data:");
+      console.log(specsDiff);
+    }
+
     // After we match specializations to a major
     // we ensure that majors with 0 specs don't require a specialization
     for (const [, [, major]] of this.parsedPrograms) {
@@ -431,6 +471,20 @@ export class Scraper {
         new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
+
+    // TODO: degrees awarded string diff: should say id instead of code
+    const dbDegrees = await db.select().from(degree);
+    const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
+      id,
+      name,
+    }));
+    const degreesDiff = diffString(deepSortArray(dbDegrees), deepSortArray(scrapedDegrees));
+    if (!degreesDiff.length) {
+      console.log("No difference found between database and scraped data for degrees awarded.");
+    } else {
+      console.log("Difference between database and scraped degrees awarded data:");
+      console.log(degreesDiff);
+    }
 
     // Post-processing steps.
 
