@@ -52,6 +52,23 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+const unitConstraintSchema = z.object({
+  type: z.literal("unit"),
+  connector: z.enum(["", "AND", "OR"]),
+  operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
+  units: z.number(),
+});
+
+const courseConstraintSchema = unitConstraintSchema;
+
+const courseConstraintsField = z
+  .record(z.string(), z.array(courseConstraintSchema))
+  .optional()
+  .openapi({
+    description:
+      "A map from course ID to the constraints that apply to that course for this requirement.",
+  });
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -70,6 +87,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    courseConstraints: courseConstraintsField,
   })
   .openapi({
     description:
@@ -94,6 +112,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    courseConstraints: courseConstraintsField,
   })
   .openapi({
     description:

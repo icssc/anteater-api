@@ -108,16 +108,27 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
  */
 export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
+export type UnitConstraint = {
+  type: "unit";
+  connector: "" | "AND" | "OR";
+  operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
+  units: number;
+};
+
+export type CourseConstraint = UnitConstraint;
+
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  courseConstraints?: Record<string, CourseConstraint[]>;
 };
 
 export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  courseConstraints?: Record<string, CourseConstraint[]>;
 };
 
 export type DegreeWorksGroupRequirement = {
