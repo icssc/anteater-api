@@ -1,6 +1,6 @@
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { type SQL, and, asc, desc, inArray, or, sql } from "@packages/db/drizzle";
+import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
