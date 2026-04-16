@@ -1,7 +1,6 @@
-import * as assert from "node:assert";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import type { Division } from "@packages/db/schema";
+import type { DegreeWorksRequirement, Division } from "@packages/db/schema";
 import {
   collegeRequirement,
   degree,
@@ -14,6 +13,10 @@ import {
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { Scraper } from "$components";
+
+function encodeBlock(requirements: DegreeWorksRequirement[]) {
+  return requirements.map((r) => r.requirementId).join("-");
+}
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -45,9 +48,9 @@ async function main() {
     }))
     .toArray();
 
-  const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
+  const collegeBlocks = new Map<string, typeof collegeRequirement.$inferInsert>();
+  const majorBlocks = new Map<string, typeof majorRequirement.$inferInsert>();
 
-  console.log(`parsed programs length: ${parsedPrograms.size}`);
   const majorSpecData = parsedPrograms
     .values()
     .map(
@@ -56,72 +59,33 @@ async function main() {
         major: { name, degreeType, code, requirements, specializationRequired },
         specCode,
       }) => {
-        let collegeBlockIndex: number | undefined;
+        let collegeBlockEncoded: null | string = null;
         if (college?.requirements) {
-          const wouldInsert = { name: college.name, requirements: college.requirements };
-          const existing = collegeBlocks.findIndex((schoolExisting) => {
-            try {
-              assert.deepStrictEqual(schoolExisting, wouldInsert);
-              return true;
-            } catch {
-              return false;
-            }
+          collegeBlockEncoded = encodeBlock(college.requirements);
+          collegeBlocks.set(collegeBlockEncoded, {
+            name: college.name,
+            requirements: college.requirements,
           });
-
-          if (existing === -1) {
-            collegeBlocks.push(wouldInsert);
-            collegeBlockIndex = collegeBlocks.length - 1;
-          } else {
-            collegeBlockIndex = existing;
-          }
         }
+
+        const majorBlockEncoded = encodeBlock(requirements);
+        majorBlocks.set(majorBlockEncoded, { requirements });
 
         return {
           id: `${degreeType}-${code}`,
           degreeId: degreeType ?? "",
           code,
+          majorBlockEncoded,
           ...(specCode !== undefined ? { specializationId: `${degreeType}-${specCode}` } : {}),
           name,
           specializationRequired,
           requirements,
-          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+          ...(collegeBlockEncoded !== null ? { collegeBlockEncoded } : {}),
         };
       },
     )
     .toArray();
-  console.log(`major spec data length: ${majorSpecData.length}`);
 
-  const majorRequirementBlocks = [] as (typeof majorRequirement.$inferInsert)[];
-  const majorSpecToRequirementIndexData = majorSpecData.map(
-    ({ id, specializationId, requirements }) => {
-      const wouldInsert = { requirements };
-      let majorRequirementBlockIndex: number | undefined;
-      const existing = majorRequirementBlocks.findIndex((req) => {
-        try {
-          assert.deepEqual(wouldInsert, req);
-          return true;
-        } catch {
-          return false;
-        }
-      });
-      if (existing === -1) {
-        majorRequirementBlocks.push(wouldInsert);
-        majorRequirementBlockIndex = majorRequirementBlocks.length - 1;
-      } else {
-        majorRequirementBlockIndex = existing;
-      }
-      return {
-        majorId: id,
-        specializationId,
-        majorRequirementBlockIndex,
-      };
-    },
-  );
-
-  console.log(`major spec to requirement length: ${majorSpecToRequirementIndexData.length}`);
-
-  const majorData = majorSpecData.filter(({ specializationId }) => specializationId === undefined);
-  console.log(`major data length: ${majorData.length}`);
   const minorData = parsedMinorPrograms
     .values()
     .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
@@ -192,10 +156,10 @@ async function main() {
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
 
-    // we need to determine the db ID of school blocks and update major objects accordingly first
+    // we need to determine the db ID of college and major_requirement before updating major objects accordingly
     const collegeBlockWithIds = await tx
       .insert(collegeRequirement)
-      .values(collegeBlocks)
+      .values(collegeBlocks.values().toArray())
       .onConflictDoUpdate({
         target: collegeRequirement.requirementsHash,
         set: conflictUpdateSetAllCols(collegeRequirement),
@@ -204,62 +168,37 @@ async function main() {
 
     const majorRequirementBlockWithIds = await tx
       .insert(majorRequirement)
-      .values(majorRequirementBlocks)
+      .values(majorBlocks.values().toArray())
       .onConflictDoUpdate({
         target: majorRequirement.id,
         set: conflictUpdateSetAllCols(majorRequirement),
       })
       .returning({ id: majorRequirement.id, block: majorRequirement.requirements });
 
-    for (const majorObj of majorData) {
-      if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).collegeRequirement = collegeBlockWithIds.find(
-          ({ id, block }) => {
-            try {
-              assert.deepStrictEqual(block, collegeBlocks[majorObj.collegeBlockIndex as number]);
-              return true;
-            } catch {
-              return false;
-            }
-          },
-        )?.id;
-      }
-    }
-    const majorSpecToRequirementData = majorSpecToRequirementIndexData.map(
-      ({ majorId, specializationId, majorRequirementBlockIndex }) => {
+    const majorData = majorSpecData
+      .filter((majorSpecObj) => majorSpecObj.specializationId === undefined)
+      .map((majorSpecObj) => {
+        const collegeRequirement = collegeBlockWithIds.find(({ block }) => {
+          return encodeBlock(block) === majorSpecObj.collegeBlockEncoded;
+        })?.id;
+        return {
+          ...majorSpecObj,
+          collegeRequirement,
+        };
+      });
+    const majorSpecToRequirementData = majorSpecData.map(
+      ({ id: majorId, specializationId, majorBlockEncoded }) => {
         const requirementId = majorRequirementBlockWithIds.find(({ block }) => {
-          try {
-            assert.deepStrictEqual(
-              block,
-              majorRequirementBlocks[majorRequirementBlockIndex].requirements,
-            );
-            return true;
-          } catch {
-            return false;
-          }
-        })!.id;
+          return encodeBlock(block) === majorBlockEncoded;
+        })?.id;
         return {
           majorId,
           specializationId,
           requirementId,
-        };
+        } as typeof majorSpecializationToRequirement.$inferInsert;
       },
     );
-    // for (const majorSpecObj of majorSpecToRequirementData) {
-    //   (majorSpecObj as unknown as typeof majorSpecializationToRequirement.$inferInsert).requirementId =
-    //     majorRequirementBlockWithIds.find(({ id, block }) => {
-    //       try {
-    //         assert.deepStrictEqual(
-    //           block,
-    //           majorRequirementBlocks[majorSpecObj.majorRequirementBlockIndex].requirements,
-    //         );
-    //         return true;
-    //       } catch {
-    //         return false;
-    //       }
-    //     })!.id;
-    // }
-    console.log(`major spec to requirement length: ${majorSpecToRequirementData.length}`);
+
     await tx
       .insert(major)
       .values(majorData)

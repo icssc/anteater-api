@@ -172,6 +172,14 @@ export class Scraper {
         console.log(`Requirements block already exists for "${majorAudit.title}" ${majorLogInfo}`);
         continue;
       }
+      // if (audit?.college) {
+      //   const data = await this.ap.parseBlock(
+      //         `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
+      //         audit?.college,
+      //       )
+      //   console.log("COLLEGE!!!");
+      //   console.log(JSON.stringify(data, null, 2))
+      // }
       ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
         college: audit?.college
           ? await this.ap.parseBlock(
