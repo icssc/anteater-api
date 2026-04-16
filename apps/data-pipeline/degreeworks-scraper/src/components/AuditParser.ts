@@ -1,16 +1,18 @@
 import { createHash } from "node:crypto";
-import type { Block, Rule, WithClause } from "$types";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
+import type { Block, Rule, WithClause } from "$types";
 
 export class AuditParser {
-  private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
+  // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
+  // private static readonly SPEC_OR_OTHER_REGEX = /"type":"(?:SPEC|OTHER)","value":"\w+"/g;
   private static readonly SPECIALIZATION_ADJACENT_REGEX =
     /specialization|concentration|emphasis|area|track|major/i;
   private static readonly ELECTIVE_REGEX = /ELECTIVE @+/;
@@ -19,7 +21,10 @@ export class AuditParser {
 
   private requirementIdMap = new Map<string, string>();
 
-  constructor(private readonly db: ReturnType<typeof database>) {
+  constructor(
+    private readonly db: ReturnType<typeof database>,
+    private readonly catalogYear: string,
+  ) {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
@@ -127,6 +132,64 @@ export class AuditParser {
     return requirementId;
   }
 
+  static parseDWTerm(raw: string) {
+    const [yearStr, termStr] = raw.split(" ");
+    const year = Number.parseInt(yearStr, 10);
+    const mapping = {
+      FALL: "Fall",
+      WINTER: "Winter",
+      SPRING: "Spring",
+      SUMMER1: "Summer1",
+      SUMMER10WK: "Summer10wk",
+      SUMMER2: "Summer2",
+    } as const;
+    const term = mapping[termStr as keyof typeof mapping];
+    return { year, term };
+  }
+
+  static termToOrdinal(year: number, term: Term): number {
+    const termOrder: Record<Term, number> = {
+      Winter: 0,
+      Spring: 1,
+      Summer1: 2,
+      Summer10wk: 3,
+      Summer2: 4,
+      Fall: 5,
+    };
+    return year * 10 + termOrder[term];
+  }
+
+  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
+    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
+    return {
+      min: AuditParser.termToOrdinal(startYear, "Fall"),
+      max: AuditParser.termToOrdinal(endYear, "Summer2"),
+    };
+  }
+
+  static canSchoolYearSatisfyDWTerm(
+    operator: WithClause["operator"],
+    dwtermOrdinal: number,
+    schoolYearMin: number,
+    schoolYearMax: number,
+  ): boolean {
+    switch (operator) {
+      case "=":
+        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
+      case "<":
+        return schoolYearMin < dwtermOrdinal;
+      case "<=":
+        return schoolYearMin <= dwtermOrdinal;
+      case ">":
+        return schoolYearMax > dwtermOrdinal;
+      case ">=":
+        return schoolYearMax >= dwtermOrdinal;
+      case "<>":
+        return !(dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax);
+    }
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -148,41 +211,80 @@ export class AuditParser {
     // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
     switch (operatorLike) {
       case "<":
-        return (minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
       case "<=":
-        return (minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
       case "=":
         return (minUnit, maxUnit, valueList) =>
           minUnit <= Number.parseInt(valueList[0], 10) &&
           Number.parseInt(valueList[0], 10) <= maxUnit;
       case ">":
-        return (minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
       case ">=":
-        return (minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
+        return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
       default:
         return () => false;
     }
   }
 
-  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
-    let filteredClasses = structuredClone(classes);
-    for (const withClause of withArray) {
-      switch (withClause.code) {
-        case "DWCREDIT":
-        case "DWCREDITS":
-          filteredClasses = filteredClasses.filter((c) =>
-            this.parseUnitRestrictionOperator(withClause.operator)(
-              Number.parseInt(c.minUnits, 10),
-              Number.parseInt(c.maxUnits, 10),
-              withClause.valueList,
-            ),
+  private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
+    switch (withClause.code) {
+      case "DWCREDIT":
+      case "DWCREDITS":
+        return this.parseUnitRestrictionOperator(withClause.operator)(
+          Number.parseInt(c.minUnits, 10),
+          Number.parseInt(c.maxUnits, 10),
+          withClause.valueList,
+        );
+      case "DWTERM": {
+        const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
+          this.catalogYear,
+        );
+        // valueList contains specific term(s) from the DWTERM constraint
+        // Courses pass this filter only if at least one term in the current
+        // catalog year satisfies a DWTERM predicate
+        return withClause.valueList.some((dwtermRaw) => {
+          const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
+          const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
+          return AuditParser.canSchoolYearSatisfyDWTerm(
+            withClause.operator,
+            dwtermOrdinal,
+            schoolYearMin,
+            schoolYearMax,
           );
-          break;
-        // There may be more withArray Codes that can be applied here to filter out courses
-        // see https://github.com/icssc/anteater-api/pull/286
+        });
+      }
+      // There may be more withArray Codes that can be applied here to filter out courses
+      // see https://github.com/icssc/anteater-api/pull/286
+      default:
+        return true;
+    }
+  }
+
+  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
+    if (withArray.length === 0) return structuredClone(classes);
+
+    // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
+    const orGroups: WithClause[][] = [];
+    let currentGroup: WithClause[] = [];
+
+    for (const withClause of withArray) {
+      if (withClause.connector === "OR") {
+        if (currentGroup.length > 0) {
+          orGroups.push(currentGroup);
+        }
+        currentGroup = [withClause];
+      } else {
+        currentGroup.push(withClause);
       }
     }
-    return filteredClasses;
+    if (currentGroup.length > 0) {
+      orGroups.push(currentGroup);
+    }
+
+    return structuredClone(classes).filter((c) =>
+      orGroups.some((group) => group.every((clause) => this.classMatchesWithClause(c, clause))),
+    );
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
@@ -295,7 +397,7 @@ export class AuditParser {
             label,
             requirementId,
             requirementType,
-            requirementCount: Number.parseInt(rule.requirement.numberOfGroups),
+            requirementCount: Number.parseInt(rule.requirement.numberOfGroups, 10),
             requirements,
           });
           break;

@@ -1,9 +1,3 @@
-import type {
-  websocDepartmentsQuerySchema,
-  websocQuerySchema,
-  websocResponseSchema,
-  websocSectionSchema,
-} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL, SQLWrapper } from "@packages/db/drizzle";
 import {
@@ -35,6 +29,12 @@ import {
 import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type {
+  websocDepartmentsQuerySchema,
+  websocQuerySchema,
+  websocResponseSchema,
+  websocSectionSchema,
+} from "$schema";
 import {
   buildCourseLevelQuery,
   buildDaysOfWeekQuery,

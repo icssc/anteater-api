@@ -1,10 +1,10 @@
-import authConfig from "@/auth.config";
-import { database } from "@/db";
-import { users } from "@/db/schema";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
+import authConfig from "@/auth.config";
+import { database } from "@/db";
+import { users } from "@/db/schema";
 
 declare module "next-auth" {
   interface Session {

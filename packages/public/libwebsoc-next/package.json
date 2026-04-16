@@ -1,7 +1,11 @@
 {
   "name": "@icssc/libwebsoc-next",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A library for safely querying WebSoc and parsing the data into a JS object",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icssc/anteater-api"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,15 +14,19 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --clean --dts --format esm --minify",
-    "check:types": "tsc -p ./tsconfig.json -noEmit"
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "prepack": "pnpm run check:types && pnpm run build"
   },
   "dependencies": {
-    "cheerio": "1.0.0",
-    "cross-fetch": "4.0.0",
-    "fast-xml-parser": "4.5.0"
+    "cheerio": "1.2.0",
+    "cross-fetch": "4.1.0",
+    "fast-xml-parser": "5.5.9"
   },
   "devDependencies": {
     "tsup": "8.3.5",
     "typescript": "5.6.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

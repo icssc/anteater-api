@@ -1,3 +1,5 @@
+import type { z } from "@hono/zod-openapi";
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
   majorRequirementsQuerySchema,
@@ -10,8 +12,6 @@ import {
   ugradRequirementsQuerySchema,
 } from "$schema";
 import { ProgramsService } from "$services";
-import type { z } from "@hono/zod-openapi";
-import { GraphQLError } from "graphql/error";
 
 export const programResolvers = {
   Query: {

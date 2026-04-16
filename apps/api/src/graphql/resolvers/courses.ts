@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { coursesByCursorQuerySchema, coursesQuerySchema } from "$schema";
 import { CoursesService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const coursesResolvers = {
   Query: {

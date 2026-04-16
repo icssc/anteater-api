@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { studyRoomsQuerySchema } from "$schema";
 import { StudyRoomsService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const studyRoomsResolvers = {
   Query: {

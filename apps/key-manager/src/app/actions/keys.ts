@@ -1,6 +1,9 @@
 "use server";
 
 import { createHash } from "node:crypto";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { KeyData } from "@packages/key-types";
+import { createId } from "@paralleldrive/cuid2";
 import {
   type CreateKeyFormValues,
   createKeyTransform,
@@ -8,10 +11,6 @@ import {
 } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
-import type { KeyData } from "@packages/key-types";
-
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createId } from "@paralleldrive/cuid2";
 
 const getUserPrefix = (userId: string) => createHash("sha256").update(userId).digest("base64url");
 
@@ -77,7 +76,7 @@ const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> =
  */
 export async function getUserApiKeys() {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -105,7 +104,7 @@ export async function createUserApiKey(
   const validatedKeyData = await validateKeyInput(keyData);
 
   const session = await auth();
-  if (!session || !session.user?.id || !session.user?.email) {
+  if (!session?.user?.id || !session.user?.email) {
     return { ok: false, error: "Unauthorized" };
   }
 
@@ -129,7 +128,7 @@ export async function createUserApiKey(
  */
 export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
@@ -153,7 +152,7 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
  */
 export async function deleteUserApiKey(key: string) {
   const session = await auth();
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 

@@ -194,8 +194,22 @@
     {
       "idx": 27,
       "version": "7",
-      "when": 1774835782725,
-      "tag": "0027_fix_missing_instructor_data",
+      "when": 1773634820227,
+      "tag": "0027_websoc_meta_drop_last_dept_scraped",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775601796966,
+      "tag": "0028_dining_period_times_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1776355846732,
+      "tag": "0029_fix_missing_instructor_data",
       "breakpoints": true
     }
   ]

@@ -1,6 +1,6 @@
 {
-  "id": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
-  "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
+  "id": "457fce90-4c25-4873-bc8a-1f19df6db23b",
+  "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1140,13 +1140,13 @@
           "name": "start_time",
           "type": "time",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "end_time": {
           "name": "end_time",
           "type": "time",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "name": {
           "name": "name",
@@ -3105,6 +3105,12 @@
       "name": "websoc_instructor",
       "schema": "",
       "columns": {
+        "identifier": {
+          "name": "identifier",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "name": {
           "name": "name",
           "type": "varchar",
@@ -3116,6 +3122,18 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "school": {
+          "name": "school",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "department": {
+          "name": "department",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -4528,7 +4546,7 @@
           "notNull": true
         }
       },
-      "definition": "with \"shortened_names_cte\" as (select \"instructor_ucinetid\", ARRAY_AGG(\"websoc_instructor_name\") as \"shortened_names\" from \"instructor_to_websoc_instructor\" group by \"instructor_to_websoc_instructor\".\"instructor_ucinetid\"), \"courses_cte\" as (with \"terms_cte\" as (select \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL) as \"terms\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" group by \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\") select \"terms_cte\".\"instructor_ucinetid\", \"course\".\"id\", \n          CASE WHEN \"course\".\"id\" IS NULL\n          THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n               'id', \"course\".\"id\",\n               'title', \"course\".\"title\",\n               'department', \"course\".\"department\",\n               'courseNumber', \"course\".\"course_number\",\n               'terms', COALESCE(\"terms\", ARRAY[]::TEXT[])\n          )\n          END\n           as \"course_info\" from \"course\" left join \"terms_cte\" on \"terms_cte\".\"id\" = \"course\".\"id\" group by \"course\".\"id\", \"terms_cte\".\"instructor_ucinetid\", \"terms\") select \"instructor\".\"ucinetid\", \"instructor\".\"name\", \"instructor\".\"title\", \"instructor\".\"email\", \"instructor\".\"department\", COALESCE(\"shortened_names\", ARRAY[]::TEXT[]) as \"shortened_names\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT \"course_info\"), NULL)\n         as \"courses\" from \"instructor\" left join \"shortened_names_cte\" on \"shortened_names_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" left join \"courses_cte\" on \"courses_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" where \"instructor\".\"ucinetid\" <> 'student' group by \"instructor\".\"ucinetid\", \"shortened_names\"",
+      "definition": "with \"shortened_names_cte\" as (select \"instructor_ucinetid\", ARRAY_AGG(\n                              DISTINCT split_part(\n                                \"websoc_instructor_name\",\n                                '&|*',\n                                1\n                              )\n                            ) as \"shortened_names\" from \"instructor_to_websoc_instructor\" group by \"instructor_to_websoc_instructor\".\"instructor_ucinetid\"), \"courses_cte\" as (with \"terms_cte\" as (select \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL) as \"terms\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" group by \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\") select \"terms_cte\".\"instructor_ucinetid\", \"course\".\"id\", \n          CASE WHEN \"course\".\"id\" IS NULL\n          THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n               'id', \"course\".\"id\",\n               'title', \"course\".\"title\",\n               'department', \"course\".\"department\",\n               'courseNumber', \"course\".\"course_number\",\n               'terms', COALESCE(\"terms\", ARRAY[]::TEXT[])\n          )\n          END\n           as \"course_info\" from \"course\" left join \"terms_cte\" on \"terms_cte\".\"id\" = \"course\".\"id\" group by \"course\".\"id\", \"terms_cte\".\"instructor_ucinetid\", \"terms\") select \"instructor\".\"ucinetid\", \"instructor\".\"name\", \"instructor\".\"title\", \"instructor\".\"email\", \"instructor\".\"department\", COALESCE(\"shortened_names\", ARRAY[]::TEXT[]) as \"shortened_names\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT \"course_info\"), NULL)\n         as \"courses\" from \"instructor\" left join \"shortened_names_cte\" on \"shortened_names_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" left join \"courses_cte\" on \"courses_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" where \"instructor\".\"ucinetid\" <> 'student' group by \"instructor\".\"ucinetid\", \"shortened_names\"",
       "name": "instructor_view",
       "schema": "public",
       "isExisting": false,

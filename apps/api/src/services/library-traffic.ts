@@ -1,8 +1,8 @@
-import type { libraryTrafficQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq } from "@packages/db/drizzle";
 import { libraryTraffic } from "@packages/db/schema";
 import type { z } from "zod";
+import type { libraryTrafficQuerySchema } from "$schema";
 
 type LibraryTrafficServiceInput = z.infer<typeof libraryTrafficQuerySchema>;
 

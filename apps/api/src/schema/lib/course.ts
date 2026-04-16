@@ -1,6 +1,6 @@
-import type { ParsedNumber } from "$schema";
 import { z } from "@hono/zod-openapi";
 import { isBaseTenInt } from "@packages/stdlib";
+import type { ParsedNumber } from "$schema";
 
 /**
  * Transforms a string of course numbers into a list of ParsedNumber objects.

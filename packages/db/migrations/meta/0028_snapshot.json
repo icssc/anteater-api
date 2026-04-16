@@ -1,6 +1,6 @@
 {
-  "id": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
-  "prevId": "c0f62b68-af2c-4377-bf84-83a14454c844",
+  "id": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
+  "prevId": "dc0f14bf-cd68-4558-a169-77a14cc5ff2a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1140,13 +1140,13 @@
           "name": "start_time",
           "type": "time",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "end_time": {
           "name": "end_time",
           "type": "time",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "name": {
           "name": "name",
