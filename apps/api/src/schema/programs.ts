@@ -52,7 +52,7 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
-export const qualifierSchema = z.union([exclusiveQualifierSchema, nonExclusiveQualifierSchema]);
+export const qualifierSchema = z.union([]);
 
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
