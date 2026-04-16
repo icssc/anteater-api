@@ -161,7 +161,7 @@ export class Scraper {
       const audit = await this.dw.getMajorAudit(degree);
       const majorAudit = audit?.major;
 
-      const specLogInfo = specCode ? ` specCode = ${specCode}` : "";
+      const specLogInfo = specCode ? `, specCode = ${specCode}` : "";
       const majorLogInfo = `(majorCode = ${majorCode}, degree = ${degreeCode}${specLogInfo})`;
 
       if (!majorAudit) {
@@ -172,14 +172,7 @@ export class Scraper {
         console.log(`Requirements block already exists for "${majorAudit.title}" ${majorLogInfo}`);
         continue;
       }
-      // if (audit?.college) {
-      //   const data = await this.ap.parseBlock(
-      //         `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
-      //         audit?.college,
-      //       )
-      //   console.log("COLLEGE!!!");
-      //   console.log(JSON.stringify(data, null, 2))
-      // }
+
       ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
         college: audit?.college
           ? await this.ap.parseBlock(
@@ -426,8 +419,8 @@ export class Scraper {
       }
     }
 
-    // Requirements in the majorBlock can change upon taking a specialization, so we must scrape the
-    // major block taken with each specialization.
+    // Requirements in the majorBlock can change upon taking a specialization, so we must
+    // rescrape programs now that we know the valid (major, specialization) combinations
     for (const [majorSpecId, majorProgram] of await this.scrapePrograms(foundMajorSpecPairs)) {
       this.parsedPrograms.set(majorSpecId, majorProgram);
     }
