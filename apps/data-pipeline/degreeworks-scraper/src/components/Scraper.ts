@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import * as fs from "node:fs/promises";
 import { database } from "@packages/db";
 import type {
@@ -6,7 +7,13 @@ import type {
   DegreeWorksRequirement,
   MajorProgram,
 } from "@packages/db/schema";
-import { degree, major, minor, schoolRequirement, specialization } from "@packages/db/schema";
+import {
+  type collegeRequirement,
+  degree,
+  major,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
 import { eq } from "drizzle-orm";
 import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
@@ -307,53 +314,86 @@ export class Scraper {
     console.log("[Scraper] discovering valid degrees");
     const validDegrees = await this.discoverValidDegrees();
 
-    this.minorPrograms = new Set((await this.dw.getMapping("minors")).keys());
-    console.log(`Fetched ${this.minorPrograms.size} minor programs`);
-    this.parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
-    console.log("Scraping minor program requirements");
-    for (const minorCode of this.minorPrograms) {
-      const audit = await this.dw.getMinorAudit(minorCode);
-      if (!audit) {
-        console.log(`Requirements block not found (minorCode = ${minorCode})`);
-        continue;
-      }
-      this.parsedMinorPrograms.set(
-        audit.title,
-        await this.ap.parseBlock(`U-MINOR-${minorCode}`, audit),
-      );
-      console.log(
-        `Requirements block found and parsed for "${audit.title}" (minorCode = ${minorCode})`,
-      );
-    }
+    // this.minorPrograms = new Set((await this.dw.getMapping("minors")).keys());
+    // console.log(`Fetched ${this.minorPrograms.size} minor programs`);
+    // this.parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
+    // console.log("Scraping minor program requirements");
+    // for (const minorCode of this.minorPrograms) {
+    //   const audit = await this.dw.getMinorAudit(minorCode);
+    //   if (!audit) {
+    //     console.log(`Requirements block not found (minorCode = ${minorCode})`);
+    //     continue;
+    //   }
+    //   this.parsedMinorPrograms.set(
+    //     audit.title,
+    //     await this.ap.parseBlock(`U-MINOR-${minorCode}`, audit),
+    //   );
+    //   console.log(
+    //     `Requirements block found and parsed for "${audit.title}" (minorCode = ${minorCode})`,
+    //   );
+    // }
 
     const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
-    const dbMinors = (await db.select().from(minor)).sort(sortById);
-    const scrapedMinors = this.parsedMinorPrograms
-      .values()
-      .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
-      .toArray()
-      .sort(sortById);
-    const minorsDiff = diffString(dbMinors, scrapedMinors);
-    if (!minorsDiff.length) {
-      console.log("No difference found between database and scraped data for minors.");
-    } else {
-      console.log("Difference between database and scraped minors data:");
-      console.log(minorsDiff);
-    }
+    // const dbMinors = (await db.select().from(minor)).sort(sortById);
+    // const scrapedMinors = this.parsedMinorPrograms
+    //   .values()
+    //   .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
+    //   .toArray()
+    //   .sort(sortById);
+    // const minorsDiff = diffString(dbMinors, scrapedMinors);
+    // if (!minorsDiff.length) {
+    //   console.log("No difference found between database and scraped data for minors.");
+    // } else {
+    //   console.log("Difference between database and scraped minors data:");
+    //   console.log(minorsDiff);
+    // }
 
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
     // TODO: parsed programs (majors) string diff
-    const dbMajors = await db.select().from(major);
-    const scrapedMajors = Array.from(this.parsedPrograms.values()).map(
-      ([, majorBlock]) => majorBlock,
-    );
-    const majorsDiff = diffString(deepSortArray(dbMajors), deepSortArray(scrapedMajors));
+    const dbMajors = (await db.select().from(major)).sort(sortById);
+    const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
+    const scrapedMajors = this.parsedPrograms
+      .values()
+      .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
+        let collegeBlockIndex: number | undefined;
+        if (college?.requirements) {
+          const wouldInsert = { name: college.name, requirements: college.requirements };
+          const existing = collegeBlocks.findIndex((schoolExisting) => {
+            try {
+              assert.deepStrictEqual(schoolExisting, wouldInsert);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+          if (existing === -1) {
+            collegeBlocks.push(wouldInsert);
+            collegeBlockIndex = collegeBlocks.length - 1;
+          } else {
+            collegeBlockIndex = existing;
+          }
+        }
+
+        return {
+          id: `${degreeType}-${code}`,
+          degreeId: degreeType ?? "",
+          code,
+          name,
+          specializationRequired,
+          requirements,
+          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+        };
+      })
+      .toArray()
+      .sort(sortById);
+    const majorsDiff = diffString(dbMajors, scrapedMajors);
     if (!majorsDiff.length) {
-      console.log("No difference found between database and scraped data for major programs.");
+      console.log("No difference found between database and scraped data for majors.");
     } else {
-      console.log("Difference between database and scraped major programs data:");
+      console.log("Difference between database and scraped majors data:");
       console.log(majorsDiff);
     }
 
