@@ -68,7 +68,7 @@ export class Scraper {
         "M.MGMT.": "M.I.M.",
       }?.[input] ?? input
     );
-  }
+  } // TODO: ACCOUNT FOR THIS
 
   private findDwNameFor(
     awardTypesMap: Map<string, z.infer<typeof rewardTypeSchema>>,
@@ -289,7 +289,22 @@ export class Scraper {
       .where(eq(schoolRequirement.id, "GE"));
     const dbGeRequirements = dbGeRequirementsFetched?.requirements;
     const geReqsDiff = diffString(dbGeRequirements, this.parsedUgradRequirements.get("GE"));
-    if (!ucReqsDiff.length && !geReqsDiff.length) {
+
+    let honorsStatus = "";
+    if (honorsFourRequirements) {
+      honorsStatus = "CHC4";
+    } else if (honorsTwoRequirements) {
+      honorsStatus = "CHC2";
+    }
+
+    const [dbHonorsRequirementsFetched] = await db
+      .select()
+      .from(schoolRequirement)
+      .where(eq(schoolRequirement.id, honorsStatus));
+    const dbHonorsRequirements = dbHonorsRequirementsFetched?.requirements;
+    const honorsReqsDiff = diffString(dbHonorsRequirements, this.parsedUgradRequirements.get("GE"));
+
+    if (!ucReqsDiff.length && !geReqsDiff.length && !honorsReqsDiff.length) {
       console.log(
         "No difference found between database and scraped data for undergraduate requirements.",
       );
@@ -301,6 +316,10 @@ export class Scraper {
       if (geReqsDiff.length) {
         console.log("Difference between database and scraped GE requirements data:");
         console.log(geReqsDiff);
+      }
+      if (honorsReqsDiff.length) {
+        console.log("Difference between database and scraped Honors requirements data:");
+        console.log(honorsReqsDiff);
       }
     }
 
