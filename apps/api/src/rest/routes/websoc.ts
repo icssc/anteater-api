@@ -6,13 +6,15 @@ import {
   response200,
   response422,
   response500,
+  syllabiQuerySchema,
+  syllabiSchema,
   websocDepartmentsQuerySchema,
   websocDepartmentsResponseSchema,
   websocQuerySchema,
   websocResponseSchema,
   websocTermResponseSchema,
 } from "$schema";
-import { WebsocService } from "$services";
+import { SyllabiService, WebsocService } from "$services";
 
 const websocRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -60,6 +62,21 @@ const websocDepartmentsRoute = createRoute({
   },
 });
 
+const websocSyllabiRoute = createRoute({
+  summary: "Retrieve historical syllabi",
+  operationId: "websocSyllabi",
+  tags: ["WebSoc"],
+  method: "get",
+  path: "/syllabi",
+  description: "Retrieves historical syllabus links for the given course.",
+  request: { query: syllabiQuerySchema },
+  responses: {
+    200: response200(syllabiSchema.array()),
+    422: response422(),
+    500: response500(),
+  },
+});
+
 websocRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }));
 
 websocRouter.openapi(websocRoute, async (c) => {
@@ -85,6 +102,18 @@ websocRouter.openapi(websocDepartmentsRoute, async (c) => {
   const service = new WebsocService(database(c.env.DB.connectionString));
   return c.json(
     { ok: true, data: websocDepartmentsResponseSchema.parse(await service.getDepartments(query)) },
+    200,
+  );
+});
+
+websocRouter.openapi(websocSyllabiRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new SyllabiService(database(c.env.DB.connectionString));
+  return c.json(
+    {
+      ok: true,
+      data: syllabiSchema.array().parse(await service.getSyllabi(query)),
+    },
     200,
   );
 });

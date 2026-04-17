@@ -1,10 +1,11 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
+  syllabiQuerySchema,
   websocDepartmentsQuerySchema,
   websocDepartmentsResponseSchema,
   websocQuerySchema,
 } from "$schema";
-import { WebsocService } from "$services";
+import { SyllabiService, WebsocService } from "$services";
 
 export const websocResolvers = {
   Query: {
@@ -21,6 +22,10 @@ export const websocResolvers = {
       return websocDepartmentsResponseSchema.parse(
         await service.getDepartments(websocDepartmentsQuerySchema.parse(args.query)),
       );
+    },
+    syllabi: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const service = new SyllabiService(db);
+      return await service.getSyllabi(syllabiQuerySchema.parse(args.query));
     },
   },
 };

@@ -11,4 +11,5 @@ export * from "./programs";
 export * from "./search";
 export * from "./study-rooms";
 export * from "./websoc";
+export * from "./websoc-syllabi";
 export * from "./week";
