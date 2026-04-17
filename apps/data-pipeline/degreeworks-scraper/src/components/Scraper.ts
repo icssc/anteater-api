@@ -276,7 +276,6 @@ export class Scraper {
       );
     }
 
-    //
     const [dbUcRequirementsFetched] = await db
       .select()
       .from(schoolRequirement)
@@ -536,7 +535,6 @@ export class Scraper {
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
 
-    // TODO: degrees awarded string diff: should say id instead of code
     const dbDegrees = await db.select().from(degree);
 
     const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
