@@ -326,37 +326,18 @@ export class Scraper {
       );
     }
 
-    // TODO: parsed minors string diff
-    // const dbMinors = await db.select().from(minor);
-    // const scrapedMinors = Array.from(this.parsedMinorPrograms.values());
-    // const minorsDiff = diffString(deepSortArray(dbMinors), deepSortArray(scrapedMinors));
-    // if (!minorsDiff.length) {
-    //   console.log("No difference found between database and scraped data for minor programs.");
-    // } else {
-    //   console.log("Difference between database and scraped minor programs data:");
-    //   console.log(minorsDiff);
-    // }
-    const dbMinors = await db.select().from(minor);
-
-    const scrapedMinors = Array.from(this.parsedMinorPrograms.values()).map((minorBlock) => ({
-      // Map 'code' to 'id' and include only the fields present in the DB
-      id: minorBlock.code,
-      name: minorBlock.name,
-      requirements: minorBlock.requirements,
-    }));
-
-    // Sort by 'id' to ensure the diff compares the same minor programs
     const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
-
-    const sortedDb = deepSortArray(dbMinors.sort(sortById));
-    const sortedScraped = deepSortArray(scrapedMinors.sort(sortById));
-
-    const minorsDiff = diffString(sortedDb, sortedScraped);
-
+    const dbMinors = (await db.select().from(minor)).sort(sortById);
+    const scrapedMinors = this.parsedMinorPrograms
+      .values()
+      .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
+      .toArray()
+      .sort(sortById);
+    const minorsDiff = diffString(dbMinors, scrapedMinors);
     if (!minorsDiff.length) {
-      console.log("No difference found between database and scraped data for minor programs.");
+      console.log("No difference found between database and scraped data for minors.");
     } else {
-      console.log("Difference between database and scraped minor programs data:");
+      console.log("Difference between database and scraped minors data:");
       console.log(minorsDiff);
     }
 
