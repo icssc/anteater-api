@@ -351,7 +351,6 @@ export class Scraper {
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
-    // TODO: parsed programs (majors) string diff
     const dbMajors = (await db.select().from(major)).sort(sortById);
     const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
     const scrapedMajors = this.parsedPrograms
@@ -504,49 +503,23 @@ export class Scraper {
       }
     }
 
-    // TODO: specializations string diff
-    // const dbSpecializations = await db.select().from(specialization);
-    // const scrapedSpecializations = Array.from(this.parsedSpecializations.values()).map(
-    //   ([, , specBlock]) => specBlock,
-    // );
-    // const specsDiff = diffString(
-    //   deepSortArray(dbSpecializations),
-    //   deepSortArray(scrapedSpecializations),
-    // );
-    // if (!specsDiff.length) {
-    //   console.log("No difference found between database and scraped data for specializations.");
-    // } else {
-    //   console.log("Difference between database and scraped specializations data:");
-    //   console.log(specsDiff);
-    // }
-    const dbSpecializations = await db.select().from(specialization);
-
-    const scrapedSpecializations = Array.from(this.parsedSpecializations.entries()).map(
-      ([specCode, [parentMajor, specName, programObject]]) => {
-        // The DB expects a composite ID like "BS-328G"
-        const compositeId = `${parentMajor.degreeType}-${specCode}`;
-        const compositeMajorId = `${parentMajor.degreeType}-${parentMajor.code}`;
-
-        return {
-          id: compositeId,
-          majorId: compositeMajorId,
-          name: specName,
-          requirements: programObject.requirements,
-        };
-      },
-    );
-
-    // CRITICAL: Sort both arrays by 'id' so json-diff compares the same programs
-    const sortedDbSpecializations = deepSortArray(dbSpecializations.sort(sortById));
-    const sortedScrapedSpecializations = deepSortArray(scrapedSpecializations.sort(sortById));
-
-    const specsDiff = diffString(sortedDbSpecializations, sortedScrapedSpecializations);
-
-    if (!specsDiff.length) {
+    const dbSpecializations = (await db.select().from(specialization)).sort(sortById);
+    const scrapedSpecializations = this.parsedSpecializations
+      .values()
+      .map(([majorId, specName, { degreeType, code, requirements }]) => ({
+        id: `${degreeType}-${code}`,
+        name: specName,
+        majorId: `${majorId.degreeType}-${majorId.code}`,
+        requirements,
+      }))
+      .toArray()
+      .sort(sortById);
+    const specializationsDiff = diffString(dbSpecializations, scrapedSpecializations);
+    if (!specializationsDiff.length) {
       console.log("No difference found between database and scraped data for specializations.");
     } else {
       console.log("Difference between database and scraped specializations data:");
-      console.log(specsDiff);
+      console.log(specializationsDiff);
     }
 
     // After we match specializations to a major
@@ -564,18 +537,6 @@ export class Scraper {
     );
 
     // TODO: degrees awarded string diff: should say id instead of code
-    // const dbDegrees = await db.select().from(degree);
-    // const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
-    //   id,
-    //   name,
-    // }));
-    // const degreesDiff = diffString(deepSortArray(dbDegrees), deepSortArray(scrapedDegrees));
-    // if (!degreesDiff.length) {
-    //   console.log("No difference found between database and scraped data for degrees awarded.");
-    // } else {
-    //   console.log("Difference between database and scraped degrees awarded data:");
-    //   console.log(degreesDiff);
-    // }
     const dbDegrees = await db.select().from(degree);
 
     const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
@@ -585,8 +546,6 @@ export class Scraper {
       name,
     }));
 
-    // To ensure identical strings, we sort both arrays by the 'id' field
-    // before passing them to the diffing/sorting utility.
     const sortedDbDegrees = deepSortArray(dbDegrees.sort(sortById));
     const sortedScrapedDegrees = deepSortArray(scrapedDegrees.sort(sortById));
 
