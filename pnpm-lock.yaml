@@ -185,6 +185,10 @@ importers:
       zod:
         specifier: 4.3.6
         version: 4.3.6
+    devDependencies:
+      '@types/json-diff':
+        specifier: 1.0.3
+        version: 1.0.3
 
   apps/data-pipeline/dining-scraper:
     dependencies:

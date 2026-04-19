@@ -17,5 +17,8 @@
     "jwt-decode": "4.0.0",
     "sort-keys": "6.0.0",
     "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/json-diff": "1.0.3"
   }
 }
