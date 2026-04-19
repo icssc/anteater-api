@@ -68,7 +68,7 @@ export class Scraper {
         "M.MGMT.": "M.I.M.",
       }?.[input] ?? input
     );
-  } // TODO: ACCOUNT FOR THIS
+  }
 
   private findDwNameFor(
     awardTypesMap: Map<string, z.infer<typeof rewardTypeSchema>>,
