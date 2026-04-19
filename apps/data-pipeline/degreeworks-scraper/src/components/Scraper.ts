@@ -236,6 +236,7 @@ export class Scraper {
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
     const url = process.env.DB_URL;
+    if (!url) throw new Error("DB_URL not found");
     const db = database(url);
     console.log("[Scraper] degreeworks-scraper starting");
 
