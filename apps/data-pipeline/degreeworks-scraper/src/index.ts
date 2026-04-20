@@ -1,6 +1,7 @@
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import type { DegreeWorksRequirement, Division } from "@packages/db/schema";
+import { notInArray, sql } from "@packages/db/drizzle";
+import type { Division } from "@packages/db/schema";
 import {
   collegeRequirement,
   degree,
@@ -12,11 +13,8 @@ import {
   specialization,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { v4 as uuidv4 } from "uuid";
 import { Scraper } from "$components";
-
-function encodeBlock(requirements: DegreeWorksRequirement[]) {
-  return requirements.map((r) => r.requirementId).join("-");
-}
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -38,6 +36,26 @@ async function main() {
   const geRequirementData = parsedUgradRequirements.get("GE");
   const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
   const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
+  // const degreesAwarded: Map<string, string> = await fs
+  //   .readFile("degree-cache.json", { encoding: "utf-8" })
+  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+  // const parsedUgradRequirements: Map<string, DegreeWorksRequirement[]> = await fs
+  //   .readFile("u-cache.json", { encoding: "utf-8" })
+  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+  // const parsedSpecializations: Map<string, [DegreeWorksProgramId, string, DegreeWorksProgram]> =
+  //   await fs
+  //     .readFile("spec-cache.json", { encoding: "utf-8" })
+  //     .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+  // const parsedPrograms: Map<string, MajorProgram> = await fs
+  //   .readFile("major-cache.json", { encoding: "utf-8" })
+  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+  // const parsedMinorPrograms: Map<string, DegreeWorksProgram> = await fs
+  //   .readFile("minor-cache.json", { encoding: "utf-8" })
+  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
+  // const ucRequirementData = parsedUgradRequirements.get("UC");
+  // const geRequirementData = parsedUgradRequirements.get("GE");
+  // const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
+  // const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -48,9 +66,6 @@ async function main() {
     }))
     .toArray();
 
-  const collegeBlocks = new Map<string, typeof collegeRequirement.$inferInsert>();
-  const majorBlocks = new Map<string, typeof majorRequirement.$inferInsert>();
-
   const majorSpecData = parsedPrograms
     .values()
     .map(
@@ -59,28 +74,17 @@ async function main() {
         major: { name, degreeType, code, requirements, specializationRequired },
         specCode,
       }) => {
-        let collegeBlockEncoded: null | string = null;
-        if (college?.requirements) {
-          collegeBlockEncoded = encodeBlock(college.requirements);
-          collegeBlocks.set(collegeBlockEncoded, {
-            name: college.name,
-            requirements: college.requirements,
-          });
-        }
-
-        const majorBlockEncoded = encodeBlock(requirements);
-        majorBlocks.set(majorBlockEncoded, { requirements });
-
         return {
-          id: `${degreeType}-${code}`,
+          ...(college ? { collegeReqUuid: uuidv4() } : {}),
+          majorReqUuid: uuidv4(),
+          majorId: `${degreeType}-${code}`,
           degreeId: degreeType ?? "",
           code,
-          majorBlockEncoded,
           ...(specCode !== undefined ? { specializationId: `${degreeType}-${specCode}` } : {}),
           name,
           specializationRequired,
           requirements,
-          ...(collegeBlockEncoded !== null ? { collegeBlockEncoded } : {}),
+          college,
         };
       },
     )
@@ -102,6 +106,8 @@ async function main() {
     .toArray();
 
   await db.transaction(async (tx) => {
+    console.log("starting first transaction");
+    tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
     if (ucRequirementData && geRequirementData) {
       await tx
         .insert(schoolRequirement)
@@ -155,54 +161,126 @@ async function main() {
       .insert(degree)
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
+    console.log("first portion of outer transaction done");
 
-    // we need to determine the db ID of college and major_requirement before updating major objects accordingly
-    const collegeBlockWithIds = await tx
-      .insert(collegeRequirement)
-      .values(collegeBlocks.values().toArray())
-      .onConflictDoUpdate({
-        target: collegeRequirement.requirementsHash,
-        set: conflictUpdateSetAllCols(collegeRequirement),
-      })
-      .returning({ id: collegeRequirement.id, block: collegeRequirement.requirements });
+    const majorReqUnifiedId = await tx.transaction(async (tx2) => {
+      console.log("starting 2nd transaction");
+      await tx2.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
+      const idToHash = await tx2
+        .insert(majorRequirement)
+        .values(
+          majorSpecData.map(({ requirements, majorReqUuid: id }) => {
+            return { id, requirements };
+          }),
+        )
+        .returning({ uuid: majorRequirement.id, hash: majorRequirement.requirementHash });
 
-    const majorRequirementBlockWithIds = await tx
-      .insert(majorRequirement)
-      .values(majorBlocks.values().toArray())
-      .onConflictDoUpdate({
-        target: majorRequirement.id,
-        set: conflictUpdateSetAllCols(majorRequirement),
-      })
-      .returning({ id: majorRequirement.id, block: majorRequirement.requirements });
+      await tx2
+        .delete(majorRequirement)
+        .where(
+          notInArray(
+            majorRequirement.id,
+            tx2
+              .selectDistinctOn([majorRequirement.requirementHash], { id: majorRequirement.id })
+              .from(majorRequirement)
+              .orderBy(majorRequirement.requirementHash, majorRequirement.id),
+          ),
+        );
+      console.log("ending 2nd transactions");
+      const hashToUnified = new Map(
+        await tx2
+          .select({ uuid: majorRequirement.id, hash: majorRequirement.requirementHash })
+          .from(majorRequirement)
+          .then((q) =>
+            q.map(({ uuid, hash }) => {
+              return [hash, uuid];
+            }),
+          ),
+      );
+      return new Map(
+        idToHash.map(({ uuid, hash }) => {
+          return [uuid, hashToUnified.get(hash)];
+        }),
+      );
+    });
 
+    const colleRegUnifiedId = await tx.transaction(async (tx2) => {
+      console.log("starting 3nd transaction");
+
+      const idToHash = await tx2
+        .insert(collegeRequirement)
+        .values(
+          majorSpecData
+            .filter((x) => x.college !== undefined)
+            .map(({ college, collegeReqUuid: uuid }) => {
+              return { name: college?.name, requirements: college?.requirements, id: uuid };
+            }) as (typeof collegeRequirement.$inferInsert)[],
+        )
+        .returning({ uuid: collegeRequirement.id, hash: collegeRequirement.requirementHash });
+      await tx2
+        .delete(collegeRequirement)
+        .where(
+          notInArray(
+            collegeRequirement.id,
+            tx2
+              .selectDistinctOn([collegeRequirement.requirementHash], { id: collegeRequirement.id })
+              .from(collegeRequirement)
+              .orderBy(collegeRequirement.requirementHash, collegeRequirement.id),
+          ),
+        );
+      const hashToUnified = new Map(
+        await tx2
+          .select({ uuid: collegeRequirement.id, hash: collegeRequirement.requirementHash })
+          .from(collegeRequirement)
+          .then((q) =>
+            q.map(({ uuid, hash }) => {
+              return [hash, uuid];
+            }),
+          ),
+      );
+      return new Map(
+        idToHash.map(({ uuid, hash }) => {
+          return [uuid, hashToUnified.get(hash)];
+        }),
+      );
+    });
+
+    console.log("UPDATING!");
+
+    // Unifies randomly generated uuid associated with the same requirement hash
+    for (const majorSpecObj of majorSpecData) {
+      if (majorSpecObj.collegeReqUuid) {
+        majorSpecObj.collegeReqUuid = colleRegUnifiedId.get(majorSpecObj.collegeReqUuid);
+      }
+      majorSpecObj.majorReqUuid = majorReqUnifiedId.get(majorSpecObj.majorReqUuid) as string;
+    }
+
+    const majorSpecToRequirementData = majorSpecData.map((majorSpecObj) => {
+      return {
+        majorId: majorSpecObj.majorId,
+        specializationId: majorSpecObj.specializationId,
+        requirementId: majorSpecObj.majorReqUuid,
+      } as typeof majorSpecializationToRequirement.$inferInsert;
+    });
+    console.log("inserting into major");
     const majorData = majorSpecData
       .filter((majorSpecObj) => majorSpecObj.specializationId === undefined)
       .map((majorSpecObj) => {
-        const collegeRequirement = collegeBlockWithIds.find(({ block }) => {
-          return encodeBlock(block) === majorSpecObj.collegeBlockEncoded;
-        })?.id;
         return {
-          ...majorSpecObj,
-          collegeRequirement,
-        };
+          name: majorSpecObj.name,
+          code: majorSpecObj.code,
+          specializationRequired: majorSpecObj.specializationRequired,
+          id: majorSpecObj.majorId,
+          degreeId: majorSpecObj.degreeId,
+          collegeRequirementId: majorSpecObj.collegeReqUuid,
+        } as typeof major.$inferInsert;
       });
-    const majorSpecToRequirementData = majorSpecData.map(
-      ({ id: majorId, specializationId, majorBlockEncoded }) => {
-        const requirementId = majorRequirementBlockWithIds.find(({ block }) => {
-          return encodeBlock(block) === majorBlockEncoded;
-        })?.id;
-        return {
-          majorId,
-          specializationId,
-          requirementId,
-        } as typeof majorSpecializationToRequirement.$inferInsert;
-      },
-    );
 
     await tx
       .insert(major)
       .values(majorData)
       .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
+    console.log("finshined inserting to major");
     await tx
       .insert(minor)
       .values(minorData)
@@ -214,7 +292,7 @@ async function main() {
         target: specialization.id,
         set: conflictUpdateSetAllCols(specialization),
       });
-
+    console.log("inserting into majorSpecToReq");
     await tx
       .insert(majorSpecializationToRequirement)
       .values(majorSpecToRequirementData)
@@ -225,6 +303,7 @@ async function main() {
         ],
         set: conflictUpdateSetAllCols(majorSpecializationToRequirement),
       });
+    console.log("finished inserting into majorSpecToReq");
   });
   exit(0);
 }

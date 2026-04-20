@@ -682,12 +682,12 @@ export const schoolRequirement = pgTable("school_requirement", {
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  requirementHash: bigint("requirement_hash", { mode: "bigint" })
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
+    .unique(), // deferrable initially immediate
   name: varchar("name").notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  requirementsHash: bigint("requirements_hash", { mode: "bigint" })
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-    .unique(),
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 });
 
 export const majorSpecializationToRequirement = pgTable(
@@ -697,7 +697,7 @@ export const majorSpecializationToRequirement = pgTable(
       .notNull()
       .references(() => major.id),
     specializationId: varchar("specialization_id").references(() => specialization.id),
-    requirementId: bigint("requirement_id", { mode: "bigint" })
+    requirementId: uuid("requirement_id")
       .notNull()
       .references(() => majorRequirement.id),
   },
@@ -705,10 +705,11 @@ export const majorSpecializationToRequirement = pgTable(
 );
 
 export const majorRequirement = pgTable("major_requirement", {
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: bigint("id", { mode: "bigint" })
-    .primaryKey()
+  requirementHash: bigint("requirement_hash", { mode: "bigint" })
+    .unique() // deferrable initially immediate
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 });
 
 export const major = pgTable(
@@ -721,9 +722,9 @@ export const major = pgTable(
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
-    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
+    collegeRequirementId: uuid("college_requirement_id").references(() => collegeRequirement.id),
   },
-  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
+  (table) => [index().on(table.degreeId), index().on(table.collegeRequirementId)],
 );
 
 export const minor = pgTable("minor", {
