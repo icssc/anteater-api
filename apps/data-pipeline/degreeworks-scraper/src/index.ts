@@ -36,26 +36,6 @@ async function main() {
   const geRequirementData = parsedUgradRequirements.get("GE");
   const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
   const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
-  // const degreesAwarded: Map<string, string> = await fs
-  //   .readFile("degree-cache.json", { encoding: "utf-8" })
-  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
-  // const parsedUgradRequirements: Map<string, DegreeWorksRequirement[]> = await fs
-  //   .readFile("u-cache.json", { encoding: "utf-8" })
-  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
-  // const parsedSpecializations: Map<string, [DegreeWorksProgramId, string, DegreeWorksProgram]> =
-  //   await fs
-  //     .readFile("spec-cache.json", { encoding: "utf-8" })
-  //     .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
-  // const parsedPrograms: Map<string, MajorProgram> = await fs
-  //   .readFile("major-cache.json", { encoding: "utf-8" })
-  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
-  // const parsedMinorPrograms: Map<string, DegreeWorksProgram> = await fs
-  //   .readFile("minor-cache.json", { encoding: "utf-8" })
-  //   .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
-  // const ucRequirementData = parsedUgradRequirements.get("UC");
-  // const geRequirementData = parsedUgradRequirements.get("GE");
-  // const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
-  // const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -75,8 +55,6 @@ async function main() {
         specCode,
       }) => {
         return {
-          ...(college ? { collegeReqUuid: uuidv4() } : {}),
-          majorReqUuid: uuidv4(),
           majorId: `${degreeType}-${code}`,
           degreeId: degreeType ?? "",
           code,
@@ -85,6 +63,8 @@ async function main() {
           specializationRequired,
           requirements,
           college,
+          ...(college ? { collegeReqUuid: uuidv4() } : {}),
+          majorReqUuid: uuidv4(),
         };
       },
     )
@@ -106,8 +86,7 @@ async function main() {
     .toArray();
 
   await db.transaction(async (tx) => {
-    console.log("starting first transaction");
-    tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
+    await tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
     if (ucRequirementData && geRequirementData) {
       await tx
         .insert(schoolRequirement)
@@ -161,11 +140,8 @@ async function main() {
       .insert(degree)
       .values(degreeData)
       .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
-    console.log("first portion of outer transaction done");
 
     const majorReqUnifiedId = await tx.transaction(async (tx2) => {
-      console.log("starting 2nd transaction");
-      await tx2.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
       const idToHash = await tx2
         .insert(majorRequirement)
         .values(
@@ -186,7 +162,7 @@ async function main() {
               .orderBy(majorRequirement.requirementHash, majorRequirement.id),
           ),
         );
-      console.log("ending 2nd transactions");
+
       const hashToUnified = new Map(
         await tx2
           .select({ uuid: majorRequirement.id, hash: majorRequirement.requirementHash })
@@ -204,9 +180,7 @@ async function main() {
       );
     });
 
-    const colleRegUnifiedId = await tx.transaction(async (tx2) => {
-      console.log("starting 3nd transaction");
-
+    const collegeReqUnifiedId = await tx.transaction(async (tx2) => {
       const idToHash = await tx2
         .insert(collegeRequirement)
         .values(
@@ -245,12 +219,10 @@ async function main() {
       );
     });
 
-    console.log("UPDATING!");
-
     // Unifies randomly generated uuid associated with the same requirement hash
     for (const majorSpecObj of majorSpecData) {
       if (majorSpecObj.collegeReqUuid) {
-        majorSpecObj.collegeReqUuid = colleRegUnifiedId.get(majorSpecObj.collegeReqUuid);
+        majorSpecObj.collegeReqUuid = collegeReqUnifiedId.get(majorSpecObj.collegeReqUuid);
       }
       majorSpecObj.majorReqUuid = majorReqUnifiedId.get(majorSpecObj.majorReqUuid) as string;
     }
@@ -262,7 +234,7 @@ async function main() {
         requirementId: majorSpecObj.majorReqUuid,
       } as typeof majorSpecializationToRequirement.$inferInsert;
     });
-    console.log("inserting into major");
+
     const majorData = majorSpecData
       .filter((majorSpecObj) => majorSpecObj.specializationId === undefined)
       .map((majorSpecObj) => {
@@ -280,7 +252,7 @@ async function main() {
       .insert(major)
       .values(majorData)
       .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
-    console.log("finshined inserting to major");
+
     await tx
       .insert(minor)
       .values(minorData)
@@ -292,7 +264,7 @@ async function main() {
         target: specialization.id,
         set: conflictUpdateSetAllCols(specialization),
       });
-    console.log("inserting into majorSpecToReq");
+
     await tx
       .insert(majorSpecializationToRequirement)
       .values(majorSpecToRequirementData)
@@ -303,7 +275,6 @@ async function main() {
         ],
         set: conflictUpdateSetAllCols(majorSpecializationToRequirement),
       });
-    console.log("finished inserting into majorSpecToReq");
   });
   exit(0);
 }
