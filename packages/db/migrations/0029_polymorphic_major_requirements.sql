@@ -1,5 +1,5 @@
 CREATE TABLE "major_requirement" (
-	"requirement_hash" bigint GENERATED ALWAYS AS (jsonb_hash_extended(requirements, 0)) STORED,
+	"requirement_hash" bigint GENERATED ALWAYS AS (jsonb_hash_extended(requirements, 0)) STORED NOT NULL,
 	"requirements" jsonb NOT NULL,
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	CONSTRAINT "major_requirement_requirement_hash_unique" UNIQUE("requirement_hash") DEFERRABLE INITIALLY IMMEDIATE
@@ -25,3 +25,4 @@ ALTER TABLE "major" ADD CONSTRAINT "major_college_requirement_id_college_require
 CREATE INDEX "major_college_requirement_id_index" ON "major" USING btree ("college_requirement_id");--> statement-breakpoint
 ALTER TABLE "major" DROP COLUMN "requirements";--> statement-breakpoint
 ALTER TABLE "college_requirement" ADD CONSTRAINT "college_requirement_requirement_hash_unique" UNIQUE("requirement_hash") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "college_requirement" ALTER COLUMN "requirement_hash" SET NOT NULL;--> statement-breakpoint

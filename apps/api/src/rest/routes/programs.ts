@@ -82,7 +82,7 @@ const majorRequirements = createRoute({
   path: "/major",
   description:
     "Retrieve course requirements for a major in UCI's current catalogue. Note that these are the requirements for the major itself; " +
-    "if this major has specializations and one is taken, its requirements apply as well",
+    "if this major has specializations and one is taken, its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: response200(majorRequirementsResponseSchema),
