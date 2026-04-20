@@ -754,6 +754,7 @@ async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
   const outcomes: Record<string, "success" | "empty" | "error"> = {};
+  const scrapedCounts: Record<string, number> = {};
 
   const before = await getGECountsFromDB(db, term);
   console.log(`[GE scrape] DB counts BEFORE for ${termToName(term)}:`, before);
@@ -781,6 +782,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
       outcomes[ge] = "error";
       console.error(`[${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
     }
+    scrapedCounts[ge] = courses.length;
 
     for (const course of courses) {
       const update = updates.get(course);
@@ -792,7 +794,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
     await sleep(1000);
   }
-  console.log(`[GE scrape] outcomes for ${termToName(term)}:`, outcomes);
+
   await db.transaction(async (tx) => {
     // reset all flags to false for categories that didn't error
     const resetSet: Partial<CourseGEUpdate> = {};
@@ -827,7 +829,17 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(`Updated GE data for ${updates.size} courses`);
 
   const after = await getGECountsFromDB(db, term);
-  console.log(`[GE scrape] DB counts AFTER for ${termToName(term)}:`, after);
+
+  const summary = geCategories.map((ge) => {
+    const stored = after?.[ge] ?? 0;
+    const scraped = scrapedCounts[ge] ?? 0;
+    const outcome = outcomes[ge];
+    const storedLabel = outcome === "error" ? "preserved" : "stored";
+    const diff = outcome === "success" ? scraped - stored : 0;
+    const diffNote = diff > 0 ? `  (${diff} unmatched)` : "";
+    return `  ${ge}: scraped=${scraped}  ${storedLabel}=${stored}  outcome=${outcome}${diffNote}`;
+  });
+  console.log(`[GE scrape] per-category summary for ${termToName(term)}:\n${summary.join("\n")}`);
 }
 
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
