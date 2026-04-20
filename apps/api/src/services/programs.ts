@@ -124,7 +124,7 @@ export class ProgramsService {
               : undefined,
           ),
         )
-        .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
+        .leftJoin(collegeRequirement, eq(major.collegeRequirementId, collegeRequirement.id))
         .leftJoin(
           majorSpecializationToRequirement,
           eq(major.id, majorSpecializationToRequirement.majorId),
