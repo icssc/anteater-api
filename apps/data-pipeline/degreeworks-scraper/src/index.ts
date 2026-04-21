@@ -87,59 +87,6 @@ async function main() {
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
-    if (ucRequirementData && geRequirementData) {
-      await tx
-        .insert(schoolRequirement)
-        .values([
-          {
-            id: "UC",
-            requirements: ucRequirementData,
-          },
-          {
-            id: "GE",
-            requirements: geRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
-        });
-    }
-
-    if (honorsFourRequirementData) {
-      await tx
-        .insert(schoolRequirement)
-        .values([
-          {
-            id: "CHC4",
-            requirements: honorsFourRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
-        });
-    }
-
-    if (honorsTwoRequirementData) {
-      await tx
-        .insert(schoolRequirement)
-        .values([
-          {
-            id: "CHC2",
-            requirements: honorsTwoRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
-        });
-    }
-
-    await tx
-      .insert(degree)
-      .values(degreeData)
-      .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
 
     const majorReqUnifiedId = await tx.transaction(async (tx2) => {
       const idToHash = await tx2
@@ -247,6 +194,60 @@ async function main() {
           collegeRequirementId: majorSpecObj.collegeReqUuid,
         } as typeof major.$inferInsert;
       });
+
+    if (ucRequirementData && geRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "UC",
+            requirements: ucRequirementData,
+          },
+          {
+            id: "GE",
+            requirements: geRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    if (honorsFourRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC4",
+            requirements: honorsFourRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    if (honorsTwoRequirementData) {
+      await tx
+        .insert(schoolRequirement)
+        .values([
+          {
+            id: "CHC2",
+            requirements: honorsTwoRequirementData,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: schoolRequirement.id,
+          set: conflictUpdateSetAllCols(schoolRequirement),
+        });
+    }
+
+    await tx
+      .insert(degree)
+      .values(degreeData)
+      .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
 
     await tx
       .insert(major)

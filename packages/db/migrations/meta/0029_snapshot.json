@@ -1,5 +1,5 @@
 {
-  "id": "12f6b361-4712-4e3d-9d85-7c1d66db443d",
+  "id": "b244b772-0e94-4329-827d-4b71d3832c12",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -315,7 +315,7 @@
           "name": "requirement_hash",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "generated": {
             "as": "jsonb_hash_extended(requirements, 0)",
             "type": "stored"
@@ -1888,7 +1888,7 @@
           "name": "requirement_hash",
           "type": "bigint",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "generated": {
             "as": "jsonb_hash_extended(requirements, 0)",
             "type": "stored"
