@@ -254,5 +254,3 @@ export class DiningService {
     };
   }
 }
-
-export default DiningService;
