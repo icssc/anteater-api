@@ -15,7 +15,7 @@ import {
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -354,7 +354,7 @@ export class Scraper {
     }
 
     const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
-    const dbMinors = (await db.select().from(minor)).sort(sortById);
+    const dbMinors = await db.select().from(minor).orderBy(asc(minor.id));
     const scrapedMinors = this.parsedMinorPrograms
       .values()
       .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
@@ -371,7 +371,7 @@ export class Scraper {
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
-    const dbMajors = (await db.select().from(major)).sort(sortById);
+    const dbMajors = await db.select().from(major).orderBy(asc(major.id));
     const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
     const scrapedMajors = this.parsedPrograms
       .values()
@@ -395,7 +395,6 @@ export class Scraper {
             collegeBlockIndex = existing;
           }
         }
-
         return {
           id: `${degreeType}-${code}`,
           degreeId: degreeType ?? "",
@@ -523,7 +522,10 @@ export class Scraper {
       }
     }
 
-    const dbSpecializations = (await db.select().from(specialization)).sort(sortById);
+    const dbSpecializations = await db
+      .select()
+      .from(specialization)
+      .orderBy(asc(specialization.id));
     const scrapedSpecializations = this.parsedSpecializations
       .values()
       .map(([majorId, specName, { degreeType, code, requirements }]) => ({
@@ -556,7 +558,7 @@ export class Scraper {
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
 
-    const dbDegrees = await db.select().from(degree);
+    const dbDegrees = await db.select().from(degree).orderBy(degree.id);
 
     const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
       // Determine division: Undergraduate if it starts with 'B', else Graduate
@@ -564,11 +566,9 @@ export class Scraper {
       id,
       name,
     }));
-
-    const sortedDbDegrees = deepSortArray(dbDegrees.sort(sortById));
     const sortedScrapedDegrees = deepSortArray(scrapedDegrees.sort(sortById));
 
-    const degreesDiff = diffString(sortedDbDegrees, sortedScrapedDegrees);
+    const degreesDiff = diffString(dbDegrees, sortedScrapedDegrees);
 
     if (!degreesDiff.length) {
       console.log("No difference found between database and scraped data for degrees awarded.");
