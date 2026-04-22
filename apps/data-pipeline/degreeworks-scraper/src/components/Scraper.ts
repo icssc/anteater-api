@@ -291,19 +291,17 @@ export class Scraper {
     const dbGeRequirements = dbGeRequirementsFetched?.requirements;
     const geReqsDiff = diffString(dbGeRequirements, this.parsedUgradRequirements.get("GE"));
 
-    let honorsStatus = "";
-    if (honorsFourRequirements) {
-      honorsStatus = "CHC4";
-    } else if (honorsTwoRequirements) {
-      honorsStatus = "CHC2";
-    }
+    const honorsKind = honorsFourRequirements ? "CHC4" : honorsTwoRequirements ? "CHC2" : "";
 
     const [dbHonorsRequirementsFetched] = await db
       .select()
       .from(schoolRequirement)
-      .where(eq(schoolRequirement.id, honorsStatus));
+      .where(eq(schoolRequirement.id, honorsKind));
     const dbHonorsRequirements = dbHonorsRequirementsFetched?.requirements;
-    const honorsReqsDiff = diffString(dbHonorsRequirements, this.parsedUgradRequirements.get("GE"));
+    const honorsReqsDiff = diffString(
+      dbHonorsRequirements,
+      this.parsedUgradRequirements.get(honorsKind),
+    );
 
     if (!ucReqsDiff.length && !geReqsDiff.length && !honorsReqsDiff.length) {
       console.log(
