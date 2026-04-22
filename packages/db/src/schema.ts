@@ -688,7 +688,7 @@ export const collegeRequirement = pgTable("college_requirement", {
     .notNull(),
   name: varchar("name").notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const majorSpecializationToRequirement = pgTable(
@@ -711,7 +711,7 @@ export const majorRequirement = pgTable("major_requirement", {
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
     .notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const major = pgTable(
