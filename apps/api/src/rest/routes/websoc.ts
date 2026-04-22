@@ -14,7 +14,7 @@ import {
   websocResponseSchema,
   websocTermResponseSchema,
 } from "$schema";
-import { SyllabiService, WebsocService } from "$services";
+import { WebsocService } from "$services";
 
 const websocRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -108,7 +108,7 @@ websocRouter.openapi(websocDepartmentsRoute, async (c) => {
 
 websocRouter.openapi(websocSyllabiRoute, async (c) => {
   const query = c.req.valid("query");
-  const service = new SyllabiService(database(c.env.DB.connectionString));
+  const service = new WebsocService(database(c.env.DB.connectionString));
   return c.json(
     {
       ok: true,

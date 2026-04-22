@@ -5,7 +5,7 @@ import {
   websocDepartmentsResponseSchema,
   websocQuerySchema,
 } from "$schema";
-import { SyllabiService, WebsocService } from "$services";
+import { WebsocService } from "$services";
 
 export const websocResolvers = {
   Query: {
@@ -24,7 +24,7 @@ export const websocResolvers = {
       );
     },
     syllabi: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
-      const service = new SyllabiService(db);
+      const service = new WebsocService(db);
       return await service.getSyllabi(syllabiQuerySchema.parse(args.query));
     },
   },

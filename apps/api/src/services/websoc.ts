@@ -30,6 +30,7 @@ import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 import type {
+  syllabiQuerySchema,
   websocDepartmentsQuerySchema,
   websocQuerySchema,
   websocResponseSchema,
@@ -442,5 +443,39 @@ export class WebsocService {
       .from(websocDepartment)
       .where(and(or(...sinceOptions), or(...untilOptions)))
       .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
+  }
+
+  async getSyllabi(input: z.infer<typeof syllabiQuerySchema>) {
+    const conditions = [eq(websocCourse.courseId, input.courseId), gt(websocSection.webURL, "")];
+    if (input.year) {
+      conditions.push(eq(websocSection.year, input.year));
+    }
+    if (input.quarter) {
+      conditions.push(eq(websocSection.quarter, input.quarter));
+    }
+    if (input.instructor) {
+      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+    }
+    return this.db
+      .selectDistinct({
+        year: websocSection.year,
+        quarter: websocSection.quarter,
+        url: websocSection.webURL,
+      })
+      .from(websocSection)
+      .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .where(and(...conditions))
+      .orderBy(desc(websocSection.year), desc(websocSection.quarter))
+      .then((rows) =>
+        rows.map((row) => ({
+          year: row.year,
+          quarter: row.quarter,
+          url: row.url,
+        })),
+      );
   }
 }
