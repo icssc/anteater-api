@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { lt } from "@packages/db/drizzle";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { load } from "cheerio";
@@ -203,6 +204,11 @@ const libraryCodeMap = {
 
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
+
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 13);
+  await db.delete(libraryTrafficHistory).where(lt(libraryTrafficHistory.timestamp, cutoff));
+
   const locationMeta = await collectLocationMeta();
 
   const currentTime = new Date();
