@@ -170,9 +170,6 @@ importers:
       cross-fetch:
         specifier: 4.1.0
         version: 4.1.0
-      drizzle-orm:
-        specifier: 0.45.2
-        version: 0.45.2(@cloudflare/workers-types@4.20241230.0)(postgres@3.4.8)
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
