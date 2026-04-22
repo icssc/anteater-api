@@ -157,8 +157,8 @@ async function main() {
     const collegeRequirementData = majorSpecData
       .filter((x) => x.college !== undefined)
       .map(({ college, collegeReqUuid: uuid }) => {
-        return { name: college!.name, requirements: college!.requirements, id: uuid };
-      });
+        return { name: college?.name, requirements: college?.requirements, id: uuid };
+      }) as (typeof collegeRequirement.$inferInsert)[];
     const collegeReqUnifiedId = await upsertAndUnifyRequirementIds(
       tx,
       collegeRequirement,
@@ -170,7 +170,7 @@ async function main() {
       if (majorSpecObj.collegeReqUuid) {
         majorSpecObj.collegeReqUuid = collegeReqUnifiedId.get(majorSpecObj.collegeReqUuid);
       }
-      majorSpecObj.majorReqUuid = majorReqUnifiedId.get(majorSpecObj.majorReqUuid) as string;
+      majorSpecObj.majorReqUuid = getFromMapOrThrow(majorReqUnifiedId, majorSpecObj.majorReqUuid);
     }
 
     const majorSpecToRequirementData = majorSpecData.map((majorSpecObj) => {
