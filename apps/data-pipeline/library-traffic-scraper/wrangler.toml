@@ -6,7 +6,7 @@ workers_dev = false
 minify = true
 
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["*/30 * * * *"]
 
 [observability]
 enabled = true
