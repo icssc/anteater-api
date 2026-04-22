@@ -49,6 +49,8 @@ type StudySpaces = {
 const ROOM_SPACE_URL = "https://spaces.lib.uci.edu/space";
 const LIB_SPACE_URL = "https://spaces.lib.uci.edu/spaces";
 const LIB_SPACE_AVAILABILITY_URL = "https://spaces.lib.uci.edu/spaces/availability/grid";
+// Library rooms are bookable 7 days in advance.
+const DAYS_TO_FETCH = 7;
 
 /**
  * Shortened libary names mapped to their IDs used by spaces.lib.uci.edu
@@ -209,7 +211,7 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
     month: "2-digit",
     day: "2-digit",
   });
-  date.setDate(date.getDate() + 3);
+  date.setDate(date.getDate() + DAYS_TO_FETCH);
   const end = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "2-digit",
