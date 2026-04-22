@@ -18,8 +18,8 @@ import { v4 as uuidv4 } from "uuid";
 import { Scraper } from "$components";
 
 /**
- * Perform a subtransaction where we upsert into requirements tables, then
- * return a map from original uuids to the uuid of the unique requirement that was inserted into the table
+ * Subtransaction upserts unique requirements into the requirements tables, then
+ * return a map from original uuids to the uuid of the unique requirement that was upserted
  */
 async function upsertAndUnifyRequirementIds(
   txOuter: Parameters<Parameters<ReturnType<typeof database>["transaction"]>[0]>[0],
@@ -32,7 +32,7 @@ async function upsertAndUnifyRequirementIds(
       .values(data)
       .returning({ uuid: requirementTable.id, hash: requirementTable.requirementHash });
 
-    // Remove all duplicate requirements from the table. We cannot use ON CONFLICT DO UPDATE
+    // Remove all duplicate requirements from the table. We couldn't have used ON CONFLICT DO UPDATE
     // as attempting to change the same row multiple times is an error
     await tx
       .delete(requirementTable)
@@ -57,7 +57,6 @@ async function upsertAndUnifyRequirementIds(
         ),
     );
 
-    // map the original uuids to the uuid that is unique for each unique requirement
     return new Map(
       idToHash.map(({ uuid, hash }) => {
         return [uuid, getFromMapOrThrow(hashToUnified, hash)];
@@ -140,7 +139,7 @@ async function main() {
       SET CONSTRAINTS 
         major_requirement_requirement_hash_unique,
         college_requirement_requirement_hash_unique,
-        major_specialization_to_requirement_requirement_id_major_requirement_id_fk,
+        major_specialization_to_requirement_requirement_id_major_requir,
         major_college_requirement_id_college_requirement_id_fk
       DEFERRED
     `);
