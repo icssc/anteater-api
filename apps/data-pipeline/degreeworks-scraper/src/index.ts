@@ -13,8 +13,58 @@ import {
   specialization,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import { v4 as uuidv4 } from "uuid";
 import { Scraper } from "$components";
+
+/**
+ * Perform a subtransaction where we upsert into requirements tables, then
+ * return a map from original uuids to the uuid of the unique requirement that was inserted into the table
+ */
+async function upsertAndUnifyRequirementIds(
+  txOuter: Parameters<Parameters<ReturnType<typeof database>["transaction"]>[0]>[0],
+  requirementTable: typeof majorRequirement | typeof collegeRequirement,
+  data: (typeof requirementTable.$inferInsert)[],
+) {
+  return await txOuter.transaction(async (tx) => {
+    const idToHash = await tx
+      .insert(requirementTable)
+      .values(data)
+      .returning({ uuid: requirementTable.id, hash: requirementTable.requirementHash });
+
+    // Remove all duplicate requirements from the table. We cannot use ON CONFLICT DO UPDATE
+    // as attempting to change the same row multiple times is an error
+    await tx
+      .delete(requirementTable)
+      .where(
+        notInArray(
+          requirementTable.id,
+          tx
+            .selectDistinctOn([requirementTable.requirementHash], { id: requirementTable.id })
+            .from(requirementTable)
+            .orderBy(requirementTable.requirementHash, requirementTable.id),
+        ),
+      );
+
+    const hashToUnified = new Map(
+      await tx
+        .select({ uuid: requirementTable.id, hash: requirementTable.requirementHash })
+        .from(requirementTable)
+        .then((q) =>
+          q.map(({ uuid, hash }) => {
+            return [hash, uuid];
+          }),
+        ),
+    );
+
+    // map the original uuids to the uuid that is unique for each unique requirement
+    return new Map(
+      idToHash.map(({ uuid, hash }) => {
+        return [uuid, getFromMapOrThrow(hashToUnified, hash)];
+      }),
+    );
+  });
+}
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -86,85 +136,34 @@ async function main() {
     .toArray();
 
   await db.transaction(async (tx) => {
-    await tx.execute(sql`SET CONSTRAINTS ALL DEFERRED`);
+    await tx.execute(sql`
+      SET CONSTRAINTS 
+        major_requirement_requirement_hash_unique,
+        college_requirement_requirement_hash_unique,
+        major_specialization_to_requirement_requirement_id_major_requirement_id_fk,
+        major_college_requirement_id_college_requirement_id_fk
+      DEFERRED
+    `);
 
-    const majorReqUnifiedId = await tx.transaction(async (tx2) => {
-      const idToHash = await tx2
-        .insert(majorRequirement)
-        .values(
-          majorSpecData.map(({ requirements, majorReqUuid: id }) => {
-            return { id, requirements };
-          }),
-        )
-        .returning({ uuid: majorRequirement.id, hash: majorRequirement.requirementHash });
-
-      await tx2
-        .delete(majorRequirement)
-        .where(
-          notInArray(
-            majorRequirement.id,
-            tx2
-              .selectDistinctOn([majorRequirement.requirementHash], { id: majorRequirement.id })
-              .from(majorRequirement)
-              .orderBy(majorRequirement.requirementHash, majorRequirement.id),
-          ),
-        );
-
-      const hashToUnified = new Map(
-        await tx2
-          .select({ uuid: majorRequirement.id, hash: majorRequirement.requirementHash })
-          .from(majorRequirement)
-          .then((q) =>
-            q.map(({ uuid, hash }) => {
-              return [hash, uuid];
-            }),
-          ),
-      );
-      return new Map(
-        idToHash.map(({ uuid, hash }) => {
-          return [uuid, hashToUnified.get(hash)];
-        }),
-      );
+    const majorRequirementData = majorSpecData.map(({ requirements, majorReqUuid: id }) => {
+      return { id, requirements };
     });
+    const majorReqUnifiedId = await upsertAndUnifyRequirementIds(
+      tx,
+      majorRequirement,
+      majorRequirementData,
+    );
 
-    const collegeReqUnifiedId = await tx.transaction(async (tx2) => {
-      const idToHash = await tx2
-        .insert(collegeRequirement)
-        .values(
-          majorSpecData
-            .filter((x) => x.college !== undefined)
-            .map(({ college, collegeReqUuid: uuid }) => {
-              return { name: college?.name, requirements: college?.requirements, id: uuid };
-            }) as (typeof collegeRequirement.$inferInsert)[],
-        )
-        .returning({ uuid: collegeRequirement.id, hash: collegeRequirement.requirementHash });
-      await tx2
-        .delete(collegeRequirement)
-        .where(
-          notInArray(
-            collegeRequirement.id,
-            tx2
-              .selectDistinctOn([collegeRequirement.requirementHash], { id: collegeRequirement.id })
-              .from(collegeRequirement)
-              .orderBy(collegeRequirement.requirementHash, collegeRequirement.id),
-          ),
-        );
-      const hashToUnified = new Map(
-        await tx2
-          .select({ uuid: collegeRequirement.id, hash: collegeRequirement.requirementHash })
-          .from(collegeRequirement)
-          .then((q) =>
-            q.map(({ uuid, hash }) => {
-              return [hash, uuid];
-            }),
-          ),
-      );
-      return new Map(
-        idToHash.map(({ uuid, hash }) => {
-          return [uuid, hashToUnified.get(hash)];
-        }),
-      );
-    });
+    const collegeRequirementData = majorSpecData
+      .filter((x) => x.college !== undefined)
+      .map(({ college, collegeReqUuid: uuid }) => {
+        return { name: college!.name, requirements: college!.requirements, id: uuid };
+      });
+    const collegeReqUnifiedId = await upsertAndUnifyRequirementIds(
+      tx,
+      collegeRequirement,
+      collegeRequirementData,
+    );
 
     // Unifies randomly generated uuid associated with the same requirement hash
     for (const majorSpecObj of majorSpecData) {
