@@ -709,8 +709,8 @@ export const majorRequirement = pgTable("major_requirement", {
   id: uuid("id").primaryKey().defaultRandom(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   requirementHash: bigint("requirement_hash", { mode: "bigint" }) // also deferrable initially immediate
-    .unique()
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
+    .unique()
     .notNull(),
 });
 
