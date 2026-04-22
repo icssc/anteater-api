@@ -4,6 +4,7 @@ import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import fetch from "cross-fetch";
 import { z } from "zod";
+import { getLaWallClockAsUtcDate } from "./time";
 
 // Schemas
 const bookingsServiceSchema = z.object({
@@ -255,7 +256,7 @@ async function scrapePlazaVerde(): Promise<{
   // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
-  const now = new Date();
+  const now = getLaWallClockAsUtcDate();
 
   // Get today's date formatted in LA timezone as a string (M/D/YYYY)
   const dateInLA = new Intl.DateTimeFormat("en-US", {
