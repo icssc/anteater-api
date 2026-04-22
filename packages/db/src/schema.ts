@@ -682,13 +682,13 @@ export const schoolRequirement = pgTable("school_requirement", {
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   requirementHash: bigint("requirement_hash", { mode: "bigint" })
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`) // also deferrable initially immediate
     .unique()
     .notNull(),
-  name: varchar("name").notNull(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const majorSpecializationToRequirement = pgTable(
@@ -706,12 +706,12 @@ export const majorSpecializationToRequirement = pgTable(
 );
 
 export const majorRequirement = pgTable("major_requirement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   requirementHash: bigint("requirement_hash", { mode: "bigint" }) // also deferrable initially immediate
     .unique()
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
     .notNull(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const major = pgTable(
