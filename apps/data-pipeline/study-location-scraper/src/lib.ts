@@ -6,7 +6,7 @@ import type { Cheerio, CheerioAPI } from "cheerio";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
-import { getLaWallClockAsUtcDate } from "./time";
+import { losAngelesNowNaive } from "./time";
 
 type StudyRoom = {
   id: string;
@@ -245,7 +245,7 @@ export async function doLibraryScrape(db: ReturnType<typeof database>) {
     rooms.map((room) => ({ ...room, studyLocationId })),
   );
   const slotRows = roomRows.flatMap((room) => room.slots);
-  const now = getLaWallClockAsUtcDate();
+  const now = losAngelesNowNaive();
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
     await tx

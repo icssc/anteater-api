@@ -1,5 +1,5 @@
-export function getLaWallClockAsUtcDate(): Date {
-  const parts = new Intl.DateTimeFormat("en-CA", {
+export function losAngelesNowNaive(): Date {
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Los_Angeles",
     year: "numeric",
     month: "2-digit",
