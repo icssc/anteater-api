@@ -482,6 +482,14 @@ export class WebsocService {
       })
       .from(subquery)
       .groupBy(subquery.year, subquery.quarter, subquery.url)
-      .orderBy(desc(subquery.year), desc(subquery.quarter));
+      .then((rows) =>
+        rows
+          .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
+            y1 === y2
+              ? termOrder[q1] - termOrder[q2]
+              : Number.parseInt(y1, 10) - Number.parseInt(y2, 10),
+          )
+          .reverse(),
+      );
   }
 }
