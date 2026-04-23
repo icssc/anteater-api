@@ -354,6 +354,10 @@ export const syllabiQuerySchema = z.object({
 export const syllabiSchema = z.object({
   year: z.string().openapi({ example: "2025" }),
   quarter: z.enum(terms).openapi({ example: "Fall" }),
+  instructorNames: z
+    .string()
+    .array()
+    .openapi({ example: ["SHINDLER, M."] }),
   url: z.string().openapi({
     example:
       "https://canvas.eee.uci.edu/courses/sis_course_id:CourseSpace-Section-F25-34190/assignments/syllabus",

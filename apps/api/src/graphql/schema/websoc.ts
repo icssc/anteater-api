@@ -122,6 +122,7 @@ input WebsocQuery {
 type Syllabus @cacheControl(maxAge: 86400) {
     year: String!
     quarter: Term!
+    instructorNames: [String!]!
     url: String!
 }
 

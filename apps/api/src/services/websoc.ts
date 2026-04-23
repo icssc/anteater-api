@@ -13,6 +13,7 @@ import {
   lte,
   ne,
   or,
+  sql,
 } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
@@ -456,11 +457,12 @@ export class WebsocService {
     if (input.instructor) {
       conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
     }
-    return this.db
+    const subquery = this.db
       .selectDistinct({
         year: websocSection.year,
         quarter: websocSection.quarter,
         url: websocSection.webURL,
+        instructor: sql<string>`UNNEST(${websocSection.instructors})`.as("instructor"),
       })
       .from(websocSection)
       .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
@@ -469,13 +471,17 @@ export class WebsocService {
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
       .where(and(...conditions))
-      .orderBy(desc(websocSection.year), desc(websocSection.quarter))
-      .then((rows) =>
-        rows.map((row) => ({
-          year: row.year,
-          quarter: row.quarter,
-          url: row.url,
-        })),
-      );
+      .as("syllabi_subquery");
+
+    return this.db
+      .select({
+        year: subquery.year,
+        quarter: subquery.quarter,
+        url: subquery.url,
+        instructorNames: sql<string[]>`ARRAY_AGG(${subquery.instructor})`,
+      })
+      .from(subquery)
+      .groupBy(subquery.year, subquery.quarter, subquery.url)
+      .orderBy(desc(subquery.year), desc(subquery.quarter));
   }
 }
