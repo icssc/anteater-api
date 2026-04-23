@@ -30,7 +30,7 @@ async function upsertAndUnifyRequirementIds(
     const idToHash = await tx
       .insert(requirementTable)
       .values(data)
-      .returning({ uuid: requirementTable.id, hash: requirementTable.requirementHash });
+      .returning({ uuid: requirementTable.id, hash: requirementTable.requirementsHash });
 
     // Remove all duplicate requirements from the table. We couldn't have used ON CONFLICT DO UPDATE
     // as attempting to change the same row multiple times is an error
@@ -40,15 +40,15 @@ async function upsertAndUnifyRequirementIds(
         notInArray(
           requirementTable.id,
           tx
-            .selectDistinctOn([requirementTable.requirementHash], { id: requirementTable.id })
+            .selectDistinctOn([requirementTable.requirementsHash], { id: requirementTable.id })
             .from(requirementTable)
-            .orderBy(requirementTable.requirementHash, requirementTable.id),
+            .orderBy(requirementTable.requirementsHash, requirementTable.id),
         ),
       );
 
     const hashToUnified = new Map(
       await tx
-        .select({ uuid: requirementTable.id, hash: requirementTable.requirementHash })
+        .select({ uuid: requirementTable.id, hash: requirementTable.requirementsHash })
         .from(requirementTable)
         .then((q) =>
           q.map(({ uuid, hash }) => {
