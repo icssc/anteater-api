@@ -12,7 +12,6 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "cross-fetch": "4.1.0",
-    "drizzle-orm": "0.45.2",
     "json-diff": "1.0.6",
     "jwt-decode": "4.0.0",
     "sort-keys": "6.0.0",

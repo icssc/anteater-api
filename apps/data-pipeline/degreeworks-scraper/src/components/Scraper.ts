@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import * as fs from "node:fs/promises";
 import { database } from "@packages/db";
+import { asc, eq } from "@packages/db/drizzle";
 import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
@@ -8,14 +9,14 @@ import type {
   MajorProgram,
 } from "@packages/db/schema";
 import {
-  type collegeRequirement,
+  collegeRequirement,
   degree,
   major,
   minor,
   schoolRequirement,
   specialization,
 } from "@packages/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -398,13 +399,31 @@ export class Scraper {
           degreeId: degreeType ?? "",
           code,
           name,
-          specializationRequired,
           requirements,
+          specializationRequired,
+          collegeRequirement: null,
           ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
         };
       })
       .toArray()
       .sort(sortById);
+    const collegeBlockIds = await db
+      .insert(collegeRequirement)
+      .values(collegeBlocks)
+      .onConflictDoUpdate({
+        target: collegeRequirement.requirementsHash,
+        set: conflictUpdateSetAllCols(collegeRequirement),
+      })
+      .returning({ id: collegeRequirement.id })
+      .then((rows) => rows.map(({ id }) => id));
+
+    for (const majorObj of scrapedMajors) {
+      if (majorObj.collegeBlockIndex !== undefined) {
+        (majorObj as typeof major.$inferInsert).collegeRequirement =
+          collegeBlockIds[majorObj.collegeBlockIndex];
+        (majorObj as typeof major.$inferInsert).collegeBlockIndex = undefined;
+      }
+    }
     const majorsDiff = diffString(dbMajors, scrapedMajors);
     if (!majorsDiff.length) {
       console.log("No difference found between database and scraped data for majors.");
