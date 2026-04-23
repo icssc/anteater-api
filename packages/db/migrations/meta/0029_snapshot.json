@@ -1,5 +1,5 @@
 {
-  "id": "b244b772-0e94-4329-827d-4b71d3832c12",
+  "id": "07e0f77a-9084-4946-8898-30876086b2b4",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -311,15 +311,12 @@
       "name": "college_requirement",
       "schema": "",
       "columns": {
-        "requirement_hash": {
-          "name": "requirement_hash",
-          "type": "bigint",
-          "primaryKey": false,
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
           "notNull": true,
-          "generated": {
-            "as": "jsonb_hash_extended(requirements, 0)",
-            "type": "stored"
-          }
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -333,22 +330,25 @@
           "primaryKey": false,
           "notNull": true
         },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
+        "requirements_hash": {
+          "name": "requirements_hash",
+          "type": "bigint",
+          "primaryKey": false,
           "notNull": true,
-          "default": "gen_random_uuid()"
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "college_requirement_requirement_hash_unique": {
-          "name": "college_requirement_requirement_hash_unique",
+        "college_requirement_requirements_hash_unique": {
+          "name": "college_requirement_requirements_hash_unique",
           "nullsNotDistinct": false,
-          "columns": ["requirement_hash"]
+          "columns": ["requirements_hash"]
         }
       },
       "policies": {},
@@ -1884,15 +1884,12 @@
       "name": "major_requirement",
       "schema": "",
       "columns": {
-        "requirement_hash": {
-          "name": "requirement_hash",
-          "type": "bigint",
-          "primaryKey": false,
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
           "notNull": true,
-          "generated": {
-            "as": "jsonb_hash_extended(requirements, 0)",
-            "type": "stored"
-          }
+          "default": "gen_random_uuid()"
         },
         "requirements": {
           "name": "requirements",
@@ -1900,22 +1897,25 @@
           "primaryKey": false,
           "notNull": true
         },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
+        "requirements_hash": {
+          "name": "requirements_hash",
+          "type": "bigint",
+          "primaryKey": false,
           "notNull": true,
-          "default": "gen_random_uuid()"
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "major_requirement_requirement_hash_unique": {
-          "name": "major_requirement_requirement_hash_unique",
+        "major_requirement_requirements_hash_unique": {
+          "name": "major_requirement_requirements_hash_unique",
           "nullsNotDistinct": false,
-          "columns": ["requirement_hash"]
+          "columns": ["requirements_hash"]
         }
       },
       "policies": {},

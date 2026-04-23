@@ -136,9 +136,9 @@ async function main() {
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`
-      SET CONSTRAINTS 
-        major_requirement_requirement_hash_unique,
-        college_requirement_requirement_hash_unique,
+      SET CONSTRAINTS
+        major_requirement_requirements_hash_unique,
+        college_requirement_requirements_hash_unique,
         major_specialization_to_requirement_requirement_id_major_requir,
         major_college_requirement_id_college_requirement_id_fk
       DEFERRED
