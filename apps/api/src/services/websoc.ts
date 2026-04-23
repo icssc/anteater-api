@@ -457,7 +457,7 @@ export class WebsocService {
     if (input.instructor) {
       conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
     }
-    const subquery = this.db
+    const sub = this.db
       .selectDistinct({
         year: websocSection.year,
         quarter: websocSection.quarter,
@@ -471,17 +471,17 @@ export class WebsocService {
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
       .where(and(...conditions))
-      .as("syllabi_subquery");
+      .as("sub");
 
     return this.db
       .select({
-        year: subquery.year,
-        quarter: subquery.quarter,
-        url: subquery.url,
-        instructorNames: sql<string[]>`ARRAY_AGG(${subquery.instructor})`,
+        year: sub.year,
+        quarter: sub.quarter,
+        url: sub.url,
+        instructorNames: sql<string[]>`ARRAY_AGG(${sub.instructor})`,
       })
-      .from(subquery)
-      .groupBy(subquery.year, subquery.quarter, subquery.url)
+      .from(sub)
+      .groupBy(sub.year, sub.quarter, sub.url)
       .then((rows) =>
         rows
           .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
