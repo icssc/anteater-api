@@ -421,7 +421,7 @@ export class Scraper {
       if (majorObj.collegeBlockIndex !== undefined) {
         (majorObj as typeof major.$inferInsert).collegeRequirement =
           collegeBlockIds[majorObj.collegeBlockIndex];
-        (majorObj as typeof major.$inferInsert).collegeBlockIndex = undefined;
+        majorObj.collegeBlockIndex = undefined;
       }
     }
     const majorsDiff = diffString(dbMajors, scrapedMajors);
