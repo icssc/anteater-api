@@ -760,7 +760,7 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(`[GE scrape] DB counts BEFORE for ${termToName(term)}:`, before);
 
   for (const ge of geCategories) {
-    console.log(`Scraping GE ${ge}`);
+    console.log(`Scraping ${ge}`);
     let courses: string[] = [];
     try {
       const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
