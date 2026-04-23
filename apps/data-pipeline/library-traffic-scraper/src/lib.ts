@@ -206,7 +206,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
 
   const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 13);
+  cutoff.setMonth(cutoff.getMonth() - 15);
   await db.delete(libraryTrafficHistory).where(lt(libraryTrafficHistory.timestamp, cutoff));
 
   const locationMeta = await collectLocationMeta();
