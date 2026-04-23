@@ -13,6 +13,8 @@ CREATE TABLE "major_specialization_to_requirement" (
 );
 --> statement-breakpoint
 ALTER TABLE "major" RENAME COLUMN "college_requirement" TO "college_requirement_id";--> statement-breakpoint
+ALTER TABLE "college_requirement" DROP CONSTRAINT "college_requirement_requirements_hash_unique";--> statement-breakpoint
+ALTER TABLE "college_requirement" ADD CONSTRAINT "college_requirement_requirements_hash_unique" UNIQUE("requirements_hash") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "major" DROP CONSTRAINT "major_college_requirement_college_requirement_id_fk";
 --> statement-breakpoint
 DROP INDEX "major_college_requirement_index";--> statement-breakpoint
