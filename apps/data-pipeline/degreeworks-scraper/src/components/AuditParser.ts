@@ -6,10 +6,10 @@ import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
-  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 import type { Block, Rule, WithClause } from "$types";
+import { classifyWithArray, invertWithArray } from "./WithArrayUtils";
 
 export class AuditParser {
   // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
@@ -133,47 +133,6 @@ export class AuditParser {
     return requirementId;
   }
 
-  static parseDWTerm(raw: string) {
-    const [yearStr, termStr] = raw.split(" ");
-    const year = Number.parseInt(yearStr, 10);
-    const mapping = {
-      FALL: "Fall",
-      WINTER: "Winter",
-      SPRING: "Spring",
-      SUMMER1: "Summer1",
-      SUMMER10WK: "Summer10wk",
-      SUMMER2: "Summer2",
-    } as const;
-    const term = mapping[termStr as keyof typeof mapping];
-    return { year, term };
-  }
-
-  static termToOrdinal(year: number, term: Term): number {
-    const termOrder: Record<Term, number> = {
-      Winter: 0,
-      Spring: 1,
-      Summer1: 2,
-      Summer10wk: 3,
-      Summer2: 4,
-      Fall: 5,
-    };
-    return year * 10 + termOrder[term];
-  }
-
-  static schoolYearTerms(catalogYear: string): number[] {
-    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
-    // protect against cases like 20262026
-    const endYear = startYear + 1;
-    return [
-      AuditParser.termToOrdinal(startYear, "Fall"),
-      AuditParser.termToOrdinal(endYear, "Winter"),
-      AuditParser.termToOrdinal(endYear, "Spring"),
-      AuditParser.termToOrdinal(endYear, "Summer1"),
-      AuditParser.termToOrdinal(endYear, "Summer10wk"),
-      AuditParser.termToOrdinal(endYear, "Summer2"),
-    ];
-  }
-
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -182,108 +141,6 @@ export class AuditParser {
    */
   private static suppressLabelPolymorphism(label: string) {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
-  }
-
-  private static satisfies(
-    value: number,
-    operator: WithClause["operator"],
-    target: number,
-  ): boolean {
-    switch (operator) {
-      case "<":
-        return value < target;
-      case "<=":
-        return value <= target;
-      case "=":
-        return value === target;
-      case ">":
-        return value > target;
-      case ">=":
-        return value >= target;
-      case "<>":
-        return value !== target;
-    }
-  }
-
-  private possibleUnitsForCourse(c: typeof course.$inferSelect): number[] {
-    const minUnits = Number.parseInt(c.minUnits, 10);
-    const maxUnits = Number.parseInt(c.maxUnits, 10);
-    return Array.from({ length: maxUnits - minUnits + 1 }, (_, i) => minUnits + i);
-  }
-
-  private isUnitConstraintAlwaysSatisfied(
-    c: typeof course.$inferSelect,
-    creditClauses: WithClause[],
-  ): boolean {
-    const units = this.possibleUnitsForCourse(c);
-    return creditClauses.every((w) => {
-      const value = Number.parseInt(w.valueList[0], 10);
-      return units.every((u) => AuditParser.satisfies(u, w.operator, value));
-    });
-  }
-
-  private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
-    switch (withClause.code) {
-      case "DWCREDIT":
-      case "DWCREDITS": {
-        // for > and >= operations, we use a loose interpretation for variable unit courses
-        // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
-        // be taken for 3 or 4 units and meet the withClause requirement
-        // for < and <= which appear to be only in exception lists, we use a strict interpretation
-        // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
-        // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
-        const value = Number.parseInt(withClause.valueList[0], 10);
-        const units = this.possibleUnitsForCourse(c);
-        const isStrict = withClause.operator === "<" || withClause.operator === "<=";
-        return isStrict
-          ? units.every((u) => AuditParser.satisfies(u, withClause.operator, value))
-          : units.some((u) => AuditParser.satisfies(u, withClause.operator, value));
-      }
-      case "DWTERM": {
-        // valueList contains specific term(s) from the DWTERM constraint.
-        // Include the course if some term in the current catalog year satisfies
-        // some target term predicate (i.e. the course is offered in a matching
-        // term during the catalog year).
-        const terms = AuditParser.schoolYearTerms(this.catalogYear);
-        // For <>, require every term in the school year to satisfy t !== target
-        const isStrict = withClause.operator === "<>";
-        return withClause.valueList.some((dwtermRaw) => {
-          const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
-          const target = AuditParser.termToOrdinal(year, term);
-          return isStrict
-            ? terms.every((t) => AuditParser.satisfies(t, withClause.operator, target))
-            : terms.some((t) => AuditParser.satisfies(t, withClause.operator, target));
-        });
-      }
-      // There may be more withArray Codes that can be applied here to filter out courses
-      // see https://github.com/icssc/anteater-api/pull/286
-      default:
-        return true;
-    }
-  }
-
-  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
-    // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
-    const orGroups: WithClause[][] = [];
-    let currentGroup: WithClause[] = [];
-
-    for (const withClause of withArray) {
-      if (withClause.connector === "OR") {
-        if (currentGroup.length > 0) {
-          orGroups.push(currentGroup);
-        }
-        currentGroup = [withClause];
-      } else {
-        currentGroup.push(withClause);
-      }
-    }
-    if (currentGroup.length > 0) {
-      orGroups.push(currentGroup);
-    }
-
-    return structuredClone(classes).filter((c) =>
-      orGroups.some((group) => group.every((clause) => this.classMatchesWithClause(c, clause))),
-    );
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
@@ -319,7 +176,13 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const creditClausesById = new Map<string, WithClause[]>();
+          const constraintsById = new Map<string, WithClause[]>();
+          const mergeConstraints = (id: string, clauses: WithClause[]) => {
+            if (clauses.length === 0) return;
+            const existing = constraintsById.get(id) ?? [];
+            constraintsById.set(id, [...existing, ...clauses]);
+          };
+
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
             await Promise.all(
               includedCourses.map(([x, withArray]) =>
@@ -330,15 +193,13 @@ export class AuditParser {
             ).then((x) =>
               x
                 .flatMap(([classes, withArray]) => {
-                  const filtered = this.filterThroughWithArray(classes, withArray);
-                  const creditClauses = withArray.filter(
-                    (w) => w.code === "DWCREDIT" || w.code === "DWCREDITS",
-                  );
-                  if (creditClauses.length > 0) {
-                    for (const c of filtered) {
-                      if (!this.isUnitConstraintAlwaysSatisfied(c, creditClauses)) {
-                        creditClausesById.set(c.id, creditClauses);
-                      }
+                  const filtered: (typeof course.$inferSelect)[] = [];
+                  for (const c of classes) {
+                    const match = classifyWithArray(c, withArray, this.catalogYear);
+                    if (match === "never") continue;
+                    filtered.push(c);
+                    if (match === "sometimes") {
+                      mergeConstraints(c.id, withArray);
                     }
                   }
                   return filtered;
@@ -352,19 +213,29 @@ export class AuditParser {
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
             ]) ?? [];
-          const toExclude = new Set<string>(
-            await Promise.all(
-              excludedCourses.map(([x, withArray]) =>
-                this.normalizeCourseId
-                  .bind(this)(x)
-                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
-              ),
-            ).then((x) =>
-              x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
-                .map((y) => y.id),
+          const toExclude = new Set<string>();
+          await Promise.all(
+            excludedCourses.map(([x, withArray]) =>
+              this.normalizeCourseId
+                .bind(this)(x)
+                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
             ),
-          );
+          ).then((x) => {
+            for (const [classes, withArray] of x) {
+              const invertedClauses = invertWithArray(withArray);
+              for (const c of classes) {
+                const match = classifyWithArray(c, invertedClauses, this.catalogYear);
+                if (match === "never") {
+                  toExclude.add(c.id);
+                  continue;
+                }
+                if (match === "sometimes" && toInclude.has(c.id)) {
+                  mergeConstraints(c.id, invertedClauses);
+                }
+              }
+            }
+          });
+
           const courses = Array.from(toInclude)
             .filter(([x]) => !toExclude.has(x))
             .sort(([, a], [, b]) =>
@@ -376,14 +247,14 @@ export class AuditParser {
 
           const courseConstraints: Record<string, CourseConstraint[]> = Object.fromEntries(
             courses
-              .filter((id) => creditClausesById.has(id))
+              .filter((id) => constraintsById.has(id))
               .map((id) => [
                 id,
-                creditClausesById.get(id)!.map((w) => ({
-                  type: "unit",
+                constraintsById.get(id)!.map((w) => ({
+                  code: w.code,
                   connector: w.connector,
                   operator: w.operator,
-                  units: Number.parseInt(w.valueList[0], 10),
+                  valueList: w.valueList,
                 })),
               ]),
           );
