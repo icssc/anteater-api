@@ -370,67 +370,67 @@ export class Scraper {
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
-    const dbMajors = await db.select().from(major).orderBy(asc(major.id));
-    const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
-    const scrapedMajors = this.parsedPrograms
-      .values()
-      .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
-        let collegeBlockIndex: number | undefined;
-        if (college?.requirements) {
-          const wouldInsert = { name: college.name, requirements: college.requirements };
-          const existing = collegeBlocks.findIndex((schoolExisting) => {
-            try {
-              assert.deepStrictEqual(schoolExisting, wouldInsert);
-              return true;
-            } catch {
-              return false;
-            }
-          });
-
-          if (existing === -1) {
-            collegeBlocks.push(wouldInsert);
-            collegeBlockIndex = collegeBlocks.length - 1;
-          } else {
-            collegeBlockIndex = existing;
-          }
-        }
-        return {
-          id: `${degreeType}-${code}`,
-          degreeId: degreeType ?? "",
-          code,
-          name,
-          requirements,
-          specializationRequired,
-          collegeRequirement: null,
-          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
-        };
-      })
-      .toArray()
-      .sort(sortById);
-    const collegeBlockIds = await db
-      .insert(collegeRequirement)
-      .values(collegeBlocks)
-      .onConflictDoUpdate({
-        target: collegeRequirement.requirementsHash,
-        set: conflictUpdateSetAllCols(collegeRequirement),
-      })
-      .returning({ id: collegeRequirement.id })
-      .then((rows) => rows.map(({ id }) => id));
-
-    for (const majorObj of scrapedMajors) {
-      if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).collegeRequirement =
-          collegeBlockIds[majorObj.collegeBlockIndex];
-        majorObj.collegeBlockIndex = undefined;
-      }
-    }
-    const majorsDiff = diffString(dbMajors, scrapedMajors);
-    if (!majorsDiff.length) {
-      console.log("No difference found between database and scraped data for majors.");
-    } else {
-      console.log("Difference between database and scraped majors data:");
-      console.log(majorsDiff);
-    }
+    // const dbMajors = await db.select().from(major).orderBy(asc(major.id));
+    // const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
+    // const scrapedMajors = this.parsedPrograms
+    //   .values()
+    //   .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
+    //     let collegeBlockIndex: number | undefined;
+    //     if (college?.requirements) {
+    //       const wouldInsert = { name: college.name, requirements: college.requirements };
+    //       const existing = collegeBlocks.findIndex((schoolExisting) => {
+    //         try {
+    //           assert.deepStrictEqual(schoolExisting, wouldInsert);
+    //           return true;
+    //         } catch {
+    //           return false;
+    //         }
+    //       });
+    //
+    //       if (existing === -1) {
+    //         collegeBlocks.push(wouldInsert);
+    //         collegeBlockIndex = collegeBlocks.length - 1;
+    //       } else {
+    //         collegeBlockIndex = existing;
+    //       }
+    //     }
+    //     return {
+    //       id: `${degreeType}-${code}`,
+    //       degreeId: degreeType ?? "",
+    //       code,
+    //       name,
+    //       requirements,
+    //       specializationRequired: specializationRequired,
+    //       collegeRequirement: null,
+    //       ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+    //     };
+    //   })
+    //   .toArray()
+    //   .sort(sortById);
+    // const collegeBlockIds = await db
+    //   .insert(collegeRequirement)
+    //   .values(collegeBlocks)
+    //   .onConflictDoUpdate({
+    //     target: collegeRequirement.requirementsHash,
+    //     set: conflictUpdateSetAllCols(collegeRequirement),
+    //   })
+    //   .returning({ id: collegeRequirement.id })
+    //   .then((rows) => rows.map(({ id }) => id));
+    //
+    // for (const majorObj of scrapedMajors) {
+    //   if (majorObj.collegeBlockIndex !== undefined) {
+    //     (majorObj as typeof major.$inferInsert).collegeRequirement =
+    //       collegeBlockIds[majorObj.collegeBlockIndex];
+    //     majorObj.collegeBlockIndex = undefined;
+    //   }
+    // }
+    // const majorsDiff = diffString(dbMajors, scrapedMajors);
+    // if (!majorsDiff.length) {
+    //   console.log("No difference found between database and scraped data for majors.");
+    // } else {
+    //   console.log("Difference between database and scraped majors data:");
+    //   console.log(majorsDiff);
+    // }
 
     this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
@@ -553,13 +553,6 @@ export class Scraper {
       }))
       .toArray()
       .sort(sortById);
-    const specializationsDiff = diffString(dbSpecializations, scrapedSpecializations);
-    if (!specializationsDiff.length) {
-      console.log("No difference found between database and scraped data for specializations.");
-    } else {
-      console.log("Difference between database and scraped specializations data:");
-      console.log(specializationsDiff);
-    }
 
     // After we match specializations to a major
     // we ensure that majors with 0 specs don't require a specialization
@@ -567,6 +560,76 @@ export class Scraper {
       if (major.specs.length === 0) {
         major.specializationRequired = false;
       }
+    }
+
+    const dbMajors = await db.select().from(major).orderBy(asc(major.id));
+    const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
+    const scrapedMajors = this.parsedPrograms
+      .values()
+      .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
+        let collegeBlockIndex: number | undefined;
+        if (college?.requirements) {
+          const wouldInsert = { name: college.name, requirements: college.requirements };
+          const existing = collegeBlocks.findIndex((schoolExisting) => {
+            try {
+              assert.deepStrictEqual(schoolExisting, wouldInsert);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+          if (existing === -1) {
+            collegeBlocks.push(wouldInsert);
+            collegeBlockIndex = collegeBlocks.length - 1;
+          } else {
+            collegeBlockIndex = existing;
+          }
+        }
+        return {
+          id: `${degreeType}-${code}`,
+          degreeId: degreeType ?? "",
+          code,
+          name,
+          requirements,
+          specializationRequired: specializationRequired,
+          collegeRequirement: null,
+          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+        };
+      })
+      .toArray()
+      .sort(sortById);
+    const collegeBlockIds = await db
+      .insert(collegeRequirement)
+      .values(collegeBlocks)
+      .onConflictDoUpdate({
+        target: collegeRequirement.requirementsHash,
+        set: conflictUpdateSetAllCols(collegeRequirement),
+      })
+      .returning({ id: collegeRequirement.id })
+      .then((rows) => rows.map(({ id }) => id));
+
+    for (const majorObj of scrapedMajors) {
+      if (majorObj.collegeBlockIndex !== undefined) {
+        (majorObj as typeof major.$inferInsert).collegeRequirement =
+          collegeBlockIds[majorObj.collegeBlockIndex];
+        majorObj.collegeBlockIndex = undefined;
+      }
+    }
+    const majorsDiff = diffString(dbMajors, scrapedMajors);
+    if (!majorsDiff.length) {
+      console.log("No difference found between database and scraped data for majors.");
+    } else {
+      console.log("Difference between database and scraped majors data:");
+      console.log(majorsDiff);
+    }
+
+    const specializationsDiff = diffString(dbSpecializations, scrapedSpecializations);
+    if (!specializationsDiff.length) {
+      console.log("No difference found between database and scraped data for specializations.");
+    } else {
+      console.log("Difference between database and scraped specializations data:");
+      console.log(specializationsDiff);
     }
 
     this.degreesAwarded = new Map(
