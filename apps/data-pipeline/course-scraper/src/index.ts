@@ -155,7 +155,7 @@ function parseCourseBlock(
     prerequisiteText: prereqText,
     repeatability: repeatText,
     repeatabilityTimes: repeatabilityData.repeatabilityTimes,
-    repeatabilityTimesType: repeatabilityData.unit,
+    repeatabilityTimesType: repeatabilityData.units,
     gradingOption: gradingText,
     concurrent: concText,
     sameAs: sameAsText,
@@ -395,27 +395,27 @@ function generateGEs(rawCourse: string[]) {
 
 function readRepeatabilityAsValue(repeatText: string): {
   repeatabilityTimes: number;
-  unit: "credit_hours" | "times";
+  units: "credit_hours" | "times";
 } {
   if (/May be taken for credit (\d+) times/.test(repeatText))
     return {
       repeatabilityTimes: Number.parseInt(repeatText.split(" ")[5]),
-      unit: "times",
+      units: "times",
     };
   else if (/May be taken (\d+) times*/.test(repeatText))
     return {
       repeatabilityTimes: Number.parseInt(repeatText.split(" ")[3]),
-      unit: "times",
+      units: "times",
     };
   else if (/May be taken for credit for (\d+) units/.test(repeatText))
     return {
       repeatabilityTimes: Number.parseInt(repeatText.split(" ")[6]),
-      unit: "credit_hours",
+      units: "credit_hours",
     };
 
   return {
-    repeatabilityTimes: -1,
-    unit: "times",
+    repeatabilityTimes: 0,
+    units: "times",
   };
 }
 
