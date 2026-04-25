@@ -1,6 +1,7 @@
 import type { GraphQLContext } from "$graphql/graphql-context";
 import {
   syllabiQuerySchema,
+  syllabiSchema,
   websocDepartmentsQuerySchema,
   websocDepartmentsResponseSchema,
   websocQuerySchema,
@@ -25,7 +26,9 @@ export const websocResolvers = {
     },
     syllabi: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new WebsocService(db);
-      return await service.getSyllabi(syllabiQuerySchema.parse(args.query));
+      return syllabiSchema
+        .array()
+        .parse(await service.getSyllabi(syllabiQuerySchema.parse(args.query)));
     },
   },
 };
