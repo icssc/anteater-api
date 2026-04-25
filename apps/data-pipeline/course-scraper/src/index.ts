@@ -138,6 +138,7 @@ function parseCourseBlock(
   );
   const geText = norm($b.find(".detail-gened").first().text());
   const geFlags = generateGEs(geText ? [geText] : []);
+  const repeatabilityData = readRepeatabilityAsValue(repeatText);
 
   return {
     id,
@@ -153,6 +154,8 @@ function parseCourseBlock(
     prerequisiteTree: prereqs?.get(`${deptCode} ${courseNumber}`) ?? {},
     prerequisiteText: prereqText,
     repeatability: repeatText,
+    repeatabilityTimes: repeatabilityData.repeatabilityTimes,
+    repeatabilityTimesType: repeatabilityData.units,
     gradingOption: gradingText,
     concurrent: concText,
     sameAs: sameAsText,
@@ -388,6 +391,32 @@ function generateGEs(rawCourse: string[]) {
     res.geText = maybeGEText;
   }
   return res;
+}
+
+function readRepeatabilityAsValue(repeatText: string): {
+  repeatabilityTimes: number;
+  units: "credit_hours" | "times";
+} {
+  if (/May be taken for credit (\d+) times/.test(repeatText))
+    return {
+      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[5]),
+      units: "times",
+    };
+  else if (/May be taken (\d+) times*/.test(repeatText))
+    return {
+      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[3]),
+      units: "times",
+    };
+  else if (/May be taken for credit for (\d+) units/.test(repeatText))
+    return {
+      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[6]),
+      units: "credit_hours",
+    };
+
+  return {
+    repeatabilityTimes: 0,
+    units: "times",
+  };
 }
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
