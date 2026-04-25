@@ -36,7 +36,8 @@ export function classifyTree(
 }
 
 // This only supports the exclusion patterns we currently know how to invert
-// currently hardcoded for single unit constraint
+// Currently hardcoded for a single unit constraint, dropping other constraints
+// In the future, it would have to create and invert the tree
 export function invertWithArrayToTree(withArray: WithClause[]): CourseConstraintTree | null {
   if (withArray.length === 0) {
     throw new Error("Expected exclusion inversion to contain at least one clause");
@@ -49,9 +50,7 @@ export function invertWithArrayToTree(withArray: WithClause[]): CourseConstraint
 
   const [clause] = withArray;
   if (clause.code !== "DWCREDIT" && clause.code !== "DWCREDITS") {
-    throw new Error(
-      `Expected exclusion inversion clause to be DWCREDIT or DWCREDITS, got ${clause.code}`,
-    );
+    return null;
   }
 
   return {
