@@ -874,8 +874,8 @@ export const diningPeriod = pgTable(
       .references(() => diningRestaurant.id, {
         onDelete: "cascade",
       }),
-    startTime: time("start_time").notNull(),
-    endTime: time("end_time").notNull(),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
     name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },

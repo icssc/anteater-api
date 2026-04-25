@@ -207,7 +207,7 @@ export class DiningService {
       .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
       .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
       .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
-      .innerJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
+      .leftJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
       .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
       .groupBy(
         // yes, we actually need all of these
