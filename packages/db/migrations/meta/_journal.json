@@ -204,6 +204,13 @@
       "when": 1775601796966,
       "tag": "0028_dining_period_times_nullable",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1776355846732,
+      "tag": "0029_fix_missing_instructor_data",
+      "breakpoints": true
     }
   ]
 }
