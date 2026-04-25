@@ -170,12 +170,22 @@ importers:
       cross-fetch:
         specifier: 4.1.0
         version: 4.1.0
+      json-diff:
+        specifier: 1.0.6
+        version: 1.0.6
       jwt-decode:
         specifier: 4.0.0
         version: 4.0.0
+      sort-keys:
+        specifier: 6.0.0
+        version: 6.0.0
       zod:
         specifier: 4.3.6
         version: 4.3.6
+    devDependencies:
+      '@types/json-diff':
+        specifier: 1.0.3
+        version: 1.0.3
 
   apps/data-pipeline/dining-scraper:
     dependencies:
@@ -561,7 +571,7 @@ packages:
   '@apollo/server@4.11.0':
     resolution: {integrity: sha512-SWDvbbs0wl2zYhKG6aGLxwTJ72xpqp0awb2lotNpfezd9VcAvzaUizzKQqocephin2uMoaA8MguoyBmgtPzNWw==}
     engines: {node: '>=14.16.0'}
-    deprecated: Apollo Server v4 is end-of-life since January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
+    deprecated: Apollo Server v4 is deprecated and will transition to end-of-life on January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
     peerDependencies:
       graphql: ^16.6.0
 

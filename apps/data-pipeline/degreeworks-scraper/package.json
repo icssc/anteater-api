@@ -12,7 +12,12 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "cross-fetch": "4.1.0",
+    "json-diff": "1.0.6",
     "jwt-decode": "4.0.0",
+    "sort-keys": "6.0.0",
     "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/json-diff": "1.0.3"
   }
 }
