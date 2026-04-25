@@ -447,7 +447,7 @@ export class WebsocService {
   }
 
   async getSyllabi(input: z.infer<typeof syllabiQuerySchema>) {
-    const conditions = [eq(websocCourse.courseId, input.courseId), gt(websocSection.webURL, "")];
+    const conditions = [eq(websocCourse.courseId, input.courseId), ne(websocSection.webURL, "")];
     if (input.year) {
       conditions.push(eq(websocSection.year, input.year));
     }
