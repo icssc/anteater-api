@@ -69,6 +69,7 @@ const AVAILABILITY_URL = `${BOOKINGS_BASE_URL}/GetStaffAvailability`;
 const STUDY_LOCATION_ID = "pv1";
 const STUDY_LOCATION_NAME = "Plaza Verde";
 const SLOT_INTERVAL_MINUTES = 15;
+// PV rooms are bookable 2 days in advance.
 const DAYS_TO_FETCH = 2;
 
 // Generates valid slots from an availability window given its duration
