@@ -2,14 +2,20 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
-  CourseConstraint,
+  CourseConstraintTree,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 import type { Block, Rule, WithClause } from "$types";
-import { classifyWithArray, invertWithArray } from "./WithArrayUtils";
+import {
+  andTrees,
+  classifyTree,
+  invertWithArrayToTree,
+  orTrees,
+  withArrayToTree,
+} from "./WithArrayUtils";
 
 export class AuditParser {
   // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
@@ -176,11 +182,17 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const constraintsById = new Map<string, WithClause[]>();
-          const mergeConstraints = (id: string, clauses: WithClause[]) => {
-            if (clauses.length === 0) return;
-            const existing = constraintsById.get(id) ?? [];
-            constraintsById.set(id, [...existing, ...clauses]);
+          const includeTreesById = new Map<string, CourseConstraintTree[]>();
+          const excludeInvertedTreesById = new Map<string, CourseConstraintTree[]>();
+          const pushTree = (
+            map: Map<string, CourseConstraintTree[]>,
+            id: string,
+            tree: CourseConstraintTree | null,
+          ) => {
+            if (tree === null) return;
+            const trees = map.get(id) ?? [];
+            trees.push(tree);
+            map.set(id, trees);
           };
 
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
@@ -193,13 +205,14 @@ export class AuditParser {
             ).then((x) =>
               x
                 .flatMap(([classes, withArray]) => {
+                  const tree = withArrayToTree(withArray);
                   const filtered: (typeof course.$inferSelect)[] = [];
                   for (const c of classes) {
-                    const match = classifyWithArray(c, withArray, this.catalogYear);
+                    const match = classifyTree(c, tree, this.catalogYear);
                     if (match === "never") continue;
                     filtered.push(c);
                     if (match === "sometimes") {
-                      mergeConstraints(c.id, withArray);
+                      pushTree(includeTreesById, c.id, tree);
                     }
                   }
                   return filtered;
@@ -222,15 +235,15 @@ export class AuditParser {
             ),
           ).then((x) => {
             for (const [classes, withArray] of x) {
-              const invertedClauses = invertWithArray(withArray);
+              const invertedTree = invertWithArrayToTree(withArray);
               for (const c of classes) {
-                const match = classifyWithArray(c, invertedClauses, this.catalogYear);
+                const match = classifyTree(c, invertedTree, this.catalogYear);
                 if (match === "never") {
                   toExclude.add(c.id);
                   continue;
                 }
                 if (match === "sometimes" && toInclude.has(c.id)) {
-                  mergeConstraints(c.id, invertedClauses);
+                  pushTree(excludeInvertedTreesById, c.id, invertedTree);
                 }
               }
             }
@@ -245,19 +258,17 @@ export class AuditParser {
             )
             .map(([x]) => x);
 
-          const courseConstraints: Record<string, CourseConstraint[]> = Object.fromEntries(
-            courses
-              .filter((id) => constraintsById.has(id))
-              .map((id) => [
-                id,
-                constraintsById.get(id)!.map((w) => ({
-                  code: w.code,
-                  connector: w.connector,
-                  operator: w.operator,
-                  valueList: w.valueList,
-                })),
-              ]),
-          );
+          const courseConstraints: Record<string, CourseConstraintTree> = {};
+          for (const id of courses) {
+            const tree = andTrees([
+              orTrees(includeTreesById.get(id) ?? []),
+              ...(excludeInvertedTreesById.get(id) ?? []),
+            ]);
+
+            if (tree !== null) {
+              courseConstraints[id] = tree;
+            }
+          }
           const hasCourseConstraints = Object.keys(courseConstraints).length > 0;
 
           if (rule.requirement.classesBegin) {

@@ -1,4 +1,4 @@
-import type { course, Term } from "@packages/db/schema";
+import type { CourseConstraintTree, course, Term } from "@packages/db/schema";
 import type { WithClause } from "$types";
 
 // For every (course, withClause) pair, the course's possible values
@@ -9,29 +9,87 @@ type ClauseResult = "always" | "sometimes" | "never";
 
 // The withArray boolean semantics below are inferred, not confirmed.
 // If we learn how DegreeWorks actually evaluates these statements, we
-// may need to rewrite much of the classifier logic
+// may need to rewrite much of the tree creation logic
 
-export function classifyWithArray(
+export function withArrayToTree(withArray: WithClause[]): CourseConstraintTree | null {
+  return orTrees(splitOrGroups(withArray).map((group) => andTrees(group.map(clauseToLeaf))));
+}
+
+export function classifyTree(
   c: typeof course.$inferSelect,
-  withArray: WithClause[],
+  tree: CourseConstraintTree | null,
   catalogYear: string,
 ): ClauseResult {
-  if (withArray.length === 0) return "always";
-  const groupResults = splitOrGroups(withArray).map((g) => classifyGroup(c, g, catalogYear));
-  if (groupResults.some((r) => r === "always")) return "always";
-  if (groupResults.every((r) => r === "never")) return "never";
+  if (tree === null) return "always";
+  if (tree.type === "leaf") return evaluateLeaf(c, tree, catalogYear);
+
+  const childResults = tree.children.map((child) => classifyTree(c, child, catalogYear));
+
+  if (tree.type === "AND") {
+    if (childResults.some((r) => r === "never")) return "never";
+    if (childResults.every((r) => r === "always")) return "always";
+    return "sometimes";
+  }
+  if (childResults.some((r) => r === "always")) return "always";
+  if (childResults.every((r) => r === "never")) return "never";
   return "sometimes";
 }
 
-function classifyGroup(
-  c: typeof course.$inferSelect,
-  group: WithClause[],
-  catalogYear: string,
-): ClauseResult {
-  const clauseResults = group.map((w) => evaluateWithClause(c, w, catalogYear));
-  if (clauseResults.some((r) => r === "never")) return "never";
-  if (clauseResults.every((r) => r === "always")) return "always";
-  return "sometimes";
+// This only supports the exclusion patterns we currently know how to invert
+// currently hardcoded for single unit constraint
+export function invertWithArrayToTree(withArray: WithClause[]): CourseConstraintTree | null {
+  if (withArray.length === 0) return null;
+  if (withArray.length > 1) {
+    throw new Error(
+      `Expected exclusion inversion to contain exactly one clause, got ${withArray.length}`,
+    );
+  }
+
+  const [clause] = withArray;
+  if (clause.code !== "DWCREDIT" && clause.code !== "DWCREDITS") {
+    throw new Error(
+      `Expected exclusion inversion clause to be DWCREDIT or DWCREDITS, got ${clause.code}`,
+    );
+  }
+
+  return {
+    type: "leaf",
+    code: clause.code,
+    operator: invertOperator(clause.operator),
+    valueList: clause.valueList,
+  };
+}
+
+export function andTrees(trees: (CourseConstraintTree | null)[]): CourseConstraintTree | null {
+  return mergeTrees(trees, "AND");
+}
+
+export function orTrees(trees: (CourseConstraintTree | null)[]): CourseConstraintTree | null {
+  return mergeTrees(trees, "OR");
+}
+
+function mergeTrees(
+  trees: (CourseConstraintTree | null)[],
+  type: "AND" | "OR",
+): CourseConstraintTree | null {
+  const children = trees.flatMap((tree): CourseConstraintTree[] => {
+    if (tree === null) return [];
+    return tree.type === type ? tree.children : [tree];
+  });
+
+  if (children.length === 0) return null;
+  if (children.length === 1) return children[0];
+
+  return { type, children };
+}
+
+function clauseToLeaf(clause: WithClause): CourseConstraintTree {
+  return {
+    type: "leaf",
+    code: clause.code,
+    operator: clause.operator,
+    valueList: clause.valueList,
+  };
 }
 
 function classifyClause<T>(values: readonly T[], matches: (value: T) => boolean): ClauseResult {
@@ -41,7 +99,6 @@ function classifyClause<T>(values: readonly T[], matches: (value: T) => boolean)
 }
 
 function splitOrGroups(withArray: WithClause[]): WithClause[][] {
-  // Assumption: DegreeWorks groups AND clauses together and evaluates OR between those groups:
   // "A AND B OR C AND D" => [(A,B), (C,D)].
   const orGroups: WithClause[][] = [];
   let currentGroup: WithClause[] = [];
@@ -62,28 +119,28 @@ function splitOrGroups(withArray: WithClause[]): WithClause[][] {
   return orGroups;
 }
 
-function evaluateWithClause(
+function evaluateLeaf(
   c: typeof course.$inferSelect,
-  withClause: WithClause,
+  leaf: Extract<CourseConstraintTree, { type: "leaf" }>,
   catalogYear: string,
 ): ClauseResult {
-  switch (withClause.code) {
+  switch (leaf.code) {
     case "DWCREDIT":
     case "DWCREDITS": {
-      const value = Number.parseInt(withClause.valueList[0], 10);
+      const value = Number.parseInt(leaf.valueList[0], 10);
       const units = possibleUnitsForCourse(c);
-      return classifyClause(units, (u) => satisfies(u, withClause.operator, value));
+      return classifyClause(units, (u) => satisfies(u, leaf.operator, value));
     }
     case "DWTERM": {
       // valueList contains specific term(s) from the DWTERM constraint.
       // evaluates the predicate against any target in valueList with OR logic
       const terms = schoolYearTerms(catalogYear);
-      const targets = withClause.valueList.map((dwtermRaw) => {
+      const targets = leaf.valueList.map((dwtermRaw) => {
         const { year, term } = parseDWTerm(dwtermRaw);
         return termToOrdinal(year, term);
       });
       return classifyClause(terms, (t) =>
-        targets.some((target) => satisfies(t, withClause.operator, target)),
+        targets.some((target) => satisfies(t, leaf.operator, target)),
       );
     }
     // There may be more withArray Codes that can be applied here to filter out courses
@@ -155,30 +212,6 @@ function satisfies(value: number, operator: WithClause["operator"], target: numb
     case "<>":
       return value !== target;
   }
-}
-
-export function invertWithArray(withArray: WithClause[]): WithClause[] {
-  if (withArray.length === 0) return [];
-  if (withArray.length > 1) {
-    throw new Error(
-      `Expected exclusion inversion to contain exactly one clause, got ${withArray.length}`,
-    );
-  }
-
-  const [clause] = withArray;
-  if (clause.code !== "DWCREDIT" && clause.code !== "DWCREDITS") {
-    throw new Error(
-      `Expected exclusion inversion clause to be DWCREDIT or DWCREDITS, got ${clause.code}`,
-    );
-  }
-
-  return [
-    {
-      ...clause,
-      operator: invertOperator(clause.operator),
-      connector: "",
-    },
-  ];
 }
 
 function invertOperator(op: WithClause["operator"]): WithClause["operator"] {

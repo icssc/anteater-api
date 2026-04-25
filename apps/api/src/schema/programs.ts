@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import type { CourseConstraintTree } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -52,22 +53,36 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
-const unitConstraintSchema = z.object({
-  type: z.literal("unit"),
-  connector: z.enum(["", "AND", "OR"]),
+const courseConstraintSchema = z.object({
+  code: z.enum([
+    "DWCREDITS",
+    "DWCREDIT",
+    "DWLOCATION",
+    "DWTERM",
+    "DWTITLE",
+    "DWGRADETYPE",
+    "DWPASSFAIL",
+  ]),
   operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
-  units: z.number(),
+  valueList: z.array(z.string()),
 });
 
-const courseConstraintSchema = unitConstraintSchema;
+const courseConstraintLeafSchema = courseConstraintSchema.extend({
+  type: z.literal("leaf"),
+});
 
-const courseConstraintsField = z
-  .record(z.string(), z.array(courseConstraintSchema))
-  .optional()
-  .openapi({
-    description:
-      "A map from course ID to the constraints that apply to that course for this requirement.",
-  });
+const courseConstraintTreeSchema: z.ZodType<CourseConstraintTree> = z.union([
+  courseConstraintLeafSchema,
+  z.object({
+    type: z.enum(["AND", "OR"]),
+    children: z.lazy(() => courseConstraintTreeSchema).array(),
+  }),
+]);
+
+const courseConstraintsField = z.record(z.string(), courseConstraintTreeSchema).optional().openapi({
+  description:
+    "A map from course ID to the boolean expression tree of constraints for that course.",
+});
 
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
