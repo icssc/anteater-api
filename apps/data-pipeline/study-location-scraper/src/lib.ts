@@ -6,6 +6,7 @@ import type { Cheerio, CheerioAPI } from "cheerio";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
+import { losAngelesNowNaive } from "./time";
 
 type StudyRoom = {
   id: string;
@@ -49,6 +50,8 @@ type StudySpaces = {
 const ROOM_SPACE_URL = "https://spaces.lib.uci.edu/space";
 const LIB_SPACE_URL = "https://spaces.lib.uci.edu/spaces";
 const LIB_SPACE_AVAILABILITY_URL = "https://spaces.lib.uci.edu/spaces/availability/grid";
+// Library rooms are bookable 7 days in advance.
+const DAYS_TO_FETCH = 7;
 
 /**
  * Shortened libary names mapped to their IDs used by spaces.lib.uci.edu
@@ -209,7 +212,7 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
     month: "2-digit",
     day: "2-digit",
   });
-  date.setDate(date.getDate() + 3);
+  date.setDate(date.getDate() + DAYS_TO_FETCH);
   const end = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "2-digit",
@@ -244,6 +247,7 @@ export async function doLibraryScrape(db: ReturnType<typeof database>) {
     rooms.map((room) => ({ ...room, studyLocationId })),
   );
   const slotRows = roomRows.flatMap((room) => room.slots);
+  const now = losAngelesNowNaive();
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
     await tx
@@ -267,6 +271,6 @@ export async function doLibraryScrape(db: ReturnType<typeof database>) {
         target: [studyRoomSlot.studyRoomId, studyRoomSlot.start, studyRoomSlot.end],
         set: conflictUpdateSetAllCols(studyRoomSlot),
       });
-    await tx.delete(studyRoomSlot).where(lt(studyRoomSlot.end, new Date()));
+    await tx.delete(studyRoomSlot).where(lt(studyRoomSlot.end, now));
   });
 }
