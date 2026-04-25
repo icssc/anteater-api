@@ -46,7 +46,7 @@ async function main() {
   const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
   const majorData = parsedPrograms
     .values()
-    .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
+    .map(([college, { name, degreeType, code, requirements, header, specializationRequired }]) => {
       let collegeBlockIndex: number | undefined;
       if (college?.requirements) {
         const wouldInsert = { name: college.name, requirements: college.requirements };
@@ -73,6 +73,7 @@ async function main() {
         code,
         name,
         specializationRequired,
+        header,
         requirements,
         ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
       };

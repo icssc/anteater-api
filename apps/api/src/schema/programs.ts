@@ -52,6 +52,19 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const exclusiveQualifierSchema = z.object({
+  qualifierType: z.literal("Exclusive"),
+});
+
+export const nonExclusiveQualifierSchema = z.object({
+  qualifierType: z.literal("NonExclusive"),
+  appliedBlocks: z
+    .array(z.string())
+    .openapi("The ids of blocks that can share courses with this requirement"),
+});
+
+export const qualifierSchema = z.union([exclusiveQualifierSchema, nonExclusiveQualifierSchema]);
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -66,6 +79,9 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     requirementType: z.literal("Course"),
     courseCount: z.number().int().nonnegative().openapi({
       description: "The number of courses from this set demanded by this requirement.",
+    }),
+    qualifiers: z.array(qualifierSchema).optional().openapi({
+      description: "Qualifiers for this requirement",
     }),
     courses: z
       .array(z.string())
@@ -91,6 +107,9 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       .int()
       .nonnegative()
       .openapi({ description: "The number of units needed for this requirement." }),
+    qualifiers: z.array(qualifierSchema).optional().openapi({
+      description: "Qualifiers for this requirement",
+    }),
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
@@ -254,6 +273,7 @@ export const programRequirementsResponseSchema = z.object({
   name: z.string().openapi({
     description: "Human name for this program",
   }),
+  header: z.array(qualifierSchema).optional(),
   requirements: z.array(programRequirementSchema).openapi({
     description:
       "The set of of requirements for this program; a course, unit, or group requirement as follows:",
