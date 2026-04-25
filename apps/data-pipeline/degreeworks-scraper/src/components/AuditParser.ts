@@ -235,6 +235,13 @@ export class AuditParser {
             ),
           ).then((x) => {
             for (const [classes, withArray] of x) {
+              if (withArray.length === 0) {
+                for (const c of classes) {
+                  toExclude.add(c.id);
+                }
+                continue;
+              }
+
               const invertedTree = invertWithArrayToTree(withArray);
               for (const c of classes) {
                 const match = classifyTree(c, invertedTree, this.catalogYear);
