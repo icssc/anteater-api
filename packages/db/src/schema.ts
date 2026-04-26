@@ -682,13 +682,11 @@ export const schoolRequirement = pgTable("school_requirement", {
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
-  requirementHash: bigint("requirement_hash", { mode: "bigint" })
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`) // also deferrable initially immediate
-    .unique()
-    .notNull(),
+  id: bigint("id", { mode: "bigint" })
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
+    .primaryKey(),
   name: varchar("name").notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const majorSpecializationToRequirement = pgTable(
@@ -698,7 +696,7 @@ export const majorSpecializationToRequirement = pgTable(
       .notNull()
       .references(() => major.id),
     specializationId: varchar("specialization_id").references(() => specialization.id),
-    requirementId: uuid("requirement_id")
+    requirementId: bigint("requirement_id", { mode: "bigint" })
       .notNull()
       .references(() => majorRequirement.id),
   },
@@ -706,12 +704,10 @@ export const majorSpecializationToRequirement = pgTable(
 );
 
 export const majorRequirement = pgTable("major_requirement", {
-  requirementHash: bigint("requirement_hash", { mode: "bigint" }) // also deferrable initially immediate
-    .unique()
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-    .notNull(),
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  id: uuid("id").primaryKey().defaultRandom(),
 });
 
 export const major = pgTable(
@@ -724,7 +720,9 @@ export const major = pgTable(
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
-    collegeRequirementId: uuid("college_requirement_id").references(() => collegeRequirement.id),
+    collegeRequirementId: bigint("college_requirement_id", { mode: "bigint" }).references(
+      () => collegeRequirement.id,
+    ),
   },
   (table) => [index().on(table.degreeId), index().on(table.collegeRequirementId)],
 );

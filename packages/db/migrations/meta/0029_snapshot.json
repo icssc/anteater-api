@@ -1,5 +1,5 @@
 {
-  "id": "b244b772-0e94-4329-827d-4b71d3832c12",
+  "id": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -311,10 +311,10 @@
       "name": "college_requirement",
       "schema": "",
       "columns": {
-        "requirement_hash": {
-          "name": "requirement_hash",
+        "id": {
+          "name": "id",
           "type": "bigint",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true,
           "generated": {
             "as": "jsonb_hash_extended(requirements, 0)",
@@ -332,25 +332,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "college_requirement_requirement_hash_unique": {
-          "name": "college_requirement_requirement_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["requirement_hash"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1817,7 +1804,7 @@
         },
         "college_requirement_id": {
           "name": "college_requirement_id",
-          "type": "uuid",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         }
@@ -1884,10 +1871,10 @@
       "name": "major_requirement",
       "schema": "",
       "columns": {
-        "requirement_hash": {
-          "name": "requirement_hash",
+        "id": {
+          "name": "id",
           "type": "bigint",
-          "primaryKey": false,
+          "primaryKey": true,
           "notNull": true,
           "generated": {
             "as": "jsonb_hash_extended(requirements, 0)",
@@ -1899,25 +1886,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "major_requirement_requirement_hash_unique": {
-          "name": "major_requirement_requirement_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["requirement_hash"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1940,7 +1914,7 @@
         },
         "requirement_id": {
           "name": "requirement_id",
-          "type": "uuid",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         }

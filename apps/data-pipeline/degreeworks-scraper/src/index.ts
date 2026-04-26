@@ -1,6 +1,5 @@
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { notInArray, sql } from "@packages/db/drizzle";
 import type { Division } from "@packages/db/schema";
 import {
   collegeRequirement,
@@ -13,57 +12,7 @@ import {
   specialization,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { getFromMapOrThrow } from "@packages/stdlib";
-import { v4 as uuidv4 } from "uuid";
 import { Scraper } from "$components";
-
-/**
- * Subtransaction upserts unique requirements into the requirements tables, then
- * return a map from original uuids to the uuid of the unique requirement that was upserted
- */
-async function upsertAndUnifyRequirementIds(
-  txOuter: Parameters<Parameters<ReturnType<typeof database>["transaction"]>[0]>[0],
-  requirementTable: typeof majorRequirement | typeof collegeRequirement,
-  data: (typeof requirementTable.$inferInsert)[],
-) {
-  return await txOuter.transaction(async (tx) => {
-    const idToHash = await tx
-      .insert(requirementTable)
-      .values(data)
-      .returning({ uuid: requirementTable.id, hash: requirementTable.requirementHash });
-
-    // Remove all duplicate requirements from the table. We couldn't have used ON CONFLICT DO UPDATE
-    // as attempting to change the same row multiple times is an error
-    await tx
-      .delete(requirementTable)
-      .where(
-        notInArray(
-          requirementTable.id,
-          tx
-            .selectDistinctOn([requirementTable.requirementHash], { id: requirementTable.id })
-            .from(requirementTable)
-            .orderBy(requirementTable.requirementHash, requirementTable.id),
-        ),
-      );
-
-    const hashToUnified = new Map(
-      await tx
-        .select({ uuid: requirementTable.id, hash: requirementTable.requirementHash })
-        .from(requirementTable)
-        .then((q) =>
-          q.map(({ uuid, hash }) => {
-            return [hash, uuid];
-          }),
-        ),
-    );
-
-    return new Map(
-      idToHash.map(({ uuid, hash }) => {
-        return [uuid, getFromMapOrThrow(hashToUnified, hash)];
-      }),
-    );
-  });
-}
 
 async function main() {
   if (!process.env.DEGREEWORKS_SCRAPER_X_AUTH_TOKEN) throw new Error("Auth cookie not set.");
@@ -112,8 +61,8 @@ async function main() {
           specializationRequired,
           requirements,
           college,
-          ...(college ? { collegeReqUuid: uuidv4() } : {}),
-          majorReqUuid: uuidv4(),
+          requirementId: undefined as bigint | undefined,
+          collegeRequirementId: undefined as bigint | undefined,
         };
       },
     )
@@ -135,62 +84,55 @@ async function main() {
     .toArray();
 
   await db.transaction(async (tx) => {
-    await tx.execute(sql`
-      SET CONSTRAINTS 
-        major_requirement_requirement_hash_unique,
-        college_requirement_requirement_hash_unique,
-        major_specialization_to_requirement_requirement_id_major_requir,
-        major_college_requirement_id_college_requirement_id_fk
-      DEFERRED
-    `);
+    for (const obj of majorSpecData) {
+      const requirementId = await tx
+        .insert(majorRequirement)
+        .values(obj)
+        .onConflictDoUpdate({
+          target: majorRequirement.id,
+          set: conflictUpdateSetAllCols(majorRequirement),
+        })
+        .returning({ id: majorRequirement.id })
+        .then(([r]) => r.id);
 
-    const majorRequirementData = majorSpecData.map(({ requirements, majorReqUuid: id }) => {
-      return { id, requirements };
-    });
-    const majorReqUnifiedId = await upsertAndUnifyRequirementIds(
-      tx,
-      majorRequirement,
-      majorRequirementData,
-    );
+      obj.requirementId = requirementId;
 
-    const collegeRequirementData = majorSpecData
-      .filter((x) => x.college !== undefined)
-      .map(({ college, collegeReqUuid: uuid }) => {
-        return { name: college?.name, requirements: college?.requirements, id: uuid };
-      }) as (typeof collegeRequirement.$inferInsert)[];
-    const collegeReqUnifiedId = await upsertAndUnifyRequirementIds(
-      tx,
-      collegeRequirement,
-      collegeRequirementData,
-    );
+      if (obj.college) {
+        const collegeRequirementId = await tx
+          .insert(collegeRequirement)
+          .values({ requirements: obj.college.requirements, name: obj.college.name })
+          .onConflictDoUpdate({
+            target: collegeRequirement.id,
+            set: conflictUpdateSetAllCols(collegeRequirement),
+          })
+          .returning({ id: collegeRequirement.id })
+          .then(([r]) => r.id);
 
-    // Unifies randomly generated uuid associated with the same requirement hash
-    for (const majorSpecObj of majorSpecData) {
-      if (majorSpecObj.collegeReqUuid) {
-        majorSpecObj.collegeReqUuid = collegeReqUnifiedId.get(majorSpecObj.collegeReqUuid);
+        obj.collegeRequirementId = collegeRequirementId;
       }
-      majorSpecObj.majorReqUuid = getFromMapOrThrow(majorReqUnifiedId, majorSpecObj.majorReqUuid);
     }
 
-    const majorSpecToRequirementData = majorSpecData.map((majorSpecObj) => {
+    const majorSpecToRequirementData = majorSpecData.map((obj) => {
       return {
-        majorId: majorSpecObj.majorId,
-        specializationId: majorSpecObj.specializationId,
-        requirementId: majorSpecObj.majorReqUuid,
+        majorId: obj.majorId,
+        specializationId: obj.specializationId,
+        requirementId: obj.requirementId,
       } as typeof majorSpecializationToRequirement.$inferInsert;
     });
 
     const majorData = majorSpecData
-      .filter((majorSpecObj) => majorSpecObj.specializationId === undefined)
-      .map((majorSpecObj) => {
+      .filter((obj) => {
+        return obj.specializationId === undefined;
+      })
+      .map((obj) => {
         return {
-          name: majorSpecObj.name,
-          code: majorSpecObj.code,
-          specializationRequired: majorSpecObj.specializationRequired,
-          id: majorSpecObj.majorId,
-          degreeId: majorSpecObj.degreeId,
-          collegeRequirementId: majorSpecObj.collegeReqUuid,
-        } as typeof major.$inferInsert;
+          name: obj.name,
+          code: obj.code,
+          specializationRequired: obj.specializationRequired,
+          id: obj.majorId,
+          degreeId: obj.degreeId,
+          collegeRequirementId: obj.collegeRequirementId,
+        };
       });
 
     if (ucRequirementData && geRequirementData) {
