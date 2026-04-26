@@ -4,6 +4,7 @@ import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import fetch from "cross-fetch";
 import { z } from "zod";
+import { losAngelesNowNaive } from "./time";
 
 // Schemas
 const bookingsServiceSchema = z.object({
@@ -68,6 +69,7 @@ const AVAILABILITY_URL = `${BOOKINGS_BASE_URL}/GetStaffAvailability`;
 const STUDY_LOCATION_ID = "pv1";
 const STUDY_LOCATION_NAME = "Plaza Verde";
 const SLOT_INTERVAL_MINUTES = 15;
+// PV rooms are bookable 2 days in advance.
 const DAYS_TO_FETCH = 2;
 
 // Generates valid slots from an availability window given its duration
@@ -255,7 +257,7 @@ async function scrapePlazaVerde(): Promise<{
   // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
-  const now = new Date();
+  const now = losAngelesNowNaive();
 
   // Get today's date formatted in LA timezone as a string (M/D/YYYY)
   const dateInLA = new Intl.DateTimeFormat("en-US", {
