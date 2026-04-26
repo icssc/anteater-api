@@ -455,7 +455,7 @@ export class WebsocService {
       conditions.push(eq(websocSection.quarter, input.quarter));
     }
     if (input.instructor) {
-      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+      conditions.push(sql`${input.instructor} = ANY(${websocSection.instructors})`);
     }
     const sub = this.db
       .selectDistinct({
@@ -466,10 +466,6 @@ export class WebsocService {
       })
       .from(websocSection)
       .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
-      .leftJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.sectionId, websocSection.id),
-      )
       .where(and(...conditions))
       .as("sub");
 
