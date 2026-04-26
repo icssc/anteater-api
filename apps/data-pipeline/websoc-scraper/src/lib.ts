@@ -732,18 +732,60 @@ type CourseGEUpdate = {
   isGE8?: boolean;
 };
 
+async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
+  return db
+    .select({
+      "GE-1A": sql<number>`count(*)::int filter (where ${websocCourse.isGE1A})`,
+      "GE-1B": sql<number>`count(*)::int filter (where ${websocCourse.isGE1B})`,
+      "GE-2": sql<number>`count(*)::int filter (where ${websocCourse.isGE2})`,
+      "GE-3": sql<number>`count(*)::int filter (where ${websocCourse.isGE3})`,
+      "GE-4": sql<number>`count(*)::int filter (where ${websocCourse.isGE4})`,
+      "GE-5A": sql<number>`count(*)::int filter (where ${websocCourse.isGE5A})`,
+      "GE-5B": sql<number>`count(*)::int filter (where ${websocCourse.isGE5B})`,
+      "GE-6": sql<number>`count(*)::int filter (where ${websocCourse.isGE6})`,
+      "GE-7": sql<number>`count(*)::int filter (where ${websocCourse.isGE7})`,
+      "GE-8": sql<number>`count(*)::int filter (where ${websocCourse.isGE8})`,
+    })
+    .from(websocCourse)
+    .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)))
+    .then((rows) => rows[0]);
+}
+
 async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const updates = new Map<string, CourseGEUpdate>();
+  const outcomes: Record<string, "success" | "empty" | "error"> = {};
+  const scrapedCounts: Record<string, number> = {};
+
+  const before = await getGECountsFromDB(db, term);
+  console.log(
+    JSON.stringify({ event: "ge_scrape_db_before", term: termToName(term), counts: before }),
+  );
+
   for (const ge of geCategories) {
-    console.log(`Scraping GE ${ge}`);
-    const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
-    const courses = resp.schools.flatMap((school) =>
-      school.departments.flatMap((dept) =>
-        dept.courses.map(
-          (course) => `${course.deptCode},${course.courseNumber},${course.courseTitle}`,
+    console.log(`Scraping ${ge}`);
+    let courses: string[] = [];
+    try {
+      const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
+      courses = resp.schools.flatMap((school) =>
+        school.departments.flatMap((dept) =>
+          dept.courses.map(
+            (course) => `${course.deptCode},${course.courseNumber},${course.courseTitle}`,
+          ),
         ),
-      ),
-    );
+      );
+      if (courses.length === 0) {
+        outcomes[ge] = "empty";
+        console.warn(`[${ge}] empty response - 0 courses returned`);
+      } else {
+        outcomes[ge] = "success";
+        console.log(`[${ge}] found ${courses.length} courses`);
+      }
+    } catch (e) {
+      outcomes[ge] = "error";
+      console.error(`[${ge}] failed to scrape GE data for term ${termToName(term)}`, e);
+    }
+    scrapedCounts[ge] = courses.length;
+
     for (const course of courses) {
       const update = updates.get(course);
       if (update) {
@@ -754,7 +796,22 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
     await sleep(1000);
   }
+
   await db.transaction(async (tx) => {
+    // reset all flags to false for categories that didn't error
+    const resetSet: Partial<CourseGEUpdate> = {};
+    for (const ge of geCategories) {
+      if (outcomes[ge] !== "error") {
+        resetSet[geCategoryToFlag[ge]] = false;
+      }
+    }
+    if (Object.keys(resetSet).length > 0) {
+      await tx
+        .update(websocCourse)
+        .set(resetSet)
+        .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)));
+    }
+
     for (const [course, update] of updates) {
       const [deptCode, courseNumber, courseTitle] = course.split(",", 3);
       await tx
@@ -772,6 +829,19 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
     }
   });
   console.log(`Updated GE data for ${updates.size} courses`);
+
+  const after = await getGECountsFromDB(db, term);
+
+  const categories = Object.fromEntries(
+    geCategories.map((ge) => {
+      const scraped = scrapedCounts[ge] ?? 0;
+      const dbCount = Number(after?.[ge] ?? 0);
+      const outcome = outcomes[ge];
+      const notInDb = outcome === "success" ? Math.max(scraped - dbCount, 0) : 0;
+      return [ge, { scraped, dbCount, outcome, notInDb }];
+    }),
+  );
+  console.log(JSON.stringify({ event: "ge_scrape_summary", term: termToName(term), categories }));
 }
 
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
@@ -801,7 +871,12 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     await ingestChunk(db, term, lastKnownCode + 1, LAST_SECTION_CODE);
   }
 
-  await scrapeGEsForTerm(db, term);
+  try {
+    await scrapeGEsForTerm(db, term);
+  } catch (e) {
+    console.error(`[scrapeTerm] scrapeGEsForTerm failed for term ${termToName(term)}`, e);
+    throw e;
+  }
   const values = { name, lastScraped: new Date() };
   await db
     .insert(websocMeta)
