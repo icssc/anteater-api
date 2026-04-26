@@ -397,19 +397,23 @@ function readRepeatabilityAsValue(repeatText: string): {
   repeatabilityTimes: number;
   units: "credit_hours" | "times";
 } {
-  if (/May be taken for credit (\d+) times/.test(repeatText))
+  const timesMatch1 = /May be taken for credit (\d+) times/.exec(repeatText);
+  const timesMatch2 = /May be taken (\d+) times*/.exec(repeatText);
+  const unitsMatch = /May be taken for credit for (\d+) units/.exec(repeatText);
+
+  if (timesMatch1)
     return {
-      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[5]),
+      repeatabilityTimes: Number.parseInt(timesMatch1[1], 10),
       units: "times",
     };
-  else if (/May be taken (\d+) times*/.test(repeatText))
+  else if (timesMatch2)
     return {
-      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[3]),
+      repeatabilityTimes: Number.parseInt(timesMatch2[1], 10),
       units: "times",
     };
-  else if (/May be taken for credit for (\d+) units/.test(repeatText))
+  else if (unitsMatch)
     return {
-      repeatabilityTimes: Number.parseInt(repeatText.split(" ")[6]),
+      repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
       units: "credit_hours",
     };
 
