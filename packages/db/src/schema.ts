@@ -683,8 +683,8 @@ export const schoolRequirement = pgTable("school_requirement", {
 
 export const collegeRequirement = pgTable("college_requirement", {
   id: bigint("id", { mode: "bigint" })
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-    .primaryKey(),
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
   name: varchar("name").notNull(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
