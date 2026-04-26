@@ -757,7 +757,9 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   const scrapedCounts: Record<string, number> = {};
 
   const before = await getGECountsFromDB(db, term);
-  console.log(`[GE scrape] DB counts BEFORE for ${termToName(term)}:`, before);
+  console.log(
+    JSON.stringify({ event: "ge_scrape_db_before", term: termToName(term), counts: before }),
+  );
 
   for (const ge of geCategories) {
     console.log(`Scraping ${ge}`);
@@ -830,16 +832,16 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
 
   const after = await getGECountsFromDB(db, term);
 
-  const summary = geCategories.map((ge) => {
-    const stored = after?.[ge] ?? 0;
-    const scraped = scrapedCounts[ge] ?? 0;
-    const outcome = outcomes[ge];
-    const storedLabel = outcome === "error" ? "preserved" : "stored";
-    const diff = outcome === "success" ? scraped - stored : 0;
-    const diffNote = diff > 0 ? `  (${diff} unmatched)` : "";
-    return `  ${ge}: scraped=${scraped}  ${storedLabel}=${stored}  outcome=${outcome}${diffNote}`;
-  });
-  console.log(`[GE scrape] per-category summary for ${termToName(term)}:\n${summary.join("\n")}`);
+  const categories = Object.fromEntries(
+    geCategories.map((ge) => {
+      const scraped = scrapedCounts[ge] ?? 0;
+      const dbCount = Number(after?.[ge] ?? 0);
+      const outcome = outcomes[ge];
+      const notInDb = outcome === "success" ? Math.max(scraped - dbCount, 0) : 0;
+      return [ge, { scraped, dbCount, outcome, notInDb }];
+    }),
+  );
+  console.log(JSON.stringify({ event: "ge_scrape_summary", term: termToName(term), categories }));
 }
 
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
