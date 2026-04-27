@@ -1,5 +1,5 @@
 {
-  "id": "c74e6785-858f-4878-8a19-39bff97989df",
+  "id": "d2421396-7e3e-4e83-967f-dc7e197dc5a8",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -481,8 +481,7 @@
           "name": "repeatability_times_type",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'times'"
+          "notNull": false
         },
         "grading_option": {
           "name": "grading_option",
@@ -4411,8 +4410,7 @@
           "name": "repeatability_times_type",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'times'"
+          "notNull": false
         },
         "grading_option": {
           "name": "grading_option",

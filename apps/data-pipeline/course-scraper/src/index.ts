@@ -138,7 +138,7 @@ function parseCourseBlock(
   );
   const geText = norm($b.find(".detail-gened").first().text());
   const geFlags = generateGEs(geText ? [geText] : []);
-  const repeatabilityData = readRepeatabilityAsValue(repeatText);
+  const repeatabilityData = parseRepeatability(repeatText);
 
   return {
     id,
@@ -393,7 +393,7 @@ function generateGEs(rawCourse: string[]) {
   return res;
 }
 
-function readRepeatabilityAsValue(repeatText: string): {
+function parseRepeatability(repeatText: string): {
   repeatabilityTimes: number;
   units: "credit_hours" | "times";
 } {

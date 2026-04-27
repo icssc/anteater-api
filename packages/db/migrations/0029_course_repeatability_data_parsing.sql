@@ -1,6 +1,6 @@
 DROP MATERIALIZED VIEW "public"."course_view";--> statement-breakpoint
 ALTER TABLE "course" ADD COLUMN "repeatability_times" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
-ALTER TABLE "course" ADD COLUMN "repeatability_times_type" varchar DEFAULT 'times' NOT NULL;--> statement-breakpoint
+ALTER TABLE "course" ADD COLUMN "repeatability_times_type" varchar;--> statement-breakpoint
 CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "course"."updated_at", "course"."department", "course"."shortened_dept", "course"."department_alias", "course"."course_number", "course"."course_numeric", "course"."school", "course"."title", "course"."course_level", "course"."min_units", "course"."max_units", "course"."description", "course"."department_name", "course"."prerequisite_tree", "course"."prerequisite_text", "course"."repeatability", "course"."repeatability_times", "course"."repeatability_times_type", "course"."grading_option", "course"."concurrent", "course"."same_as", "course"."restriction", "course"."overlap", "course"."corequisites", "course"."is_ge_1a", "course"."is_ge_1b", "course"."is_ge_2", "course"."is_ge_3", "course"."is_ge_4", "course"."is_ge_5a", "course"."is_ge_5b", "course"."is_ge_6", "course"."is_ge_7", "course"."is_ge_8", "course"."ge_text", 
         ARRAY_REMOVE(COALESCE(
           (
