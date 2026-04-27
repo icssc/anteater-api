@@ -37,6 +37,7 @@ const JWT_HEADER_PREFIX_LENGTH = 7;
 type ProgramTriplet = [string, string, string];
 
 const deepSortArray = <T extends unknown[]>(array: T): T => sortKeys(array, { deep: true });
+const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
 
 export class Scraper {
   private ap!: AuditParser;
@@ -279,6 +280,7 @@ export class Scraper {
       );
     }
 
+    // Compare scraped and db info for requirements
     const [dbUcRequirementsFetched] = await db
       .select()
       .from(schoolRequirement)
@@ -352,7 +354,7 @@ export class Scraper {
       );
     }
 
-    const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
+    // Compare scraped and db info for minors
     const dbMinors = await db.select().from(minor).orderBy(asc(minor.id));
     const scrapedMinors = this.parsedMinorPrograms
       .values()
@@ -369,68 +371,6 @@ export class Scraper {
 
     console.log("Scraping undergraduate and graduate program requirements");
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
-
-    // const dbMajors = await db.select().from(major).orderBy(asc(major.id));
-    // const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
-    // const scrapedMajors = this.parsedPrograms
-    //   .values()
-    //   .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
-    //     let collegeBlockIndex: number | undefined;
-    //     if (college?.requirements) {
-    //       const wouldInsert = { name: college.name, requirements: college.requirements };
-    //       const existing = collegeBlocks.findIndex((schoolExisting) => {
-    //         try {
-    //           assert.deepStrictEqual(schoolExisting, wouldInsert);
-    //           return true;
-    //         } catch {
-    //           return false;
-    //         }
-    //       });
-    //
-    //       if (existing === -1) {
-    //         collegeBlocks.push(wouldInsert);
-    //         collegeBlockIndex = collegeBlocks.length - 1;
-    //       } else {
-    //         collegeBlockIndex = existing;
-    //       }
-    //     }
-    //     return {
-    //       id: `${degreeType}-${code}`,
-    //       degreeId: degreeType ?? "",
-    //       code,
-    //       name,
-    //       requirements,
-    //       specializationRequired: specializationRequired,
-    //       collegeRequirement: null,
-    //       ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
-    //     };
-    //   })
-    //   .toArray()
-    //   .sort(sortById);
-    // const collegeBlockIds = await db
-    //   .insert(collegeRequirement)
-    //   .values(collegeBlocks)
-    //   .onConflictDoUpdate({
-    //     target: collegeRequirement.requirementsHash,
-    //     set: conflictUpdateSetAllCols(collegeRequirement),
-    //   })
-    //   .returning({ id: collegeRequirement.id })
-    //   .then((rows) => rows.map(({ id }) => id));
-    //
-    // for (const majorObj of scrapedMajors) {
-    //   if (majorObj.collegeBlockIndex !== undefined) {
-    //     (majorObj as typeof major.$inferInsert).collegeRequirement =
-    //       collegeBlockIds[majorObj.collegeBlockIndex];
-    //     majorObj.collegeBlockIndex = undefined;
-    //   }
-    // }
-    // const majorsDiff = diffString(dbMajors, scrapedMajors);
-    // if (!majorsDiff.length) {
-    //   console.log("No difference found between database and scraped data for majors.");
-    // } else {
-    //   console.log("Difference between database and scraped majors data:");
-    //   console.log(majorsDiff);
-    // }
 
     this.parsedSpecializations = new Map();
     console.log("Scraping all specialization requirements");
@@ -562,6 +502,7 @@ export class Scraper {
       }
     }
 
+    // Compare scraped and db info for majors, specializations, and degrees
     const dbMajors = await db.select().from(major).orderBy(asc(major.id));
     const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
     const scrapedMajors = this.parsedPrograms
@@ -653,7 +594,6 @@ export class Scraper {
     const dbDegrees = await db.select().from(degree).orderBy(degree.id);
 
     const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
-      // Determine division: Undergraduate if it starts with 'B', else Graduate
       division: id.startsWith("B") ? "Undergraduate" : "Graduate",
       id,
       name,
