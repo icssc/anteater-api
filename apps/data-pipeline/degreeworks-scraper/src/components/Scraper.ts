@@ -616,7 +616,19 @@ export class Scraper {
         majorObj.collegeBlockIndex = undefined;
       }
     }
-    const majorsDiff = diffString(dbMajors, scrapedMajors);
+
+    const cleanDbMajors = JSON.parse(JSON.stringify(dbMajors)).sort(sortById);
+    const cleanScrapedMajors = JSON.parse(JSON.stringify(scrapedMajors))
+      .map((m: any) => ({
+        ...m,
+        collegeRequirement: m.collegeRequirement ?? null,
+      }))
+      .sort(sortById);
+
+    const sortedScrapedMajors = deepSortArray(cleanScrapedMajors);
+    const sortedDbMajors = deepSortArray(cleanDbMajors);
+
+    const majorsDiff = diffString(sortedDbMajors, sortedScrapedMajors);
     if (!majorsDiff.length) {
       console.log("No difference found between database and scraped data for majors.");
     } else {
