@@ -229,7 +229,7 @@ export const courseSchema = z.object({
   dependencies: coursePreviewSchema.array(),
   repeatability: z.string(),
   repeatabilityTimes: z.int(),
-  repeatabilityTimesType: z.string(),
+  repeatabilityTimesType: z.string().nullable(),
   gradingOption: z.string(),
   concurrent: z.string(),
   sameAs: z.string(),
