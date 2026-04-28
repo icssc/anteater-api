@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import * as fs from "node:fs/promises";
+import { exit } from "node:process";
 import { database } from "@packages/db";
 import { asc, eq } from "@packages/db/drizzle";
 import type {
@@ -20,6 +21,7 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
+import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
 import type { z } from "zod";
 import { AuditParser, DegreeworksClient } from "$components";
@@ -323,6 +325,10 @@ export class Scraper {
         console.log("Difference between database and scraped Honors requirements data:");
         console.log(honorsReqsDiff);
       }
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.error("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
@@ -367,6 +373,10 @@ export class Scraper {
     } else {
       console.log("Difference between database and scraped minors data:");
       console.log(minorsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.error("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     console.log("Scraping undergraduate and graduate program requirements");
@@ -575,6 +585,10 @@ export class Scraper {
     } else {
       console.log("Difference between database and scraped majors data:");
       console.log(majorsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     const specializationsDiff = diffString(dbSpecializations, scrapedSpecializations);
@@ -583,6 +597,10 @@ export class Scraper {
     } else {
       console.log("Difference between database and scraped specializations data:");
       console.log(specializationsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     this.degreesAwarded = new Map(
@@ -607,6 +625,10 @@ export class Scraper {
     } else {
       console.log("Difference between database and scraped degrees awarded data:");
       console.log(degreesDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     // Post-processing steps.

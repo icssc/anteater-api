@@ -14,10 +14,12 @@
     "cross-fetch": "4.1.0",
     "json-diff": "1.0.6",
     "jwt-decode": "4.0.0",
+    "readline-sync": "1.4.10",
     "sort-keys": "6.0.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@types/json-diff": "1.0.3"
+    "@types/json-diff": "1.0.3",
+    "@types/readline-sync": "1.4.8"
   }
 }
