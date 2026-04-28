@@ -196,11 +196,11 @@ export const divisions = ["Undergraduate", "Graduate"] as const;
 export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
 
-export const textbookFormats = ["Physical", "Electronic", "Both"] as const;
+export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
 export const textbookFormat = pgEnum("textbook_format", textbookFormats);
 export type TextbookFormat = (typeof textbookFormats)[number];
 
-export const materialRequirements = ["Required", "Recommended"] as const;
+export const materialRequirements = ["Required", "Recommended", "Go to Class First"] as const;
 export const materialRequirement = pgEnum("material_requirement", materialRequirements);
 export type MaterialRequirement = (typeof materialRequirements)[number];
 

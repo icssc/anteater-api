@@ -1,5 +1,5 @@
 {
-  "id": "a52766b3-605d-44a5-94a6-7921a0119cb1",
+  "id": "5b345d25-2f07-4f26-8f41-fdb94dcf72d8",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -4390,7 +4390,7 @@
     "public.material_requirement": {
       "name": "material_requirement",
       "schema": "public",
-      "values": ["Required", "Recommended"]
+      "values": ["Required", "Recommended", "Go to Class First"]
     },
     "public.term": {
       "name": "term",
@@ -4400,7 +4400,7 @@
     "public.textbook_format": {
       "name": "textbook_format",
       "schema": "public",
-      "values": ["Physical", "Electronic", "Both"]
+      "values": ["Physical", "Electronic", "Both", "OER"]
     },
     "public.websoc_section_type": {
       "name": "websoc_section_type",
