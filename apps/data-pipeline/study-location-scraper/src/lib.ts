@@ -93,7 +93,7 @@ const STUDY_LOCATIONS: Record<string, LocationDef> = {
 /**
  * Make post request used by "https://<keyof ROOM_INFO_URL>/spaces" to retrieve room availability.
  *
- * @param location Details on the location to fetch details of.
+ * @param location - Details on the location to fetch details of.
  * @param start - Date format YYYY-MM-DD
  * @param end - Date format YYYY-MM-DD
  * @returns {object} JSON response returned by request
