@@ -455,29 +455,25 @@ export class WebsocService {
       conditions.push(eq(websocSection.quarter, input.quarter));
     }
     if (input.instructor) {
-      conditions.push(sql`${input.instructor} = ANY(${websocSection.instructors})`);
+      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
     }
-    const sub = this.db
-      .selectDistinct({
+    return this.db
+      .select({
         year: websocSection.year,
         quarter: websocSection.quarter,
         url: websocSection.webURL,
-        instructor: sql<string>`UNNEST(${websocSection.instructors})`.as("instructor"),
+        instructorNames: sql<
+          string[]
+        >`ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName})`,
       })
       .from(websocSection)
       .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
+      .innerJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
       .where(and(...conditions))
-      .as("sub");
-
-    return this.db
-      .select({
-        year: sub.year,
-        quarter: sub.quarter,
-        url: sub.url,
-        instructorNames: sql<string[]>`ARRAY_AGG(${sub.instructor})`,
-      })
-      .from(sub)
-      .groupBy(sub.year, sub.quarter, sub.url)
+      .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
       .then((rows) =>
         rows
           .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
