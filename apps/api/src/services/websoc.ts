@@ -464,11 +464,11 @@ export class WebsocService {
         url: websocSection.webURL,
         instructorNames: sql<
           string[]
-        >`ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName})`,
+        >`ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName}), NULL)`,
       })
       .from(websocSection)
       .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
-      .innerJoin(
+      .leftJoin(
         websocSectionToInstructor,
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
