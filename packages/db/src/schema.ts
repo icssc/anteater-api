@@ -834,8 +834,8 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
-export const lowCostTextbook = pgTable(
-  "low_cost_textbook",
+export const courseMaterial = pgTable(
+  "course_material",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     sectionId: uuid("section_id").references(() => websocSection.id),
@@ -849,7 +849,7 @@ export const lowCostTextbook = pgTable(
     title: varchar("title").notNull(),
     edition: varchar("edition"),
     format: textbookFormat("format").notNull(),
-    requirement: materialRequirement("requirement").notNull(),
+    requirement: materialRequirement("requirement"),
     mmsId: varchar("mms_id"),
     link: text("link"),
   },
