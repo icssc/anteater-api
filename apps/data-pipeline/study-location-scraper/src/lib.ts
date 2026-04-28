@@ -47,22 +47,46 @@ type StudySpaces = {
   slots: Slot[];
 };
 
-const ROOM_SPACE_URL = "https://spaces.lib.uci.edu/space";
-const LIB_SPACE_URL = "https://spaces.lib.uci.edu/spaces";
-const LIB_SPACE_AVAILABILITY_URL = "https://spaces.lib.uci.edu/spaces/availability/grid";
+const ROOM_INFO_URL = {
+  "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/space",
+  "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/space",
+} as Record<LocationSite, string>;
+
+const AVAILABILITY_URL = {
+  "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/spaces/availability/grid",
+  "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/spaces/availability/grid",
+} as Record<LocationSite, string>;
+const REFERER = {
+  "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/allspaces",
+  "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/allspaces",
+} as Record<LocationSite, string>;
+
+type LocationSite = "spaces.lib.uci.edu" | "scheduler.oit.uci.edu";
+
 // Library rooms are bookable 7 days in advance.
 const DAYS_TO_FETCH = 7;
+
+type SpaceDef = { name: string; lid: string; site: LocationSite };
 
 /**
  * Shortened libary names mapped to their IDs used by spaces.lib.uci.edu
  * See https://www.lib.uci.edu/ for shortened names
  **/
-const studyLocations: Record<string, { name: string; lid: string }> = {
-  Langson: { name: "Langson Library", lid: "6539" },
-  Gateway: { name: "Gateway Study Center", lid: "6579" },
-  Science: { name: "Science Library", lid: "6580" },
-  MRC: { name: "Multimedia Resources Center", lid: "6581" },
-  GML: { name: "Grunigen Medical Library", lid: "12189" },
+const studyLocations: Record<string, SpaceDef> = {
+  Langson: {
+    name: "Langson Library",
+    lid: "6539",
+    site: "spaces.lib.uci.edu",
+  },
+  Gateway: {
+    name: "Gateway Study Center",
+    lid: "6579",
+    site: "spaces.lib.uci.edu",
+  },
+  Science: { name: "Science Library", lid: "6580", site: "spaces.lib.uci.edu" },
+  MRC: { name: "Multimedia Resources Center", lid: "6581", site: "spaces.lib.uci.edu" },
+  GML: { name: "Grunigen Medical Library", lid: "12189", site: "spaces.lib.uci.edu" },
+  ALP: { name: "Anteater Learning Pavillion", lid: "5448", site: "scheduler.oit.uci.edu" },
 };
 
 /**
@@ -73,14 +97,14 @@ const studyLocations: Record<string, { name: string; lid: string }> = {
  * @param end - Date format YYYY-MM-DD
  * @returns {object} JSON response returned by request
  */
-const getStudySpaces = async (lid: string, start: string, end: string): Promise<StudySpaces> =>
-  await fetch(LIB_SPACE_AVAILABILITY_URL, {
+async function getStudySpaces(space: SpaceDef, start: string, end: string): Promise<StudySpaces> {
+  return await fetch(AVAILABILITY_URL[space.site], {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Referer: `${LIB_SPACE_URL}?lid=${lid}`,
+      Referer: REFERER[space.site],
     },
-    body: new URLSearchParams({ lid, gid: "0", start, end, pageSize: "18" }),
+    body: new URLSearchParams({ lid: space.lid, gid: "0", start, end, pageSize: "18" }),
   })
     .then((res): Promise<StudySpacesResponse> => res.json())
     .then((res) => ({
@@ -91,6 +115,7 @@ const getStudySpaces = async (lid: string, start: string, end: string): Promise<
         isAvailable: !slot.className,
       })),
     }));
+}
 
 function processGML(descriptionHeader: Cheerio<AnyNode>, $: CheerioAPI): string {
   let descriptionText = "";
@@ -162,8 +187,9 @@ function processDescription(
   return descriptionText;
 }
 
-async function getRoomInfo(RoomId: string): Promise<StudyRoom> {
-  const url = `${ROOM_SPACE_URL}/${RoomId}`;
+async function getRoomInfo(site: LocationSite, RoomId: string): Promise<StudyRoom> {
+  const baseUrl = ROOM_INFO_URL[site];
+  const url = `${baseUrl}/${RoomId}`;
   const room: StudyRoom = {
     id: `${RoomId}`,
     name: "",
@@ -225,10 +251,13 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
       name: lib,
       rooms: new Map(),
     };
-    const spaces = await getStudySpaces(studyLocation.id, start, end);
+    const spaces = await getStudySpaces(studyLocations[lib], start, end);
     for (const slot of spaces.slots) {
       if (!studyLocation.rooms.has(slot.studyRoomId)) {
-        studyLocation.rooms.set(slot.studyRoomId, await getRoomInfo(slot.studyRoomId));
+        studyLocation.rooms.set(
+          slot.studyRoomId,
+          await getRoomInfo(studyLocations[lib].site, slot.studyRoomId),
+        );
       }
       studyLocation.rooms.get(slot.studyRoomId)?.slots.push(slot);
     }
@@ -240,7 +269,7 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
   return locations;
 }
 
-export async function doLibraryScrape(db: ReturnType<typeof database>) {
+export async function doSpringshareScrape(db: ReturnType<typeof database>) {
   const locations = await scrapeStudyLocations();
   const locationRows = locations.map(({ id, name }) => ({ id, name }));
   const roomRows = locations.flatMap(({ id: studyLocationId, rooms }) =>
