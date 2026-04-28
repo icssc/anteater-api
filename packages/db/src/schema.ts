@@ -196,6 +196,14 @@ export const divisions = ["Undergraduate", "Graduate"] as const;
 export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
 
+export const textbookFormats = ["Physical", "Electronic", "Both"] as const;
+export const textbookFormat = pgEnum("textbook_format", textbookFormats);
+export type TextbookFormat = (typeof textbookFormats)[number];
+
+export const materialRequirements = ["Required", "Recommended"] as const;
+export const materialRequirement = pgEnum("material_requirement", materialRequirements);
+export type MaterialRequirement = (typeof materialRequirements)[number];
+
 // WebSoc enums
 
 export const websocStatuses = ["OPEN", "Waitl", "FULL", "NewOnly"] as const;
@@ -824,6 +832,28 @@ export const libraryTrafficHistory = pgTable(
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+);
+
+export const lowCostTextbook = pgTable(
+  "low_cost_textbook",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id").references(() => websocSection.id),
+    year: varchar("year").notNull(),
+    quarter: term("quarter").notNull(),
+    department: varchar("department").notNull(),
+    courseNumber: integer("course_number").notNull(),
+    instructor: varchar("instructor").notNull(),
+    isbn: varchar("isbn"),
+    author: varchar("author"),
+    title: varchar("title").notNull(),
+    edition: varchar("edition"),
+    format: textbookFormat("format").notNull(),
+    requirement: materialRequirement("requirement").notNull(),
+    mmsId: varchar("mms_id"),
+    link: text("link"),
+  },
+  (table) => [index().on(table.sectionId), index().on(table.isbn)],
 );
 
 // dining stuff
