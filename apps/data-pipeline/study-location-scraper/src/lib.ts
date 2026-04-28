@@ -8,6 +8,8 @@ import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
 import { losAngelesNowNaive } from "./time";
 
+type LocationSite = "spaces.lib.uci.edu" | "scheduler.oit.uci.edu";
+
 type StudyRoom = {
   id: string;
   name: string;
@@ -47,6 +49,11 @@ type StudySpaces = {
   slots: Slot[];
 };
 
+// Library rooms are bookable 7 days in advance.
+const DAYS_TO_FETCH = 7;
+
+type LocationDef = { name: string; lid: string; site: LocationSite };
+
 const ROOM_INFO_URL = {
   "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/space",
   "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/space",
@@ -56,23 +63,17 @@ const AVAILABILITY_URL = {
   "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/spaces/availability/grid",
   "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/spaces/availability/grid",
 } as Record<LocationSite, string>;
+
 const REFERER = {
   "spaces.lib.uci.edu": "https://spaces.lib.uci.edu/allspaces",
   "scheduler.oit.uci.edu": "https://scheduler.oit.uci.edu/allspaces",
 } as Record<LocationSite, string>;
 
-type LocationSite = "spaces.lib.uci.edu" | "scheduler.oit.uci.edu";
-
-// Library rooms are bookable 7 days in advance.
-const DAYS_TO_FETCH = 7;
-
-type SpaceDef = { name: string; lid: string; site: LocationSite };
-
 /**
  * Shortened libary names mapped to their IDs used by spaces.lib.uci.edu
  * See https://www.lib.uci.edu/ for shortened names
  **/
-const studyLocations: Record<string, SpaceDef> = {
+const STUDY_LOCATIONS: Record<string, LocationDef> = {
   Langson: {
     name: "Langson Library",
     lid: "6539",
@@ -90,21 +91,25 @@ const studyLocations: Record<string, SpaceDef> = {
 };
 
 /**
- * Make post request used by "https://spaces.lib.uci.edu/spaces" to retrieve room availability.
+ * Make post request used by "https://<keyof ROOM_INFO_URL>/spaces" to retrieve room availability.
  *
- * @param lid - Library ID
+ * @param location Details on the location to fetch details of.
  * @param start - Date format YYYY-MM-DD
  * @param end - Date format YYYY-MM-DD
  * @returns {object} JSON response returned by request
  */
-async function getStudySpaces(space: SpaceDef, start: string, end: string): Promise<StudySpaces> {
-  return await fetch(AVAILABILITY_URL[space.site], {
+async function getStudySpaces(
+  location: LocationDef,
+  start: string,
+  end: string,
+): Promise<StudySpaces> {
+  return await fetch(AVAILABILITY_URL[location.site], {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Referer: REFERER[space.site],
+      Referer: REFERER[location.site],
     },
-    body: new URLSearchParams({ lid: space.lid, gid: "0", start, end, pageSize: "18" }),
+    body: new URLSearchParams({ lid: location.lid, gid: "0", start, end, pageSize: "18" }),
   })
     .then((res): Promise<StudySpacesResponse> => res.json())
     .then((res) => ({
@@ -245,18 +250,18 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
     day: "2-digit",
   });
   const locations: StudyLocation[] = [];
-  for (const lib in studyLocations) {
+  for (const lib in STUDY_LOCATIONS) {
     const studyLocation: Omit<StudyLocation, "rooms"> & { rooms: Map<string, StudyRoom> } = {
-      id: studyLocations[lib].lid,
+      id: STUDY_LOCATIONS[lib].lid,
       name: lib,
       rooms: new Map(),
     };
-    const spaces = await getStudySpaces(studyLocations[lib], start, end);
+    const spaces = await getStudySpaces(STUDY_LOCATIONS[lib], start, end);
     for (const slot of spaces.slots) {
       if (!studyLocation.rooms.has(slot.studyRoomId)) {
         studyLocation.rooms.set(
           slot.studyRoomId,
-          await getRoomInfo(studyLocations[lib].site, slot.studyRoomId),
+          await getRoomInfo(STUDY_LOCATIONS[lib].site, slot.studyRoomId),
         );
       }
       studyLocation.rooms.get(slot.studyRoomId)?.slots.push(slot);
