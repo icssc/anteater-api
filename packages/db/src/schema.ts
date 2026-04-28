@@ -425,8 +425,14 @@ export const websocLocation = pgTable(
 );
 
 export const websocInstructor = pgTable("websoc_instructor", {
+  identifier: varchar("identifier"),
   name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  }).notNull(),
+  school: varchar("school"),
+  department: varchar("department"),
 });
 
 export const websocSectionToInstructor = pgTable(
@@ -1082,9 +1088,13 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
     qb
       .select({
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
-          "shortened_names",
-        ),
+        shortenedNames: sql`ARRAY_AGG(
+                              DISTINCT split_part(
+                                ${instructorToWebsocInstructor.websocInstructorName},
+                                '&|*',
+                                1
+                              )
+                            )`.as("shortened_names"),
       })
       .from(instructorToWebsocInstructor)
       .groupBy(instructorToWebsocInstructor.instructorUcinetid),
