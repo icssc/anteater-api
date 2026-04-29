@@ -1,8 +1,9 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { getTableColumns } from "@packages/db/drizzle";
-import { courseMaterial } from "@packages/db/schema";
+import { and, eq, getTableColumns, or } from "@packages/db/drizzle";
+import type { MaterialTerm, Term } from "@packages/db/schema";
+import { courseMaterial, websocSection } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
 
@@ -60,6 +61,11 @@ async function main() {
 
   // 3. Transform data and resolve section IDs
   for (const entry of inputData) {
+    const sectionCode = entry.get("Course Code");
+    if (!sectionCode) {
+      continue;
+    }
+
     const termStr = getFromMapOrThrow(entry, "Term"); // e.g., "Fall 2024"
     const [quarter, year] = termStr.split(" ");
 
@@ -73,30 +79,32 @@ async function main() {
 
     // Look up the section ID based on the course details
     // Note: Course materials are often linked to all sections of a course/instructor
-    // const [section] = await db
-    //   .select({ id: websocSection.id })
-    //   .from(websocSection)
-    //   .where(
-    //     and(
-    //       eq(websocSection.year, year),
-    //       eq(websocSection.quarter, quarter as Term),
-    //       eq(websocSection.sectionCode, courseNum),
-    //       // We limit to 1 because materials are usually identical across sections
-    //       // of the same course taught by the same instructor
-    //     )
-    //   )
-    //   .limit(1);
-    //
-    // if (!section) {
-    //   console.warn(`Could not find section for ${dept} ${courseNum} (${termStr})`);
-    //   continue;
-    // }
+    const [section] = await db
+      .select({ id: websocSection.id })
+      .from(websocSection)
+      .where(
+        and(
+          eq(websocSection.year, year),
+          quarter === "Summer"
+            ? or(
+                eq(websocSection.quarter, "Summer1"),
+                eq(websocSection.quarter, "Summer10wk"),
+                eq(websocSection.quarter, "Summer2"),
+              )
+            : eq(websocSection.quarter, quarter as Term),
+          eq(websocSection.sectionCode, Number.parseInt(sectionCode, 10)),
+        ),
+      );
+
+    if (!section) {
+      console.warn(`Could not find section for ${dept} ${courseNum} (${termStr})`);
+      continue;
+    }
 
     values.push({
-      // sectionId: section.id,
+      sectionId: section.id,
       year,
-      // quarter: quarter as Term,
-      quarter: "Spring",
+      quarter: quarter as MaterialTerm,
       department: dept,
       courseNumber: parseInt(courseNum.replace(/\D/g, ""), 10) || 0,
       instructor,
@@ -113,6 +121,8 @@ async function main() {
 
   // 4. Batch insert with transaction
   await db.transaction(async (tx) => {
+    await tx.delete(courseMaterial);
+
     for (let i = 0; i < values.length; i += ROWS_PER_INSERT) {
       await tx
         .insert(courseMaterial)
