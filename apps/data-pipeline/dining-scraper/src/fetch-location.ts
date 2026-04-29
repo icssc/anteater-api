@@ -147,6 +147,7 @@ export async function fetchLocation(
     });
 
     return {
+      upstreamId: schedule.id,
       name: schedule.name,
       type: schedule.type,
       startDate: schedule.start_date,
