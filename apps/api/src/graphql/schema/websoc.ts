@@ -119,6 +119,20 @@ input WebsocQuery {
     includeRelatedCourses: Boolean
 }
 
+type Syllabus @cacheControl(maxAge: 86400) {
+    year: String!
+    quarter: Term!
+    instructorNames: [String!]!
+    url: String!
+}
+
+input SyllabiQuery {
+    courseId: String!
+    year: String
+    quarter: Term
+    instructor: String
+}
+
 input WebsocDepartmentsQuery {
     sinceYear: String
     sinceTerm: Term
@@ -130,5 +144,6 @@ extend type Query {
     websoc(query: WebsocQuery!): WebsocResponse!
     terms: [WebsocTerm!]!
     websocDepartments(query: WebsocDepartmentsQuery!): [WebsocDepartmentPreview!]!
+    syllabi(query: SyllabiQuery!): [Syllabus!]!
 }
 `;
