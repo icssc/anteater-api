@@ -735,16 +735,16 @@ type CourseGEUpdate = {
 async function getGECountsFromDB(db: ReturnType<typeof database>, term: Term) {
   return db
     .select({
-      "GE-1A": sql<number>`count(*)::int filter (where ${websocCourse.isGE1A})`,
-      "GE-1B": sql<number>`count(*)::int filter (where ${websocCourse.isGE1B})`,
-      "GE-2": sql<number>`count(*)::int filter (where ${websocCourse.isGE2})`,
-      "GE-3": sql<number>`count(*)::int filter (where ${websocCourse.isGE3})`,
-      "GE-4": sql<number>`count(*)::int filter (where ${websocCourse.isGE4})`,
-      "GE-5A": sql<number>`count(*)::int filter (where ${websocCourse.isGE5A})`,
-      "GE-5B": sql<number>`count(*)::int filter (where ${websocCourse.isGE5B})`,
-      "GE-6": sql<number>`count(*)::int filter (where ${websocCourse.isGE6})`,
-      "GE-7": sql<number>`count(*)::int filter (where ${websocCourse.isGE7})`,
-      "GE-8": sql<number>`count(*)::int filter (where ${websocCourse.isGE8})`,
+      "GE-1A": sql<number>`(count(*) filter (where ${websocCourse.isGE1A}))::int`,
+      "GE-1B": sql<number>`(count(*) filter (where ${websocCourse.isGE1B}))::int`,
+      "GE-2": sql<number>`(count(*) filter (where ${websocCourse.isGE2}))::int`,
+      "GE-3": sql<number>`(count(*) filter (where ${websocCourse.isGE3}))::int`,
+      "GE-4": sql<number>`(count(*) filter (where ${websocCourse.isGE4}))::int`,
+      "GE-5A": sql<number>`(count(*) filter (where ${websocCourse.isGE5A}))::int`,
+      "GE-5B": sql<number>`(count(*) filter (where ${websocCourse.isGE5B}))::int`,
+      "GE-6": sql<number>`(count(*) filter (where ${websocCourse.isGE6}))::int`,
+      "GE-7": sql<number>`(count(*) filter (where ${websocCourse.isGE7}))::int`,
+      "GE-8": sql<number>`(count(*) filter (where ${websocCourse.isGE8}))::int`,
     })
     .from(websocCourse)
     .where(and(eq(websocCourse.year, term.year), eq(websocCourse.quarter, term.quarter)))
