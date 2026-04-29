@@ -3,6 +3,7 @@ import {
   diningDietRestriction,
   diningDish,
   diningDishToPeriod,
+  diningMealPeriodType,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
@@ -12,7 +13,13 @@ import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import { allergens, dietaryPreferences, type RestaurantId, restaurantIDToURL } from "./model.ts";
+import {
+  allergens,
+  dietaryPreferences,
+  type RestaurantId,
+  restaurantIDToURL,
+  type Schedule,
+} from "./model.ts";
 import { findCurrentlyActiveSchedule } from "./util.ts";
 
 /**
@@ -278,4 +285,45 @@ export async function updateRestaurant(
         });
     });
   }
+}
+
+/**
+ * Upserts the meal period types, schedules, and per-schedule weekly hours for a restaurant.
+ * Schedules not found in the current scrape are deleted.
+ * @param db the Drizzle database instance
+ * @param restaurantId the restaurant to upsert data for ("anteatery", "brandywine")
+ * @param schedules the schedules to upsert
+ * @param updatedAt the timestamp to use for the updatedAt field for all upserted rows in this scrape
+ */
+async function upsertSchedules(
+  db: ReturnType<typeof database>,
+  restaurantId: RestaurantId,
+  schedules: Schedule[],
+  updatedAt: Date,
+): Promise<void> {
+  const catalogRows = new Map<number, typeof diningMealPeriodType.$inferInsert>();
+  for (const schedule of schedules) {
+    for (const mp of schedule.mealPeriods) {
+      if (typeof mp.id !== "number") continue;
+      catalogRows.set(mp.id, {
+        adobeId: mp.id,
+        name: mp.name,
+        position: mp.position,
+        updatedAt,
+      });
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    if (catalogRows.size > 0) {
+      console.log(`Upserting ${catalogRows.size} meal period types...`);
+      await tx
+        .insert(diningMealPeriodType)
+        .values(Array.from(catalogRows.values()))
+        .onConflictDoUpdate({
+          target: diningMealPeriodType.adobeId,
+          set: conflictUpdateSetAllCols(diningMealPeriodType),
+        });
+    }
+  });
 }
