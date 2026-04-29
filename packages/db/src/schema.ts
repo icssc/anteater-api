@@ -984,6 +984,26 @@ export const diningEvent = pgTable(
   },
 );
 
+export const diningSchedule = pgTable(
+  "dining_schedule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id),
+    upstreamId: varchar("upstream_id").notNull(),
+    name: varchar("name").notNull(),
+    type: varchar("type").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex().on(table.restaurantId, table.upstreamId),
+    index().on(table.restaurantId),
+  ],
+);
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {
