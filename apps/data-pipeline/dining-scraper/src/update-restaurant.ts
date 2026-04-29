@@ -98,16 +98,15 @@ export async function updateRestaurant(
       periodsOnDay.add(period.id);
 
       const row = {
-        adobeId: period.id,
+        mealPeriodTypeId: period.id,
         date: dateString,
         restaurantId,
-        name: period.name,
         startTime: period.openHours[dayOfWeekToFetch],
         endTime: period.closeHours[dayOfWeekToFetch],
         updatedAt,
       } satisfies typeof diningPeriod.$inferInsert;
 
-      const key = `${row.adobeId}|${row.date}|${row.restaurantId}`;
+      const key = `${row.mealPeriodTypeId}|${row.date}|${row.restaurantId}`;
       periodsToUpsert.set(key, row);
     }
     dayToPeriods.set(dateString, periodsOnDay);
@@ -118,12 +117,12 @@ export async function updateRestaurant(
     .insert(diningPeriod)
     .values(Array.from(periodsToUpsert.values()))
     .onConflictDoUpdate({
-      target: [diningPeriod.adobeId, diningPeriod.date, diningPeriod.restaurantId],
+      target: [diningPeriod.mealPeriodTypeId, diningPeriod.date, diningPeriod.restaurantId],
       set: conflictUpdateSetAllCols(diningPeriod),
     })
     .returning({
       id: diningPeriod.id,
-      adobeId: diningPeriod.adobeId,
+      mealPeriodTypeId: diningPeriod.mealPeriodTypeId,
       date: diningPeriod.date,
       restaurantId: diningPeriod.restaurantId,
     });
@@ -163,8 +162,8 @@ export async function updateRestaurant(
               fetchedDish: fetchedDish,
               // this cast is ok because every periodAdobeId has a corresponding upserted row
               periodId: periodsInserted.find(
-                ({ adobeId, date, restaurantId: rId }) =>
-                  rId === restaurantId && date === dateString && adobeId === periodAdobeId,
+                ({ mealPeriodTypeId, date, restaurantId: rId }) =>
+                  rId === restaurantId && date === dateString && mealPeriodTypeId === periodAdobeId,
               )?.id as string,
               updatedAt: periodUpdatedAt,
             });
