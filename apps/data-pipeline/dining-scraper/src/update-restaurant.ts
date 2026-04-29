@@ -301,6 +301,11 @@ async function upsertSchedules(
   schedules: Schedule[],
   updatedAt: Date,
 ): Promise<void> {
+  if (schedules.length === 0) {
+    console.warn(`No schedules returned for ${restaurantId}; skipping schedule upsert.`);
+    return;
+  }
+
   const catalogRows = new Map<number, typeof diningMealPeriodType.$inferInsert>();
   for (const schedule of schedules) {
     for (const mp of schedule.mealPeriods) {
