@@ -1,5 +1,5 @@
 {
-  "id": "5b345d25-2f07-4f26-8f41-fdb94dcf72d8",
+  "id": "15cc90b3-d78c-4ed7-808c-818bdaef6031",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -637,7 +637,7 @@
         },
         "quarter": {
           "name": "quarter",
-          "type": "term",
+          "type": "material_term",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -4391,6 +4391,11 @@
       "name": "material_requirement",
       "schema": "public",
       "values": ["Required", "Recommended", "Go to Class First"]
+    },
+    "public.material_term": {
+      "name": "material_term",
+      "schema": "public",
+      "values": ["Fall", "Winter", "Spring", "Summer"]
     },
     "public.term": {
       "name": "term",

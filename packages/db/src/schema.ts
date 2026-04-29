@@ -196,6 +196,10 @@ export const divisions = ["Undergraduate", "Graduate"] as const;
 export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
 
+export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
+export const materialTerm = pgEnum("material_term", materialTerms);
+export type MaterialTerm = (typeof materialTerms)[number];
+
 export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
 export const textbookFormat = pgEnum("textbook_format", textbookFormats);
 export type TextbookFormat = (typeof textbookFormats)[number];
@@ -840,7 +844,7 @@ export const courseMaterial = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     sectionId: uuid("section_id").references(() => websocSection.id),
     year: varchar("year").notNull(),
-    quarter: term("quarter").notNull(),
+    quarter: materialTerm("quarter").notNull(),
     department: varchar("department").notNull(),
     courseNumber: integer("course_number").notNull(),
     instructor: varchar("instructor").notNull(),
