@@ -205,10 +205,6 @@ const libraryCodeMap = {
 export async function doScrape(db: ReturnType<typeof database>) {
   console.log("Starting library traffic scrape.");
 
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 15);
-  await db.delete(libraryTrafficHistory).where(lt(libraryTrafficHistory.timestamp, cutoff));
-
   const locationMeta = await collectLocationMeta();
 
   const currentTime = new Date();
@@ -267,6 +263,10 @@ export async function doScrape(db: ReturnType<typeof database>) {
       },
     ]);
   }
+
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 15);
+  await db.delete(libraryTrafficHistory).where(lt(libraryTrafficHistory.timestamp, cutoff));
 
   console.log("Library traffic scrape complete.");
 }
