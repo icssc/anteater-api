@@ -1011,6 +1011,39 @@ export const diningSchedule = pgTable(
   ],
 );
 
+export const diningScheduleMealPeriod = pgTable(
+  "dining_schedule_meal_period",
+  {
+    scheduleId: uuid("schedule_id")
+      .notNull()
+      .references(() => diningSchedule.id),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
+    sunOpen: time("sun_open"),
+    sunClose: time("sun_close"),
+    monOpen: time("mon_open"),
+    monClose: time("mon_close"),
+    tueOpen: time("tue_open"),
+    tueClose: time("tue_close"),
+    wedOpen: time("wed_open"),
+    wedClose: time("wed_close"),
+    thuOpen: time("thu_open"),
+    thuClose: time("thu_close"),
+    friOpen: time("fri_open"),
+    friClose: time("fri_close"),
+    satOpen: time("sat_open"),
+    satClose: time("sat_close"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "dining_schedule_meal_period_pk",
+      columns: [table.scheduleId, table.mealPeriodTypeId],
+    }),
+  ],
+);
+
 // Materialized views
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {
