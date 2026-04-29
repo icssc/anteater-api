@@ -984,6 +984,13 @@ export const diningEvent = pgTable(
   },
 );
 
+export const diningMealPeriodType = pgTable("dining_meal_period_type", {
+  adobeId: integer("adobe_id").primaryKey(),
+  name: varchar("name").notNull(),
+  position: integer("position").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
 export const diningSchedule = pgTable(
   "dining_schedule",
   {
