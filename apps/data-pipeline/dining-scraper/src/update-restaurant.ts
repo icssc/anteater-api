@@ -8,6 +8,7 @@ import {
   diningPeriod,
   diningRestaurant,
   diningSchedule,
+  diningScheduleMealPeriod,
   diningStation,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
@@ -360,5 +361,45 @@ async function upsertSchedules(
         id: diningSchedule.id,
         upstreamId: diningSchedule.upstreamId,
       });
+
+    const upstreamIdToScheduleId = new Map(insertedSchedules.map((s) => [s.upstreamId, s.id]));
+    const junctionRows: (typeof diningScheduleMealPeriod.$inferInsert)[] = [];
+    for (const schedule of schedules) {
+      const scheduleId = upstreamIdToScheduleId.get(schedule.upstreamId);
+      if (!scheduleId) continue;
+      for (const mp of schedule.mealPeriods) {
+        if (typeof mp.id !== "number") continue;
+        junctionRows.push({
+          scheduleId,
+          mealPeriodTypeId: mp.id,
+          sunOpen: mp.openHours[0],
+          sunClose: mp.closeHours[0],
+          monOpen: mp.openHours[1],
+          monClose: mp.closeHours[1],
+          tueOpen: mp.openHours[2],
+          tueClose: mp.closeHours[2],
+          wedOpen: mp.openHours[3],
+          wedClose: mp.closeHours[3],
+          thuOpen: mp.openHours[4],
+          thuClose: mp.closeHours[4],
+          friOpen: mp.openHours[5],
+          friClose: mp.closeHours[5],
+          satOpen: mp.openHours[6],
+          satClose: mp.closeHours[6],
+          updatedAt,
+        });
+      }
+    }
+
+    if (junctionRows.length > 0) {
+      console.log(`Upserting ${junctionRows.length} schedule meal period rows...`);
+      await tx
+        .insert(diningScheduleMealPeriod)
+        .values(junctionRows)
+        .onConflictDoUpdate({
+          target: [diningScheduleMealPeriod.scheduleId, diningScheduleMealPeriod.mealPeriodTypeId],
+          set: conflictUpdateSetAllCols(diningScheduleMealPeriod),
+        });
+    }
   });
 }
