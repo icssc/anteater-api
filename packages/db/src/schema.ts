@@ -997,7 +997,9 @@ export const diningSchedule = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     restaurantId: varchar("restaurant_id")
       .notNull()
-      .references(() => diningRestaurant.id),
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
     upstreamId: varchar("upstream_id").notNull(),
     name: varchar("name").notNull(),
     type: varchar("type").notNull(),
@@ -1016,7 +1018,9 @@ export const diningScheduleMealPeriod = pgTable(
   {
     scheduleId: uuid("schedule_id")
       .notNull()
-      .references(() => diningSchedule.id),
+      .references(() => diningSchedule.id, {
+        onDelete: "cascade",
+      }),
     mealPeriodTypeId: integer("meal_period_type_id")
       .notNull()
       .references(() => diningMealPeriodType.adobeId),
