@@ -7,6 +7,7 @@ import {
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
+  diningSchedule,
   diningStation,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
@@ -289,7 +290,6 @@ export async function updateRestaurant(
 
 /**
  * Upserts the meal period types, schedules, and per-schedule weekly hours for a restaurant.
- * Schedules not found in the current scrape are deleted.
  * @param db the Drizzle database instance
  * @param restaurantId the restaurant to upsert data for ("anteatery", "brandywine")
  * @param schedules the schedules to upsert
@@ -330,5 +330,35 @@ async function upsertSchedules(
           set: conflictUpdateSetAllCols(diningMealPeriodType),
         });
     }
+
+    // coerce to the expected string | null shape
+    const dateValue = (d: Date | string | undefined): string | null => {
+      if (!d) return null;
+      if (typeof d === "string") return d;
+      return format(d, "yyyy-MM-dd");
+    };
+
+    const scheduleRows = schedules.map((s) => ({
+      restaurantId,
+      upstreamId: s.upstreamId,
+      name: s.name,
+      type: s.type,
+      startDate: dateValue(s.startDate),
+      endDate: dateValue(s.endDate),
+      updatedAt,
+    }));
+
+    console.log(`Upserting ${scheduleRows.length} schedules...`);
+    const insertedSchedules = await tx
+      .insert(diningSchedule)
+      .values(scheduleRows)
+      .onConflictDoUpdate({
+        target: [diningSchedule.restaurantId, diningSchedule.upstreamId],
+        set: conflictUpdateSetAllCols(diningSchedule),
+      })
+      .returning({
+        id: diningSchedule.id,
+        upstreamId: diningSchedule.upstreamId,
+      });
   });
 }
