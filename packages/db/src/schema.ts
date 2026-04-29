@@ -836,7 +836,9 @@ export const diningPeriod = pgTable(
   "dining_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    adobeId: integer("adobe_id").notNull(),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -845,11 +847,10 @@ export const diningPeriod = pgTable(
       }),
     startTime: time("start_time"),
     endTime: time("end_time"),
-    name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    uniqueIndex().on(table.mealPeriodTypeId, table.date, table.restaurantId),
     index().on(table.date),
     index().on(table.restaurantId),
   ],
