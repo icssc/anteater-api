@@ -1,4 +1,4 @@
-import type { CourseConstraintTree, course, Term } from "@packages/db/schema";
+import type { CourseConstraintLeaf, CourseConstraintTree, course, Term } from "@packages/db/schema";
 import type { WithClause } from "$types";
 
 // For every (course, withClause) pair, the course's possible values
@@ -122,7 +122,7 @@ function splitOrGroups(withArray: WithClause[]): WithClause[][] {
 
 function evaluateLeaf(
   c: typeof course.$inferSelect,
-  leaf: Extract<CourseConstraintTree, { type: "leaf" }>,
+  leaf: CourseConstraintLeaf,
   catalogYear: string,
 ): ClauseResult {
   switch (leaf.code) {
