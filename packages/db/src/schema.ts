@@ -838,27 +838,23 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
-export const courseMaterial = pgTable(
-  "course_material",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    sectionId: uuid("section_id").references(() => websocSection.id),
-    year: varchar("year").notNull(),
-    quarter: materialTerm("quarter").notNull(),
-    department: varchar("department").notNull(),
-    courseNumber: integer("course_number").notNull(),
-    instructor: varchar("instructor").notNull(),
-    isbn: varchar("isbn"),
-    author: varchar("author"),
-    title: varchar("title").notNull(),
-    edition: varchar("edition"),
-    format: textbookFormat("format").notNull(),
-    requirement: materialRequirement("requirement"),
-    mmsId: varchar("mms_id"),
-    link: text("link"),
-  },
-  (table) => [index().on(table.sectionId), index().on(table.isbn)],
-);
+export const courseMaterial = pgTable("course_material", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sectionId: uuid("section_id").references(() => websocSection.id),
+  year: varchar("year").notNull(),
+  quarter: materialTerm("quarter").notNull(),
+  department: varchar("department").notNull(),
+  courseNumber: integer("course_number").notNull(),
+  instructor: varchar("instructor").notNull(),
+  isbn: varchar("isbn"),
+  author: varchar("author"),
+  title: varchar("title").notNull(),
+  edition: varchar("edition"),
+  format: textbookFormat("format").notNull(),
+  requirement: materialRequirement("requirement"),
+  mmsId: varchar("mms_id"),
+  link: text("link"),
+});
 
 // dining stuff
 export const diningRestaurant = pgTable("dining_restaurant", {
