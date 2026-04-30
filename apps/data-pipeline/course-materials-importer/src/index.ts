@@ -94,8 +94,8 @@ async function main() {
       author: entry.get("Author"),
       edition: entry.get("Edition"),
       isbn: entry.get("ISBN"),
-      format: entry.get("Format"),
-      requirement: entry.get("Req/Rec"),
+      format: (entry.get("Format") || null) as any,
+      requirement: (entry.get("Req/Rec") || null) as any,
       mmsId: entry.get("MMS ID"),
       link: entry.get("Link"),
     });
