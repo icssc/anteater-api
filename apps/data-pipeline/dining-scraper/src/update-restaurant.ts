@@ -59,6 +59,8 @@ export async function updateRestaurant(
       set: conflictUpdateSetAllCols(diningRestaurant),
     });
 
+  await upsertSchedules(db, restaurantId, restaurantInfo.schedules, updatedAt);
+
   const stationsToUpsert = Object.keys(restaurantInfo.stationsInfo).map((id) => {
     return {
       id,
