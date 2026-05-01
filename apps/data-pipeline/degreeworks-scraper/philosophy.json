@@ -1,0 +1,4220 @@
+{
+  "refresh": {
+    "bridged": {
+      "date": "20260412",
+      "time": "0132"
+    },
+    "changed": {
+      "date": "20260327",
+      "time": "0300"
+    }
+  },
+  "auditHeader": {
+    "auditId": "W0005LvP",
+    "studentId": "73399545",
+    "auditType": "AA",
+    "studentName": "LIM, LINDSAY JOANNA",
+    "studentEmail": "LINDSAJL@UCI.EDU",
+    "freezeType": "",
+    "freezeTypeDescription": "",
+    "freezeDate": "",
+    "freezeUserName": "",
+    "auditDescription": "",
+    "dateYear": "2026",
+    "dateMonth": "04",
+    "dateDay": "28",
+    "timeHour": "22",
+    "timeMinute": "20",
+    "studentSystemGpa": "3.648",
+    "degreeworksGpa": "3.648",
+    "percentComplete": "12",
+    "version": "$Id$ OS_TYPE=Linux; Release=5.1.6.2",
+    "inProgress": "Y",
+    "whatIf": "Y",
+    "residentApplied": "194.5",
+    "residentAppliedInProgress": "13",
+    "transferApplied": "0",
+    "examAppliedCredits": "0",
+    "residentOverTheLimit": "0",
+    "residentOverTheLimitInProgress": "0",
+    "transferOverTheLimit": "0",
+    "examOverTheLimit": "0"
+  },
+  "blockArray": [
+    {
+      "requirementId": "RA003715",
+      "requirementType": "DEGREE",
+      "requirementValue": "BS",
+      "title": "B.S. Degree",
+      "percentComplete": "12",
+      "catalogYearStart": "20232024",
+      "catalogYearStop": "20232024",
+      "catalogYear": "20232024",
+      "catalogYearLit": "2023-2024",
+      "degree": "BS",
+      "gpa": "3.648",
+      "classesApplied": "42",
+      "creditsApplied": "207.5",
+      "gpaGradePoints": "444.999939",
+      "gpaCredits": "122",
+      "header": {
+        "qualifierArray": [
+          {
+            "nodeId": "1",
+            "nodeType": "4121",
+            "satisfied": "Yes",
+            "applied": "207.5",
+            "classesApplied": "42",
+            "creditsApplied": "207.5",
+            "name": "CLASSESCREDITS",
+            "credits": "180",
+            "text": "180 Credits"
+          },
+          {
+            "nodeId": "2",
+            "nodeType": "4116",
+            "satisfied": "Yes",
+            "applied": "3.64754",
+            "name": "MINGPA",
+            "minGPA": "2",
+            "text": "MINGPA 2"
+          }
+        ],
+        "remark": {
+          "textList": [
+            "36 of final 45 units must be earned in residence.",
+            "*** Repeat courses that are in-progress (IP) may be temporarily",
+            "applied twice on a requirement/unit count and will be",
+            "corrected when the IP courses are assigned grades.",
+            "*** Your audit may not have an accurate GPA/unit count if you",
+            "have more than 16 units of repeat courses. Verify GPA/unit",
+            "count with your academic advisor in the school of your major."
+          ]
+        }
+      },
+      "ruleArray": [
+        {
+          "label": "Modality Requirement",
+          "labelTag": "IP",
+          "percentComplete": "100",
+          "ruleId": "2-0",
+          "nodeId": "13",
+          "nodeType": "4400",
+          "indentLevel": "1",
+          "ruleType": "Block",
+          "ifElsePart": "IfPart",
+          "requirement": {
+            "numBlocks": "1",
+            "type": "OTHER",
+            "value": "MODALITY"
+          }
+        },
+        {
+          "label": "University Requirements",
+          "percentComplete": "100",
+          "ruleId": "3",
+          "nodeId": "15",
+          "nodeType": "4500",
+          "indentLevel": "1",
+          "ruleType": "Blocktype",
+          "requirement": {
+            "numBlocktypes": "1",
+            "type": "SCHOOL"
+          }
+        },
+        {
+          "label": "General Education Requirements",
+          "percentComplete": "0",
+          "ruleId": "4",
+          "nodeId": "17",
+          "nodeType": "4500",
+          "indentLevel": "1",
+          "ruleType": "Blocktype",
+          "requirement": {
+            "numBlocktypes": "1",
+            "type": "PROGRAM"
+          },
+          "advice": {
+            "type": "PROGRAM"
+          }
+        },
+        {
+          "label": "Requirements for one major",
+          "percentComplete": "1.785714",
+          "ruleId": "5-0",
+          "nodeId": "23",
+          "nodeType": "4500",
+          "indentLevel": "1",
+          "ruleType": "Blocktype",
+          "ifElsePart": "IfPart",
+          "requirement": {
+            "numBlocktypes": "1",
+            "type": "MAJOR"
+          },
+          "advice": {
+            "titleList": ["Major in Biomedical Engineering"]
+          }
+        }
+      ]
+    },
+    {
+      "requirementId": "RA003708",
+      "requirementType": "OTHER",
+      "requirementValue": "MODALITY",
+      "title": "Modality Requirement",
+      "percentComplete": "100",
+      "catalogYearStart": "20232024",
+      "catalogYearStop": "20242025",
+      "catalogYear": "20232024",
+      "catalogYearLit": "2023-2024",
+      "gpa": "0.000",
+      "classesApplied": "0",
+      "creditsApplied": "0",
+      "gpaGradePoints": "0",
+      "gpaCredits": "0",
+      "header": {
+        "qualifierArray": [
+          {
+            "nodeId": "1",
+            "nodeType": "4137",
+            "applied": "",
+            "name": "STANDALONEBLOCK",
+            "text": "StandAloneBlock"
+          }
+        ],
+        "remark": {
+          "textList": [
+            "Students must complete 50 percent or more of the total quarter units ",
+            "earned at UCI before graduation through courses that are not designated ",
+            "as online or mixed modality by the University Registrar.",
+            "The current Modality Percentages are found on the top section of DegreeWorks.",
+            "Detailed information can be found on the Unofficial Transcript page under Modality.",
+            "The University Registrar website has more information on the Modality Policy:",
+            "https://reg.uci.edu/addl/modality.html"
+          ]
+        }
+      },
+      "ruleArray": [
+        {
+          "label": "Modality Requirement",
+          "labelTag": "OL",
+          "percentComplete": "100",
+          "ruleId": "1-0",
+          "nodeId": "6",
+          "nodeType": "4900",
+          "indentLevel": "1",
+          "ruleType": "Complete",
+          "ifElsePart": "IfPart",
+          "remark": {
+            "textList": [
+              "Students should monitor their in-person and online modality ",
+              "percentages with the consideration that the calculations ",
+              "remain in flux until all coursework is completed."
+            ]
+          },
+          "requirement": {}
+        }
+      ]
+    },
+    {
+      "requirementId": "RA003699",
+      "requirementType": "SCHOOL",
+      "requirementValue": "U",
+      "title": "University Requirements",
+      "percentComplete": "100",
+      "catalogYearStart": "20232024",
+      "catalogYearStop": "99999999",
+      "catalogYear": "20232024",
+      "catalogYearLit": "2023-2024",
+      "school": "U",
+      "gpa": "0.000",
+      "classesApplied": "0",
+      "creditsApplied": "0",
+      "gpaGradePoints": "0",
+      "gpaCredits": "0",
+      "header": {
+        "qualifierArray": [
+          {
+            "nodeId": "1",
+            "nodeType": "4137",
+            "applied": "",
+            "name": "STANDALONEBLOCK",
+            "text": "StandAloneBlock"
+          },
+          {
+            "nodeId": "2",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 37"]
+          },
+          {
+            "nodeId": "4",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 39A"]
+          },
+          {
+            "nodeId": "6",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 39AP"]
+          },
+          {
+            "nodeId": "8",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 45"]
+          },
+          {
+            "nodeId": "10",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 40"]
+          },
+          {
+            "nodeId": "12",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["WRITING 40A"]
+          },
+          {
+            "nodeId": "14",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["HUMAN 1AES"]
+          },
+          {
+            "nodeId": "16",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["HUMAN 1BES"]
+          },
+          {
+            "nodeId": "18",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["POLSCI 21A"]
+          },
+          {
+            "nodeId": "20",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["HISTORY 40A"]
+          },
+          {
+            "nodeId": "22",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["HISTORY 40B"]
+          },
+          {
+            "nodeId": "24",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["HISTORY 40C"]
+          }
+        ]
+      },
+      "ruleArray": [
+        {
+          "label": "Entry Level Writing Satisfied",
+          "labelTag": "ELWY",
+          "percentComplete": "100",
+          "ruleId": "1-0",
+          "nodeId": "30",
+          "nodeType": "4900",
+          "indentLevel": "1",
+          "ruleType": "Complete",
+          "ifElsePart": "IfPart",
+          "requirement": {}
+        },
+        {
+          "label": "American History and Institution Satisfied",
+          "labelTag": "YY",
+          "percentComplete": "100",
+          "ruleId": "2-0",
+          "nodeId": "45",
+          "nodeType": "4900",
+          "indentLevel": "1",
+          "ruleType": "Complete",
+          "ifElsePart": "IfPart",
+          "requirement": {}
+        }
+      ]
+    },
+    {
+      "requirementId": "RA003586",
+      "requirementType": "MAJOR",
+      "requirementValue": "289",
+      "title": "Major in Biomedical Engineering",
+      "percentComplete": "1.785714",
+      "catalogYearStart": "20232024",
+      "catalogYearStop": "20232024",
+      "catalogYear": "20232024",
+      "catalogYearLit": "2023-2024",
+      "school": "U",
+      "degree": "BS",
+      "major1": "289",
+      "gpa": "3.000",
+      "classesApplied": "3",
+      "creditsApplied": "4",
+      "gpaGradePoints": "12",
+      "gpaCredits": "4",
+      "header": {
+        "qualifierArray": [
+          {
+            "nodeId": "1",
+            "nodeType": "4111",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "NONEXCLUSIVE",
+            "text": "ShareWith ",
+            "subTextList": ["(MAJOR)"]
+          },
+          {
+            "nodeId": "3",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["CHEM 1A, H2A"]
+          },
+          {
+            "nodeId": "6",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["CHEM 1B, H2B"]
+          },
+          {
+            "nodeId": "9",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["CHEM 1LB, H2LB"]
+          },
+          {
+            "nodeId": "12",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["CHEM 1C, H2C"]
+          },
+          {
+            "nodeId": "15",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["CHEM 1LC, H2LC"]
+          },
+          {
+            "nodeId": "18",
+            "nodeType": "4101",
+            "classesApplied": "1",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 2A"]
+          },
+          {
+            "nodeId": "20",
+            "nodeType": "4101",
+            "classesApplied": "1",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 2B"]
+          },
+          {
+            "nodeId": "22",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 2D, H2D"]
+          },
+          {
+            "nodeId": "25",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 2E"]
+          },
+          {
+            "nodeId": "27",
+            "nodeType": "4101",
+            "classesApplied": "1",
+            "creditsApplied": "4",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 3A"]
+          },
+          {
+            "nodeId": "29",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["MATH 3D"]
+          },
+          {
+            "nodeId": "31",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["STATS 8"]
+          },
+          {
+            "nodeId": "33",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["PHYSICS 7C"]
+          },
+          {
+            "nodeId": "35",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["PHYSICS 7LC"]
+          },
+          {
+            "nodeId": "37",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["PHYSICS 7D"]
+          },
+          {
+            "nodeId": "39",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["PHYSICS 7LD"]
+          },
+          {
+            "nodeId": "41",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["PHYSICS 7E"]
+          },
+          {
+            "nodeId": "43",
+            "nodeType": "4101",
+            "classesApplied": "0",
+            "creditsApplied": "0",
+            "name": "MAXCLASS",
+            "classes": "1",
+            "text": "MaxClasses 1 in ",
+            "subTextList": ["EECS 12, ENGRECE 12"]
+          }
+        ]
+      },
+      "ruleArray": [
+        {
+          "label": "Math 2A,2B,2D,2E,3A,3D, Stats 8",
+          "labelTag": "1",
+          "percentComplete": "42.857143",
+          "ruleId": "1",
+          "nodeId": "46",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "3",
+          "creditsApplied": "4",
+          "classesAppliedToRule": {
+            "classArray": [
+              {
+                "discipline": "MATH",
+                "number": "2A",
+                "credits": "0",
+                "letterGrade": "T",
+                "id": "0004",
+                "term": ""
+              },
+              {
+                "discipline": "MATH",
+                "number": "2B",
+                "credits": "0",
+                "letterGrade": "T",
+                "id": "0005",
+                "term": ""
+              },
+              {
+                "discipline": "MATH",
+                "number": "3A",
+                "credits": "4",
+                "letterGrade": "B",
+                "id": "0020",
+                "term": "202414"
+              }
+            ]
+          },
+          "requirement": {
+            "classesBegin": "7",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "MATH",
+                "number": "2A",
+                "nodeId": "47",
+                "newDiscipline": "Yes",
+                "maxAdviceTag": "Yes"
+              },
+              {
+                "discipline": "MATH",
+                "number": "2B",
+                "nodeId": "48",
+                "maxAdviceTag": "Yes"
+              },
+              {
+                "discipline": "MATH",
+                "number": "2D",
+                "nodeId": "49"
+              },
+              {
+                "discipline": "MATH",
+                "number": "2E",
+                "nodeId": "50"
+              },
+              {
+                "discipline": "MATH",
+                "number": "3A",
+                "nodeId": "51",
+                "maxAdviceTag": "Yes"
+              },
+              {
+                "discipline": "MATH",
+                "number": "3D",
+                "nodeId": "52"
+              },
+              {
+                "discipline": "MATH",
+                "number": "H2D",
+                "hideFromAdvice": "Yes",
+                "nodeId": "53"
+              },
+              {
+                "discipline": "STATS",
+                "number": "8",
+                "nodeId": "54",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "55",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "4",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "MATH",
+                "number": "2D",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "MATH",
+                "number": "2E"
+              },
+              {
+                "discipline": "MATH",
+                "number": "3D"
+              },
+              {
+                "discipline": "STATS",
+                "number": "8",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Chem 1A, 1B, 1C/1LC",
+          "labelTag": "2",
+          "percentComplete": "0",
+          "ruleId": "2",
+          "nodeId": "56",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "4",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "CHEM",
+                "number": "1A",
+                "nodeId": "57",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1B",
+                "nodeId": "58"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1C",
+                "nodeId": "59"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "H2A",
+                "hideFromAdvice": "Yes",
+                "nodeId": "60"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "H2B",
+                "hideFromAdvice": "Yes",
+                "nodeId": "61"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "H2C",
+                "hideFromAdvice": "Yes",
+                "nodeId": "62"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1LC",
+                "nodeId": "63"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "H2LB",
+                "hideFromAdvice": "Yes",
+                "nodeId": "64"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "H2LC",
+                "hideFromAdvice": "Yes",
+                "nodeId": "65"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "66",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "4",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "CHEM",
+                "number": "1A",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1B"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1C"
+              },
+              {
+                "discipline": "CHEM",
+                "number": "1LC"
+              }
+            ]
+          }
+        },
+        {
+          "label": "PHYSICS 7C/7LC",
+          "labelTag": "3",
+          "percentComplete": "0",
+          "ruleId": "3",
+          "nodeId": "67",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "2",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "PHYSICS",
+                "number": "7C",
+                "nodeId": "68",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7LC",
+                "nodeId": "69"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "70",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "2",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "PHYSICS",
+                "number": "7C",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7LC"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Physics 7D/7LD and 7E",
+          "labelTag": "4",
+          "percentComplete": "0",
+          "ruleId": "4",
+          "nodeId": "71",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "3",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "PHYSICS",
+                "number": "7D",
+                "nodeId": "72",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7LD",
+                "nodeId": "73"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7E",
+                "nodeId": "74"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "75",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "3",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "PHYSICS",
+                "number": "7D",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7LD"
+              },
+              {
+                "discipline": "PHYSICS",
+                "number": "7E"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 1",
+          "labelTag": "6",
+          "percentComplete": "0",
+          "ruleId": "5",
+          "nodeId": "76",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "1",
+                "nodeId": "77",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "78",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "1",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 50A",
+          "labelTag": "7",
+          "percentComplete": "0",
+          "ruleId": "6",
+          "nodeId": "79",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "50A",
+                "nodeId": "80",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "81",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "50A",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 50B",
+          "labelTag": "8",
+          "percentComplete": "0",
+          "ruleId": "7",
+          "nodeId": "82",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "50B",
+                "nodeId": "83",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "84",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "50B",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 60A",
+          "labelTag": "9",
+          "percentComplete": "0",
+          "ruleId": "8",
+          "nodeId": "85",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60A",
+                "nodeId": "86",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "87",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60A",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 60B",
+          "labelTag": "10",
+          "percentComplete": "0",
+          "ruleId": "9",
+          "nodeId": "88",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60B",
+                "nodeId": "89",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "90",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60B",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 60C",
+          "labelTag": "11",
+          "percentComplete": "0",
+          "ruleId": "10",
+          "nodeId": "91",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60C",
+                "nodeId": "92",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "93",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "60C",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 110A",
+          "labelTag": "12",
+          "percentComplete": "0",
+          "ruleId": "11",
+          "nodeId": "94",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110A",
+                "nodeId": "95",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "96",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110A",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 110B",
+          "labelTag": "13",
+          "percentComplete": "0",
+          "ruleId": "12",
+          "nodeId": "97",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110B",
+                "nodeId": "98",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "99",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110B",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 110C",
+          "labelTag": "14",
+          "percentComplete": "0",
+          "ruleId": "13",
+          "nodeId": "100",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110C",
+                "nodeId": "101",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "102",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "110C",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 111",
+          "labelTag": "15",
+          "percentComplete": "0",
+          "ruleId": "14",
+          "nodeId": "103",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "111",
+                "nodeId": "104",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "105",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "111",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 120",
+          "labelTag": "16",
+          "percentComplete": "0",
+          "ruleId": "15",
+          "nodeId": "106",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "120",
+                "nodeId": "107",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "108",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "120",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 121",
+          "labelTag": "17",
+          "percentComplete": "0",
+          "ruleId": "16",
+          "nodeId": "109",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "121",
+                "nodeId": "110",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "111",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "121",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 130",
+          "labelTag": "18",
+          "percentComplete": "0",
+          "ruleId": "17",
+          "nodeId": "112",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "130",
+                "nodeId": "113",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "114",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "130",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 140",
+          "labelTag": "19",
+          "percentComplete": "0",
+          "ruleId": "18",
+          "nodeId": "115",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "140",
+                "nodeId": "116",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "117",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "140",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 150",
+          "labelTag": "20",
+          "percentComplete": "0",
+          "ruleId": "19",
+          "nodeId": "118",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "150",
+                "nodeId": "119",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "120",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "150",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Core: BME 170",
+          "labelTag": "21",
+          "percentComplete": "0",
+          "ruleId": "20",
+          "nodeId": "121",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "170",
+                "nodeId": "122",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "123",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "170",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Major Design: BME 180A, 180B, 180C",
+          "labelTag": "22",
+          "percentComplete": "0",
+          "ruleId": "21",
+          "nodeId": "124",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "3",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "180A",
+                "nodeId": "125",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "BME",
+                "number": "180B",
+                "nodeId": "126"
+              },
+              {
+                "discipline": "BME",
+                "number": "180C",
+                "nodeId": "127"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "128",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "3",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "BME",
+                "number": "180A",
+                "newDiscipline": "Yes"
+              },
+              {
+                "discipline": "BME",
+                "number": "180B"
+              },
+              {
+                "discipline": "BME",
+                "number": "180C"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Engr Prof Topics Course:Engr 190W",
+          "labelTag": "23",
+          "percentComplete": "0",
+          "ruleId": "22",
+          "nodeId": "129",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "classesBegin": "1",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "ENGR",
+                "number": "190W",
+                "nodeId": "130",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "131",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "classes": "1",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "ENGR",
+                "number": "190W",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Approved Engineering Electives",
+          "labelTag": "26",
+          "percentComplete": "0",
+          "ruleId": "23-1-1",
+          "nodeId": "146",
+          "nodeType": "4200",
+          "indentLevel": "1",
+          "ruleType": "Course",
+          "ifElsePart": "ElsePart",
+          "classesApplied": "0",
+          "creditsApplied": "0",
+          "classesAppliedToRule": {},
+          "requirement": {
+            "creditsBegin": "12",
+            "classCreditOperator": "OR",
+            "connector": ",",
+            "courseArray": [
+              {
+                "discipline": "ELECTIVE",
+                "number": "@",
+                "nodeId": "147",
+                "newDiscipline": "Yes"
+              }
+            ],
+            "qualifierArray": [
+              {
+                "nodeId": "148",
+                "nodeType": "4114",
+                "applied": "",
+                "name": "MAXPASSFAIL",
+                "classes": "0",
+                "text": "MAXPASSFAIL 0 CLASSES"
+              }
+            ]
+          },
+          "advice": {
+            "credits": "12",
+            "connector": ", ",
+            "courseArray": [
+              {
+                "discipline": "ELECTIVE",
+                "number": "@",
+                "newDiscipline": "Yes"
+              }
+            ]
+          }
+        },
+        {
+          "label": "28 Design Units Required by Major",
+          "labelTag": "27",
+          "percentComplete": "0",
+          "ruleId": "24",
+          "nodeId": "149",
+          "nodeType": "4800",
+          "indentLevel": "1",
+          "ruleType": "Noncourse",
+          "proxyAdviceExists": "Yes",
+          "noncoursesApplied": {},
+          "requirement": {
+            "numNoncourses": "1",
+            "code": "BIOMDESIGN"
+          },
+          "proxyAdvice": {
+            "textList": ["28 Design Units Required by Major"]
+          }
+        }
+      ]
+    }
+  ],
+  "classInformation": {
+    "classArray": [
+      {
+        "discipline": "(T)CS",
+        "number": "002A",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0007",
+        "term": "202151",
+        "courseTitle": "OBJ-ORIENT PROG METHOD IN C++                 (FC)",
+        "termLiteral": "2021 SS",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4.5",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "T",
+        "gradePoints": "0",
+        "numericGrade": "4",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "(T)JAPN",
+        "number": "1",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0021",
+        "term": "202451",
+        "courseTitle": "ELEMENTARY JAPA                             (MSAC)",
+        "termLiteral": "2024 SS",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "T",
+        "gradePoints": "0",
+        "numericGrade": "4",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "(T)JAPN",
+        "number": "2",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0022",
+        "term": "202492",
+        "courseTitle": "CONT ELEMENTARY                             (MSAC)",
+        "termLiteral": "2024 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "T",
+        "gradePoints": "0",
+        "numericGrade": "4",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "BIOSCI",
+        "number": "H90",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0032",
+        "term": "202592",
+        "courseTitle": "IDIOM/PRACTICE SCI",
+        "termLiteral": "2025 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "122A",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0033",
+        "term": "202592",
+        "courseTitle": "INTRO TO DATA MGMT",
+        "termLiteral": "2025 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "132",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0036",
+        "term": "202603",
+        "courseTitle": "COMPUTER NETWORKS",
+        "termLiteral": "2026 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "133",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0040",
+        "term": "202614",
+        "courseTitle": "ADV COMPUTER NETWKS",
+        "termLiteral": "2026 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "Y",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "143A",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0034",
+        "term": "202592",
+        "courseTitle": "PRNCPLS OPERTNG SYS",
+        "termLiteral": "2025 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "13.2",
+        "numericGrade": "3.3",
+        "gpaGradePoints": "13.2",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "143B",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0037",
+        "term": "202603",
+        "courseTitle": "PROJ IN OPERTNG SYS",
+        "termLiteral": "2026 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "147",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0035",
+        "term": "202592",
+        "courseTitle": "IOT SW AND SYSTEMS",
+        "termLiteral": "2025 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "161",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0029",
+        "term": "202514",
+        "courseTitle": "DES&ANALYS OF ALGOR",
+        "termLiteral": "2025 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "171",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0038",
+        "term": "202603",
+        "courseTitle": "INTRO ARTIFCL INTEL",
+        "termLiteral": "2026 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "13.2",
+        "numericGrade": "3.3",
+        "gpaGradePoints": "13.2",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "179",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0041",
+        "term": "202614",
+        "courseTitle": "ALGRTMS GRAPH MDLS",
+        "termLiteral": "2026 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "Y",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "ECON",
+        "number": "H80",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0030",
+        "term": "202514",
+        "courseTitle": "ECONOMICS & SPORTS",
+        "termLiteral": "2025 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1A",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0008",
+        "term": "202392",
+        "courseTitle": "HUMANITIES CORE LEC",
+        "termLiteral": "2023 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "13.2",
+        "numericGrade": "3.3",
+        "gpaGradePoints": "13.2",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1B",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0013",
+        "term": "202403",
+        "courseTitle": "HUMANITIES CORE LEC",
+        "termLiteral": "2024 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1C",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0017",
+        "term": "202414",
+        "courseTitle": "HUMANITIES CORE LEC",
+        "termLiteral": "2024 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1AS",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0009",
+        "term": "202392",
+        "courseTitle": "HUM CORE WRT HONORS",
+        "termLiteral": "2023 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1BS",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0014",
+        "term": "202403",
+        "courseTitle": "HUM CORE WRT HONORS",
+        "termLiteral": "2024 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "13.2",
+        "numericGrade": "3.3",
+        "gpaGradePoints": "13.2",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1CS",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0018",
+        "term": "202414",
+        "courseTitle": "HUM CORE WRT HONORS",
+        "termLiteral": "2024 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "139W",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0039",
+        "term": "202603",
+        "courseTitle": "CRITICAL WRITING",
+        "termLiteral": "2026 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "O",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "20",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0001",
+        "term": "",
+        "courseTitle": "INVITATION COMPUTNG",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Comp Sci Prin AP",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "32A",
+        "credits": "4",
+        "letterGrade": "B",
+        "id": "0010",
+        "term": "202392",
+        "courseTitle": "PYTHN PGMG LIBR/ACC",
+        "termLiteral": "2023 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "12",
+        "numericGrade": "3",
+        "gpaGradePoints": "12",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "33",
+        "credits": "4",
+        "letterGrade": "B-",
+        "id": "0015",
+        "term": "202403",
+        "courseTitle": "INTERMEDIATE PRGRMG",
+        "termLiteral": "2024 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "10.8",
+        "numericGrade": "2.7",
+        "gpaGradePoints": "10.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "45C",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0019",
+        "term": "202414",
+        "courseTitle": "PROGRAM IN C/C++",
+        "termLiteral": "2024 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "45J",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0026",
+        "term": "202503",
+        "courseTitle": "PROGRAMMING IN JAVA",
+        "termLiteral": "2025 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "46",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0023",
+        "term": "202492",
+        "courseTitle": "DATA STRC IMPL&ANLS",
+        "termLiteral": "2024 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "51",
+        "credits": "6",
+        "letterGrade": "A-",
+        "id": "0027",
+        "term": "202503",
+        "courseTitle": "INTRO COMPUTER ORG",
+        "termLiteral": "2025 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "6",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "22.200001",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "22.200001",
+        "gpaCredits": "6",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "6B",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0011",
+        "term": "202392",
+        "courseTitle": "BOOL LOG & DISC STR",
+        "termLiteral": "2023 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "6D",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0016",
+        "term": "202403",
+        "courseTitle": "DISCRET MATH FOR CS",
+        "termLiteral": "2024 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "14.8",
+        "numericGrade": "3.7",
+        "gpaGradePoints": "14.8",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "IN4MATX",
+        "number": "43",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0031",
+        "term": "202514",
+        "courseTitle": "INTRO SOFTWARE ENGR",
+        "termLiteral": "2025 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0002",
+        "term": "",
+        "courseTitle": "Placement Language",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Placement Test",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1B",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0003",
+        "term": "",
+        "courseTitle": "Placement Language",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Placement Test",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1C",
+        "credits": "5",
+        "letterGrade": "IP",
+        "id": "0042",
+        "term": "202614",
+        "courseTitle": "FUNDAMENTALS",
+        "termLiteral": "2026 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "5",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "Y",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "MATH",
+        "number": "2A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0004",
+        "term": "",
+        "courseTitle": "CALCULUS",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Calculus AP Exam BC",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " ",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "19",
+            "level": "1",
+            "headerFit": "Yes",
+            "qualifierNodeLocation": "18"
+          },
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "47",
+            "level": "6"
+          }
+        ]
+      },
+      {
+        "discipline": "MATH",
+        "number": "2B",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0005",
+        "term": "",
+        "courseTitle": "CALCULUS",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Calculus AP Exam BC",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " ",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "21",
+            "level": "1",
+            "headerFit": "Yes",
+            "qualifierNodeLocation": "20"
+          },
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "48",
+            "level": "6"
+          }
+        ]
+      },
+      {
+        "discipline": "MATH",
+        "number": "3A",
+        "credits": "4",
+        "letterGrade": "B",
+        "id": "0020",
+        "term": "202414",
+        "courseTitle": "INTRO LINEAR ALGBRA",
+        "termLiteral": "2024 SPRING",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "12",
+        "numericGrade": "3",
+        "gpaGradePoints": "12",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " ",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "28",
+            "level": "1",
+            "headerFit": "Yes",
+            "qualifierNodeLocation": "27"
+          },
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "51",
+            "level": "6"
+          }
+        ]
+      },
+      {
+        "discipline": "PHYSICS",
+        "number": "3A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0006",
+        "term": "",
+        "courseTitle": "BASIC PHYSICS I",
+        "termLiteral": "",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "0",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TS",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "T",
+        "transferCode": "CE",
+        "transferType": "CE",
+        "transferCourse": "Physics AP Exam C",
+        "transferSchool": "",
+        "transferSchoolId": "",
+        "transferTitle": "",
+        "transferGrade": "",
+        "transferCredits": "0000.000",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "SOCSCI",
+        "number": "H1F",
+        "credits": "6",
+        "letterGrade": "B",
+        "id": "0028",
+        "term": "202503",
+        "courseTitle": "HONORS: CRIT ISSUES",
+        "termLiteral": "2025 WINTER",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "6",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "18",
+        "numericGrade": "3",
+        "gpaGradePoints": "18",
+        "gpaCredits": "6",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "SOCSCI",
+        "number": "H1G",
+        "credits": "6",
+        "letterGrade": "A",
+        "id": "0024",
+        "term": "202492",
+        "courseTitle": "HONORS: CRIT ISSUES",
+        "termLiteral": "2024 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "6",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "24",
+        "numericGrade": "4",
+        "gpaGradePoints": "24",
+        "gpaCredits": "6",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "STATS",
+        "number": "67",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0025",
+        "term": "202492",
+        "courseTitle": "INTRO PROB&STAT/CS",
+        "termLiteral": "2024 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "4",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "16",
+        "numericGrade": "4",
+        "gpaGradePoints": "16",
+        "gpaCredits": "4",
+        "section": "I",
+        "school": "U",
+        "gradeType": "AF",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "",
+        "transferType": "",
+        "withData": " ",
+        "equivalenceExists": " "
+      },
+      {
+        "discipline": "TRANSFER",
+        "number": "CREDIT",
+        "credits": "72.5",
+        "letterGrade": "",
+        "id": "0012",
+        "term": "202392",
+        "courseTitle": "TOTAL AP AND NON-UC CREDIT",
+        "termLiteral": "2023 FALL",
+        "termLiteralLong": "",
+        "recordType": "C",
+        "recordSequence": " ",
+        "classErrorNumber": "",
+        "status": "",
+        "studentSystemCredits": "72.5",
+        "reasonInsufficient": "",
+        "forceInsufficient": "N",
+        "forceToFallthrough": "N",
+        "inProgress": "N",
+        "preregistered": "N",
+        "failedCountInMajorGpa": "Y",
+        "incomplete": "N",
+        "passfail": "N",
+        "passed": "Y",
+        "atCode": "",
+        "gradePoints": "0",
+        "numericGrade": "0",
+        "gpaGradePoints": "0",
+        "gpaCredits": "0",
+        "section": "",
+        "school": "U",
+        "gradeType": "TR",
+        "repeatDiscipline": "",
+        "repeatNumber": "",
+        "repeatPolicy": " ",
+        "transfer": "C",
+        "transferCode": "AC",
+        "transferType": "AC",
+        "withData": " ",
+        "equivalenceExists": " "
+      }
+    ]
+  },
+  "fallThrough": {
+    "classes": "39",
+    "credits": "203.5",
+    "noncourses": "0",
+    "classArray": [
+      {
+        "discipline": "(T)CS",
+        "number": "002A",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0007",
+        "term": "202151"
+      },
+      {
+        "discipline": "(T)JAPN",
+        "number": "1",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0021",
+        "term": "202451"
+      },
+      {
+        "discipline": "(T)JAPN",
+        "number": "2",
+        "credits": "0",
+        "letterGrade": "A",
+        "id": "0022",
+        "term": "202492"
+      },
+      {
+        "discipline": "BIOSCI",
+        "number": "H90",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0032",
+        "term": "202592"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "122A",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0033",
+        "term": "202592"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "132",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0036",
+        "term": "202603"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "133",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0040",
+        "term": "202614"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "143A",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0034",
+        "term": "202592"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "143B",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0037",
+        "term": "202603"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "147",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0035",
+        "term": "202592"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "161",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0029",
+        "term": "202514"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "171",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0038",
+        "term": "202603"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "179",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0041",
+        "term": "202614"
+      },
+      {
+        "discipline": "ECON",
+        "number": "H80",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0030",
+        "term": "202514"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1A",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0008",
+        "term": "202392"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1B",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0013",
+        "term": "202403"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "1C",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0017",
+        "term": "202414"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1AS",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0009",
+        "term": "202392"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1BS",
+        "credits": "4",
+        "letterGrade": "B+",
+        "id": "0014",
+        "term": "202403"
+      },
+      {
+        "discipline": "HUMAN",
+        "number": "H1CS",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0018",
+        "term": "202414"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "139W",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0039",
+        "term": "202603"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "20",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0001",
+        "term": ""
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "32A",
+        "credits": "4",
+        "letterGrade": "B",
+        "id": "0010",
+        "term": "202392"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "33",
+        "credits": "4",
+        "letterGrade": "B-",
+        "id": "0015",
+        "term": "202403"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "45C",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0019",
+        "term": "202414"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "45J",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0026",
+        "term": "202503"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "46",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0023",
+        "term": "202492"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "51",
+        "credits": "6",
+        "letterGrade": "A-",
+        "id": "0027",
+        "term": "202503"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "6B",
+        "credits": "4",
+        "letterGrade": "A+",
+        "id": "0011",
+        "term": "202392"
+      },
+      {
+        "discipline": "I&CSCI",
+        "number": "6D",
+        "credits": "4",
+        "letterGrade": "A-",
+        "id": "0016",
+        "term": "202403"
+      },
+      {
+        "discipline": "IN4MATX",
+        "number": "43",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0031",
+        "term": "202514"
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0002",
+        "term": ""
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1B",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0003",
+        "term": ""
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1C",
+        "credits": "5",
+        "letterGrade": "IP",
+        "id": "0042",
+        "term": "202614"
+      },
+      {
+        "discipline": "PHYSICS",
+        "number": "3A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0006",
+        "term": ""
+      },
+      {
+        "discipline": "SOCSCI",
+        "number": "H1F",
+        "credits": "6",
+        "letterGrade": "B",
+        "id": "0028",
+        "term": "202503"
+      },
+      {
+        "discipline": "SOCSCI",
+        "number": "H1G",
+        "credits": "6",
+        "letterGrade": "A",
+        "id": "0024",
+        "term": "202492"
+      },
+      {
+        "discipline": "STATS",
+        "number": "67",
+        "credits": "4",
+        "letterGrade": "A",
+        "id": "0025",
+        "term": "202492"
+      },
+      {
+        "discipline": "TRANSFER",
+        "number": "CREDIT",
+        "credits": "72.5",
+        "letterGrade": "",
+        "id": "0012",
+        "term": "202392"
+      }
+    ]
+  },
+  "overTheLimit": {
+    "classes": "0",
+    "credits": "0"
+  },
+  "insufficient": {
+    "classes": "0",
+    "credits": "0"
+  },
+  "inProgress": {
+    "classes": "3",
+    "credits": "13",
+    "classArray": [
+      {
+        "discipline": "COMPSCI",
+        "number": "133",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0040",
+        "term": "202614"
+      },
+      {
+        "discipline": "COMPSCI",
+        "number": "179",
+        "credits": "4",
+        "letterGrade": "IP",
+        "id": "0041",
+        "term": "202614"
+      },
+      {
+        "discipline": "JAPANSE",
+        "number": "1C",
+        "credits": "5",
+        "letterGrade": "IP",
+        "id": "0042",
+        "term": "202614"
+      }
+    ]
+  },
+  "fitList": {
+    "classArray": [
+      {
+        "discipline": "MATH",
+        "number": "3A",
+        "credits": "4",
+        "letterGrade": "B",
+        "id": "0020",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "51",
+            "level": "6",
+            "rank": "1"
+          }
+        ]
+      },
+      {
+        "discipline": "MATH",
+        "number": "2B",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0005",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "48",
+            "level": "6",
+            "rank": "1"
+          }
+        ]
+      },
+      {
+        "discipline": "MATH",
+        "number": "2A",
+        "credits": "0",
+        "letterGrade": "T",
+        "id": "0004",
+        "locArray": [
+          {
+            "requirementId": "RA003586",
+            "nodeLocation": "47",
+            "level": "6",
+            "rank": "1"
+          }
+        ]
+      }
+    ]
+  },
+  "splitCredits": {
+    "classes": "0",
+    "credits": "0"
+  },
+  "degreeInformation": {
+    "degreeDataArray": [
+      {
+        "degree": "BS",
+        "school": "U",
+        "catalogYear": "20232024",
+        "activeTerm": "202614",
+        "studentLevel": "04",
+        "degreeTerm": "202614",
+        "studentSystemCumulativeGradedCreditsAttempted": "0000.000",
+        "studentSystemCumulativeGradePointsEarned": "00000.00",
+        "studentSystemCumulativeGpa": "003.648 ",
+        "studentSystemCumulativeTotalCreditsEarned": "0194.500",
+        "studentSystemCumulativeCreditsEarned": "0122.000",
+        "degreeSource": "  ",
+        "degreeLiteral": "B.S.",
+        "schoolLiteral": "Undergraduate",
+        "studentLevelLiteral": "04     Senior              SR",
+        "catalogYearLit": "2023-2024",
+        "activeTermLiteral": "2026 SPRING"
+      }
+    ],
+    "goalArray": [
+      {
+        "value": "289",
+        "catalogYear": "20232024",
+        "code": "MAJOR",
+        "valueLiteral": "Biomedical Engineering"
+      }
+    ]
+  },
+  "exceptionList": {
+    "exceptionArray": [
+      {
+        "id": "0001",
+        "type": "AH",
+        "label": "JAPN 1 + JAPN 2 = JAPANESE 1C",
+        "details": "",
+        "requirementId": "RA003690",
+        "nodeType": "4200",
+        "Node_id ": "001173",
+        "enforced": "No",
+        "reason": "Block not found in student's audit",
+        "reasonProperty": "audit.exceptions.unenforced.blockNotFound.reason",
+        "ruleId": "None",
+        "remark": "WITH:",
+        "applyStatus": "BK",
+        "labelTag": "6D:",
+        "discipline": "(T)JAPN",
+        "courseNumberBegin": "1",
+        "school": "U",
+        "degree": "BS",
+        "text": "",
+        "userLast": "",
+        "date": "20250106",
+        "who": "TRAN, KARENA S.",
+        "whoEmail": ""
+      },
+      {
+        "id": "0002",
+        "type": "AA",
+        "label": "Allow ECON H80 to apply here",
+        "details": "",
+        "requirementId": "RA003372",
+        "nodeType": "4200",
+        "Node_id ": "000023",
+        "enforced": "No",
+        "reason": "IF-statement was resolved - rule not used",
+        "reasonProperty": "audit.exceptions.unenforced.ifStatement.reason",
+        "ruleId": "None",
+        "remark": "WITH:",
+        "applyStatus": "IF",
+        "labelTag": "FY2",
+        "discipline": "ECON",
+        "courseNumberBegin": "H80",
+        "school": "U",
+        "degree": "BS",
+        "text": "",
+        "userLast": "",
+        "date": "20251021",
+        "who": "DEMARTINO, KACY ELIZABETH",
+        "whoEmail": ""
+      },
+      {
+        "id": "0003",
+        "type": "AH",
+        "label": "Apply ECON H80 here",
+        "details": "",
+        "requirementId": "RA003690",
+        "nodeType": "4200",
+        "Node_id ": "000602",
+        "enforced": "No",
+        "reason": "Block not found in student's audit",
+        "reasonProperty": "audit.exceptions.unenforced.blockNotFound.reason",
+        "ruleId": "None",
+        "remark": "WITH:",
+        "applyStatus": "BK",
+        "labelTag": "3A:",
+        "discipline": "ECON",
+        "courseNumberBegin": "H80",
+        "school": "U",
+        "degree": "BS",
+        "text": "",
+        "userLast": "",
+        "date": "20260224",
+        "who": "WANG, BOWEN",
+        "whoEmail": ""
+      }
+    ]
+  },
+  "notes": {},
+  "flags": {
+    "cfg020DAP14": "Y Y 01NYNNYY0004000     NYYYN                             YYNN3YYNYYY01NNYNYYYYNNNNNA",
+    "cfg020TIEBREAK": "01H02H03H04H05N06N07N08N09N                                                                         "
+  }
+}

@@ -1,4 +1,11 @@
-import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
+import type {
+  Block,
+  DWAuditResponse,
+  DWMappingResponse,
+  RuleBase,
+  RuleBlock,
+  UndergraduateRequirements,
+} from "$types";
 import fetch from "cross-fetch";
 
 export class DegreeworksClient {
@@ -107,7 +114,7 @@ export class DegreeworksClient {
   ): Promise<
     | {
         college?: Block;
-        major?: Block;
+        major?: Block & { otherBlock?: Block };
       }
     | undefined
   > {
@@ -132,14 +139,25 @@ export class DegreeworksClient {
     if ("error" in json) {
       return undefined;
     }
-
+    const major = json.blockArray.find(
+      (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+    );
+    const firstRule = major?.ruleArray[0];
+    const isOtherBlock =
+      firstRule?.ruleType === "Block" &&
+      (firstRule as RuleBase & RuleBlock).requirement.type === "OTHER";
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
       ),
-      major: json.blockArray.find(
-        (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
-      ),
+      major: (isOtherBlock
+        ? {
+            ...major,
+            otherBlock: json.blockArray.find(
+              (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
+            ),
+          }
+        : major) as (Block & { otherBlock?: Block }) | undefined,
     };
   }
 
