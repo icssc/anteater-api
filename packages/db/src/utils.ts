@@ -23,6 +23,17 @@ export const isFalse = <T extends ColumnBaseConfig<"boolean", string>>(col: PgCo
  *   });
  * ```
  */
+
+export const websocTermSortOrder = sql`CASE quarter 
+  WHEN 'Fall' THEN 5
+  WHEN 'Summer2' THEN 4
+  WHEN 'Summer10wk' THEN 3
+  WHEN 'Summer1' THEN 2
+  WHEN 'Spring' THEN 1
+  WHEN 'Winter' THEN 0
+  END
+  `;
+
 export function conflictUpdateSetAllCols<T extends PgTable>(table: T): PgUpdateSetSource<T> {
   const columns = getTableColumns(table);
   const { name: tableName } = getTableConfig(table);
