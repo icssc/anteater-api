@@ -558,6 +558,8 @@ export const course = pgTable(
     prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
     prerequisiteText: text("prerequisite_text").notNull(),
     repeatability: varchar("repeatability").notNull(),
+    repeatabilityTimes: integer("repeatability_times").notNull().default(0),
+    repeatabilityTimesType: varchar("repeatability_times_type"),
     gradingOption: varchar("grading_option").notNull(),
     concurrent: varchar("concurrent").notNull(),
     sameAs: varchar("same_as").notNull(),
