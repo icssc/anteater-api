@@ -1,13 +1,28 @@
+import assert from "node:assert";
 import * as fs from "node:fs/promises";
-import type { database } from "@packages/db";
+import { exit } from "node:process";
+import { database } from "@packages/db";
+import { asc, eq } from "@packages/db/drizzle";
 import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
   MajorProgram,
 } from "@packages/db/schema";
+import {
+  collegeRequirement,
+  degree,
+  major,
+  minor,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { diffString } from "json-diff";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
+import readlineSync from "readline-sync";
+import sortKeys from "sort-keys";
 import type { z } from "zod";
 import { AuditParser, DegreeworksClient } from "$components";
 import type { Block, SpecializationCache } from "$types";
@@ -22,6 +37,9 @@ const JWT_HEADER_PREFIX_LENGTH = 7;
 
 // (school code, major code, degree code)
 type ProgramTriplet = [string, string, string];
+
+const deepSortArray = <T extends unknown[]>(array: T): T => sortKeys(array, { deep: true });
+const sortById = (a: any, b: any) => a.id.localeCompare(b.id);
 
 export class Scraper {
   private ap!: AuditParser;
@@ -221,6 +239,9 @@ export class Scraper {
 
   async run() {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
+    const url = process.env.DB_URL;
+    if (!url) throw new Error("DB_URL not found");
+    const db = database(url);
     console.log("[Scraper] degreeworks-scraper starting");
 
     const ugradReqs = await this.dw.getUgradRequirements();
@@ -260,6 +281,56 @@ export class Scraper {
         "no access to honors requirements; retry scrape from honors-enrolled account to get this information",
       );
     }
+
+    // Compare scraped and db info for requirements
+    const [dbUcRequirementsFetched] = await db
+      .select()
+      .from(schoolRequirement)
+      .where(eq(schoolRequirement.id, "UC"));
+    const dbUcRequirements = dbUcRequirementsFetched?.requirements;
+    const ucReqsDiff = diffString(dbUcRequirements, this.parsedUgradRequirements.get("UC"));
+    const [dbGeRequirementsFetched] = await db
+      .select()
+      .from(schoolRequirement)
+      .where(eq(schoolRequirement.id, "GE"));
+    const dbGeRequirements = dbGeRequirementsFetched?.requirements;
+    const geReqsDiff = diffString(dbGeRequirements, this.parsedUgradRequirements.get("GE"));
+
+    const honorsKind = honorsFourRequirements ? "CHC4" : honorsTwoRequirements ? "CHC2" : "";
+
+    const [dbHonorsRequirementsFetched] = await db
+      .select()
+      .from(schoolRequirement)
+      .where(eq(schoolRequirement.id, honorsKind));
+    const dbHonorsRequirements = dbHonorsRequirementsFetched?.requirements;
+    const honorsReqsDiff = diffString(
+      dbHonorsRequirements,
+      this.parsedUgradRequirements.get(honorsKind),
+    );
+
+    if (!ucReqsDiff.length && !geReqsDiff.length && !honorsReqsDiff.length) {
+      console.log(
+        "No difference found between database and scraped data for undergraduate requirements.",
+      );
+    } else {
+      if (ucReqsDiff.length) {
+        console.log("Difference between database and scraped UC requirements data:");
+        console.log(ucReqsDiff);
+      }
+      if (geReqsDiff.length) {
+        console.log("Difference between database and scraped GE requirements data:");
+        console.log(geReqsDiff);
+      }
+      if (honorsReqsDiff.length) {
+        console.log("Difference between database and scraped Honors requirements data:");
+        console.log(honorsReqsDiff);
+      }
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.error("Cancelling scraping run.");
+        exit(1);
+      }
+    }
+
     console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
 
     this.degrees = await this.dw.getMapping("degrees");
@@ -287,6 +358,25 @@ export class Scraper {
       console.log(
         `Requirements block found and parsed for "${audit.title}" (minorCode = ${minorCode})`,
       );
+    }
+
+    // Compare scraped and db info for minors
+    const dbMinors = await db.select().from(minor).orderBy(asc(minor.id));
+    const scrapedMinors = this.parsedMinorPrograms
+      .values()
+      .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
+      .toArray()
+      .sort(sortById);
+    const minorsDiff = diffString(dbMinors, scrapedMinors);
+    if (!minorsDiff.length) {
+      console.log("No difference found between database and scraped data for minors.");
+    } else {
+      console.log("Difference between database and scraped minors data:");
+      console.log(minorsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.error("Cancelling scraping run.");
+        exit(1);
+      }
     }
 
     console.log("Scraping undergraduate and graduate program requirements");
@@ -399,6 +489,21 @@ export class Scraper {
       }
     }
 
+    const dbSpecializations = await db
+      .select()
+      .from(specialization)
+      .orderBy(asc(specialization.id));
+    const scrapedSpecializations = this.parsedSpecializations
+      .values()
+      .map(([majorId, specName, { degreeType, code, requirements }]) => ({
+        id: `${degreeType}-${code}`,
+        name: specName,
+        majorId: `${majorId.degreeType}-${majorId.code}`,
+        requirements,
+      }))
+      .toArray()
+      .sort(sortById);
+
     // After we match specializations to a major
     // we ensure that majors with 0 specs don't require a specialization
     for (const [, [, major]] of this.parsedPrograms) {
@@ -407,11 +512,124 @@ export class Scraper {
       }
     }
 
+    // Compare scraped and db info for majors, specializations, and degrees
+    const dbMajors = await db.select().from(major).orderBy(asc(major.id));
+    const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
+    const scrapedMajors = this.parsedPrograms
+      .values()
+      .map(([college, { name, degreeType, code, requirements, specializationRequired }]) => {
+        let collegeBlockIndex: number | undefined;
+        if (college?.requirements) {
+          const wouldInsert = { name: college.name, requirements: college.requirements };
+          const existing = collegeBlocks.findIndex((schoolExisting) => {
+            try {
+              assert.deepStrictEqual(schoolExisting, wouldInsert);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+
+          if (existing === -1) {
+            collegeBlocks.push(wouldInsert);
+            collegeBlockIndex = collegeBlocks.length - 1;
+          } else {
+            collegeBlockIndex = existing;
+          }
+        }
+        return {
+          id: `${degreeType}-${code}`,
+          degreeId: degreeType ?? "",
+          code,
+          name,
+          requirements,
+          specializationRequired: specializationRequired,
+          collegeRequirement: null,
+          ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
+        };
+      })
+      .toArray()
+      .sort(sortById);
+    const collegeBlockIds = await db
+      .insert(collegeRequirement)
+      .values(collegeBlocks)
+      .onConflictDoUpdate({
+        target: collegeRequirement.requirementsHash,
+        set: conflictUpdateSetAllCols(collegeRequirement),
+      })
+      .returning({ id: collegeRequirement.id })
+      .then((rows) => rows.map(({ id }) => id));
+
+    for (const majorObj of scrapedMajors) {
+      if (majorObj.collegeBlockIndex !== undefined) {
+        (majorObj as typeof major.$inferInsert).collegeRequirement =
+          collegeBlockIds[majorObj.collegeBlockIndex];
+        majorObj.collegeBlockIndex = undefined;
+      }
+    }
+
+    const cleanDbMajors = JSON.parse(JSON.stringify(dbMajors)).sort(sortById);
+    const cleanScrapedMajors = JSON.parse(JSON.stringify(scrapedMajors))
+      .map((m: any) => ({
+        ...m,
+        collegeRequirement: m.collegeRequirement ?? null,
+      }))
+      .sort(sortById);
+
+    const sortedScrapedMajors = deepSortArray(cleanScrapedMajors);
+    const sortedDbMajors = deepSortArray(cleanDbMajors);
+
+    const majorsDiff = diffString(sortedDbMajors, sortedScrapedMajors);
+    if (!majorsDiff.length) {
+      console.log("No difference found between database and scraped data for majors.");
+    } else {
+      console.log("Difference between database and scraped majors data:");
+      console.log(majorsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
+    }
+
+    const specializationsDiff = diffString(dbSpecializations, scrapedSpecializations);
+    if (!specializationsDiff.length) {
+      console.log("No difference found between database and scraped data for specializations.");
+    } else {
+      console.log("Difference between database and scraped specializations data:");
+      console.log(specializationsDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
+    }
+
     this.degreesAwarded = new Map(
       Array.from(
         new Set(this.parsedPrograms.entries().map(([, [_s, program]]) => program.degreeType ?? "")),
       ).map((x): [string, string] => [x, this.degrees?.get(x) ?? ""]),
     );
+
+    const dbDegrees = await db.select().from(degree).orderBy(degree.id);
+
+    const scrapedDegrees = Array.from(this.degreesAwarded.entries()).map(([id, name]) => ({
+      division: id.startsWith("B") ? "Undergraduate" : "Graduate",
+      id,
+      name,
+    }));
+    const sortedScrapedDegrees = deepSortArray(scrapedDegrees.sort(sortById));
+
+    const degreesDiff = diffString(dbDegrees, sortedScrapedDegrees);
+
+    if (!degreesDiff.length) {
+      console.log("No difference found between database and scraped data for degrees awarded.");
+    } else {
+      console.log("Difference between database and scraped degrees awarded data:");
+      console.log(degreesDiff);
+      if (!readlineSync.keyInYNStrict("Is this ok")) {
+        console.log("Cancelling scraping run.");
+        exit(1);
+      }
+    }
 
     // Post-processing steps.
 
