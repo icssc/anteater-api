@@ -196,7 +196,7 @@ async function getRoomInfo(site: LocationSite, RoomId: string): Promise<StudyRoo
   const baseUrl = ROOM_INFO_URL[site];
   const url = `${baseUrl}/${RoomId}`;
   const room: StudyRoom = {
-    id: `${RoomId}`,
+    id: RoomId,
     name: "",
     capacity: 0,
     location: "",
