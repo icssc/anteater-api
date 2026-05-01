@@ -110,13 +110,19 @@ export class ProgramsService {
 
     const [got] = await (programType !== "major"
       ? this.db
-          .select({ id: table.id, name: table.name, requirements: table.requirements })
+          .select({
+            id: table.id,
+            name: table.name,
+            requirements: table.requirements,
+            header: major.header,
+          })
           .from(table)
       : this.db
           .select({
             id: major.id,
             name: major.name,
             requirements: major.requirements,
+            header: major.header,
             schoolRequirements: {
               name: collegeRequirement.name,
               requirements: collegeRequirement.requirements,

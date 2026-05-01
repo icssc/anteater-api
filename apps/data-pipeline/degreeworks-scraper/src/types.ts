@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type {
   blockSchema,
+  qualifierClauseSchema,
   ruleBaseSchema,
   ruleBlockSchema,
   ruleBlocktypeSchema,
@@ -51,6 +52,8 @@ export type Rule = z.infer<typeof ruleBaseSchema> &
 export type Block = z.infer<typeof blockSchema>;
 
 export type WithClause = z.infer<typeof withClauseSchema>;
+
+export type QualifierClause = z.infer<typeof qualifierClauseSchema>;
 
 export type SpecializationCache = z.infer<typeof specializationCacheSchema>;
 
