@@ -380,8 +380,9 @@ export class WebsocService {
 
   async getAllTerms() {
     return this.db
-      .selectDistinct({ year: websocSchool.year, quarter: websocSchool.quarter })
+      .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
+      .groupBy(websocSchool.year, websocSchool.quarter)
       .orderBy(desc(websocSchool.year), desc(websocTermSortOrder))
       .then((rows) => rows.map(transformTerm));
   }
