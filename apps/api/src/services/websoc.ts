@@ -27,7 +27,7 @@ import {
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { isFalse, isTrue } from "@packages/db/utils";
+import { isFalse, isTrue, websocTermSortOrder } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 import type {
@@ -382,18 +382,9 @@ export class WebsocService {
     return this.db
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
-      .then((rows) =>
-        new Map(rows.map((row) => [`${row.year} ${row.quarter}`, row]))
-          .values()
-          .toArray()
-          .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
-            y1 === y2
-              ? termOrder[q1] - termOrder[q2]
-              : Number.parseInt(y1, 10) - Number.parseInt(y2, 10),
-          )
-          .reverse()
-          .map(transformTerm),
-      );
+      .groupBy(websocSchool.year, websocSchool.quarter)
+      .orderBy(desc(websocSchool.year), desc(websocTermSortOrder(websocSchool.quarter)))
+      .then((rows) => rows.map(transformTerm));
   }
 
   async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
@@ -474,14 +465,6 @@ export class WebsocService {
       )
       .where(and(...conditions))
       .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
-      .then((rows) =>
-        rows
-          .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
-            y1 === y2
-              ? termOrder[q1] - termOrder[q2]
-              : Number.parseInt(y1, 10) - Number.parseInt(y2, 10),
-          )
-          .reverse(),
-      );
+      .orderBy(desc(websocSection.year), desc(websocTermSortOrder(websocSection.quarter)));
   }
 }
