@@ -129,16 +129,47 @@ export type MajorProgram = {
   specCode?: string;
 };
 
+/**
+ * Boolean expression tree for per-course constraints (withArray clauses)
+ * DegreeWorks serves these in a flat shape for display
+ * We parse it into a statement tree for evaluation and downstream use.
+ */
+export type CourseConstraint = {
+  code:
+    | "DWCREDIT"
+    | "DWCREDITS"
+    | "DWTERM"
+    | "DWLOCATION"
+    | "DWTITLE"
+    | "DWGRADETYPE"
+    | "DWPASSFAIL";
+  operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
+  valueList: string[];
+};
+
+export type CourseConstraintLeaf = CourseConstraint & {
+  type: "leaf";
+};
+
+export type CourseConstraintNode = {
+  type: "AND" | "OR";
+  children: CourseConstraintTree[];
+};
+
+export type CourseConstraintTree = CourseConstraintLeaf | CourseConstraintNode;
+
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
 export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
 export type DegreeWorksGroupRequirement = {
