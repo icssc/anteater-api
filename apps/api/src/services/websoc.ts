@@ -383,7 +383,7 @@ export class WebsocService {
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
       .groupBy(websocSchool.year, websocSchool.quarter)
-      .orderBy(desc(websocSchool.year), desc(websocTermSortOrder))
+      .orderBy(desc(websocSchool.year), desc(websocTermSortOrder(websocSchool.quarter)))
       .then((rows) => rows.map(transformTerm));
   }
 
@@ -465,6 +465,6 @@ export class WebsocService {
       )
       .where(and(...conditions))
       .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
-      .orderBy(desc(websocSection.year), desc(websocTermSortOrder));
+      .orderBy(desc(websocSection.year), desc(websocTermSortOrder(websocSection.quarter)));
   }
 }
