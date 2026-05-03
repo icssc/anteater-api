@@ -57,6 +57,8 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+export const qualifierSchema = z.union([]);
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -96,6 +98,9 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       .int()
       .nonnegative()
       .openapi({ description: "The number of units needed for this requirement." }),
+    qualifiers: z.array(qualifierSchema).optional().openapi({
+      description: "Qualifiers for this requirement",
+    }),
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
