@@ -844,7 +844,7 @@ export const courseMaterial = pgTable("course_material", {
   year: varchar("year").notNull(),
   quarter: materialTerm("quarter").notNull(),
   department: varchar("department").notNull(),
-  courseNumber: integer("course_number").notNull(),
+  courseNumber: varchar("course_number").notNull(),
   instructor: varchar("instructor").notNull(),
   isbn: varchar("isbn"),
   author: varchar("author"),

@@ -7,7 +7,7 @@ CREATE TABLE "course_material" (
 	"year" varchar NOT NULL,
 	"quarter" "material_term" NOT NULL,
 	"department" varchar NOT NULL,
-	"course_number" integer NOT NULL,
+	"course_number" varchar NOT NULL,
 	"instructor" varchar NOT NULL,
 	"isbn" varchar,
 	"author" varchar,
@@ -19,6 +19,4 @@ CREATE TABLE "course_material" (
 	"link" text
 );
 --> statement-breakpoint
-ALTER TABLE "course_material" ADD CONSTRAINT "course_material_section_id_websoc_section_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."websoc_section"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "course_material_section_id_index" ON "course_material" USING btree ("section_id");--> statement-breakpoint
-CREATE INDEX "course_material_isbn_index" ON "course_material" USING btree ("isbn");
+ALTER TABLE "course_material" ADD CONSTRAINT "course_material_section_id_websoc_section_id_fk" FOREIGN KEY ("section_id") REFERENCES "public"."websoc_section"("id") ON DELETE no action ON UPDATE no action;

@@ -1,5 +1,5 @@
 {
-  "id": "15cc90b3-d78c-4ed7-808c-818bdaef6031",
+  "id": "720df4d3-2b14-4b22-90fb-fb85082bc95c",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -650,7 +650,7 @@
         },
         "course_number": {
           "name": "course_number",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -711,38 +711,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "course_material_section_id_index": {
-          "name": "course_material_section_id_index",
-          "columns": [
-            {
-              "expression": "section_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "course_material_isbn_index": {
-          "name": "course_material_isbn_index",
-          "columns": [
-            {
-              "expression": "isbn",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "course_material_section_id_websoc_section_id_fk": {
           "name": "course_material_section_id_websoc_section_id_fk",

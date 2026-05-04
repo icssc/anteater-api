@@ -80,7 +80,7 @@ export const rawCourseMaterialsSchema = z.object({
   year: z.string(),
   quarter: z.enum(materialTerms),
   department: z.string(),
-  courseNumber: z.number(),
+  courseNumber: z.string(),
   instructor: z.string(),
   isbn: z.string().nullable(),
   author: z.string().nullable(),

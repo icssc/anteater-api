@@ -88,7 +88,7 @@ async function main() {
       year,
       quarter: quarter as MaterialTerm,
       department: dept,
-      courseNumber: parseInt(courseNum.replace(/\D/g, ""), 10) || 0,
+      courseNumber: courseNum,
       instructor: getFromMapOrThrow(entry, "Instructor"),
       title: getFromMapOrThrow(entry, "Title"),
       author: entry.get("Author"),

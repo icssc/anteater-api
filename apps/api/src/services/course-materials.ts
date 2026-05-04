@@ -55,10 +55,6 @@ function buildQuery(input: CourseMaterialsServiceInput) {
 export class CourseMaterialsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  /**
-   * Fetches raw course materials matching the query criteria.
-   * Mirrors getRawGrades pattern[cite: 1, 73].
-   */
   async getCourseMaterials(input: CourseMaterialsServiceInput) {
     const query = this.db
       .select({
