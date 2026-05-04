@@ -391,7 +391,7 @@ export class WebsocService {
             eq(websocDepartment.year, input.sinceYear),
             gte(
               websocTermSortOrder(websocDepartment.quarter),
-              websocTermSortOrder(sql`${input.sinceQuarter}`),
+              websocTermSortOrder(input.sinceQuarter),
             ),
           ),
         );
@@ -408,7 +408,7 @@ export class WebsocService {
             eq(websocDepartment.year, input.untilYear),
             lte(
               websocTermSortOrder(websocDepartment.quarter),
-              websocTermSortOrder(sql`${input.untilQuarter}`),
+              websocTermSortOrder(input.untilQuarter),
             ),
           ),
         );
