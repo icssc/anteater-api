@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { materialRequirements, materialTerms, terms, textbookFormats } from "@packages/db/schema";
 import { isBaseTenInt } from "@packages/stdlib";
-import { courseNumberSchema, yearSchema } from "./lib";
+import { yearSchema } from "./lib";
 import type { ParsedNumber, ParsedString } from "./websoc.ts";
 
 export const courseMaterialsQuerySchema = z.object({
@@ -11,8 +11,9 @@ export const courseMaterialsQuerySchema = z.object({
     description: "Only include materials from courses offered by the specified department code",
     example: "I&C SCI",
   }),
-  courseNumber: courseNumberSchema.optional().openapi({
-    description: "Only include materials from courses with the specified course number",
+  courseNumber: z.string().optional().openapi({
+    description: "Only include materials from courses exactly matching the specified course number",
+    example: "45C",
   }),
   sectionCodes: z
     .string()
