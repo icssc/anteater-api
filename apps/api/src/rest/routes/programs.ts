@@ -82,7 +82,7 @@ const majorRequirements = createRoute({
   path: "/major",
   description:
     "Retrieve course requirements for a major in UCI's current catalogue. Note that these are the requirements for the major itself; " +
-    "if this major has specializations, then one is mandatory and its requirements apply as well.",
+    "if this major has specializations and one is taken, its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: response200(majorRequirementsResponseSchema),
@@ -190,7 +190,8 @@ programsRouter.openapi(majorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this major; check your ID?",
+          message:
+            "Couldn't find major requirements associated with this major and specialization; check your IDs?",
         },
         404,
       );
