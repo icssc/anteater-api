@@ -24,7 +24,7 @@ export const isFalse = <T extends ColumnBaseConfig<"boolean", string>>(col: PgCo
  * ```
  */
 
-export const websocTermSortOrder = (col: PgColumn) => sql`CASE ${col} 
+export const websocTermSortOrder = (col: PgColumn | string) => sql`CASE ${col} 
   WHEN 'Fall' THEN 5
   WHEN 'Summer2' THEN 4
   WHEN 'Summer10wk' THEN 3
