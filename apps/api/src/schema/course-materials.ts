@@ -87,7 +87,7 @@ export const rawCourseMaterialsSchema = z.object({
   title: z.string(),
   edition: z.string().nullable(),
   format: z.enum(textbookFormats),
-  requirement: z.enum(materialRequirements),
+  requirement: z.enum(materialRequirements).nullable(),
   mmsId: z.string().nullable(),
   link: z.string().nullable(),
 });
