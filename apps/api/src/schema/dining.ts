@@ -233,7 +233,7 @@ export const scheduleMealPeriodSchema = z.object({
 
 export const scheduleSchema = z.object({
   upstreamId: z.string().openapi({
-    description: "Schedule identifier identifier from dining system",
+    description: "Schedule identifier from dining system",
     example: "zuq1l1b",
   }),
   restaurantId: restaurantIdSchema,

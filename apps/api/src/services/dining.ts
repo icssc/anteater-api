@@ -5,6 +5,7 @@ import {
   diningDish,
   diningDishToPeriod,
   diningEvent,
+  diningMealPeriodType,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
@@ -190,11 +191,11 @@ export class DiningService {
         },
         period: {
           id: diningPeriod.id,
-          name: diningPeriod.name,
           startTime: diningPeriod.startTime,
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
         },
+        periodName: diningMealPeriodType.name,
         station: {
           id: diningStation.id,
           updatedAt: diningStation.updatedAt,
@@ -205,6 +206,10 @@ export class DiningService {
       })
       .from(diningRestaurant)
       .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
+      .leftJoin(
+        diningMealPeriodType,
+        eq(diningPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
       .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
       .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
       .leftJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
@@ -213,6 +218,7 @@ export class DiningService {
         // yes, we actually need all of these
         diningRestaurant.id,
         diningPeriod.id,
+        diningMealPeriodType.name,
         diningPeriod.startTime,
         diningPeriod.endTime,
         diningPeriod.updatedAt,
@@ -227,14 +233,14 @@ export class DiningService {
     type PeriodsRecord = z.infer<typeof restaurantTodayResponseSchema>["periods"];
     const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
-    for (const { period, station, dishes } of rows) {
+    for (const { period, periodName, station, dishes } of rows) {
       if (period === null) {
         continue;
       }
 
       if (!periods.has(period.id)) {
         periods.set(period.id, {
-          name: period.name,
+          name: periodName ?? "",
           startTime: period.startTime,
           endTime: period.endTime,
           stationToDishes: {},
