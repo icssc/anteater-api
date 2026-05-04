@@ -1,5 +1,10 @@
 import { z } from "@hono/zod-openapi";
-import { materialRequirements, materialTerms, textbookFormats } from "@packages/db/schema";
+import {
+  materialRequirement,
+  materialRequirements,
+  materialTerms,
+  textbookFormats,
+} from "@packages/db/schema";
 import { isBaseTenInt } from "@packages/stdlib";
 import { courseNumberSchema, yearSchema } from "./lib";
 import type { ParsedNumber, ParsedString } from "./websoc.ts";
@@ -74,4 +79,20 @@ export const courseMaterialsQuerySchema = z.object({
   }),
   format: z.enum(textbookFormats).optional(),
   requirement: z.enum(materialRequirements).optional(),
+});
+
+export const rawCourseMaterialsSchema = z.object({
+  year: z.string(),
+  quarter: z.enum(materialTerms),
+  department: z.string(),
+  courseNumber: z.number(),
+  instructor: z.string(),
+  isbn: z.string().nullable(),
+  author: z.string().nullable(),
+  title: z.string(),
+  edition: z.string().nullable(),
+  format: z.enum(textbookFormats),
+  requirement: materialRequirement("requirement"),
+  mmsId: z.string().nullable(),
+  link: z.string().nullable(),
 });
