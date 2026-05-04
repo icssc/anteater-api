@@ -16,7 +16,7 @@ function buildQuery(input: CourseMaterialsServiceInput) {
     conditions.push(eq(courseMaterial.department, input.department));
   }
   if (input.courseNumber) {
-    conditions.push(eq(courseMaterial.courseNumber, Number.parseInt(input.courseNumber, 10)));
+    conditions.push(eq(courseMaterial.courseNumber, input.courseNumber));
   }
 
   if (input.instructorName) {
