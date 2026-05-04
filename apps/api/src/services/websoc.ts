@@ -44,15 +44,6 @@ import {
   buildMultiCourseNumberQuery,
 } from "./util.ts";
 
-const termOrder = {
-  Winter: 0,
-  Spring: 1,
-  Summer1: 2,
-  Summer10wk: 3,
-  Summer2: 4,
-  Fall: 5,
-};
-
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
 function buildQuery(input: WebsocServiceInput) {
@@ -395,17 +386,15 @@ export class WebsocService {
       if (!input.sinceQuarter) {
         sinceOptions.push(eq(websocDepartment.year, input.sinceYear));
       } else {
-        for (const [term, order] of Object.entries(termOrder)) {
-          if (order >= termOrder[input.sinceQuarter]) {
-            sinceOptions.push(
-              and(
-                eq(websocDepartment.year, input.sinceYear),
-                // cast is safe because term comes from a statically known object
-                eq(websocDepartment.quarter, term as Term),
-              ),
-            );
-          }
-        }
+        sinceOptions.push(
+          and(
+            eq(websocDepartment.year, input.sinceYear),
+            gte(
+              websocTermSortOrder(websocDepartment.quarter),
+              websocTermSortOrder(sql`${input.sinceQuarter}`),
+            ),
+          ),
+        );
       }
       sinceOptions.push(gt(websocDepartment.year, input.sinceYear));
     }
@@ -414,16 +403,15 @@ export class WebsocService {
       if (!input.untilQuarter) {
         untilOptions.push(eq(websocDepartment.year, input.untilYear));
       } else {
-        for (const [term, order] of Object.entries(termOrder)) {
-          if (order <= termOrder[input.untilQuarter]) {
-            untilOptions.push(
-              and(
-                eq(websocDepartment.year, input.untilYear),
-                eq(websocDepartment.quarter, term as Term),
-              ),
-            );
-          }
-        }
+        untilOptions.push(
+          and(
+            eq(websocDepartment.year, input.untilYear),
+            lte(
+              websocTermSortOrder(websocDepartment.quarter),
+              websocTermSortOrder(sql`${input.untilQuarter}`),
+            ),
+          ),
+        );
       }
       untilOptions.push(lt(websocDepartment.year, input.untilYear));
     }
