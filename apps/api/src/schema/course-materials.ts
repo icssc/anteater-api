@@ -1,12 +1,12 @@
 import { z } from "@hono/zod-openapi";
-import { materialRequirements, materialTerms, terms, textbookFormats } from "@packages/db/schema";
+import { materialRequirements, materialTerms, textbookFormats } from "@packages/db/schema";
 import { isBaseTenInt } from "@packages/stdlib";
 import { yearSchema } from "./lib";
 import type { ParsedNumber, ParsedString } from "./websoc.ts";
 
 export const courseMaterialsQuerySchema = z.object({
   year: yearSchema.optional(),
-  quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
+  quarter: z.enum(materialTerms, { error: (_issue) => "Invalid quarter provided" }).optional(),
   department: z.string().optional().openapi({
     description: "Only include materials from courses offered by the specified department code",
     example: "I&C SCI",
