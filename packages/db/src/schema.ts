@@ -109,19 +109,25 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 /**
+ * constraint codes we've found in withArray constraints
+ */
+export enum WithConstraintCode {
+  DWCREDIT = "DWCREDIT",
+  DWCREDITS = "DWCREDITS",
+  DWTERM = "DWTERM",
+  DWLOCATION = "DWLOCATION",
+  DWTITLE = "DWTITLE",
+  DWGRADETYPE = "DWGRADETYPE",
+  DWPASSFAIL = "DWPASSFAIL",
+}
+
+/**
  * Boolean expression tree for per-course constraints (withArray clauses)
  * DegreeWorks serves these in a flat shape for display
  * We parse it into a statement tree for evaluation and downstream use.
  */
 export type CourseConstraint = {
-  code:
-    | "DWCREDIT"
-    | "DWCREDITS"
-    | "DWTERM"
-    | "DWLOCATION"
-    | "DWTITLE"
-    | "DWGRADETYPE"
-    | "DWPASSFAIL";
+  code: WithConstraintCode;
   operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
   valueList: string[];
 };

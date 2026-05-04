@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import type { CourseConstraintTree } from "@packages/db/schema";
+import { type CourseConstraintTree, WithConstraintCode } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -54,15 +54,7 @@ export const ugradRequirementsQuerySchema = z.object({
 });
 
 const courseConstraintSchema = z.object({
-  code: z.enum([
-    "DWCREDITS",
-    "DWCREDIT",
-    "DWLOCATION",
-    "DWTERM",
-    "DWTITLE",
-    "DWGRADETYPE",
-    "DWPASSFAIL",
-  ]),
+  code: z.enum(WithConstraintCode),
   operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
   valueList: z.array(z.string()),
 });

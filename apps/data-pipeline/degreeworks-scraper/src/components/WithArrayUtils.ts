@@ -49,6 +49,7 @@ export function invertWithArrayToTree(withArray: WithClause[]): CourseConstraint
   }
 
   const [clause] = withArray;
+  // If we add more withClauses here, we must first make invertWithArrayToTree actually invert a tree
   if (clause.code !== "DWCREDIT" && clause.code !== "DWCREDITS") {
     return null;
   }
