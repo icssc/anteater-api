@@ -8,17 +8,18 @@ type CourseMaterialsServiceInput = z.infer<typeof courseMaterialsQuerySchema>;
 
 function buildQuery(input: CourseMaterialsServiceInput) {
   const conditions = [];
-
-  conditions.push(eq(courseMaterial.year, input.year));
-  conditions.push(eq(courseMaterial.quarter, input.quarter));
-
+  if (input.year) {
+    conditions.push(eq(courseMaterial.year, input.year));
+  }
+  if (input.quarter) {
+    conditions.push(eq(courseMaterial.quarter, input.quarter));
+  }
   if (input.department) {
     conditions.push(eq(courseMaterial.department, input.department));
   }
   if (input.courseNumber) {
     conditions.push(eq(courseMaterial.courseNumber, input.courseNumber));
   }
-
   if (input.instructorName) {
     conditions.push(ilike(courseMaterial.instructor, `%${input.instructorName}%`));
   }
@@ -28,14 +29,12 @@ function buildQuery(input: CourseMaterialsServiceInput) {
   if (input.title) {
     conditions.push(ilike(courseMaterial.title, `%${input.title}%`));
   }
-
   if (input.format) {
     conditions.push(eq(courseMaterial.format, input.format));
   }
   if (input.requirement) {
     conditions.push(eq(courseMaterial.requirement, input.requirement));
   }
-
   if (input.sectionCodes && input.sectionCodes.length > 0) {
     const sectionConditions = input.sectionCodes.map((code) => {
       if (code._type === "ParsedInteger") {
@@ -48,7 +47,6 @@ function buildQuery(input: CourseMaterialsServiceInput) {
     });
     conditions.push(or(...sectionConditions));
   }
-
   return and(...conditions);
 }
 
