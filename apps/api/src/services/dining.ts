@@ -9,6 +9,8 @@ import {
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
+  diningSchedule,
+  diningScheduleMealPeriod,
   diningStation,
 } from "@packages/db/schema";
 import { getFromMapOrThrow, orNull } from "@packages/stdlib";
@@ -21,6 +23,8 @@ import type {
   restaurantsResponseSchema,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
+  scheduleSchema,
+  schedulesQuerySchema,
 } from "$schema";
 
 type DiningDishQuery = z.infer<typeof dishQuerySchema>;
@@ -258,5 +262,113 @@ export class DiningService {
       periods: Object.fromEntries(periods),
       updatedAt: rows[0].restaurant.updatedAt,
     };
+  }
+
+  async getSchedules(
+    query: z.infer<typeof schedulesQuerySchema>,
+  ): Promise<z.infer<typeof scheduleSchema>[]> {
+    const conds: SQL[] = [];
+    if (query.restaurantId) {
+      conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
+    }
+
+    if (!query.includeHistorical) {
+      const filter = or(
+        isNull(diningSchedule.endDate),
+        gte(diningSchedule.endDate, sql`CURRENT_DATE`),
+      );
+      if (filter) conds.push(filter);
+    }
+
+    const rows = await this.db
+      .select({
+        schedule: {
+          id: diningSchedule.id,
+          restaurantId: diningSchedule.restaurantId,
+          upstreamId: diningSchedule.upstreamId,
+          name: diningSchedule.name,
+          type: diningSchedule.type,
+          startDate: diningSchedule.startDate,
+          endDate: diningSchedule.endDate,
+          updatedAt: diningSchedule.updatedAt,
+        },
+        mealPeriod: {
+          adobeId: diningScheduleMealPeriod.mealPeriodTypeId,
+          name: diningMealPeriodType.name,
+          position: diningMealPeriodType.position,
+          sunOpen: diningScheduleMealPeriod.sunOpen,
+          sunClose: diningScheduleMealPeriod.sunClose,
+          monOpen: diningScheduleMealPeriod.monOpen,
+          monClose: diningScheduleMealPeriod.monClose,
+          tueOpen: diningScheduleMealPeriod.tueOpen,
+          tueClose: diningScheduleMealPeriod.tueClose,
+          wedOpen: diningScheduleMealPeriod.wedOpen,
+          wedClose: diningScheduleMealPeriod.wedClose,
+          thuOpen: diningScheduleMealPeriod.thuOpen,
+          thuClose: diningScheduleMealPeriod.thuClose,
+          friOpen: diningScheduleMealPeriod.friOpen,
+          friClose: diningScheduleMealPeriod.friClose,
+          satOpen: diningScheduleMealPeriod.satOpen,
+          satClose: diningScheduleMealPeriod.satClose,
+        },
+      })
+      .from(diningSchedule)
+      .leftJoin(
+        diningScheduleMealPeriod,
+        eq(diningSchedule.id, diningScheduleMealPeriod.scheduleId),
+      )
+      .leftJoin(
+        diningMealPeriodType,
+        eq(diningScheduleMealPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
+      .where(conds.length > 0 ? and(...conds) : undefined)
+      .orderBy(
+        sql`CASE ${diningSchedule.type} WHEN 'standard' THEN 0 ELSE 1 END`,
+        sql`${diningSchedule.startDate} ASC NULLS FIRST`,
+        diningSchedule.upstreamId,
+        diningMealPeriodType.position,
+      );
+
+    type ScheduleResponse = z.infer<typeof scheduleSchema>;
+    const schedulesById = new Map<string, ScheduleResponse>();
+
+    for (const { schedule, mealPeriod } of rows) {
+      let entry = schedulesById.get(schedule.id);
+      if (!entry) {
+        entry = {
+          upstreamId: schedule.upstreamId,
+          restaurantId: schedule.restaurantId as ScheduleResponse["restaurantId"],
+          name: schedule.name,
+          type: schedule.type as ScheduleResponse["type"],
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          mealPeriods: [],
+          updatedAt: schedule.updatedAt,
+        };
+        schedulesById.set(schedule.id, entry);
+      }
+
+      // skip if the leftJoin produced null
+      if (mealPeriod.adobeId === null || mealPeriod.name === null || mealPeriod.position === null) {
+        continue;
+      }
+
+      entry.mealPeriods.push({
+        adobeId: mealPeriod.adobeId,
+        name: mealPeriod.name,
+        position: mealPeriod.position,
+        hours: {
+          sunday: { open: mealPeriod.sunOpen, close: mealPeriod.sunClose },
+          monday: { open: mealPeriod.monOpen, close: mealPeriod.monClose },
+          tuesday: { open: mealPeriod.tueOpen, close: mealPeriod.tueClose },
+          wednesday: { open: mealPeriod.wedOpen, close: mealPeriod.wedClose },
+          thursday: { open: mealPeriod.thuOpen, close: mealPeriod.thuClose },
+          friday: { open: mealPeriod.friOpen, close: mealPeriod.friClose },
+          saturday: { open: mealPeriod.satOpen, close: mealPeriod.satClose },
+        },
+      });
+    }
+
+    return Array.from(schedulesById.values());
   }
 }
