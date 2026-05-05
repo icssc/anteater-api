@@ -74,7 +74,7 @@ export const courseMaterialsQuerySchema = z.object({
   requirement: z.enum(materialRequirements).optional(),
 });
 
-export const rawCourseMaterialsSchema = z.object({
+export const courseMaterialsSchema = z.object({
   year: z.string(),
   quarter: z.enum(materialTerms),
   department: z.string(),
