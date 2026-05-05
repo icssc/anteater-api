@@ -31,19 +31,11 @@ const INSTRUCTORS_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${instructor.title}, '')), 'B')
   )`;
 
-function splitAtLastNumber(s: string): string {
-  const i = s
-    .matchAll(/\d+/g)
-    .map((x) => x.index)
-    .toArray()
-    .slice(-1)[0];
-  return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`;
-}
-
 function toQuery(query: string) {
-  const normalizedQuery = splitAtLastNumber(query)
+  const normalizedQuery = query
     .replaceAll(/ {2,}/g, " ")
     .replaceAll(/-/g, "\\-")
+    .replaceAll("ics", "i&csci")
     .split(" ")
     .map((x) => x.replace(/^\\-/, "-"))
     .join(" ");
@@ -164,7 +156,7 @@ export class SearchService {
   }
 
   async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
-    const query = toQuery(input.query);
+    const query = toQuery(transformQuery(input.query));
 
     if (input.resultType === "instructor") {
       return this.doSearchForInstructors(input, query);
