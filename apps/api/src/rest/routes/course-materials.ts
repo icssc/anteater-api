@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
+import { productionCache } from "$middleware";
 import {
   courseMaterialsQuerySchema,
   rawCourseMaterialsSchema,
@@ -15,7 +16,7 @@ const courseMaterialsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook }
 const rawCourseMaterialsRoute = createRoute({
   summary: "Filter course materials",
   operationId: "rawCourseMaterials",
-  tags: ["Other"],
+  tags: ["Course Materials"],
   method: "get",
   path: "/raw",
   request: { query: courseMaterialsQuerySchema },
@@ -26,6 +27,11 @@ const rawCourseMaterialsRoute = createRoute({
     500: response500(),
   },
 });
+
+courseMaterialsRouter.get(
+  "*",
+  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
+);
 
 courseMaterialsRouter.openapi(rawCourseMaterialsRoute, async (c) => {
   const query = c.req.valid("query");
