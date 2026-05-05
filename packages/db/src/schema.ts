@@ -424,16 +424,19 @@ export const websocLocation = pgTable(
   (table) => [uniqueIndex().on(table.building, table.room)],
 );
 
-export const websocInstructor = pgTable("websoc_instructor", {
-  identifier: varchar("identifier"),
-  name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", {
-    mode: "date",
-    withTimezone: true,
-  }).notNull(),
-  school: varchar("school"),
-  department: varchar("department"),
-});
+export const websocInstructor = pgTable(
+  "websoc_instructor",
+  {
+    name: varchar("name"),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    school: varchar("school"),
+    department: varchar("department"),
+  },
+  (table) => [primaryKey({ columns: [table.name, table.school, table.department] })],
+);
 
 export const websocSectionToInstructor = pgTable(
   "websoc_section_to_instructor",
