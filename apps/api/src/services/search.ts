@@ -31,7 +31,7 @@ const INSTRUCTORS_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${instructor.title}, '')), 'B')
   )`;
 
-function toQuery(query: string, inputType?: "instructor" | "course") {
+function toQuery(query: string, resultType?: "instructor" | "course") {
   let normalizedQuery = query
     .replaceAll(/ {2,}/g, " ")
     .replaceAll(/-/g, "\\-")
@@ -39,7 +39,7 @@ function toQuery(query: string, inputType?: "instructor" | "course") {
     .map((x) => x.replace(/^\\-/, "-"))
     .join(" ");
 
-  if (inputType && inputType === "course")
+  if (resultType && resultType === "course")
     normalizedQuery = normalizedQuery.replaceAll("ics", "i&csci");
 
   const tsQuery = sql`WEBSEARCH_TO_TSQUERY('english', ${normalizedQuery})`;
@@ -159,7 +159,7 @@ export class SearchService {
   }
 
   async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
-    const query = toQuery(input.query);
+    const query = toQuery(input.query, input.resultType);
 
     if (input.resultType === "instructor") {
       return this.doSearchForInstructors(input, query);
