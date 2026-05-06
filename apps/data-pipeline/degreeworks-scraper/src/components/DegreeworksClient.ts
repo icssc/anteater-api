@@ -142,6 +142,7 @@ export class DegreeworksClient {
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
       ),
       major: major,
+      // some majors (e.g., English-345, History-429) store requirements within the 'OTHER' block; passing it here to extract those values
       otherBlock: json.blockArray.find(
         (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
       ),
