@@ -71,10 +71,13 @@ const courseConstraintTreeSchema: z.ZodType<CourseConstraintTree> = z.union([
   }),
 ]);
 
-const courseConstraintsField = z.record(z.string(), courseConstraintTreeSchema).optional().openapi({
-  description:
-    "A map from course ID to the boolean expression tree of constraints for that course.",
-});
+const courseConstraintsSchema = z
+  .record(z.string(), courseConstraintTreeSchema)
+  .optional()
+  .openapi({
+    description:
+      "A map from course ID to the boolean expression tree of constraints for that course.",
+  });
 
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
@@ -94,7 +97,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
-    courseConstraints: courseConstraintsField,
+    courseConstraints: courseConstraintsSchema,
   })
   .openapi({
     description:
@@ -119,7 +122,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
-    courseConstraints: courseConstraintsField,
+    courseConstraints: courseConstraintsSchema,
   })
   .openapi({
     description:

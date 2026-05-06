@@ -276,7 +276,8 @@ export class AuditParser {
               courseConstraints[id] = tree;
             }
           }
-          const hasCourseConstraints = Object.keys(courseConstraints).length > 0;
+          const optionalCourseConstraints =
+            Object.keys(courseConstraints).length > 0 ? { courseConstraints } : {};
 
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -289,7 +290,7 @@ export class AuditParser {
               requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
-              ...(hasCourseConstraints && { courseConstraints }),
+              ...optionalCourseConstraints,
             });
           } else if (rule.requirement.creditsBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -302,7 +303,7 @@ export class AuditParser {
               requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
-              ...(hasCourseConstraints && { courseConstraints }),
+              ...optionalCourseConstraints,
             });
           }
           break;

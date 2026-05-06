@@ -110,16 +110,19 @@ export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
 
 /**
  * constraint codes we've found in withArray constraints
+ * We use a runtime value so zod schema can consume it
  */
-export enum WithConstraintCode {
-  DWCREDIT = "DWCREDIT",
-  DWCREDITS = "DWCREDITS",
-  DWTERM = "DWTERM",
-  DWLOCATION = "DWLOCATION",
-  DWTITLE = "DWTITLE",
-  DWGRADETYPE = "DWGRADETYPE",
-  DWPASSFAIL = "DWPASSFAIL",
-}
+export const WithConstraintCode = {
+  DWCREDIT: "DWCREDIT",
+  DWCREDITS: "DWCREDITS",
+  DWTERM: "DWTERM",
+  DWLOCATION: "DWLOCATION",
+  DWTITLE: "DWTITLE",
+  DWGRADETYPE: "DWGRADETYPE",
+  DWPASSFAIL: "DWPASSFAIL",
+} as const;
+
+export type WithConstraintCode = keyof typeof WithConstraintCode;
 
 /**
  * Boolean expression tree for per-course constraints (withArray clauses)
