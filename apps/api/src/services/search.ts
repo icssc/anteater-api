@@ -3,7 +3,7 @@ import type { database } from "@packages/db";
 import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
+import { DEPT_TO_ALIAS, type DeptCode, getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
   instructorSchema,
@@ -40,7 +40,11 @@ function toQuery(query: string, resultType?: "instructor" | "course") {
     .join(" ");
 
   if (resultType && resultType === "course")
-    normalizedQuery = normalizedQuery.replaceAll("ics", "i&csci");
+    for (const code in DEPT_TO_ALIAS)
+      normalizedQuery = normalizedQuery.replaceAll(
+        `${DEPT_TO_ALIAS[code as DeptCode].toLowerCase()} `,
+        `${code.toLowerCase()} `,
+      );
 
   const tsQuery = sql`WEBSEARCH_TO_TSQUERY('english', ${normalizedQuery})`;
   return sql`CASE WHEN NUMNODE(${tsQuery}) > 0 THEN TO_TSQUERY('english', ${tsQuery}::TEXT || ':*') ELSE '' END`;
