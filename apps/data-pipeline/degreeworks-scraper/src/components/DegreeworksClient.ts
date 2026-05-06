@@ -1,11 +1,4 @@
-import type {
-  Block,
-  DWAuditResponse,
-  DWMappingResponse,
-  RuleBase,
-  RuleBlock,
-  UndergraduateRequirements,
-} from "$types";
+import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
 import fetch from "cross-fetch";
 
 export class DegreeworksClient {
@@ -144,9 +137,6 @@ export class DegreeworksClient {
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
     const firstRule = major?.ruleArray[0];
-    const isOtherBlock =
-      firstRule?.ruleType === "Block" &&
-      (firstRule as RuleBase & RuleBlock).requirement.type === "OTHER";
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
