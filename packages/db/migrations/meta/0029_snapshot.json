@@ -1,5 +1,5 @@
 {
-  "id": "458bc68f-112b-47ea-b6b7-817af426cd2a",
+  "id": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -313,10 +313,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "bigint",
           "primaryKey": true,
           "notNull": true,
-          "default": "gen_random_uuid()"
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
         },
         "name": {
           "name": "name",
@@ -329,28 +332,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "requirements_hash": {
-          "name": "requirements_hash",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false,
-          "generated": {
-            "as": "jsonb_hash_extended(requirements, 0)",
-            "type": "stored"
-          }
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "college_requirement_requirements_hash_unique": {
-          "name": "college_requirement_requirements_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["requirements_hash"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -976,43 +963,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.dining_meal_period_type": {
-      "name": "dining_meal_period_type",
-      "schema": "",
-      "columns": {
-        "adobe_id": {
-          "name": "adobe_id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.dining_nutrition_info": {
       "name": "dining_nutrition_info",
       "schema": "",
@@ -1155,8 +1105,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "meal_period_type_id": {
-          "name": "meal_period_type_id",
+        "adobe_id": {
+          "name": "adobe_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1185,6 +1135,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp with time zone",
@@ -1193,11 +1149,11 @@
         }
       },
       "indexes": {
-        "dining_period_meal_period_type_id_date_restaurant_id_index": {
-          "name": "dining_period_meal_period_type_id_date_restaurant_id_index",
+        "dining_period_adobe_id_date_restaurant_id_index": {
+          "name": "dining_period_adobe_id_date_restaurant_id_index",
           "columns": [
             {
-              "expression": "meal_period_type_id",
+              "expression": "adobe_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1252,15 +1208,6 @@
         }
       },
       "foreignKeys": {
-        "dining_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk": {
-          "name": "dining_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk",
-          "tableFrom": "dining_period",
-          "tableTo": "dining_meal_period_type",
-          "columnsFrom": ["meal_period_type_id"],
-          "columnsTo": ["adobe_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "dining_period_restaurant_id_dining_restaurant_id_fk": {
           "name": "dining_period_restaurant_id_dining_restaurant_id_fk",
           "tableFrom": "dining_period",
@@ -1297,254 +1244,6 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.dining_schedule": {
-      "name": "dining_schedule",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "restaurant_id": {
-          "name": "restaurant_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "upstream_id": {
-          "name": "upstream_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "dining_schedule_restaurant_id_upstream_id_index": {
-          "name": "dining_schedule_restaurant_id_upstream_id_index",
-          "columns": [
-            {
-              "expression": "restaurant_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "upstream_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "dining_schedule_restaurant_id_index": {
-          "name": "dining_schedule_restaurant_id_index",
-          "columns": [
-            {
-              "expression": "restaurant_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "dining_schedule_restaurant_id_dining_restaurant_id_fk": {
-          "name": "dining_schedule_restaurant_id_dining_restaurant_id_fk",
-          "tableFrom": "dining_schedule",
-          "tableTo": "dining_restaurant",
-          "columnsFrom": ["restaurant_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.dining_schedule_meal_period": {
-      "name": "dining_schedule_meal_period",
-      "schema": "",
-      "columns": {
-        "schedule_id": {
-          "name": "schedule_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "meal_period_type_id": {
-          "name": "meal_period_type_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sun_open": {
-          "name": "sun_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sun_close": {
-          "name": "sun_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mon_open": {
-          "name": "mon_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mon_close": {
-          "name": "mon_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tue_open": {
-          "name": "tue_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tue_close": {
-          "name": "tue_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wed_open": {
-          "name": "wed_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wed_close": {
-          "name": "wed_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "thu_open": {
-          "name": "thu_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "thu_close": {
-          "name": "thu_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fri_open": {
-          "name": "fri_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fri_close": {
-          "name": "fri_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sat_open": {
-          "name": "sat_open",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sat_close": {
-          "name": "sat_close",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "dining_schedule_meal_period_schedule_id_dining_schedule_id_fk": {
-          "name": "dining_schedule_meal_period_schedule_id_dining_schedule_id_fk",
-          "tableFrom": "dining_schedule_meal_period",
-          "tableTo": "dining_schedule",
-          "columnsFrom": ["schedule_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "dining_schedule_meal_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk": {
-          "name": "dining_schedule_meal_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk",
-          "tableFrom": "dining_schedule_meal_period",
-          "tableTo": "dining_meal_period_type",
-          "columnsFrom": ["meal_period_type_id"],
-          "columnsTo": ["adobe_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "dining_schedule_meal_period_pk": {
-          "name": "dining_schedule_meal_period_pk",
-          "columns": ["schedule_id", "meal_period_type_id"]
-        }
-      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -2103,17 +1802,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "college_requirement": {
-          "name": "college_requirement",
-          "type": "uuid",
+        "college_requirement_id": {
+          "name": "college_requirement_id",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {
@@ -2132,11 +1825,11 @@
           "method": "btree",
           "with": {}
         },
-        "major_college_requirement_index": {
-          "name": "major_college_requirement_index",
+        "major_college_requirement_id_index": {
+          "name": "major_college_requirement_id_index",
           "columns": [
             {
-              "expression": "college_requirement",
+              "expression": "college_requirement_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2158,11 +1851,11 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "major_college_requirement_college_requirement_id_fk": {
-          "name": "major_college_requirement_college_requirement_id_fk",
+        "major_college_requirement_id_college_requirement_id_fk": {
+          "name": "major_college_requirement_id_college_requirement_id_fk",
           "tableFrom": "major",
           "tableTo": "college_requirement",
-          "columnsFrom": ["college_requirement"],
+          "columnsFrom": ["college_requirement_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2170,6 +1863,100 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.major_requirement": {
+      "name": "major_requirement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.major_specialization_to_requirement": {
+      "name": "major_specialization_to_requirement",
+      "schema": "",
+      "columns": {
+        "major_id": {
+          "name": "major_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "specialization_id": {
+          "name": "specialization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requirement_id": {
+          "name": "requirement_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "major_specialization_to_requirement_major_id_major_id_fk": {
+          "name": "major_specialization_to_requirement_major_id_major_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "major",
+          "columnsFrom": ["major_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "major_specialization_to_requirement_specialization_id_specialization_id_fk": {
+          "name": "major_specialization_to_requirement_specialization_id_specialization_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "specialization",
+          "columnsFrom": ["specialization_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "major_specialization_to_requirement_requirement_id_major_requirement_id_fk": {
+          "name": "major_specialization_to_requirement_requirement_id_major_requirement_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "major_requirement",
+          "columnsFrom": ["requirement_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "major_specialization_to_requirement_major_id_specialization_id_unique": {
+          "name": "major_specialization_to_requirement_major_id_specialization_id_unique",
+          "nullsNotDistinct": true,
+          "columns": ["major_id", "specialization_id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
