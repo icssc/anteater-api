@@ -84,9 +84,9 @@ type Restaurant @cacheControl(maxAge: 3600) {
 }
 
 type Period @cacheControl(maxAge: 3600) {
-  id: String! 
-  name: String! 
-  startTime: String! 
+  id: String!
+  name: String!
+  startTime: String!
   endTime: String!
   stations: JSON!
   updatedAt: String!
@@ -95,7 +95,40 @@ type Period @cacheControl(maxAge: 3600) {
 type RestaurantToday @cacheControl(maxAge: 3600) {
   id: RestaurantId
   updatedAt: String
-  periods: [Period!]! 
+  periods: [Period!]!
+}
+
+type DayHours @cacheControl(maxAge: 3600) {
+  open: String
+  close: String
+}
+
+type ScheduleDayHours @cacheControl(maxAge: 3600) {
+  sunday: DayHours!
+  monday: DayHours!
+  tuesday: DayHours!
+  wednesday: DayHours!
+  thursday: DayHours!
+  friday: DayHours!
+  saturday: DayHours!
+}
+
+type ScheduleMealPeriod @cacheControl(maxAge: 3600) {
+  adobeId: Int!
+  name: String!
+  position: Int!
+  hours: ScheduleDayHours!
+}
+
+type Schedule @cacheControl(maxAge: 3600) {
+  upstreamId: String!
+  restaurantId: RestaurantId!
+  name: String!
+  type: String!
+  startDate: String
+  endDate: String
+  mealPeriods: [ScheduleMealPeriod!]!
+  updatedAt: String!
 }
 
 input DiningEventsQuery {
@@ -111,6 +144,11 @@ input RestaurantTodayQuery {
   date: String!
 }
 
+input SchedulesQuery {
+  restaurantId: RestaurantId
+  includeHistorical: Boolean
+}
+
 extend type Query {
   diningEvents(query: DiningEventsQuery): [DiningEvent!]!
   diningDish(id: String!): DiningDish!
@@ -118,5 +156,6 @@ extend type Query {
   diningDateRange: DiningDateRange!
   getRestaurants(query: RestaurantsQuery): [Restaurant!]!
   getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday!
+  getDiningSchedules(query: SchedulesQuery): [Schedule!]!
 }
 `;
