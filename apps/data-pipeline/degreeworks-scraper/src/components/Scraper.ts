@@ -176,7 +176,11 @@ export class Scraper {
               audit?.college,
             )
           : undefined,
-        await this.ap.parseBlock(`${schoolCode}-MAJOR-${majorCode}-${degreeCode}`, majorAudit),
+        await this.ap.parseBlock(
+          `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
+          majorAudit,
+          audit.otherBlock,
+        ),
       ]);
 
       console.log(

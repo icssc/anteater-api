@@ -114,7 +114,8 @@ export class DegreeworksClient {
   ): Promise<
     | {
         college?: Block;
-        major?: Block & { otherBlock?: Block };
+        major?: Block;
+        otherBlock?: Block;
       }
     | undefined
   > {
@@ -150,14 +151,10 @@ export class DegreeworksClient {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
       ),
-      major: (isOtherBlock
-        ? {
-            ...major,
-            otherBlock: json.blockArray.find(
-              (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
-            ),
-          }
-        : major) as (Block & { otherBlock?: Block }) | undefined,
+      major: major,
+      otherBlock: json.blockArray.find(
+        (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
+      ),
     };
   }
 
