@@ -32,7 +32,7 @@ const eventsRoute = createRoute({
   path: "/events",
   request: { query: diningEventsQuerySchema },
   description:
-    "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with null end time are served for 2 weeks after their removal from the underlying data source,",
+    "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with null end time are served for 2 weeks after their removal from the underlying data source. Use startDate and/or endDate to include past events.",
   responses: {
     200: response200(diningEventsResponseSchema),
     422: response422(),
@@ -123,7 +123,7 @@ const restaurantTodayRoute = createRoute({
 diningRouter.openapi(eventsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new DiningService(database(c.env.DB.connectionString));
-  const events = await service.getUpcomingEvents(query);
+  const events = await service.getEvents(query);
 
   return c.json({ ok: true, data: diningEventsResponseSchema.parse(events) }, 200);
 });

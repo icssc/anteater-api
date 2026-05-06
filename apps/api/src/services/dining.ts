@@ -1,5 +1,17 @@
 import type { database } from "@packages/db";
-import { and, eq, gte, inArray, isNull, max, min, or, type SQL, sql } from "@packages/db/drizzle";
+import {
+  and,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  max,
+  min,
+  or,
+  type SQL,
+  sql,
+} from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -28,14 +40,25 @@ type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getUpcomingEvents(input: DiningEventQuery) {
-    // only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
-    const conds = [
-      or(
-        gte(diningEvent.end, sql`NOW()`),
-        and(isNull(diningEvent.end), gte(diningEvent.updatedAt, sql`NOW() - INTERVAL '2 WEEKS'`)),
-      ),
-    ];
+  async getEvents(input: DiningEventQuery) {
+    const conds = [];
+
+    if (input.startDate || input.endDate) {
+      if (input.startDate) {
+        conds.push(gte(diningEvent.start, sql`${input.startDate}::timestamp`));
+      }
+      if (input.endDate) {
+        conds.push(lt(diningEvent.start, sql`${input.endDate}::date + INTERVAL '1 day'`));
+      }
+    } else {
+      // default: // only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
+      conds.push(
+        or(
+          gte(diningEvent.end, sql`NOW()`),
+          and(isNull(diningEvent.end), gte(diningEvent.updatedAt, sql`NOW() - INTERVAL '2 WEEKS'`)),
+        ),
+      );
+    }
 
     if (input.restaurantId) {
       conds.push(eq(diningEvent.restaurantId, input.restaurantId));

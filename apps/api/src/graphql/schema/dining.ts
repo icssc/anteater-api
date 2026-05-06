@@ -100,6 +100,8 @@ type RestaurantToday @cacheControl(maxAge: 3600) {
 
 input DiningEventsQuery {
   restaurantId: RestaurantId
+  startDate: String
+  endDate: String
 }
 
 input RestaurantsQuery {
