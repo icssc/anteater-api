@@ -1,5 +1,5 @@
 {
-  "id": "4520e42b-bee8-43d5-bcc9-ed37c8a01f23",
+  "id": "b8afad82-0738-4346-829e-69d62b3c2b65",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -615,37 +615,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
-        },
-        "year": {
-          "name": "year",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quarter": {
-          "name": "quarter",
-          "type": "material_term",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "department": {
-          "name": "department",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "course_number": {
-          "name": "course_number",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "instructor": {
-          "name": "instructor",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
         },
         "isbn": {
           "name": "isbn",

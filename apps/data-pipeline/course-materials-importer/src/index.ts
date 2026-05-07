@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
 import { and, eq, getTableColumns, or } from "@packages/db/drizzle";
-import type { MaterialTerm, Term } from "@packages/db/schema";
+import type { Term } from "@packages/db/schema";
 import { courseMaterial, websocSection } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
@@ -85,11 +85,11 @@ async function main() {
 
     values.push({
       sectionId: section.id,
-      year,
-      quarter: quarter as MaterialTerm,
-      department: dept,
-      courseNumber: courseNum,
-      instructor: getFromMapOrThrow(entry, "Instructor"),
+      // year,
+      // quarter: quarter as MaterialTerm,
+      // department: dept,
+      // courseNumber: courseNum,
+      // instructor: getFromMapOrThrow(entry, "Instructor"),
       title: getFromMapOrThrow(entry, "Title"),
       author: entry.get("Author"),
       edition: entry.get("Edition"),
