@@ -76,7 +76,8 @@ const courseConstraintsSchema = z
   .optional()
   .openapi({
     description:
-      "A map from course ID to the boolean expression tree of constraints for that course.",
+      "A map from course ID to the boolean expression tree of constraints for that course. " +
+      "If this field is omitted, or a course is missing from this map, no additional constraints apply.",
   });
 
 export const programRequirementBaseSchema = z.object({
