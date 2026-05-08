@@ -883,11 +883,6 @@ export const libraryTrafficHistory = pgTable(
 export const courseMaterial = pgTable("course_material", {
   id: uuid("id").primaryKey().defaultRandom(),
   sectionId: uuid("section_id").references(() => websocSection.id),
-  // year: varchar("year").notNull(),
-  // quarter: materialTerm("quarter").notNull(),
-  // department: varchar("department").notNull(),
-  // courseNumber: varchar("course_number").notNull(),
-  // instructor: varchar("instructor").notNull(),
   isbn: varchar("isbn"),
   author: varchar("author"),
   title: varchar("title").notNull(),
