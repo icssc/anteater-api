@@ -7,12 +7,9 @@ import { courseMaterial, websocSection } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
 
-// The directory from which to read course materials spreadsheets.
 const INPUT_DIR = "./input";
 
-// All fields that are required to be present in the given data (other fields are optional).
-// May need to be updated from time to time as the format changes.
-const REQUIRED_FIELDS = ["Term", "Dept", "Course", "Instructor", "Title", "Format"] as const;
+const REQUIRED_FIELDS = ["Term", "Dept/Course", "Title", "Format"] as const;
 
 const MAX_PARAMS_PER_INSERT = 65534;
 
@@ -85,11 +82,6 @@ async function main() {
 
     values.push({
       sectionId: section.id,
-      // year,
-      // quarter: quarter as MaterialTerm,
-      // department: dept,
-      // courseNumber: courseNum,
-      // instructor: getFromMapOrThrow(entry, "Instructor"),
       title: getFromMapOrThrow(entry, "Title"),
       author: entry.get("Author"),
       edition: entry.get("Edition"),
