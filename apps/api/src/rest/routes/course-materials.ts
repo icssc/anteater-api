@@ -18,7 +18,7 @@ const filterCourseMaterialsRoute = createRoute({
   operationId: "filterCourseMaterials",
   tags: ["Course Materials"],
   method: "get",
-  path: "/filter",
+  path: "/",
   request: { query: courseMaterialsQuerySchema },
   description: "Retrieves course materials data for the given parameters.",
   responses: {
