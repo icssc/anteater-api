@@ -92,40 +92,4 @@ export class CourseMaterialsService {
       .values()
       .toArray();
   }
-
-  async getCourseMaterialOptions(input: CourseMaterialsServiceInput) {
-    const res = await this.db
-      .select({
-        year: courseMaterial.year,
-        department: courseMaterial.department,
-        instructor: courseMaterial.instructor,
-        format: courseMaterial.format,
-      })
-      .from(courseMaterial)
-      .where(buildQuery(input))
-      .then((rows) =>
-        rows.reduce(
-          (acc, row) => {
-            acc.years.add(row.year);
-            acc.departments.add(row.department);
-            acc.instructors.add(row.instructor);
-            acc.formats.add(row.format);
-            return acc;
-          },
-          {
-            years: new Set<string>(),
-            departments: new Set<string>(),
-            instructors: new Set<string>(),
-            formats: new Set<string>(),
-          },
-        ),
-      );
-
-    return {
-      years: Array.from(res.years),
-      departments: Array.from(res.departments),
-      instructors: Array.from(res.instructors),
-      formats: Array.from(res.formats),
-    };
-  }
 }
