@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, ilike } from "@packages/db/drizzle";
+import { and, eq, ilike, inArray } from "@packages/db/drizzle";
 import {
   courseMaterial,
   websocCourse,
@@ -17,7 +17,11 @@ function buildQuery(input: CourseMaterialsServiceInput) {
     conditions.push(eq(websocCourse.year, input.year));
   }
   if (input.quarter) {
-    conditions.push(eq(websocCourse.quarter, input.quarter));
+    if (input.quarter === "Summer") {
+      conditions.push(inArray(websocCourse.quarter, ["Summer1", "Summer2", "Summer10wk"] as any[]));
+    } else {
+      conditions.push(eq(websocCourse.quarter, input.quarter as any));
+    }
   }
   if (input.instructor) {
     conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
@@ -81,9 +85,11 @@ export class CourseMaterialsService {
 
     return rows
       .reduce((acc, row) => {
-        if (!acc.has(row.materialId)) {
+        if (row && row.materialId && !acc.has(row.materialId)) {
+          const displayQuarter = row.quarter.startsWith("Summer") ? "Summer" : row.quarter;
           acc.set(row.materialId, {
             ...row,
+            quarter: displayQuarter as any,
             sectionCode: row.sectionCode ? row.sectionCode.toString(10).padStart(5, "0") : "00000",
           });
         }
