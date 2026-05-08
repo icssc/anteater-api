@@ -2,12 +2,26 @@ import type { ColumnBaseConfig, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import type { terms } from "./schema";
 
 export const isTrue = <T extends ColumnBaseConfig<"boolean", string>>(col: PgColumn<T>): SQL =>
   eq(col, true);
 
 export const isFalse = <T extends ColumnBaseConfig<"boolean", string>>(col: PgColumn<T>): SQL =>
   eq(col, false);
+
+export function websocTermSortOrder(
+  col: PgColumn<ColumnBaseConfig<"string", "PgEnumColumn"> & { enumValues: typeof terms }> | string,
+) {
+  return sql`CASE ${col} 
+  WHEN 'Fall' THEN 5
+  WHEN 'Summer2' THEN 4
+  WHEN 'Summer10wk' THEN 3
+  WHEN 'Summer1' THEN 2
+  WHEN 'Spring' THEN 1
+  WHEN 'Winter' THEN 0
+  END`;
+}
 
 /**
  * Shim from https://github.com/drizzle-team/drizzle-orm/issues/1728#issuecomment-1998494043 for upserts that overwrite the existing data.
@@ -23,15 +37,6 @@ export const isFalse = <T extends ColumnBaseConfig<"boolean", string>>(col: PgCo
  *   });
  * ```
  */
-
-export const websocTermSortOrder = (col: PgColumn | string) => sql`CASE ${col} 
-  WHEN 'Fall' THEN 5
-  WHEN 'Summer2' THEN 4
-  WHEN 'Summer10wk' THEN 3
-  WHEN 'Summer1' THEN 2
-  WHEN 'Spring' THEN 1
-  WHEN 'Winter' THEN 0
-  END`;
 
 export function conflictUpdateSetAllCols<T extends PgTable>(table: T): PgUpdateSetSource<T> {
   const columns = getTableColumns(table);
