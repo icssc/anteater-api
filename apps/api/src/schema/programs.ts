@@ -31,6 +31,11 @@ export const majorRequirementsQuerySchema = z.object({
     description: "A major ID to query requirements for",
     example: "BS-201",
   }),
+  specializationId: programIdBase.optional().openapi({
+    description:
+      "if provided, fetch major requirements given this specialization; providing no specialization when one is required has unspecified behavior",
+    example: "BS-201A",
+  }),
 });
 
 export const minorRequirementsQuerySchema = z.object({
@@ -230,8 +235,7 @@ export const majorsResponseSchema = z.array(
       description: "Whether a specialization must be completed to complete this degree",
     }),
     specializations: z.array(z.string()).openapi({
-      description:
-        "The ID(s) of specialization(s) associated with this major; if any are present, one is mandatory for this major.",
+      description: "The ID(s) of specialization(s) associated with this major",
       example: [
         "BS-201A",
         "BS-201B",

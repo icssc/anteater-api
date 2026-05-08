@@ -108,6 +108,11 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
+input MajorRequirementsQuery {
+    programId: String!
+    specializationId: String
+}
+
 input ProgramRequirementsQuery {
     programId: String!
 }
@@ -132,7 +137,7 @@ extend type Query {
     majors(query: MajorsQuery): [MajorPreview!]!
     minors(query: MinorsQuery): [MinorPreview!]!
     specializations(query: SpecializationsQuery): [SpecializationPreview!]!
-    major(query: ProgramRequirementsQuery!): Major!
+    major(query: MajorRequirementsQuery!): Major!
     minor(query: ProgramRequirementsQuery!): Minor!
     specialization(query: ProgramRequirementsQuery!): Specialization!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!

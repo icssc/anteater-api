@@ -20,7 +20,9 @@ export class StudyRoomsService {
         description: studyRoom.description,
         directions: studyRoom.directions,
         techEnhanced: studyRoom.techEnhanced,
-        url: sql`COALESCE(${studyRoom.url}, 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id})`,
+        url: sql`COALESCE(${studyRoom.url}, CASE 
+          WHEN ${studyRoom.location} = 'Anteater Learning Pavilion' THEN 'https://scheduler.oit.uci.edu/space/'
+          ELSE 'https://spaces.lib.uci.edu/space/' END || ${studyRoom.id})`,
         slots:
           sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
             ELSE JSONB_BUILD_OBJECT(
@@ -29,7 +31,13 @@ export class StudyRoomsService {
               'end', TO_CHAR((${studyRoomSlot.end} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"+00:00"'),
               'url', CASE
                 WHEN ${studyRoom.url} IS NOT NULL THEN ${studyRoom.url}
-                ELSE 'https://spaces.lib.uci.edu/space/' || ${studyRoom.id} || '?date=' || TO_CHAR((${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') || '#submit_times'
+                ELSE CASE
+                  WHEN ${studyRoom.location} = 'Anteater Learning Pavilion' THEN 'https://scheduler.oit.uci.edu/space/'
+                  ELSE 'https://spaces.lib.uci.edu/space/' END
+                || ${studyRoom.id}
+                || '?date='
+                || TO_CHAR((${studyRoomSlot.start} AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+                || '#submit_times'
               END,
               'isAvailable', ${studyRoomSlot.isAvailable}
             )
