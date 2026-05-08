@@ -133,17 +133,17 @@ export type MajorProgram = {
  * constraint codes we've found in withArray constraints
  * We use a runtime value so zod schema can consume it
  */
-export const WithConstraintCode = {
-  DWCREDIT: "DWCREDIT",
-  DWCREDITS: "DWCREDITS",
-  DWTERM: "DWTERM",
-  DWLOCATION: "DWLOCATION",
-  DWTITLE: "DWTITLE",
-  DWGRADETYPE: "DWGRADETYPE",
-  DWPASSFAIL: "DWPASSFAIL",
-} as const;
+export const WithConstraintCode = [
+  "DWCREDIT",
+  "DWCREDITS",
+  "DWTERM",
+  "DWLOCATION",
+  "DWTITLE",
+  "DWGRADETYPE",
+  "DWPASSFAIL",
+] as const;
 
-export type WithConstraintCode = keyof typeof WithConstraintCode;
+export type WithConstraintCode = (typeof WithConstraintCode)[number];
 
 /**
  * Boolean expression tree for per-course constraints (withArray clauses)
