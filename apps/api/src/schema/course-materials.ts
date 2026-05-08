@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { materialRequirements, materialTerms, textbookFormats } from "@packages/db/schema";
-import { isBaseTenInt } from "@packages/stdlib";
 import { yearSchema } from "./lib";
-import type { ParsedNumber, ParsedString } from "./websoc.ts";
 
 export const courseMaterialsQuerySchema = z.object({
   year: yearSchema.optional(),
@@ -15,50 +13,15 @@ export const courseMaterialsQuerySchema = z.object({
     description: "Only include materials from courses exactly matching the specified course number",
     example: "45C",
   }),
-  sectionCodes: z
+  sectionCode: z
     .string()
+    .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
     .optional()
-    .transform((codes, ctx) => {
-      if (!codes) return undefined;
-      const parsedNums: Exclude<ParsedNumber, ParsedString>[] = [];
-      for (const code of codes.split(",").map((code) => code.trim())) {
-        if (code.includes("-")) {
-          const [lower, upper] = code.split("-");
-          if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
-            ctx.issues.push({
-              input: code,
-              code: "custom",
-              error: `'${code}' is not a valid section code range. A valid section code range consists of valid section codes, which are base-10 integers.`,
-            });
-            return z.NEVER;
-          }
-          parsedNums.push({
-            _type: "ParsedRange",
-            min: Number.parseInt(lower, 10),
-            max: Number.parseInt(upper, 10),
-          });
-          continue;
-        }
-        if (!isBaseTenInt(code)) {
-          ctx.issues.push({
-            input: code,
-            code: "custom",
-            error: `'${code}' is not a valid section code. A valid section code is a base-10 integer.`,
-          });
-          return z.NEVER;
-        }
-        parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
-      }
-      return parsedNums;
-    })
-    .openapi({
-      description: "A comma-separated list of section codes or section code ranges",
-      example: "36210,36216-36218",
-    }),
-  instructorName: z.string().optional().openapi({
+    .openapi({ description: "The 5-digit section code", example: "35630" }),
+  instructor: z.string().optional().openapi({
     description:
-      "Only include materials from courses taught by the specified instructor (case-insensitive, last name only)",
-    example: "DILLENCOURT",
+      "Only include materials from courses taught by the specified instructor (case-insensitive)",
+    example: "DILLENCOURT, M.B.",
   }),
   author: z.string().optional().openapi({
     description:
@@ -77,15 +40,17 @@ export const courseMaterialsQuerySchema = z.object({
 export const courseMaterialsSchema = z.object({
   year: z.string(),
   quarter: z.enum(materialTerms),
+  sectionCode: z.string(),
   department: z.string(),
   courseNumber: z.string(),
-  instructor: z.string(),
-  isbn: z.string().nullable(),
+  courseNumeric: z.number(),
+  instructors: z.string().array(),
   author: z.string().nullable(),
   title: z.string(),
   edition: z.string().nullable(),
   format: z.enum(textbookFormats),
   requirement: z.enum(materialRequirements).nullable(),
+  isbn: z.string().nullable(),
   mmsId: z.string().nullable(),
   link: z.string().nullable(),
 });
