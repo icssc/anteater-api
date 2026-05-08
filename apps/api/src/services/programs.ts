@@ -1,10 +1,12 @@
 import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
+import { and, eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   collegeRequirement,
   degree,
   major,
+  majorRequirement,
+  majorSpecializationToRequirement,
   minor,
   sampleProgramVariation,
   schoolRequirement,
@@ -102,32 +104,48 @@ export class ProgramsService {
         programType: "specialization";
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
+    if (programType === "major") {
+      const [got] = await this.db
+        .select({
+          id: major.id,
+          name: major.name,
+          requirements: majorRequirement.requirements,
+          schoolRequirements: {
+            name: collegeRequirement.name,
+            requirements: collegeRequirement.requirements,
+          },
+        })
+        .from(major)
+        .where(
+          and(
+            eq(major.id, query.programId),
+            query.specializationId
+              ? eq(majorSpecializationToRequirement.specializationId, query.specializationId)
+              : undefined,
+          ),
+        )
+        .leftJoin(collegeRequirement, eq(major.collegeRequirementId, collegeRequirement.id))
+        .leftJoin(
+          majorSpecializationToRequirement,
+          eq(major.id, majorSpecializationToRequirement.majorId),
+        )
+        .leftJoin(
+          majorRequirement,
+          eq(majorSpecializationToRequirement.requirementId, majorRequirement.id),
+        )
+        .limit(1);
+      return orNull(got);
+    }
+
     const table = {
-      major,
       minor,
       specialization,
     }[programType];
-
-    const [got] = await (programType !== "major"
-      ? this.db
-          .select({ id: table.id, name: table.name, requirements: table.requirements })
-          .from(table)
-      : this.db
-          .select({
-            id: major.id,
-            name: major.name,
-            requirements: major.requirements,
-            schoolRequirements: {
-              name: collegeRequirement.name,
-              requirements: collegeRequirement.requirements,
-            },
-          })
-          .from(major)
-          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-    )
+    const [got] = await this.db
+      .select({ id: table.id, name: table.name, requirements: table.requirements })
+      .from(table)
       .where(eq(table.id, query.programId))
       .limit(1);
-
     return orNull(got);
   }
 
