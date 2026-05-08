@@ -1,5 +1,6 @@
-import type { AccessControlledResource } from "@packages/key-types";
+import type { AccessControlledResource, KeyData } from "@packages/key-types";
 import { createMiddleware } from "hono/factory";
+import { HTTPException } from "hono/http-exception";
 
 /**
  * Middleware for restricting access to certain routes.
@@ -9,7 +10,6 @@ import { createMiddleware } from "hono/factory";
  */
 export const accessController = (resource: AccessControlledResource) =>
   createMiddleware<{ Bindings: Env }>(async (c, next) => {
-    /*
     const header = c.req.header("authorization");
     if (!header) {
       throw new HTTPException(401, { message: "An API key is required to access this resource" });
@@ -22,6 +22,5 @@ export const accessController = (resource: AccessControlledResource) =>
         message: "The specified API key is not permitted to access this resource",
       });
     }
-      */
     await next();
   });
