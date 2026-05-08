@@ -42,7 +42,7 @@ function toQuery(query: string, resultType?: "instructor" | "course") {
   if (resultType && resultType === "course")
     for (const code in DEPT_TO_ALIAS)
       normalizedQuery = normalizedQuery.replaceAll(
-        `${DEPT_TO_ALIAS[code as DeptCode].toLowerCase()} `,
+        new RegExp(`(^|s)${DEPT_TO_ALIAS[code as DeptCode].toLowerCase()}`, "gi"),
         `${code.toLowerCase()} `,
       );
 
