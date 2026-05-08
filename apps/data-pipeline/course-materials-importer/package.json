@@ -2,7 +2,7 @@
   "name": "@apps/course-materials-importer",
   "version": "0.0.0",
   "private": true,
-  "description": "Script for importing grades statistics from the Public Records Office",
+  "description": "Script for importing course materials data from UCI Libraries",
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
