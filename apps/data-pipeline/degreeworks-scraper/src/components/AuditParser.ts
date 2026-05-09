@@ -2,20 +2,13 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
-  CourseConstraintTree,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
+  Term,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 import type { Block, Rule, WithClause } from "$types";
-import {
-  andTrees,
-  classifyTree,
-  invertWithArrayToTree,
-  orTrees,
-  withArrayToTree,
-} from "./WithArrayUtils";
 
 export class AuditParser {
   // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
@@ -139,6 +132,64 @@ export class AuditParser {
     return requirementId;
   }
 
+  static parseDWTerm(raw: string) {
+    const [yearStr, termStr] = raw.split(" ");
+    const year = Number.parseInt(yearStr, 10);
+    const mapping = {
+      FALL: "Fall",
+      WINTER: "Winter",
+      SPRING: "Spring",
+      SUMMER1: "Summer1",
+      SUMMER10WK: "Summer10wk",
+      SUMMER2: "Summer2",
+    } as const;
+    const term = mapping[termStr as keyof typeof mapping];
+    return { year, term };
+  }
+
+  static termToOrdinal(year: number, term: Term): number {
+    const termOrder: Record<Term, number> = {
+      Winter: 0,
+      Spring: 1,
+      Summer1: 2,
+      Summer10wk: 3,
+      Summer2: 4,
+      Fall: 5,
+    };
+    return year * 10 + termOrder[term];
+  }
+
+  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
+    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
+    return {
+      min: AuditParser.termToOrdinal(startYear, "Fall"),
+      max: AuditParser.termToOrdinal(endYear, "Summer2"),
+    };
+  }
+
+  static canSchoolYearSatisfyDWTerm(
+    operator: WithClause["operator"],
+    dwtermOrdinal: number,
+    schoolYearMin: number,
+    schoolYearMax: number,
+  ): boolean {
+    switch (operator) {
+      case "=":
+        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
+      case "<":
+        return schoolYearMin < dwtermOrdinal;
+      case "<=":
+        return schoolYearMin <= dwtermOrdinal;
+      case ">":
+        return schoolYearMax > dwtermOrdinal;
+      case ">=":
+        return schoolYearMax >= dwtermOrdinal;
+      case "<>":
+        return !(dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax);
+    }
+  }
+
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -147,6 +198,93 @@ export class AuditParser {
    */
   private static suppressLabelPolymorphism(label: string) {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
+  }
+
+  parseUnitRestrictionOperator(
+    operatorLike: string,
+  ): (minUnit: number, maxUnit: number, valueList: string[]) => boolean {
+    // for > and >= operations, we use a loose interpretation for variable unit courses
+    // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
+    // be taken for 3 or 4 units and meet the withClause requirement
+    // for < and <= which appear to be only in exception lists, we use a strict interpretation
+    // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
+    // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
+    switch (operatorLike) {
+      case "<":
+        return (_minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
+      case "<=":
+        return (_minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
+      case "=":
+        return (minUnit, maxUnit, valueList) =>
+          minUnit <= Number.parseInt(valueList[0], 10) &&
+          Number.parseInt(valueList[0], 10) <= maxUnit;
+      case ">":
+        return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
+      case ">=":
+        return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
+      default:
+        return () => false;
+    }
+  }
+
+  private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
+    switch (withClause.code) {
+      case "DWCREDIT":
+      case "DWCREDITS":
+        return this.parseUnitRestrictionOperator(withClause.operator)(
+          Number.parseInt(c.minUnits, 10),
+          Number.parseInt(c.maxUnits, 10),
+          withClause.valueList,
+        );
+      case "DWTERM": {
+        const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
+          this.catalogYear,
+        );
+        // valueList contains specific term(s) from the DWTERM constraint
+        // Courses pass this filter only if at least one term in the current
+        // catalog year satisfies a DWTERM predicate
+        return withClause.valueList.some((dwtermRaw) => {
+          const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
+          const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
+          return AuditParser.canSchoolYearSatisfyDWTerm(
+            withClause.operator,
+            dwtermOrdinal,
+            schoolYearMin,
+            schoolYearMax,
+          );
+        });
+      }
+      // There may be more withArray Codes that can be applied here to filter out courses
+      // see https://github.com/icssc/anteater-api/pull/286
+      default:
+        return true;
+    }
+  }
+
+  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
+    if (withArray.length === 0) return structuredClone(classes);
+
+    // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
+    const orGroups: WithClause[][] = [];
+    let currentGroup: WithClause[] = [];
+
+    for (const withClause of withArray) {
+      if (withClause.connector === "OR") {
+        if (currentGroup.length > 0) {
+          orGroups.push(currentGroup);
+        }
+        currentGroup = [withClause];
+      } else {
+        currentGroup.push(withClause);
+      }
+    }
+    if (currentGroup.length > 0) {
+      orGroups.push(currentGroup);
+    }
+
+    return structuredClone(classes).filter((c) =>
+      orGroups.some((group) => group.every((clause) => this.classMatchesWithClause(c, clause))),
+    );
   }
 
   async checkSpecializationIsRequired(ruleArray: Rule[]) {
@@ -182,19 +320,6 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
-          const includeTreesById = new Map<string, CourseConstraintTree[]>();
-          const excludeInvertedTreesById = new Map<string, CourseConstraintTree[]>();
-          const pushTree = (
-            map: Map<string, CourseConstraintTree[]>,
-            id: string,
-            tree: CourseConstraintTree | null,
-          ) => {
-            if (tree === null) return;
-            const trees = map.get(id) ?? [];
-            trees.push(tree);
-            map.set(id, trees);
-          };
-
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
             await Promise.all(
               includedCourses.map(([x, withArray]) =>
@@ -204,19 +329,7 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => {
-                  const tree = withArrayToTree(withArray);
-                  const filtered: (typeof course.$inferSelect)[] = [];
-                  for (const c of classes) {
-                    const match = classifyTree(c, tree, this.catalogYear);
-                    if (match === "never") continue;
-                    filtered.push(c);
-                    if (match === "sometimes") {
-                      pushTree(includeTreesById, c.id, tree);
-                    }
-                  }
-                  return filtered;
-                })
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
                 .map((y) => [y.id, y]),
             ),
           );
@@ -226,36 +339,19 @@ export class AuditParser {
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
             ]) ?? [];
-          const toExclude = new Set<string>();
-          await Promise.all(
-            excludedCourses.map(([x, withArray]) =>
-              this.normalizeCourseId
-                .bind(this)(x)
-                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+          const toExclude = new Set<string>(
+            await Promise.all(
+              excludedCourses.map(([x, withArray]) =>
+                this.normalizeCourseId
+                  .bind(this)(x)
+                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
+              ),
+            ).then((x) =>
+              x
+                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .map((y) => y.id),
             ),
-          ).then((x) => {
-            for (const [classes, withArray] of x) {
-              if (withArray.length === 0) {
-                for (const c of classes) {
-                  toExclude.add(c.id);
-                }
-                continue;
-              }
-
-              const invertedTree = invertWithArrayToTree(withArray);
-              for (const c of classes) {
-                const match = classifyTree(c, invertedTree, this.catalogYear);
-                if (match === "never") {
-                  toExclude.add(c.id);
-                  continue;
-                }
-                if (match === "sometimes" && toInclude.has(c.id)) {
-                  pushTree(excludeInvertedTreesById, c.id, invertedTree);
-                }
-              }
-            }
-          });
-
+          );
           const courses = Array.from(toInclude)
             .filter(([x]) => !toExclude.has(x))
             .sort(([, a], [, b]) =>
@@ -264,21 +360,6 @@ export class AuditParser {
                 : this.lexOrd(a.department, b.department),
             )
             .map(([x]) => x);
-
-          const courseConstraints: Record<string, CourseConstraintTree> = {};
-          for (const id of courses) {
-            const tree = andTrees([
-              orTrees(includeTreesById.get(id) ?? []),
-              ...(excludeInvertedTreesById.get(id) ?? []),
-            ]);
-
-            if (tree !== null) {
-              courseConstraints[id] = tree;
-            }
-          }
-          const optionalCourseConstraints =
-            Object.keys(courseConstraints).length > 0 ? { courseConstraints } : {};
-
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
             const requirementType = "Course";
@@ -290,7 +371,6 @@ export class AuditParser {
               requirementType,
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
-              ...optionalCourseConstraints,
             });
           } else if (rule.requirement.creditsBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -303,7 +383,6 @@ export class AuditParser {
               requirementType,
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
-              ...optionalCourseConstraints,
             });
           }
           break;
