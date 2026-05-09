@@ -1,4 +1,3 @@
-import { WithConstraintCode } from "@packages/db/schema";
 import { z } from "zod";
 import type { Rule } from "$types";
 
@@ -6,7 +5,15 @@ import type { Rule } from "$types";
  * a specification for course range for unit req, etc.
  */
 export const withClauseSchema = z.object({
-  code: z.enum(WithConstraintCode),
+  code: z.enum([
+    "DWCREDITS",
+    "DWCREDIT",
+    "DWLOCATION",
+    "DWTERM",
+    "DWTITLE",
+    "DWGRADETYPE",
+    "DWPASSFAIL",
+  ]),
   connector: z.enum(["", "AND", "OR"]),
   operator: z.enum(["<", "<=", "=", ">", ">=", "<>"]),
   valueList: z.array(z.string()),
