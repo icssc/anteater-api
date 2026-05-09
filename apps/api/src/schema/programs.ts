@@ -68,13 +68,15 @@ const courseConstraintLeafSchema = courseConstraintSchema.extend({
   type: z.literal("leaf"),
 });
 
-const courseConstraintTreeSchema: z.ZodType<CourseConstraintTree> = z.union([
-  courseConstraintLeafSchema,
-  z.object({
-    type: z.enum(["AND", "OR"]),
-    children: z.lazy(() => courseConstraintTreeSchema).array(),
-  }),
-]);
+const courseConstraintTreeSchema: z.ZodType<CourseConstraintTree> = z
+  .union([
+    courseConstraintLeafSchema,
+    z.object({
+      type: z.enum(["AND", "OR"]),
+      children: z.lazy(() => courseConstraintTreeSchema).array(),
+    }),
+  ])
+  .openapi("CourseConstraintTree");
 
 const courseConstraintsSchema = z
   .record(z.string(), courseConstraintTreeSchema)
