@@ -509,9 +509,9 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
           dept.courses.flatMap((course) =>
             course.sections.flatMap((section) => {
               const letterMatch = section.sectionNum.match(/[a-z]+/i);
-              const letter = letterMatch ? letterMatch[0] : "";
+              const sectionGroup = letterMatch ? letterMatch[0] : "";
               const groupedSections = course.sections
-                .filter((section) => section.sectionNum.match(letter))
+                .filter((section) => section.sectionNum.match(sectionGroup))
                 .map((section) => new Set(section.instructors));
 
               return Array.from(intersectAll(groupedSections[0], ...groupedSections.slice(1))).map(
@@ -928,8 +928,7 @@ export async function doScrape(db: ReturnType<typeof database>) {
   const term = termsInDatabase[0];
   if (term?.name) {
     try {
-      //await scrapeTerm(db, nameToTerm(term.name));
-      await scrapeTerm(db, nameToTerm("2026 Fall"));
+      await scrapeTerm(db, nameToTerm(term.name));
     } catch (e) {
       console.error(e);
     }
