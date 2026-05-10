@@ -9,22 +9,23 @@ runs:
 
   steps:
     - name: Setup Node.js environment
-      uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 22.11.0
+        node-version: 22.22.2
+        registry-url: https://registry.npmjs.org
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v5
       with:
         run_install: false
-        version: 10
+        version: 10.26.0
     - name: Get pnpm store directory
       id: pnpm-cache
       shell: bash
       run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
     - name: Setup pnpm cache
-      uses: actions/cache@53aa38c736a561b9c17b62df3fe885a17b78ee6d # v4
+      uses: actions/cache@v5
       with:
         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}

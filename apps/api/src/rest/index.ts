@@ -1,5 +1,5 @@
-import { defaultHook } from "$hooks";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { defaultHook } from "$hooks";
 import { apExamsRouter } from "./routes/ap-exams.ts";
 import { calendarRouter } from "./routes/calendar";
 import { catalogueRouter } from "./routes/catalogue.ts";

@@ -1,3 +1,7 @@
+import type { KeyData } from "@packages/key-types";
+import { TrashIcon } from "lucide-react";
+import type React from "react";
+import { startTransition, useState } from "react";
 import { deleteUserApiKey } from "@/app/actions/keys";
 import DisplayKey from "@/components/key/view/DisplayKey";
 import { Button } from "@/components/ui/button";
@@ -10,11 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { KeyData } from "@packages/key-types";
-import { TrashIcon } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
-import { startTransition } from "react";
 
 interface Props {
   apiKey: string;

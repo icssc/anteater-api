@@ -4,10 +4,10 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { and, eq, inArray } from "@packages/db/drizzle";
 import {
-  type SampleProgramEntry,
-  type StandingYearType,
   catalogProgram,
   course,
+  type SampleProgramEntry,
+  type StandingYearType,
   sampleProgramVariation,
 } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";

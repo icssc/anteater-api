@@ -1,9 +1,9 @@
-import type { coursesQuerySchema, websocQuerySchema } from "$schema";
-import { type ColumnBaseConfig, type SQL, and, eq, gte, lte, or } from "@packages/db/drizzle";
+import { and, type ColumnBaseConfig, eq, gte, lte, or, type SQL } from "@packages/db/drizzle";
 import type { PgColumn } from "@packages/db/drizzle-pg";
 import { websocCourse } from "@packages/db/schema";
 import { isTrue } from "@packages/db/utils";
 import type { z } from "zod";
+import type { coursesQuerySchema, websocQuerySchema } from "$schema";
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 

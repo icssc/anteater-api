@@ -1,3 +1,5 @@
+import { CircleUserRoundIcon } from "lucide-react";
+import Link from "next/link";
 import { auth } from "@/auth";
 import SignOut from "@/components/auth/SignOut";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,8 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CircleUserRoundIcon } from "lucide-react";
-import Link from "next/link";
 
 const Header = async () => {
   const session = await auth();

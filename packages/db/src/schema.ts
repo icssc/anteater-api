@@ -2,6 +2,7 @@ import { terms } from "@packages/stdlib";
 import type { SQL } from "drizzle-orm";
 import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   decimal,
@@ -18,6 +19,7 @@ import {
   text,
   time,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -25,7 +27,6 @@ import {
 import { aliasedTable } from "./drizzle.ts";
 
 // Types
-
 export type HourMinute = { hour: number; minute: number };
 
 export type TBAWebsocSectionMeeting = { timeIsTBA: true };
@@ -98,17 +99,36 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
   requirements: DegreeWorksRequirement[];
   /**
    * The set of specializations (if any) that this program has.
-   * If this array is not empty, then exactly one specialization must be selected
-   * to fulfill the requirements of the program.
    */
   specs: string[];
+  specializationRequired: boolean;
 };
 
 /**
- * (school, major) pair, because school requirements can vary by major
+ * Information nessessary to find complete major requirements
+ * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
+ * @param degreeCode a degree code, e.g. "BS"
+ * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
+ * @param majorCode a major code
+ * @param specCode a specialization code
+ */
+export type ProgramCodes = {
+  schoolCode: string;
+  degreeCode: string;
+  collegeCode?: string;
+  majorCode: string;
+  specCode?: string;
+};
+
+/**
+ * college requirements can vary by major and major requirements can vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
-export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
+export type MajorProgram = {
+  college?: DegreeWorksProgram;
+  major: DegreeWorksProgram;
+  specCode?: string;
+};
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
@@ -132,7 +152,10 @@ export type DegreeWorksMarkerRequirement = {
   requirementType: "Marker";
 };
 
-export type DegreeWorksRequirementBase = { label: string };
+export type DegreeWorksRequirementBase = {
+  label: string;
+  requirementId: string;
+};
 
 export type DegreeWorksRequirement = DegreeWorksRequirementBase &
   (
@@ -183,8 +206,8 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
 
 // Misc. enums
 
-export { terms } from "@packages/stdlib";
 export type { Term } from "@packages/stdlib";
+export { terms } from "@packages/stdlib";
 
 export const term = pgEnum("term", terms);
 
@@ -224,7 +247,6 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
-  lastDeptScraped: varchar("last_dept_scraped"),
 });
 
 export const websocSchool = pgTable(
@@ -662,9 +684,32 @@ export const schoolRequirement = pgTable("school_requirement", {
 });
 
 export const collegeRequirement = pgTable("college_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
   name: varchar("name").notNull(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().unique().notNull(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+});
+
+export const majorSpecializationToRequirement = pgTable(
+  "major_specialization_to_requirement",
+  {
+    majorId: varchar("major_id")
+      .notNull()
+      .references(() => major.id),
+    specializationId: varchar("specialization_id").references(() => specialization.id),
+    requirementId: bigint("requirement_id", { mode: "bigint" })
+      .notNull()
+      .references(() => majorRequirement.id),
+  },
+  (table) => [unique().on(table.majorId, table.specializationId).nullsNotDistinct()],
+);
+
+export const majorRequirement = pgTable("major_requirement", {
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
 export const major = pgTable(
@@ -676,10 +721,12 @@ export const major = pgTable(
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
-    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+    specializationRequired: boolean("specialization_required").notNull(),
+    collegeRequirementId: bigint("college_requirement_id", { mode: "bigint" }).references(
+      () => collegeRequirement.id,
+    ),
   },
-  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
+  (table) => [index().on(table.degreeId), index().on(table.collegeRequirementId)],
 );
 
 export const minor = pgTable("minor", {
@@ -840,8 +887,8 @@ export const diningPeriod = pgTable(
       .references(() => diningRestaurant.id, {
         onDelete: "cascade",
       }),
-    startTime: time("start_time").notNull(),
-    endTime: time("end_time").notNull(),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
     name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },

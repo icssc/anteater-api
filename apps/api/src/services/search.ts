@@ -1,15 +1,15 @@
+import type { z } from "@hono/zod-openapi";
+import type { database } from "@packages/db";
+import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
+import { unionAll } from "@packages/db/drizzle-pg";
+import { course, instructor } from "@packages/db/schema";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
   instructorSchema,
   searchQuerySchema,
   searchResponseSchema,
 } from "$schema";
-import type { z } from "@hono/zod-openapi";
-import type { database } from "@packages/db";
-import { and, asc, desc, inArray, or, sql } from "@packages/db/drizzle";
-import { unionAll } from "@packages/db/drizzle-pg";
-import { course, instructor } from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
 import type { CoursesService } from "./courses";
 import type { InstructorsService } from "./instructors";
 import { buildCourseLevelQuery, buildGEQuery, buildUnitBoundsQuery } from "./util.ts";
@@ -101,8 +101,8 @@ export class SearchService {
 
   private async doSearchForCourses(
     input: SearchServiceInput,
+    query: SQL,
   ): Promise<z.infer<typeof searchResponseSchema>> {
-    const query = toQuery(input.query);
     const results = await this.db
       .select({
         id: course.id,
@@ -132,8 +132,8 @@ export class SearchService {
 
   private async doSearchForInstructors(
     input: SearchServiceInput,
+    query: SQL,
   ): Promise<z.infer<typeof searchResponseSchema>> {
-    const query = toQuery(input.query);
     const results = await this.db
       .select({
         id: instructor.ucinetid,
@@ -164,15 +164,16 @@ export class SearchService {
   }
 
   async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
+    const query = toQuery(input.query);
+
     if (input.resultType === "instructor") {
-      return this.doSearchForInstructors(input);
+      return this.doSearchForInstructors(input, query);
     }
 
     if (input.resultType === "course") {
-      return this.doSearchForCourses(input);
+      return this.doSearchForCourses(input, query);
     }
 
-    const query = toQuery(input.query);
     const results = await unionAll(
       this.db
         .select({

@@ -1,4 +1,3 @@
-import type { enrollmentHistoryQuerySchema, enrollmentHistorySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, eq, getTableColumns, inArray } from "@packages/db/drizzle";
 import {
@@ -12,6 +11,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
+import type { enrollmentHistoryQuerySchema, enrollmentHistorySchema } from "$schema";
 
 type EnrollmentHistoryServiceInput = z.infer<typeof enrollmentHistoryQuerySchema>;
 

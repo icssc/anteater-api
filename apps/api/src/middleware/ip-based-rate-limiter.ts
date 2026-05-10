@@ -1,7 +1,7 @@
-import type { ErrorSchema } from "$schema";
 import { DurableObjectStore } from "@hono-rate-limiter/cloudflare";
-import { rateLimiter } from "hono-rate-limiter";
 import { createMiddleware } from "hono/factory";
+import { rateLimiter } from "hono-rate-limiter";
+import type { ErrorSchema } from "$schema";
 
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1_000;
 const REQUESTS_PER_HOUR = 1_000;

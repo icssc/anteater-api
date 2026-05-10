@@ -19,15 +19,14 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-1
-
-  AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-  AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
+  # we do not currently use these
+  # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # AWS_REGION: us-east-1
 
   AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
   USERS_DB_URL: ${{ secrets.USERS_DB_URL }}
+  CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_USERS_DB: ${{ secrets.USERS_DB_URL }}
 
   CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
   CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
@@ -48,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-and-pnpm
@@ -70,8 +69,8 @@ jobs:
       - name: Deploy ETL pipeline to production
         run: pnpm --filter "./apps/data-pipeline/**" run deploy
 
-      - name: Prefer SST bundled Pulumi
-        run: echo "$HOME/.config/sst/bin" >> $GITHUB_PATH
-
-      - name: Deploy Key Manager/Dashboard if present
-        run: pnpm --filter "./apps/key-manager/**" run deploy
+      - name: Deploy Key Manager/Dashboard
+        working-directory: apps/key-manager
+        run: |
+          echo "${{ secrets.AUTH_SECRET }}" | pnpm exec wrangler secret put AUTH_SECRET
+          pnpm run deploy

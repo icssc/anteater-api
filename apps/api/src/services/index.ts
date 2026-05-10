@@ -9,6 +9,6 @@ export * from "./instructors";
 export * from "./library-traffic";
 export * from "./programs";
 export * from "./search";
+export * from "./study-rooms";
 export * from "./websoc";
 export * from "./week";
-export * from "./study-rooms";

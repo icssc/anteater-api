@@ -1,6 +1,6 @@
-import type { ErrorSchema } from "$schema";
 import type { Context } from "hono";
 import type { ZodError } from "zod";
+import type { ErrorSchema } from "$schema";
 
 export const defaultHook = (
   result: { success: false; error: ZodError } | { success: true; data: unknown },

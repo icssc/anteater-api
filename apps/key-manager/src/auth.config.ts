@@ -1,12 +1,31 @@
-import Google from "next-auth/providers/google";
-
 import type { NextAuthConfig } from "next-auth";
-import { z } from "zod";
-
-const { AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET } = z
-  .object({ AUTH_GOOGLE_ID: z.string(), AUTH_GOOGLE_SECRET: z.string() })
-  .parse(process.env);
 
 export default {
-  providers: [Google({ clientId: AUTH_GOOGLE_ID, clientSecret: AUTH_GOOGLE_SECRET })],
+  providers: [
+    {
+      id: "icssc",
+      name: "ICSSC OIDC",
+      type: "oidc",
+      clientId:
+        process.env.CF_ENV === "prod" ? "anteater-api-key-manager" : "anteater-api-key-manager-dev",
+      issuer: "https://auth.icssc.club",
+      wellKnown: "https://auth.icssc.club/.well-known/openid-configuration",
+      idToken: true,
+      authorization: { params: { scope: "openid email profile" } },
+      checks: ["pkce", "state"],
+      // :)
+      allowDangerousEmailAccountLinking: true,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          // set later
+          isAdmin: false,
+        };
+      },
+    },
+  ],
+  trustHost: true,
 } satisfies NextAuthConfig;

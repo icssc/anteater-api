@@ -1,10 +1,15 @@
-import { defaultHook } from "$hooks";
-import { productionCache } from "$middleware";
-import { accessController } from "$middleware";
-import { errorSchema, responseSchema, searchQuerySchema, searchResponseSchema } from "$schema";
-import { CoursesService, InstructorsService, SearchService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import { defaultHook } from "$hooks";
+import { accessController, productionCache } from "$middleware";
+import {
+  response200,
+  response422,
+  response500,
+  searchQuerySchema,
+  searchResponseSchema,
+} from "$schema";
+import { CoursesService, InstructorsService, SearchService } from "$services";
 
 const searchRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -17,18 +22,9 @@ const searchRoute = createRoute({
   request: { query: searchQuerySchema },
   description: "Retrieves course/instructor results for the given search query.",
   responses: {
-    200: {
-      content: { "application/json": { schema: responseSchema(searchResponseSchema) } },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(searchResponseSchema),
+    422: response422(),
+    500: response500(),
   },
 });
 

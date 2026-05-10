@@ -1,5 +1,8 @@
+/* biome-ignore lint/suspicious/noUnknownAtRules: this is a real at-rule */
 @tailwind base;
+/* biome-ignore lint/suspicious/noUnknownAtRules: this is a real at-rule */
 @tailwind components;
+/* biome-ignore lint/suspicious/noUnknownAtRules: this is a real at-rule */
 @tailwind utilities;
 
 @layer base {

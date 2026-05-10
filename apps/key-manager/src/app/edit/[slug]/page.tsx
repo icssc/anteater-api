@@ -1,15 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSession } from "next-auth/react";
+import { AlertCircle, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, ChevronLeft } from "lucide-react";
+import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";
+import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
 
 import DeleteKey from "@/components/key/DeleteKey";
 import NameField from "@/components/key/form/NameField";
@@ -19,11 +18,10 @@ import ResourcesField from "@/components/key/form/ResourcesField";
 import TypeField from "@/components/key/form/TypeField";
 import DisplayKey from "@/components/key/view/DisplayKey";
 import HeadingText from "@/components/layout/HeadingText";
-import { Form } from "@/components/ui/form";
-
-import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";
-import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import ButtonSpinner from "@/components/ui/button-spinner";
+import { Form } from "@/components/ui/form";
 import Placeholder from "@/components/ui/placeholder";
 
 const EditKey = () => {

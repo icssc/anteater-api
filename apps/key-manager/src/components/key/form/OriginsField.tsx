@@ -1,10 +1,10 @@
+import { PlusIcon, TrashIcon } from "lucide-react";
+import type React from "react";
+import { type UseFormReturn, useFieldArray } from "react-hook-form";
 import type { CreateKeyFormValues } from "@/app/actions/types";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusIcon, TrashIcon } from "lucide-react";
-import type React from "react";
-import { type UseFormReturn, useFieldArray } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;

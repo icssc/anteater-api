@@ -1,3 +1,6 @@
+import { GlobeIcon, LockIcon } from "lucide-react";
+import type React from "react";
+import type { UseFormReturn } from "react-hook-form";
 import type { CreateKeyFormValues } from "@/app/actions/types";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
@@ -7,9 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GlobeIcon, LockIcon } from "lucide-react";
-import type React from "react";
-import type { UseFormReturn } from "react-hook-form";
 
 interface Props {
   form: UseFormReturn<CreateKeyFormValues>;

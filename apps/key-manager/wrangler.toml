@@ -1,0 +1,28 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+main = ".open-next/worker.js"
+name = "anteater-api-key-manager"
+compatibility_date = "2026-02-26"
+compatibility_flags = ["nodejs_compat"]
+kv_namespaces = [
+  { binding = "API_KEYS", id = "4c8dd3090bea4d469cd3c66b3002a5a2" },
+]
+
+[observability]
+enabled = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[vars]
+CF_ENV = "prod"
+
+[[hyperdrive]]
+binding = "USERS_DB"
+id = "891f9443f6924f71a3eebe6e761525a9"
+
+[[routes]]
+pattern = "dashboard.anteaterapi.com"
+custom_domain = true
+
+# don't forget secrets; see CI for what you need

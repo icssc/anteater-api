@@ -1,5 +1,5 @@
-import { doScrape } from "$lib";
 import { database } from "@packages/db";
+import { doScrape } from "$lib";
 
 export default {
   async scheduled(_, env) {

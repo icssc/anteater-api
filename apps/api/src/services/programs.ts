@@ -1,3 +1,19 @@
+import type { database } from "@packages/db";
+import { and, eq, sql } from "@packages/db/drizzle";
+import {
+  catalogProgram,
+  collegeRequirement,
+  degree,
+  major,
+  majorRequirement,
+  majorSpecializationToRequirement,
+  minor,
+  sampleProgramVariation,
+  schoolRequirement,
+  specialization,
+} from "@packages/db/schema";
+import { orNull } from "@packages/stdlib";
+import type { z } from "zod";
 import type {
   majorRequirementsQuerySchema,
   majorsQuerySchema,
@@ -8,20 +24,6 @@ import type {
   specializationsQuerySchema,
   ugradRequirementsQuerySchema,
 } from "$schema";
-import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
-import {
-  catalogProgram,
-  collegeRequirement,
-  degree,
-  major,
-  minor,
-  sampleProgramVariation,
-  schoolRequirement,
-  specialization,
-} from "@packages/db/schema";
-import { orNull } from "@packages/stdlib";
-import type { z } from "zod";
 
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
@@ -46,6 +48,7 @@ export class ProgramsService {
       .select({
         id: majorSpecialization.id,
         name: majorSpecialization.name,
+        specializationRequired: major.specializationRequired,
         specializations: majorSpecialization.specializations,
         type: degree.name,
         division: degree.division,
@@ -101,32 +104,48 @@ export class ProgramsService {
         programType: "specialization";
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
+    if (programType === "major") {
+      const [got] = await this.db
+        .select({
+          id: major.id,
+          name: major.name,
+          requirements: majorRequirement.requirements,
+          schoolRequirements: {
+            name: collegeRequirement.name,
+            requirements: collegeRequirement.requirements,
+          },
+        })
+        .from(major)
+        .where(
+          and(
+            eq(major.id, query.programId),
+            query.specializationId
+              ? eq(majorSpecializationToRequirement.specializationId, query.specializationId)
+              : undefined,
+          ),
+        )
+        .leftJoin(collegeRequirement, eq(major.collegeRequirementId, collegeRequirement.id))
+        .leftJoin(
+          majorSpecializationToRequirement,
+          eq(major.id, majorSpecializationToRequirement.majorId),
+        )
+        .leftJoin(
+          majorRequirement,
+          eq(majorSpecializationToRequirement.requirementId, majorRequirement.id),
+        )
+        .limit(1);
+      return orNull(got);
+    }
+
     const table = {
-      major,
       minor,
       specialization,
     }[programType];
-
-    const [got] = await (programType !== "major"
-      ? this.db
-          .select({ id: table.id, name: table.name, requirements: table.requirements })
-          .from(table)
-      : this.db
-          .select({
-            id: major.id,
-            name: major.name,
-            requirements: major.requirements,
-            schoolRequirements: {
-              name: collegeRequirement.name,
-              requirements: collegeRequirement.requirements,
-            },
-          })
-          .from(major)
-          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-    )
+    const [got] = await this.db
+      .select({ id: table.id, name: table.name, requirements: table.requirements })
+      .from(table)
       .where(eq(table.id, query.programId))
       .limit(1);
-
     return orNull(got);
   }
 

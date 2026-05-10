@@ -74,7 +74,7 @@ type TermDateData = {
 async function getTermDateData(year: string): Promise<TermDateData[]> {
   const yearNum = Number.parseInt(year, 10);
 
-  if (year.length !== 4 || Number.isNaN(Number.parseInt(year))) {
+  if (year.length !== 4 || Number.isNaN(Number.parseInt(year, 10))) {
     throw new Error("Error: Invalid year provided.");
   }
 

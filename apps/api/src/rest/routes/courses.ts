@@ -1,3 +1,5 @@
+import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -6,15 +8,14 @@ import {
   coursesByCursorQuerySchema,
   coursesPathSchema,
   coursesQuerySchema,
-  cursorResponseSchema,
-  errorSchema,
   prerequisiteSchema,
   prerequisiteTreeSchema,
-  responseSchema,
+  response200,
+  response404,
+  response422,
+  response500,
 } from "$schema";
 import { CoursesService } from "$services";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { database } from "@packages/db";
 
 const coursesRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 const coursesCursorRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
@@ -31,20 +32,9 @@ const batchCoursesRoute = createRoute({
   request: { query: batchCoursesQuerySchema },
   description: "Retrieves courses with the IDs provided",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(courseSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(courseSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -57,22 +47,10 @@ const courseByIdRoute = createRoute({
   request: { params: coursesPathSchema },
   description: "Retrieves a course by its ID.",
   responses: {
-    200: {
-      content: { "application/json": { schema: responseSchema(courseSchema) } },
-      description: "Successful operation",
-    },
-    404: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Course not found",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(courseSchema),
+    404: response404("Course not found"),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -85,20 +63,9 @@ const coursesByFiltersRoute = createRoute({
   request: { query: coursesQuerySchema },
   description: "Retrieves courses matching the given filters.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: responseSchema(courseSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(courseSchema.array()),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -111,20 +78,9 @@ const coursesByCursorRoute = createRoute({
   request: { query: coursesByCursorQuerySchema },
   description: "Retrieves courses matching the given filters with cursor-based pagination.",
   responses: {
-    200: {
-      content: {
-        "application/json": { schema: cursorResponseSchema(courseSchema.array()) },
-      },
-      description: "Successful operation",
-    },
-    422: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Parameters failed validation",
-    },
-    500: {
-      content: { "application/json": { schema: errorSchema } },
-      description: "Server error occurred",
-    },
+    200: response200(courseSchema.array(), { isCursor: true }),
+    422: response422(),
+    500: response500(),
   },
 });
 
@@ -183,4 +139,4 @@ coursesCursorRouter.openapi(coursesByCursorRoute, async (c) => {
   );
 });
 
-export { coursesRouter, coursesCursorRouter };
+export { coursesCursorRouter, coursesRouter };

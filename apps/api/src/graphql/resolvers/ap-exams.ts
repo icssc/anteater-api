@@ -1,7 +1,7 @@
+import { GraphQLError } from "graphql/error";
 import type { GraphQLContext } from "$graphql/graphql-context";
 import { apExamsQuerySchema } from "$schema";
 import { APExamsService } from "$services";
-import { GraphQLError } from "graphql/error";
 
 export const apExamResolvers = {
   Query: {

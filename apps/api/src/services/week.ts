@@ -1,9 +1,9 @@
-import type { weekQuerySchema } from "$schema";
 import type { database } from "@packages/db";
 import { and, getTableColumns, gte, lte, or } from "@packages/db/drizzle";
 import { calendarTerm } from "@packages/db/schema";
 import { getWeek } from "@packages/stdlib";
 import type { z } from "zod";
+import type { weekQuerySchema } from "$schema";
 
 type WeekData = {
   weeks: [number] | [number, number];

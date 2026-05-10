@@ -1,5 +1,8 @@
-import type { Block, DWAuditResponse, DWMappingResponse, UndergraduateRequirements } from "$types";
+import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "src/schema";
+import type { z } from "zod";
+import type { Block, UndergraduateRequirements } from "$types";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
@@ -28,7 +31,11 @@ export class DegreeworksClient {
      */
     const currentYear = new Date().getUTCFullYear();
     dw.catalogYear = `${currentYear}${currentYear + 1}`;
-    const dataThisYear = await dw.getMajorAudit("BS", "U", "201");
+    const dataThisYear = await dw.getMajorAudit({
+      degreeCode: "BS",
+      schoolCode: "U",
+      majorCode: "201",
+    });
     if (!dataThisYear?.major) {
       dw.catalogYear = `${currentYear - 1}${currentYear}`;
     }
@@ -42,6 +49,24 @@ export class DegreeworksClient {
     return Object.entries(params)
       .map((kv) => kv.map(encodeURIComponent).join("="))
       .join("&");
+  }
+
+  private async parseResponse<T>(
+    res: Response,
+    schema: z.ZodType<T>,
+    // for logging messages
+    label: string,
+  ): Promise<T | undefined> {
+    const raw = await res.json().catch(() => null);
+    if (!raw) return undefined;
+
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      return undefined;
+    }
+
+    return parsed.data;
   }
 
   async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
@@ -58,10 +83,8 @@ export class DegreeworksClient {
     });
     await this.sleep();
 
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    if ("error" in json) {
-      return;
-    }
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     // "DEGREE" block doesn't contain any material requirements, "SCHOOL" block has what we need
     const ucRequirements = json.blockArray.find((b) => b.requirementType === "SCHOOL");
@@ -73,29 +96,33 @@ export class DegreeworksClient {
       return;
     }
 
-    const honorsFourRequirements = json.blockArray.find(
+    const honorsRequirements = json.blockArray.find(
       (b) => b.requirementType === "OTHER" && b.requirementValue === "CHP",
     );
+
+    const honorsFourRequirements = honorsRequirements?.ruleArray.some((r) => r?.labelTag === "FY")
+      ? honorsRequirements
+      : undefined;
+
+    const honorsTwoRequirements = honorsRequirements?.ruleArray.some((r) => r?.labelTag === "HTH")
+      ? honorsRequirements
+      : undefined;
 
     return {
       UC: ucRequirements,
       GE: geRequirements,
       CHC4: honorsFourRequirements,
+      CHC2: honorsTwoRequirements,
     };
   }
 
-  /**
-   * @param degree a degree code, e.g. "BS"
-   * @param school this corresponds to the UCI notion of division, e.g. "U" or "G"
-   * @param majorCode a major code
-   * @param college this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
-   */
-  async getMajorAudit(
-    degree: string,
-    school: string,
-    majorCode: string,
-    college?: string,
-  ): Promise<
+  async getMajorAudit({
+    degreeCode,
+    schoolCode,
+    majorCode,
+    specCode,
+    collegeCode,
+  }: ProgramCodes): Promise<
     | {
         college?: Block;
         major?: Block;
@@ -106,27 +133,26 @@ export class DegreeworksClient {
       method: "POST",
       body: JSON.stringify({
         catalogYear: this.catalogYear,
-        degree,
-        school,
+        degree: degreeCode,
+        school: schoolCode,
         studentId: this.studentId,
         classes: [],
         goals: [
           { code: "MAJOR", value: majorCode },
-          ...(college ? [{ code: "COLLEGE", value: college }] : []),
+          ...(collegeCode ? [{ code: "COLLEGE", value: collegeCode }] : []),
+          ...(specCode ? [{ code: "SPEC", value: specCode }] : []),
         ],
       }),
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
 
-    if ("error" in json) {
-      return undefined;
-    }
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
 
     return {
       college: json.blockArray.find(
-        (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
+        (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
       ),
       major: json.blockArray.find(
         (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
@@ -151,12 +177,13 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    return "error" in json
-      ? undefined
-      : json.blockArray.find(
-          (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
-        );
+
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
+    return json.blockArray.find(
+      (x) => x.requirementType === "MINOR" && x.requirementValue === minorCode,
+    );
   }
 
   async getSpecAudit(
@@ -182,14 +209,15 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWAuditResponse = await res.json().catch(() => ({ error: "" }));
-    return "error" in json
-      ? undefined
-      : json.blockArray.find(
-          (x) =>
-            (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
-            x.requirementValue === specCode,
-        );
+
+    const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
+    if (!json) return undefined;
+
+    return json.blockArray.find(
+      (x) =>
+        (x.requirementType === "SPEC" || x.requirementType === "OTHER") &&
+        x.requirementValue === specCode,
+    );
   }
 
   async getMapping<T extends string>(path: T): Promise<Map<string, string>> {
@@ -197,8 +225,9 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
-    const json: DWMappingResponse<T> = await res.json();
-    return new Map(json._embedded[path].map((x) => [x.key, x.description]));
+    const json = await res.json();
+    const parsed = dwMappingResponseSchema(path).parse(json);
+    return new Map(parsed._embedded[path].map((x) => [x.key, x.description]));
   }
 
   getCatalogYear() {

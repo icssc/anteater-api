@@ -1,9 +1,3 @@
-import type {
-  websocDepartmentsQuerySchema,
-  websocQuerySchema,
-  websocResponseSchema,
-  websocSectionSchema,
-} from "$schema";
 import type { database } from "@packages/db";
 import type { SQL, SQLWrapper } from "@packages/db/drizzle";
 import {
@@ -19,6 +13,7 @@ import {
   lte,
   ne,
   or,
+  sql,
 } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
@@ -35,6 +30,13 @@ import {
 import { isFalse, isTrue } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
+import type {
+  syllabiQuerySchema,
+  websocDepartmentsQuerySchema,
+  websocQuerySchema,
+  websocResponseSchema,
+  websocSectionSchema,
+} from "$schema";
 import {
   buildCourseLevelQuery,
   buildDaysOfWeekQuery,
@@ -442,5 +444,44 @@ export class WebsocService {
       .from(websocDepartment)
       .where(and(or(...sinceOptions), or(...untilOptions)))
       .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
+  }
+
+  async getSyllabi(input: z.infer<typeof syllabiQuerySchema>) {
+    const conditions = [eq(websocCourse.courseId, input.courseId), ne(websocSection.webURL, "")];
+    if (input.year) {
+      conditions.push(eq(websocSection.year, input.year));
+    }
+    if (input.quarter) {
+      conditions.push(eq(websocSection.quarter, input.quarter));
+    }
+    if (input.instructor) {
+      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+    }
+    return this.db
+      .select({
+        year: websocSection.year,
+        quarter: websocSection.quarter,
+        url: websocSection.webURL,
+        instructorNames: sql<
+          string[]
+        >`ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName}), NULL)`,
+      })
+      .from(websocSection)
+      .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .where(and(...conditions))
+      .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
+      .then((rows) =>
+        rows
+          .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
+            y1 === y2
+              ? termOrder[q1] - termOrder[q2]
+              : Number.parseInt(y1, 10) - Number.parseInt(y2, 10),
+          )
+          .reverse(),
+      );
   }
 }
