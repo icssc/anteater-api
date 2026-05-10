@@ -5,6 +5,7 @@ import {
   restaurantsQuerySchema,
   restaurantTodayQuerySchema,
   schedulesQuerySchema,
+  schedulesResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
 
@@ -49,7 +50,8 @@ export const diningResolvers = {
 
     getDiningSchedules: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getSchedules(schedulesQuerySchema.parse(args.query ?? {}));
+      const data = await service.getSchedules(schedulesQuerySchema.parse(args.query ?? {}));
+      return schedulesResponseSchema.parse(data);
     },
   },
 };
