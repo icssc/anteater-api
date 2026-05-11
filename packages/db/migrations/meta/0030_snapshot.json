@@ -1,5 +1,5 @@
 {
-  "id": "b668a7cb-8957-4019-8b78-b2157b591f7f",
+  "id": "bd7d287d-bb74-4c5a-8ccb-4d9fe64c5ef6",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -461,8 +461,7 @@
           "name": "repeatability_times",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 0
+          "notNull": false
         },
         "repeatability_times_type": {
           "name": "repeatability_times_type",
@@ -4478,8 +4477,7 @@
           "name": "repeatability_times",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 0
+          "notNull": false
         },
         "repeatability_times_type": {
           "name": "repeatability_times_type",

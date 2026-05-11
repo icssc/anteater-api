@@ -394,8 +394,8 @@ function generateGEs(rawCourse: string[]) {
 }
 
 function parseRepeatability(repeatText: string): {
-  repeatabilityTimes: number;
-  units: "credit_hours" | "times";
+  repeatabilityTimes: number | undefined;
+  units: "credit_hours" | "times" | undefined;
 } {
   const timesMatch1 = /May be taken for credit (\d+) times/.exec(repeatText);
   const timesMatch2 = /May be taken (\d+) times*/.exec(repeatText);
@@ -415,6 +415,11 @@ function parseRepeatability(repeatText: string): {
     return {
       repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
       units: "credit_hours",
+    };
+  else if (repeatText.toLowerCase() === "may be taken unlimited times")
+    return {
+      repeatabilityTimes: undefined,
+      units: undefined,
     };
 
   return {
