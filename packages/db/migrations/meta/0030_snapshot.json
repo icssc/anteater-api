@@ -1,5 +1,5 @@
 {
-  "id": "b8afad82-0738-4346-829e-69d62b3c2b65",
+  "id": "763fcb4b-929c-4f5a-a0b7-91b6c8cf4504",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -667,7 +667,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "course_material_section_id_index": {
+          "name": "course_material_section_id_index",
+          "columns": [
+            {
+              "expression": "section_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "course_material_section_id_websoc_section_id_fk": {
           "name": "course_material_section_id_websoc_section_id_fk",
@@ -4404,11 +4420,6 @@
       "name": "material_requirement",
       "schema": "public",
       "values": ["Required", "Recommended", "Go to Class First"]
-    },
-    "public.material_term": {
-      "name": "material_term",
-      "schema": "public",
-      "values": ["Fall", "Winter", "Spring", "Summer"]
     },
     "public.term": {
       "name": "term",

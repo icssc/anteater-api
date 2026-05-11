@@ -21,7 +21,7 @@ export const courseMaterialsQuerySchema = z.object({
   instructor: z.string().optional().openapi({
     description:
       "Only include materials from courses taught by the specified instructor (case-insensitive)",
-    example: "DILLENCOURT, M.B.",
+    example: "DILLENCOURT, M.",
   }),
   author: z.string().optional().openapi({
     description:

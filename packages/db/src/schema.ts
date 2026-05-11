@@ -218,8 +218,6 @@ export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
 
 export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
-export const materialTerm = pgEnum("material_term", materialTerms);
-export type MaterialTerm = (typeof materialTerms)[number];
 
 export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
 export const textbookFormat = pgEnum("textbook_format", textbookFormats);
@@ -880,18 +878,22 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
-export const courseMaterial = pgTable("course_material", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sectionId: uuid("section_id").references(() => websocSection.id),
-  isbn: varchar("isbn"),
-  author: varchar("author"),
-  title: varchar("title").notNull(),
-  edition: varchar("edition"),
-  format: textbookFormat("format").notNull(),
-  requirement: materialRequirement("requirement"),
-  mmsId: varchar("mms_id"),
-  link: text("link"),
-});
+export const courseMaterial = pgTable(
+  "course_material",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id").references(() => websocSection.id),
+    isbn: varchar("isbn"),
+    author: varchar("author"),
+    title: varchar("title").notNull(),
+    edition: varchar("edition"),
+    format: textbookFormat("format").notNull(),
+    requirement: materialRequirement("requirement"),
+    mmsId: varchar("mms_id"),
+    link: text("link"),
+  },
+  (table) => [index().on(table.sectionId)],
+);
 
 // dining stuff
 export const diningRestaurant = pgTable("dining_restaurant", {
