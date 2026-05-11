@@ -1,5 +1,5 @@
 {
-  "id": "d2421396-7e3e-4e83-967f-dc7e197dc5a8",
+  "id": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "prevId": "f6b84d5b-2ad0-4874-8d9a-91c65a5f21d3",
   "version": "7",
   "dialect": "postgresql",
@@ -313,10 +313,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "bigint",
           "primaryKey": true,
           "notNull": true,
-          "default": "gen_random_uuid()"
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
         },
         "name": {
           "name": "name",
@@ -329,28 +332,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "requirements_hash": {
-          "name": "requirements_hash",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false,
-          "generated": {
-            "as": "jsonb_hash_extended(requirements, 0)",
-            "type": "stored"
-          }
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "college_requirement_requirements_hash_unique": {
-          "name": "college_requirement_requirements_hash_unique",
-          "nullsNotDistinct": false,
-          "columns": ["requirements_hash"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -469,19 +456,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "repeatability_times": {
-          "name": "repeatability_times",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "repeatability_times_type": {
-          "name": "repeatability_times_type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "grading_option": {
           "name": "grading_option",
@@ -1828,17 +1802,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "college_requirement": {
-          "name": "college_requirement",
-          "type": "uuid",
+        "college_requirement_id": {
+          "name": "college_requirement_id",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {
@@ -1857,11 +1825,11 @@
           "method": "btree",
           "with": {}
         },
-        "major_college_requirement_index": {
-          "name": "major_college_requirement_index",
+        "major_college_requirement_id_index": {
+          "name": "major_college_requirement_id_index",
           "columns": [
             {
-              "expression": "college_requirement",
+              "expression": "college_requirement_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1883,11 +1851,11 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "major_college_requirement_college_requirement_id_fk": {
-          "name": "major_college_requirement_college_requirement_id_fk",
+        "major_college_requirement_id_college_requirement_id_fk": {
+          "name": "major_college_requirement_id_college_requirement_id_fk",
           "tableFrom": "major",
           "tableTo": "college_requirement",
-          "columnsFrom": ["college_requirement"],
+          "columnsFrom": ["college_requirement_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1895,6 +1863,100 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.major_requirement": {
+      "name": "major_requirement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "generated": {
+            "as": "jsonb_hash_extended(requirements, 0)",
+            "type": "stored"
+          }
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.major_specialization_to_requirement": {
+      "name": "major_specialization_to_requirement",
+      "schema": "",
+      "columns": {
+        "major_id": {
+          "name": "major_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "specialization_id": {
+          "name": "specialization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requirement_id": {
+          "name": "requirement_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "major_specialization_to_requirement_major_id_major_id_fk": {
+          "name": "major_specialization_to_requirement_major_id_major_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "major",
+          "columnsFrom": ["major_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "major_specialization_to_requirement_specialization_id_specialization_id_fk": {
+          "name": "major_specialization_to_requirement_specialization_id_specialization_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "specialization",
+          "columnsFrom": ["specialization_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "major_specialization_to_requirement_requirement_id_major_requirement_id_fk": {
+          "name": "major_specialization_to_requirement_requirement_id_major_requirement_id_fk",
+          "tableFrom": "major_specialization_to_requirement",
+          "tableTo": "major_requirement",
+          "columnsFrom": ["requirement_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "major_specialization_to_requirement_major_id_specialization_id_unique": {
+          "name": "major_specialization_to_requirement_major_id_specialization_id_unique",
+          "nullsNotDistinct": true,
+          "columns": ["major_id", "specialization_id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4399,19 +4461,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "repeatability_times": {
-          "name": "repeatability_times",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "repeatability_times_type": {
-          "name": "repeatability_times_type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "grading_option": {
           "name": "grading_option",
           "type": "varchar",
@@ -4515,7 +4564,7 @@
           "notNull": true
         }
       },
-      "definition": "select \"course\".\"id\", \"course\".\"updated_at\", \"course\".\"department\", \"course\".\"shortened_dept\", \"course\".\"department_alias\", \"course\".\"course_number\", \"course\".\"course_numeric\", \"course\".\"school\", \"course\".\"title\", \"course\".\"course_level\", \"course\".\"min_units\", \"course\".\"max_units\", \"course\".\"description\", \"course\".\"department_name\", \"course\".\"prerequisite_tree\", \"course\".\"prerequisite_text\", \"course\".\"repeatability\", \"course\".\"repeatability_times\", \"course\".\"repeatability_times_type\", \"course\".\"grading_option\", \"course\".\"concurrent\", \"course\".\"same_as\", \"course\".\"restriction\", \"course\".\"overlap\", \"course\".\"corequisites\", \"course\".\"is_ge_1a\", \"course\".\"is_ge_1b\", \"course\".\"is_ge_2\", \"course\".\"is_ge_3\", \"course\".\"is_ge_4\", \"course\".\"is_ge_5a\", \"course\".\"is_ge_5b\", \"course\".\"is_ge_6\", \"course\".\"is_ge_7\", \"course\".\"is_ge_8\", \"course\".\"ge_text\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"prerequisite_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n              'id', \"prerequisite_course\".\"id\",\n              'title', \"prerequisite_course\".\"title\",\n              'department', \"prerequisite_course\".\"department\",\n              'courseNumber', \"prerequisite_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\"\n            LEFT JOIN \"course\" \"prerequisite_course\" ON \"prerequisite_course\".\"id\" = \"prerequisite\".\"prerequisite_id\"\n            WHERE \"prerequisite\".\"dependency_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"prerequisites\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"dependency_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n                'id', \"dependency_course\".\"id\",\n                'title', \"dependency_course\".\"title\",\n                'department', \"dependency_course\".\"department\",\n                'courseNumber', \"dependency_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\" \"dependency\"\n            LEFT JOIN \"course\" \"dependency_course\" ON \"dependency_course\".\"id\" = \"dependency\".\"dependency_id\"\n            WHERE \"dependency\".\"prerequisite_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"dependencies\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL)\n           as \"terms\", \n        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT\n          CASE WHEN \"instructor\".\"ucinetid\" IS NULL THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n            'ucinetid', \"instructor\".\"ucinetid\",\n            'name', \"instructor\".\"name\",\n            'title', \"instructor\".\"title\",\n            'email', \"instructor\".\"email\",\n            'department', \"instructor\".\"department\",\n            'shortenedNames', ARRAY(\n              SELECT \"instructor_to_websoc_instructor\".\"websoc_instructor_name\"\n              FROM \"instructor_to_websoc_instructor\"\n              WHERE \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\"\n            )\n          )\n          END\n        ), ARRAY[]::JSONB[]), NULL)\n         as \"instructors\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" left join \"instructor\" on (\"instructor\".\"ucinetid\" = \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" and \"instructor\".\"ucinetid\" is not null and \"instructor\".\"ucinetid\" <> 'student') group by \"course\".\"id\"",
+      "definition": "select \"course\".\"id\", \"course\".\"updated_at\", \"course\".\"department\", \"course\".\"shortened_dept\", \"course\".\"department_alias\", \"course\".\"course_number\", \"course\".\"course_numeric\", \"course\".\"school\", \"course\".\"title\", \"course\".\"course_level\", \"course\".\"min_units\", \"course\".\"max_units\", \"course\".\"description\", \"course\".\"department_name\", \"course\".\"prerequisite_tree\", \"course\".\"prerequisite_text\", \"course\".\"repeatability\", \"course\".\"grading_option\", \"course\".\"concurrent\", \"course\".\"same_as\", \"course\".\"restriction\", \"course\".\"overlap\", \"course\".\"corequisites\", \"course\".\"is_ge_1a\", \"course\".\"is_ge_1b\", \"course\".\"is_ge_2\", \"course\".\"is_ge_3\", \"course\".\"is_ge_4\", \"course\".\"is_ge_5a\", \"course\".\"is_ge_5b\", \"course\".\"is_ge_6\", \"course\".\"is_ge_7\", \"course\".\"is_ge_8\", \"course\".\"ge_text\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"prerequisite_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n              'id', \"prerequisite_course\".\"id\",\n              'title', \"prerequisite_course\".\"title\",\n              'department', \"prerequisite_course\".\"department\",\n              'courseNumber', \"prerequisite_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\"\n            LEFT JOIN \"course\" \"prerequisite_course\" ON \"prerequisite_course\".\"id\" = \"prerequisite\".\"prerequisite_id\"\n            WHERE \"prerequisite\".\"dependency_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"prerequisites\", \n        ARRAY_REMOVE(COALESCE(\n          (\n            SELECT ARRAY_AGG(\n              CASE WHEN \"dependency_course\".\"id\" IS NULL THEN NULL\n              ELSE JSONB_BUILD_OBJECT(\n                'id', \"dependency_course\".\"id\",\n                'title', \"dependency_course\".\"title\",\n                'department', \"dependency_course\".\"department\",\n                'courseNumber', \"dependency_course\".\"course_number\"\n              )\n              END\n            )\n            FROM \"prerequisite\" \"dependency\"\n            LEFT JOIN \"course\" \"dependency_course\" ON \"dependency_course\".\"id\" = \"dependency\".\"dependency_id\"\n            WHERE \"dependency\".\"prerequisite_id\" = \"course\".\"id\"\n          ),\n        ARRAY[]::JSONB[]), NULL)\n         as \"dependencies\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL)\n           as \"terms\", \n        ARRAY_REMOVE(COALESCE(ARRAY_AGG(DISTINCT\n          CASE WHEN \"instructor\".\"ucinetid\" IS NULL THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n            'ucinetid', \"instructor\".\"ucinetid\",\n            'name', \"instructor\".\"name\",\n            'title', \"instructor\".\"title\",\n            'email', \"instructor\".\"email\",\n            'department', \"instructor\".\"department\",\n            'shortenedNames', ARRAY(\n              SELECT \"instructor_to_websoc_instructor\".\"websoc_instructor_name\"\n              FROM \"instructor_to_websoc_instructor\"\n              WHERE \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\"\n            )\n          )\n          END\n        ), ARRAY[]::JSONB[]), NULL)\n         as \"instructors\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" left join \"instructor\" on (\"instructor\".\"ucinetid\" = \"instructor_to_websoc_instructor\".\"instructor_ucinetid\" and \"instructor\".\"ucinetid\" is not null and \"instructor\".\"ucinetid\" <> 'student') group by \"course\".\"id\"",
       "name": "course_view",
       "schema": "public",
       "isExisting": false,
