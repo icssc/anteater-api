@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
 import { and, eq, getTableColumns, or } from "@packages/db/drizzle";
-import type { Term } from "@packages/db/schema";
+import type { MaterialRequirement, Term, TextbookFormat } from "@packages/db/schema";
 import { courseMaterial, websocSection } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
@@ -86,8 +86,8 @@ async function main() {
       author: entry.get("Author"),
       edition: entry.get("Edition"),
       isbn: entry.get("ISBN"),
-      format: (entry.get("Format") || null) as any,
-      requirement: (entry.get("Req/Rec") || null) as any,
+      format: (entry.get("Format") || null) as TextbookFormat,
+      requirement: (entry.get("Req/Rec") || null) as MaterialRequirement,
       mmsId: entry.get("MMS ID"),
       link: entry.get("Link"),
     });
