@@ -90,7 +90,7 @@ export class CourseMaterialsService {
           acc.set(row.materialId, {
             ...row,
             quarter: displayQuarter as any,
-            sectionCode: row.sectionCode ? row.sectionCode.toString(10).padStart(5, "0") : "00000",
+            sectionCode: row.sectionCode.toString(10).padStart(5, "0"),
           });
         }
         return acc;
