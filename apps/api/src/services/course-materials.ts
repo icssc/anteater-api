@@ -18,13 +18,13 @@ function buildQuery(input: CourseMaterialsServiceInput) {
   }
   if (input.quarter) {
     if (input.quarter === "Summer") {
-      conditions.push(inArray(websocCourse.quarter, ["Summer1", "Summer2", "Summer10wk"] as any[]));
+      conditions.push(inArray(websocCourse.quarter, ["Summer1", "Summer2", "Summer10wk"]));
     } else {
-      conditions.push(eq(websocCourse.quarter, input.quarter as any));
+      conditions.push(eq(websocCourse.quarter, input.quarter));
     }
   }
   if (input.instructor) {
-    conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+    conditions.push(ilike(websocSectionToInstructor.instructorName, `%${input.instructor}%`));
   }
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
