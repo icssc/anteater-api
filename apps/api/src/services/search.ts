@@ -173,15 +173,19 @@ export class SearchService {
       return this.doSearchForCourses(input, query);
     }
 
+    const courseAdjustedQuery = toQuery(input.query, "course");
+
     const results = await unionAll(
       this.db
         .select({
           type: sql<SearchResultType>`'course'`,
           id: course.id,
-          rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
+          rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${courseAdjustedQuery})`.mapWith(Number),
         })
         .from(course)
-        .where(and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${query}`)),
+        .where(
+          and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${courseAdjustedQuery}`),
+        ),
       this.db
         .select({
           type: sql<SearchResultType>`'instructor'`,
