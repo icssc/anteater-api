@@ -916,10 +916,12 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     )
     .limit(1);
 
-  // Get last snapshot to calculate time elapsed
+  // Get last snapshot scoped per-term to calculate time elapsed
   const lastSnapshot = await db
     .select({ createdAt: max(websocSectionEnrollment.createdAt) })
     .from(websocSectionEnrollment)
+    .innerJoin(websocSection, eq(websocSectionEnrollment.sectionId, websocSection.id))
+    .where(and(eq(websocSection.year, term.year), eq(websocSection.quarter, term.quarter)))
     .then(([row]) => row?.createdAt);
   /*
    * NOTE: Intervals are based on scraper start times, so actual data collection intervals
