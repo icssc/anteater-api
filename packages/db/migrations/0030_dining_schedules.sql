@@ -5,6 +5,21 @@ CREATE TABLE "dining_meal_period_type" (
 	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
+INSERT INTO "dining_meal_period_type" ("adobe_id", "name", "position", "updated_at") VALUES
+	(10, 'Breakfast', 50, NOW()),
+	(13, 'Brunch', 70, NOW()),
+	(25, 'Lunch', 90, NOW()),
+	(51, 'Lite Lunch', 95, NOW()),
+	(1, 'Afternoon Snack', 110, NOW()),
+	(53, 'Limited Dinner', 130, NOW()),
+	(16, 'Dinner', 140, NOW()),
+	(22, 'Evening Snack', 160, NOW()),
+	(31, 'Overnight', 170, NOW()),
+	(4, 'All Day', 180, NOW()),
+	(75, 'Happy Hour', 599, NOW()),
+	(72, 'Late Night', 600, NOW())
+ON CONFLICT ("adobe_id") DO NOTHING;
+--> statement-breakpoint
 CREATE TABLE "dining_schedule" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"restaurant_id" varchar NOT NULL,
@@ -44,6 +59,12 @@ ALTER TABLE "dining_schedule_meal_period" ADD CONSTRAINT "dining_schedule_meal_p
 ALTER TABLE "dining_schedule_meal_period" ADD CONSTRAINT "dining_schedule_meal_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk" FOREIGN KEY ("meal_period_type_id") REFERENCES "public"."dining_meal_period_type"("adobe_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "dining_schedule_restaurant_id_upstream_id_index" ON "dining_schedule" USING btree ("restaurant_id","upstream_id");--> statement-breakpoint
 CREATE INDEX "dining_schedule_restaurant_id_index" ON "dining_schedule" USING btree ("restaurant_id");--> statement-breakpoint
+INSERT INTO "dining_meal_period_type" ("adobe_id", "name", "position", "updated_at")
+SELECT DISTINCT "meal_period_type_id", 'Unknown', 0, NOW()
+FROM "dining_period"
+WHERE "meal_period_type_id" NOT IN (SELECT "adobe_id" FROM "dining_meal_period_type")
+ON CONFLICT ("adobe_id") DO NOTHING;
+--> statement-breakpoint
 ALTER TABLE "dining_period" ADD CONSTRAINT "dining_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk" FOREIGN KEY ("meal_period_type_id") REFERENCES "public"."dining_meal_period_type"("adobe_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "dining_period_meal_period_type_id_date_restaurant_id_index" ON "dining_period" USING btree ("meal_period_type_id","date","restaurant_id");--> statement-breakpoint
 ALTER TABLE "dining_period" DROP COLUMN "name";
