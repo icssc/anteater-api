@@ -1,21 +1,21 @@
-import { graphqlRouter } from "$graphql";
-import { defaultHook } from "$hooks";
-import {
-  globalRateLimiter,
-  headerInjector,
-  ipBasedRateLimiter,
-  keyVerifier,
-  openapiMeta,
-  redirectBrowserToDocs,
-  referenceOgTagInjector,
-} from "$middleware";
-import { restRouter } from "$rest";
-import type { ErrorSchema } from "$schema";
-import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { DurableObjectRateLimiter } from "@hono-rate-limiter/cloudflare";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { graphqlRouter } from "$graphql";
+import { defaultHook } from "$hooks";
+import {
+	globalRateLimiter,
+	headerInjector,
+	ipBasedRateLimiter,
+	keyVerifier,
+	openapiMeta,
+	redirectBrowserToDocs,
+	referenceOgTagInjector,
+} from "$middleware";
+import { restRouter } from "$rest";
+import type { ErrorSchema } from "$schema";
 
 const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
@@ -24,30 +24,32 @@ const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 const ogTitle = "Anteater API | API Reference";
 app.doc("/openapi.json", openapiMeta);
 app.use("/reference", referenceOgTagInjector(ogTitle)).get(
-  "/reference",
-  Scalar({
-    pageTitle: ogTitle,
-    favicon: "/favicon.svg",
-    url: "/openapi.json",
-  }),
+	"/reference",
+	Scalar({
+		pageTitle: ogTitle,
+		favicon: "/favicon.svg",
+		url: "/openapi.json",
+	}),
 );
 
 // Default handler configuration
 
 app.onError((err, c) =>
-  c.json<ErrorSchema>(
-    { ok: false, message: err.message.replaceAll(/"/g, "'") },
-    "getResponse" in err ? (err.getResponse().status as ContentfulStatusCode) : 500,
-  ),
+	c.json<ErrorSchema>(
+		{ ok: false, message: err.message.replaceAll(/"/g, "'") },
+		"getResponse" in err
+			? (err.getResponse().status as ContentfulStatusCode)
+			: 500,
+	),
 );
 app.notFound((c) =>
-  c.json<ErrorSchema>(
-    {
-      ok: false,
-      message: "The requested resource could not be found.",
-    },
-    404,
-  ),
+	c.json<ErrorSchema>(
+		{
+			ok: false,
+			message: "The requested resource could not be found.",
+		},
+		404,
+	),
 );
 
 // Middleware configuration

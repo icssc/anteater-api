@@ -14,8 +14,9 @@
     "@icssc/libwebsoc-next": "1.1.1",
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.0.0",
-    "cross-fetch": "4.0.0"
+    "@types/node": "22.9.3",
+    "cheerio": "1.2.0",
+    "cross-fetch": "4.1.0"
   },
   "devDependencies": {
     "wrangler": "4.0.0"

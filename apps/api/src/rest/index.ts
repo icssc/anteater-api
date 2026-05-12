@@ -1,5 +1,5 @@
-import { defaultHook } from "$hooks";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { defaultHook } from "$hooks";
 import { apExamsRouter } from "./routes/ap-exams.ts";
 import { calendarRouter } from "./routes/calendar";
 import { catalogueRouter } from "./routes/catalogue.ts";
@@ -7,7 +7,10 @@ import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { diningRouter } from "./routes/dining";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
 import { gradesRouter } from "./routes/grades";
-import { instructorsCursorRouter, instructorsRouter } from "./routes/instructors";
+import {
+	instructorsCursorRouter,
+	instructorsRouter,
+} from "./routes/instructors";
 import { larcRouter } from "./routes/larc.ts";
 import { libraryTrafficRouter } from "./routes/library-traffic";
 import { pingRouter } from "./routes/ping";

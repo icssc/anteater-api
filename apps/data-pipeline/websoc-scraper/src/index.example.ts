@@ -9,11 +9,12 @@ import { database } from "@packages/db";
  * `index.ts` is ignored, so no need to worry about your testing process being made public :)
  */
 async function main() {
-  const url = process.env.DB_URL;
-  if (!url) throw new Error("DB_URL not found");
-  const db = database(url);
-  // do something...
-  exit(0);
+	const url = process.env.DB_URL;
+	if (!url) throw new Error("DB_URL not found");
+	// biome-ignore lint/correctness/noUnusedVariables: example code is an example
+	const db = database(url);
+	// do something...
+	exit(0);
 }
 
 main().then();

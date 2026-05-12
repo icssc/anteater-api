@@ -1,6 +1,6 @@
-import type { ParsedNumber } from "$schema";
 import { z } from "@hono/zod-openapi";
 import { isBaseTenInt } from "@packages/stdlib";
+import type { ParsedNumber } from "$schema";
 
 /**
  * Transforms a string of course numbers into a list of ParsedNumber objects.
@@ -19,49 +19,58 @@ import { isBaseTenInt } from "@packages/stdlib";
  *
  * @returns a list of ParsedNumber objects
  */
-const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) => {
-  if (!nums) return undefined;
-  const parsedNums: ParsedNumber[] = [];
-  for (const num of nums.split(",").map((num) => num.trim())) {
-    if (num.includes("-")) {
-      const [lower, upper] = num.split("-");
-      if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
-        ctx.issues.push({
-          input: num,
-          code: "custom",
-          error: `'${num}' is not a valid course number range. The lower and upper bounds of a course number range must both be base-10 integers.`,
-        });
-        return z.NEVER;
-      }
-      parsedNums.push({
-        _type: "ParsedRange",
-        min: Number.parseInt(lower, 10),
-        max: Number.parseInt(upper, 10),
-      });
-      continue;
-    }
-    if (!isBaseTenInt(num)) {
-      parsedNums.push({ _type: "ParsedString", value: num });
-    } else {
-      parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(num, 10) });
-    }
-  }
-  return parsedNums;
+const courseNumberTransform = (
+	nums: string | undefined,
+	ctx: z.RefinementCtx,
+) => {
+	if (!nums) return undefined;
+	const parsedNums: ParsedNumber[] = [];
+	for (const num of nums.split(",").map((num) => num.trim())) {
+		if (num.includes("-")) {
+			const [lower, upper] = num.split("-");
+			if (!(isBaseTenInt(lower) && isBaseTenInt(upper))) {
+				ctx.issues.push({
+					input: num,
+					code: "custom",
+					error: `'${num}' is not a valid course number range. The lower and upper bounds of a course number range must both be base-10 integers.`,
+				});
+				return z.NEVER;
+			}
+			parsedNums.push({
+				_type: "ParsedRange",
+				min: Number.parseInt(lower, 10),
+				max: Number.parseInt(upper, 10),
+			});
+			continue;
+		}
+		if (!isBaseTenInt(num)) {
+			parsedNums.push({ _type: "ParsedString", value: num });
+		} else {
+			parsedNums.push({
+				_type: "ParsedInteger",
+				value: Number.parseInt(num, 10),
+			});
+		}
+	}
+	return parsedNums;
 };
 
-export const courseNumberSchema = z.string().transform(courseNumberTransform).openapi({
-  example: "46,6B,51-53",
-});
+export const courseNumberSchema = z
+	.string()
+	.transform(courseNumberTransform)
+	.openapi({
+		example: "46,6B,51-53",
+	});
 
 export const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
+	"GE-1A",
+	"GE-1B",
+	"GE-2",
+	"GE-3",
+	"GE-4",
+	"GE-5A",
+	"GE-5B",
+	"GE-6",
+	"GE-7",
+	"GE-8",
 ] as const;
