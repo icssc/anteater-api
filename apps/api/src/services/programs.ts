@@ -1,5 +1,7 @@
 import type { database } from "@packages/db";
-import { and, eq, sql } from "@packages/db/drizzle";
+import type { TableConfig } from "@packages/db/drizzle";
+import { and, type ColumnBaseConfig, eq, max, sql } from "@packages/db/drizzle";
+import type { PgColumn, PgTableWithColumns } from "@packages/db/drizzle-pg";
 import {
   catalogProgram,
   dwDegree,
@@ -30,6 +32,21 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
+  private catalogYearCondition<
+    // is config covariant over columns? if so, one of these parameters is obsolete
+    Config extends {
+      columns: Columns;
+    } & TableConfig,
+    Columns extends {
+      catalogYear: PgColumn<ColumnBaseConfig<"string", string>>;
+    },
+  >(table: PgTableWithColumns<Config>, catalogYear: string | undefined) {
+    return eq(
+      table.catalogYear,
+      catalogYear ?? this.db.select({ m: max(table.catalogYear).as("m") }).from(table),
+    );
+  }
+
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
@@ -56,10 +73,14 @@ export class ProgramsService {
         division: dwDegree.division,
       })
       .from(majorSpecialization)
-      .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
       .innerJoin(dwMajor, eq(majorSpecialization.id, dwMajor.id))
-      .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id));
-    // todo: CATALOG YEAR
+      .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id))
+      .where(
+        and(
+          query.id ? eq(majorSpecialization.id, query.id) : undefined,
+          this.catalogYearCondition(dwMajorYear, query.catalogYear),
+        ),
+      );
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {
@@ -119,7 +140,6 @@ export class ProgramsService {
           },
         })
         .from(dwMajor)
-        // todo: CATALOG YEAR
         .leftJoin(
           dwMajorSpecializationToRequirement,
           eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
@@ -134,6 +154,7 @@ export class ProgramsService {
             query.specializationId
               ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
               : undefined,
+            this.catalogYearCondition(dwMajorSpecializationToRequirement, query.catalogYear),
           ),
         )
         .limit(1);
@@ -152,8 +173,12 @@ export class ProgramsService {
       })
       .from(baseTable)
       .leftJoin(requirementsTable, eq(baseTable.id, requirementsTable.programId))
-      .where(eq(baseTable.id, query.programId))
-      // todo: CATALOG YEAR
+      .where(
+        and(
+          eq(baseTable.id, query.programId),
+          this.catalogYearCondition(requirementsTable, query.catalogYear),
+        ),
+      )
       .limit(1);
     return orNull(got);
   }
