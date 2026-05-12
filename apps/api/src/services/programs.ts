@@ -2,15 +2,15 @@ import type { database } from "@packages/db";
 import { and, eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
-  collegeRequirement,
-  degree,
-  major,
-  majorRequirement,
-  majorSpecializationToRequirement,
-  minor,
+  dwCollegeRequirement,
+  dwDegree,
+  dwMajor,
+  dwMajorRequirement,
+  dwMajorSpecializationToRequirement,
+  dwMinor,
+  dwSchoolRequirement,
+  dwSpecialization,
   sampleProgramVariation,
-  schoolRequirement,
-  specialization,
 } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
@@ -32,15 +32,15 @@ export class ProgramsService {
     const majorSpecialization = this.db.$with("major_specialization").as(
       this.db
         .select({
-          id: major.id,
-          name: major.name,
-          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${specialization.id}), NULL)`.as(
+          id: dwMajor.id,
+          name: dwMajor.name,
+          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${dwSpecialization.id}), NULL)`.as(
             "specializations",
           ),
         })
-        .from(major)
-        .leftJoin(specialization, eq(major.id, specialization.majorId))
-        .groupBy(major.id),
+        .from(dwMajor)
+        .leftJoin(dwSpecialization, eq(dwMajor.id, dwSpecialization.majorId))
+        .groupBy(dwMajor.id),
     );
 
     return this.db
@@ -48,36 +48,36 @@ export class ProgramsService {
       .select({
         id: majorSpecialization.id,
         name: majorSpecialization.name,
-        specializationRequired: major.specializationRequired,
+        specializationRequired: dwMajor.specializationRequired,
         specializations: majorSpecialization.specializations,
-        type: degree.name,
-        division: degree.division,
+        type: dwDegree.name,
+        division: dwDegree.division,
       })
       .from(majorSpecialization)
       .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
-      .innerJoin(major, eq(majorSpecialization.id, major.id))
-      .innerJoin(degree, eq(major.degreeId, degree.id));
+      .innerJoin(dwMajor, eq(majorSpecialization.id, dwMajor.id))
+      .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id));
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {
     return this.db
       .select({
-        id: minor.id,
-        name: minor.name,
+        id: dwMinor.id,
+        name: dwMinor.name,
       })
-      .from(minor)
-      .where(query.id ? eq(minor.id, query.id) : undefined);
+      .from(dwMinor)
+      .where(query.id ? eq(dwMinor.id, query.id) : undefined);
   }
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
       .select({
-        id: specialization.id,
-        majorId: specialization.majorId,
-        name: specialization.name,
+        id: dwSpecialization.id,
+        majorId: dwSpecialization.majorId,
+        name: dwSpecialization.name,
       })
-      .from(specialization)
-      .where(query.majorId ? eq(specialization.majorId, query.majorId) : undefined);
+      .from(dwSpecialization)
+      .where(query.majorId ? eq(dwSpecialization.majorId, query.majorId) : undefined);
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
@@ -107,39 +107,39 @@ export class ProgramsService {
     if (programType === "major") {
       const [got] = await this.db
         .select({
-          id: major.id,
-          name: major.name,
-          requirements: majorRequirement.requirements,
+          id: dwMajor.id,
+          name: dwMajor.name,
+          requirements: dwMajorRequirement.requirements,
           schoolRequirements: {
-            name: collegeRequirement.name,
-            requirements: collegeRequirement.requirements,
+            name: dwCollegeRequirement.name,
+            requirements: dwCollegeRequirement.requirements,
           },
         })
-        .from(major)
+        .from(dwMajor)
         .where(
           and(
-            eq(major.id, query.programId),
+            eq(dwMajor.id, query.programId),
             query.specializationId
-              ? eq(majorSpecializationToRequirement.specializationId, query.specializationId)
+              ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
               : undefined,
           ),
         )
-        .leftJoin(collegeRequirement, eq(major.collegeRequirementId, collegeRequirement.id))
+        .leftJoin(dwCollegeRequirement, eq(dwMajor.collegeRequirementId, dwCollegeRequirement.id))
         .leftJoin(
-          majorSpecializationToRequirement,
-          eq(major.id, majorSpecializationToRequirement.majorId),
+          dwMajorSpecializationToRequirement,
+          eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
         )
         .leftJoin(
-          majorRequirement,
-          eq(majorSpecializationToRequirement.requirementId, majorRequirement.id),
+          dwMajorRequirement,
+          eq(dwMajorSpecializationToRequirement.requirementId, dwMajorRequirement.id),
         )
         .limit(1);
       return orNull(got);
     }
 
     const table = {
-      minor,
-      specialization,
+      minor: dwMinor,
+      specialization: dwSpecialization,
     }[programType];
     const [got] = await this.db
       .select({ id: table.id, name: table.name, requirements: table.requirements })
@@ -152,11 +152,11 @@ export class ProgramsService {
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
     const [got] = await this.db
       .select({
-        id: schoolRequirement.id,
-        requirements: schoolRequirement.requirements,
+        id: dwSchoolRequirement.id,
+        requirements: dwSchoolRequirement.requirements,
       })
-      .from(schoolRequirement)
-      .where(eq(schoolRequirement.id, query.id))
+      .from(dwSchoolRequirement)
+      .where(eq(dwSchoolRequirement.id, query.id))
       .limit(1);
 
     return orNull(got);
