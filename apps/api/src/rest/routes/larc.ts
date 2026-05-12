@@ -21,7 +21,7 @@ const larcSectionsRoute = createRoute({
   path: "/",
   deprecated: true,
   description:
-    "Retrieves LARC sections data matching the given filters.\n\n**Deprecation Notice:** As of Spring 2026, UCI has disbanded the legacy LARC section system. There are currently no plans to serve the data offered by the new system but this may change in the future.",
+    "Retrieves LARC sections data matching the given filters.\n\n**Deprecation Notice:** As of Fall 2025, UCI has disbanded the legacy LARC section system. There are currently no plans to serve the data offered by the new system but this may change in the future.",
   request: { query: larcQuerySchema },
   responses: {
     200: response200(larcResponseSchema),
