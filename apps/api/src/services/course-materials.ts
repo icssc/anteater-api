@@ -8,6 +8,7 @@ import {
 } from "@packages/db/schema";
 import type { z } from "zod";
 import type { courseMaterialsQuerySchema } from "$schema";
+import { buildMultiCourseNumberQuery } from "./util.ts";
 
 type CourseMaterialsServiceInput = z.infer<typeof courseMaterialsQuerySchema>;
 
@@ -30,7 +31,7 @@ function buildQuery(input: CourseMaterialsServiceInput) {
     conditions.push(eq(websocCourse.deptCode, input.department));
   }
   if (input.courseNumber) {
-    conditions.push(eq(websocCourse.courseNumber, input.courseNumber));
+    conditions.push(...buildMultiCourseNumberQuery(input.courseNumber));
   }
   if (input.sectionCode) {
     conditions.push(eq(websocSection.sectionCode, Number.parseInt(input.sectionCode, 10)));
