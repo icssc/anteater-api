@@ -230,11 +230,10 @@ export const courseSchema = z.object({
   repeatability: z.string(),
   repeatabilityTimes: z.int().nullable().openapi({
     description:
-      "The numeric amount of the unit specified in `repeatabilityTimesType`, when equal to `null` the course may be taken an unlimited amount of times.",
+      "The numeric amount of the unit specified in `repeatabilityTimesType`, if `null` the course may be taken an unlimited amount of times.",
   }),
-  repeatabilityTimesType: z.string().nullable().openapi({
-    description:
-      "The unit of measurement for repeatability, when `repeatabilityTimes` is null, it can be safely assumed `repeatabilityTimesType` will be null and vice-versa. Will hold the value of `credit_hours` or `times` if not equal to null.",
+  repeatabilityTimesType: z.enum(["credit_hours", "times"]).nullable().openapi({
+    description: "The unit of measurement for repeatability.",
   }),
   gradingOption: z.string(),
   concurrent: z.string(),
