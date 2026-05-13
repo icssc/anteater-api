@@ -511,16 +511,16 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
               // Try to prevent TAs from being included
               // Lec sections (usually) only contain the primary instructor, so the intersection of instructors in Dis and Lec sections finds the primary instructor
 
-              // When the same course is taught by multiple professors, lectures are labeled with an alphabet
-              // and corresponding discussions/labs (usually) have that letter as a prefix/suffix
-              // Intersecting all sections when multiple instructors are teaching a course results in an empty list so we intersect after grouping by letters
+              // When a course has multiple offerings, lectures are (usually) labeled with an alphabet
+              // and corresponding discussions/labs have that letter as a prefix/suffix
+              // The intersection of potentially disjoint sets of instructors from different offerings would be empty so we only intersect within one offerings.
               const letterMatch = section.sectionNum.match(/[a-z]+/i);
-              const sectionGroup = letterMatch ? letterMatch[0] : "";
-              const groupedSections = course.sections
-                .filter((section) => section.sectionNum.match(sectionGroup))
+              const offeringGroup = letterMatch ? letterMatch[0] : "";
+              const SectionsInOffering = course.sections
+                .filter((section) => section.sectionNum.match(offeringGroup))
                 .map((section) => new Set(section.instructors));
               const instructorIntersection = Array.from(
-                intersectAll(groupedSections[0], ...groupedSections.slice(1)),
+                intersectAll(SectionsInOffering[0], ...SectionsInOffering.slice(1)),
               ).map((instructor) => [section.sectionCode, instructor]);
 
               // The above pattern is heuristic. When it doesn't work, simply return the original listed instructors
