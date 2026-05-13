@@ -228,8 +228,14 @@ export const courseSchema = z.object({
   prerequisites: coursePreviewSchema.array(),
   dependencies: coursePreviewSchema.array(),
   repeatability: z.string(),
-  repeatabilityTimes: z.int().nullable(),
-  repeatabilityTimesType: z.string().nullable(),
+  repeatabilityTimes: z.int().nullable().openapi({
+    description:
+      "The numeric amount of the unit specified in `repeatabilityTimesType`, when equal to `null` the course may be taken an unlimited amount of times.",
+  }),
+  repeatabilityTimesType: z.string().nullable().openapi({
+    description:
+      "The unit of measurement for repeatability, when `repeatabilityTimes` is null, it can be safely assumed `repeatabilityTimesType` will be null and vice-versa. Will hold the value of `credit_hours` or `times` if not equal to null.",
+  }),
   gradingOption: z.string(),
   concurrent: z.string(),
   sameAs: z.string(),
