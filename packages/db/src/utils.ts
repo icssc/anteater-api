@@ -2,7 +2,7 @@ import type { ColumnBaseConfig, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import type { terms } from "./schema";
+import type { Term, terms } from "./schema";
 
 export const isTrue = <T extends ColumnBaseConfig<"boolean", string>>(col: PgColumn<T>): SQL =>
   eq(col, true);
@@ -11,7 +11,7 @@ export const isFalse = <T extends ColumnBaseConfig<"boolean", string>>(col: PgCo
   eq(col, false);
 
 export function websocTermSortOrder(
-  col: PgColumn<ColumnBaseConfig<"string", "PgEnumColumn"> & { enumValues: typeof terms }> | string,
+  col: PgColumn<ColumnBaseConfig<"string", "PgEnumColumn"> & { enumValues: typeof terms }> | Term,
 ) {
   return sql`CASE ${col} 
   WHEN 'Fall' THEN 5
