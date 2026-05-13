@@ -2,8 +2,14 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { and, eq, isNotNull, isNull, or } from "@packages/db/drizzle";
-import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
+import { and, eq, isNull } from "@packages/db/drizzle";
+import {
+  instructor,
+  instructorToWebsocInstructor,
+  websocInstructor,
+  websocSection,
+  websocSectionToInstructor,
+} from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
 import fetch from "cross-fetch";
@@ -36,8 +42,6 @@ const DIRECTORY_URL = "https://directory.uci.edu/";
 const HEADERS_INIT = {
   "Content-Type": "application/x-www-form-urlencoded",
 };
-
-const INSTRUCTOR_DELIMETER = "&|*";
 
 const FILTER_KEYWORDS = ["professor", "lecturer", "faculty", "graduate"];
 
@@ -155,38 +159,35 @@ async function main() {
 
   const names = await db
     .select({
+      id: websocInstructor.id,
       name: websocInstructor.name,
       department: websocInstructor.department,
     })
     .from(websocInstructor)
     .leftJoin(
       instructorToWebsocInstructor,
-      eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
     )
-    .where(
-      and(
-        or(
-          isNull(instructorToWebsocInstructor.websocInstructorName),
-          isNull(instructorToWebsocInstructor.instructorUcinetid),
-        ),
-        // filter out legacy websoc instructor entries
-        isNotNull(websocInstructor.department),
-      ),
+    .leftJoin(
+      websocSectionToInstructor,
+      eq(websocSectionToInstructor.instructorId, websocInstructor.id),
     )
+    .leftJoin(websocSection, eq(websocSectionToInstructor.sectionId, websocSection.id))
+    .where(and(isNull(instructorToWebsocInstructor.instructorUcinetid)))
     .then((rows) => rows.filter((x) => !x.name.startsWith("STAFF")));
+
+  console.log(names);
 
   logger.info(`Found ${names.length} WebSoc instructors without associated instructors`);
 
-  const shortNamesToUcinetids = new Map<string, Array<string | null>>();
+  const websocIdToUcinetids = new Map<string, Array<string | null>>();
   const ucinetidToInstructorObject = new Map<string, typeof instructor.$inferInsert>();
 
   for (const row of names) {
-    let name = row.name;
+    const name = row.name;
     const department = row.department;
 
-    const uniqueName = name;
-    const delimIndex = name.indexOf(INSTRUCTOR_DELIMETER);
-    if (delimIndex !== -1) name = name.substring(0, delimIndex);
+    const uniqueWebsocId = row.id;
 
     const normalizedName = name.toLowerCase().replaceAll(/, ?/g, " ").trim();
     const fullyNormalizedName = normalizedName.replaceAll(/\./g, " ").trim();
@@ -218,10 +219,10 @@ async function main() {
       logger.warn("Did not find any entries for this instructor.");
       logger.warn("Assigning this instructor a null UCInetID.");
 
-      if (shortNamesToUcinetids.has(uniqueName)) {
-        shortNamesToUcinetids.get(uniqueName)?.push(null);
+      if (websocIdToUcinetids.has(uniqueWebsocId)) {
+        websocIdToUcinetids.get(uniqueWebsocId)?.push(null);
       } else {
-        shortNamesToUcinetids.set(uniqueName, [null]);
+        websocIdToUcinetids.set(uniqueWebsocId, [null]);
       }
 
       continue;
@@ -237,10 +238,10 @@ async function main() {
         logger.warn("Mapping this instructor to the UCInetID 'student'.");
       }
 
-      if (shortNamesToUcinetids.has(uniqueName)) {
-        shortNamesToUcinetids.get(uniqueName)?.push(instructor.ucinetid);
+      if (websocIdToUcinetids.has(uniqueWebsocId)) {
+        websocIdToUcinetids.get(uniqueWebsocId)?.push(instructor.ucinetid);
       } else {
-        shortNamesToUcinetids.set(uniqueName, [instructor.ucinetid]);
+        websocIdToUcinetids.set(uniqueWebsocId, [instructor.ucinetid]);
       }
 
       ucinetidToInstructorObject.set(instructor.ucinetid, instructor);
@@ -286,10 +287,10 @@ async function main() {
           logger.warn("Mapping this instructor to the UCInetID 'student'.");
         }
 
-        if (shortNamesToUcinetids.has(uniqueName)) {
-          shortNamesToUcinetids.get(uniqueName)?.push(instructor.ucinetid);
+        if (websocIdToUcinetids.has(uniqueWebsocId)) {
+          websocIdToUcinetids.get(uniqueWebsocId)?.push(instructor.ucinetid);
         } else {
-          shortNamesToUcinetids.set(uniqueName, [instructor.ucinetid]);
+          websocIdToUcinetids.set(uniqueWebsocId, [instructor.ucinetid]);
         }
 
         // map is used to avoid ucinet collisions
@@ -317,23 +318,23 @@ async function main() {
     logger.error(`Cannot find a unique match for instructor with WebSoc name '${name}'.`);
     logger.error("Assigning this instructor a null UCInetID.");
 
-    if (shortNamesToUcinetids.has(uniqueName)) {
-      shortNamesToUcinetids.get(uniqueName)?.push(null);
+    if (websocIdToUcinetids.has(uniqueWebsocId)) {
+      websocIdToUcinetids.get(uniqueWebsocId)?.push(null);
     } else {
-      shortNamesToUcinetids.set(uniqueName, [null]);
+      websocIdToUcinetids.set(uniqueWebsocId, [null]);
     }
   }
 
   const uciNetIds = [
     ...new Set(
-      Array.from(shortNamesToUcinetids).flatMap(([websocInstructorName, ucinetIds]) =>
+      Array.from(websocIdToUcinetids).flatMap(([websocInstructorId, ucinetIds]) =>
         ucinetIds.map((instructorUcinetid) => ({
           instructorUcinetid,
-          websocInstructorName,
+          websocInstructorId,
         })),
       ),
     ),
-  ].filter((v, i) => v.instructorUcinetid !== "student");
+  ].filter((v) => v.instructorUcinetid !== "student");
 
   await db.transaction(async (tx) => {
     await tx
@@ -349,7 +350,7 @@ async function main() {
       .onConflictDoUpdate({
         target: [
           instructorToWebsocInstructor.instructorUcinetid,
-          instructorToWebsocInstructor.websocInstructorName,
+          instructorToWebsocInstructor.websocInstructorId,
         ],
         set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
       });

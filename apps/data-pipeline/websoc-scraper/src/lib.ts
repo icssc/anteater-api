@@ -47,11 +47,6 @@ const SECTIONS_PER_CHUNK = 891;
  */
 const LAST_SECTION_CODE = 97999;
 
-/**
- * Separates faculty names and their school/departments during processing.
- */
-const INSTRUCTOR_DELIMETER = "&|*";
-
 const geCategories = [
   "GE-1A",
   "GE-1B",
@@ -516,7 +511,11 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
               return section.instructors.map((ins) => {
                 return [
                   section.sectionCode,
-                  `${ins}${INSTRUCTOR_DELIMETER}${school.schoolName}${INSTRUCTOR_DELIMETER}${dept.deptName}`,
+                  {
+                    name: ins,
+                    school: school.schoolName,
+                    department: dept.deptName,
+                  },
                 ];
               });
             }),
@@ -524,31 +523,28 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
         ),
       )
       .reduce((acc, [sectionCode, instructor]) => {
-        if (acc.get(sectionCode)) {
-          acc.get(sectionCode)?.push(instructor);
+        const sc = sectionCode as string;
+        if (acc.get(sc)) {
+          acc.get(sc)?.push(instructor as { name: string; school: string; department: string });
           return acc;
         }
-        return acc.set(sectionCode, [instructor]);
-      }, new Map<string, string[]>());
+        return acc.set(sc, [instructor as { name: string; school: string; department: string }]);
+      }, new Map<string, { name: string; school: string; department: string; id?: string }[]>());
 
     // pray that two people with the same last name and first initial don't work in the same school
     const instructorsToInsert = Array.from(new Set(sectionsToInstructors.values())).flatMap(
-      (names) =>
-        names.map((name) => {
-          const instructorDataParts = name.split(INSTRUCTOR_DELIMETER);
-
+      (instructors) =>
+        instructors.map((instructor) => {
           return {
-            identifier: instructorDataParts[0],
-            name: `${instructorDataParts[0]}${INSTRUCTOR_DELIMETER}${instructorDataParts[1]}${INSTRUCTOR_DELIMETER}`,
-            school: instructorDataParts[1],
-            department: instructorDataParts[2],
+            ...instructor,
             updatedAt,
           };
         }),
     );
 
     if (instructorsToInsert.length) {
-      await tx
+      // we need to make sure they all have ids, so this one can't be atomic...
+      const updatedInstructors = await tx
         .insert(websocInstructor)
         .values(
           instructorsToInsert.filter((w, i) => {
@@ -556,9 +552,39 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
           }),
         )
         .onConflictDoUpdate({
-          target: websocInstructor.name,
+          target: [websocInstructor.name, websocInstructor.school],
           set: conflictUpdateSetAllCols(websocInstructor),
+        })
+        .returning({
+          id: websocInstructor.id,
+          name: websocInstructor.name,
+          school: websocInstructor.school,
+          department: websocInstructor.department,
         });
+
+      for (const w of sectionsToInstructors.keys()) {
+        const instructors = sectionsToInstructors.get(w);
+        const newSectionInstructors = [];
+        if (instructors) {
+          for (const instructor of instructors) {
+            newSectionInstructors.push(
+              updatedInstructors.find(
+                (v) => v.name === instructor.name && v.school === instructor.school,
+              ),
+            );
+          }
+
+          sectionsToInstructors.set(
+            w,
+            newSectionInstructors as {
+              id?: string;
+              name: string;
+              school: string;
+              department: string;
+            }[],
+          );
+        }
+      }
     }
 
     await tx.delete(websocSectionToInstructor).where(
@@ -574,25 +600,25 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
 
     const instructorAssociationsToInsert = sectionsToInstructors
       .entries()
-      .flatMap(([k, names]) =>
-        names.map((instructorName) => {
+      .flatMap(([k, instructors]) =>
+        instructors.map((instructor) => {
           const sectionId = sections.get(k);
-          return sectionId
+
+          return sectionId && instructor?.id
             ? {
                 sectionId,
-                instructorName: instructorName.substring(
-                  0,
-                  instructorName.lastIndexOf(INSTRUCTOR_DELIMETER) + 3,
-                ),
+                instructorId: instructor.id,
               }
             : undefined;
         }),
       )
-      .filter(notNull)
-      .toArray();
+      .toArray()
+      .filter(notNull);
+
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }
+
     await tx
       .delete(websocSectionMeeting)
       .where(inArray(websocSectionMeeting.sectionId, sections.values().toArray()));
