@@ -1,8 +1,8 @@
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
+import { and, asc, desc, eq, inArray, notLike, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
-import { course, instructor } from "@packages/db/schema";
+import { course, instructor, websocDepartment } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
@@ -60,6 +60,28 @@ export class SearchService {
     private readonly coursesService: CoursesService,
     private readonly instructorsService: InstructorsService,
   ) {}
+
+  private async buildInstructorConditions(input: SearchServiceInput) {
+    const deptNames = [];
+
+    if (input.department)
+      for (const deptCode of input.department) {
+        const nameEntries = await this.db
+          .select({ name: websocDepartment.deptName })
+          .from(websocDepartment)
+          .where(
+            and(eq(websocDepartment.deptCode, deptCode), notLike(websocDepartment.deptName, "%*")),
+          )
+          .limit(1);
+
+        if (nameEntries.length) deptNames.push(nameEntries[0].name);
+      }
+    else return and();
+
+    console.log(deptNames);
+
+    return inArray(instructor.department, deptNames);
+  }
 
   private buildCourseConditions(input: SearchServiceInput) {
     const geIn = input.ge ?? [];
@@ -140,7 +162,9 @@ export class SearchService {
         rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
       })
       .from(instructor)
-      .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)
+      .where(
+        and(await this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
+      )
       .offset(input.skip)
       .limit(input.take)
       .orderBy((t) => [desc(t.rank), asc(t.id)])
@@ -190,7 +214,9 @@ export class SearchService {
           rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(instructor)
-        .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
+        .where(
+          and(await this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
+        ),
     ).then((rows) =>
       rows.reduce(
         (acc, row) => {
