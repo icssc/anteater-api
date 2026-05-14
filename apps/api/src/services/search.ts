@@ -78,8 +78,6 @@ export class SearchService {
       }
     else return and();
 
-    console.log(deptNames);
-
     return inArray(instructor.department, deptNames);
   }
 
