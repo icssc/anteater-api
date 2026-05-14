@@ -2,14 +2,8 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { and, eq, isNull } from "@packages/db/drizzle";
-import {
-  instructor,
-  instructorToWebsocInstructor,
-  websocInstructor,
-  websocSection,
-  websocSectionToInstructor,
-} from "@packages/db/schema";
+import { and, eq, isNotNull, isNull } from "@packages/db/drizzle";
+import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
 import fetch from "cross-fetch";
@@ -48,6 +42,8 @@ const FILTER_KEYWORDS = ["professor", "lecturer", "faculty", "graduate"];
 const MAX_DELAY_MS = 8_000;
 
 const INSTRUCTOR_MAX_SURNAME_LENGTH = 14;
+
+const PARTIAL_WRITE_PERIOD = 10;
 
 type DirectoryEntry = {
   UCInetID: string;
@@ -168,12 +164,12 @@ async function main() {
       instructorToWebsocInstructor,
       eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
     )
-    .leftJoin(
-      websocSectionToInstructor,
-      eq(websocSectionToInstructor.instructorId, websocInstructor.id),
+    .where(
+      and(
+        isNull(instructorToWebsocInstructor.instructorUcinetid),
+        isNotNull(websocInstructor.department),
+      ),
     )
-    .leftJoin(websocSection, eq(websocSectionToInstructor.sectionId, websocSection.id))
-    .where(and(isNull(instructorToWebsocInstructor.instructorUcinetid)))
     .then((rows) => rows.filter((x) => !x.name.startsWith("STAFF")));
 
   console.log(names);
@@ -182,8 +178,10 @@ async function main() {
 
   const websocIdToUcinetids = new Map<string, Array<string | null>>();
   const ucinetidToInstructorObject = new Map<string, typeof instructor.$inferInsert>();
+  let i = 0;
 
   for (const row of names) {
+    i++;
     const name = row.name;
     const department = row.department;
 
@@ -309,6 +307,45 @@ async function main() {
           `Still found multiple entries for this instructor when narrowing for '${keyword}'.`,
         );
       }
+    }
+
+    if (i % PARTIAL_WRITE_PERIOD === 0) {
+      // small wip, yes there's repeated work rn
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(instructor)
+          .values(ucinetidToInstructorObject.values().toArray())
+          .onConflictDoUpdate({
+            target: instructor.ucinetid,
+            set: conflictUpdateSetAllCols(instructor),
+          });
+        await tx
+          .insert(instructorToWebsocInstructor)
+          .values(
+            [
+              ...new Set(
+                Array.from(websocIdToUcinetids).flatMap(([websocInstructorId, ucinetIds]) =>
+                  ucinetIds.map((instructorUcinetid) => ({
+                    instructorUcinetid,
+                    websocInstructorId,
+                  })),
+                ),
+              ),
+            ].filter((v) => v.instructorUcinetid !== "student"),
+          )
+          .onConflictDoUpdate({
+            target: [
+              instructorToWebsocInstructor.instructorUcinetid,
+              instructorToWebsocInstructor.websocInstructorId,
+            ],
+            set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
+          });
+      });
+
+      /*
+      websocIdToUcinetids.clear();
+      ucinetidToInstructorObject.clear();
+      */
     }
 
     if (uniquelyResolvedInstructor) {
