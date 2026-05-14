@@ -4,7 +4,11 @@ import { CourseMaterialsService } from "$services";
 
 export const courseMaterialsResolvers = {
   Query: {
-    samplePrograms: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
+    filterCourseMaterials: async (
+      _: unknown,
+      args: { query?: unknown },
+      { db }: GraphQLContext,
+    ) => {
       const service = new CourseMaterialsService(db);
       return await service.getCourseMaterials(courseMaterialsQuerySchema.parse(args.query));
     },
