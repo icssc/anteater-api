@@ -19,7 +19,7 @@ enum MaterialRequirement {
     GoToClassFirst
 }
 
-type FilterCourseMaterials @cacheControl(maxAge: 86400) {
+type GetCourseMaterials @cacheControl(maxAge: 86400) {
     year: String!
     quarter: MaterialTerm!
     sectionCode: String!

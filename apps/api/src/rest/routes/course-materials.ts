@@ -13,9 +13,9 @@ import { CourseMaterialsService } from "$services";
 
 const courseMaterialsRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
-const filterCourseMaterialsRoute = createRoute({
-  summary: "Filter course materials",
-  operationId: "filterCourseMaterials",
+const getCourseMaterialsRoute = createRoute({
+  summary: "Retrieve course materials",
+  operationId: "getCourseMaterials",
   tags: ["Course Materials"],
   method: "get",
   path: "/",
@@ -33,7 +33,7 @@ courseMaterialsRouter.get(
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
-courseMaterialsRouter.openapi(filterCourseMaterialsRoute, async (c) => {
+courseMaterialsRouter.openapi(getCourseMaterialsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new CourseMaterialsService(database(c.env.DB.connectionString));
   return c.json(
