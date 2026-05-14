@@ -1,5 +1,5 @@
 {
-  "id": "763fcb4b-929c-4f5a-a0b7-91b6c8cf4504",
+  "id": "8215d9eb-fe64-4091-abba-19e2c30f7a92",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -614,7 +614,7 @@
           "name": "section_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "isbn": {
           "name": "isbn",

@@ -882,7 +882,9 @@ export const courseMaterial = pgTable(
   "course_material",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    sectionId: uuid("section_id").references(() => websocSection.id),
+    sectionId: uuid("section_id")
+      .references(() => websocSection.id)
+      .notNull(),
     isbn: varchar("isbn"),
     author: varchar("author"),
     title: varchar("title").notNull(),
