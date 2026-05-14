@@ -15,7 +15,7 @@ export const searchQuerySchema = z.object({
     .pipe(z.string().array())
     .optional()
     .openapi({
-      description: "If searching for courses, they must be from one of these departments",
+      description: "Course/Instructor must be from one of these departments",
       example: "BIO SCI,GDIM",
     }),
   courseLevel: z.coerce
