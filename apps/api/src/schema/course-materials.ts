@@ -41,9 +41,8 @@ export const courseMaterialsQuerySchema = z.object({
   format: z.enum(textbookFormats).optional(),
   requirement: z.preprocess(
     (val) => (typeof val === "string" ? (requirementMap[val] ?? val) : val),
-    z.enum(materialRequirements),
+    z.enum(materialRequirements).optional(),
   ),
-  // requirement: z.enum(materialRequirements).optional(),
 });
 
 export const courseMaterialsSchema = z.object({
