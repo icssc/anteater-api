@@ -16,7 +16,7 @@ enum TextbookFormat {
 enum MaterialRequirement {
     Required
     Recommended
-    Go to Class First
+    GoToClassFirst
 }
 
 type FilterCourseMaterials @cacheControl(maxAge: 86400) {
