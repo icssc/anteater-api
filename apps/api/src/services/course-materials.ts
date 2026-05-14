@@ -7,7 +7,7 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
-import type { courseMaterialsQuerySchema } from "$schema";
+import type { courseMaterialsQuerySchema, courseMaterialsSchema } from "$schema";
 import { buildMultiCourseNumberQuery } from "./util.ts";
 
 type CourseMaterialsServiceInput = z.infer<typeof courseMaterialsQuerySchema>;
@@ -95,7 +95,7 @@ export class CourseMaterialsService {
           });
         }
         return acc;
-      }, new Map<string, any>())
+      }, new Map<string, z.infer<typeof courseMaterialsSchema>>())
       .values()
       .toArray();
   }
