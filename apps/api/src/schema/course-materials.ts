@@ -44,12 +44,40 @@ export const courseMaterialsSchema = z.object({
   courseNumber: z.string(),
   courseNumeric: z.number(),
   instructors: z.string().array(),
-  author: z.string().nullable(),
-  title: z.string(),
-  edition: z.string().nullable(),
-  format: z.enum(textbookFormats),
-  requirement: z.enum(materialRequirements).nullable(),
-  isbn: z.string().nullable(),
-  mmsId: z.string().nullable(),
-  link: z.string().nullable(),
+  author: z.string().nullable().openapi({
+    description: "The author of this course material.",
+    example: "KLEINBERG",
+  }),
+  title: z.string().openapi({
+    description: "The title of this course material.",
+    example: "ALGORITHM DESIGN",
+  }),
+  edition: z
+    .string()
+    .nullable()
+    .openapi({
+      description: "The edition of this course material (formatting varies).",
+      example: ["Third edition.", "14", "5TH 17"],
+    }),
+  format: z.enum(textbookFormats).openapi({
+    description: "The format in which this course material is offered.",
+  }),
+  requirement: z.enum(materialRequirements).nullable().openapi({
+    description: "The extent to which this course material is required for this particular course.",
+  }),
+  isbn: z.string().nullable().openapi({
+    description: "The ISBN of this course material.",
+    example: "9780062065254",
+  }),
+  mmsId: z.string().nullable().openapi({
+    description:
+      "The Metadata Management System ID of this course material, typically used to determine the material's URL.",
+    example: "9780062065254",
+  }),
+  link: z.string().nullable().openapi({
+    description:
+      "The URL of this course material, typically located under https://uci.primo.exlibrisgroup.com.",
+    example:
+      "https://uci.primo.exlibrisgroup.com/permalink/01CDL_IRV_INST/17uq3m8/alma991014089349704701",
+  }),
 });
