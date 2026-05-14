@@ -12,7 +12,7 @@ import {
   websocDepartment,
   websocSchool,
 } from "@packages/db/schema";
-import { orNull, sleep } from "@packages/stdlib";
+import { DEPT_TO_ALIAS, type DeptCode, orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
 import fetch from "cross-fetch";
 import type { Element as DomElement } from "domhandler";
@@ -62,18 +62,6 @@ const unitFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
   minimumFractionDigits: 2,
 });
-
-const DEPT_TO_ALIAS = {
-  COMPSCI: "CS",
-  EARTHSS: "ESS",
-  "I&C SCI": "ICS",
-  IN4MATX: "INF",
-  ENGRMAE: "MAE",
-  WRITING: "WR",
-} as const;
-
-type DeptAliasMap = typeof DEPT_TO_ALIAS;
-type DeptCode = keyof DeptAliasMap;
 
 const getDepartmentAlias = (dept: string) => orNull(DEPT_TO_ALIAS[dept as DeptCode]);
 
