@@ -86,7 +86,7 @@ export class CourseMaterialsService {
 
     return rows
       .reduce((acc, row) => {
-        if (row && row.materialId && !acc.has(row.materialId)) {
+        if (row?.materialId && !acc.has(row.materialId)) {
           const displayQuarter = row.quarter.startsWith("Summer") ? "Summer" : row.quarter;
           acc.set(row.materialId, {
             ...row,
