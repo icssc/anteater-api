@@ -90,6 +90,9 @@ importers:
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
+      drizzle-orm:
+        specifier: 0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20241230.0)(postgres@3.4.8)
 
   apps/data-pipeline/calendar-scraper:
     dependencies:
