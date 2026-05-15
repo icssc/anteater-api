@@ -8,12 +8,6 @@ const MAX_RANGE_DAYS: Record<string, number> = {
 };
 
 export const libraryTrafficHistoryRawQuerySchema = z.object({
-  locationId: z.coerce
-    .number()
-    .int()
-    .nonnegative()
-    .optional()
-    .openapi({ example: 245, description: "Filter results by Occuspace location ID" }),
   locationName: z.string().optional().openapi({
     example: "4th Floor - Nordstrom Honors Study Room",
     description: "Filter results by name of this floor / section",
@@ -38,15 +32,16 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
     example: "instruction",
   }),
   startDate: z.coerce.date().optional().openapi({
-    example: "2025-01-01",
+    example: "2025-01-01T00:00:00Z",
     description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
   }),
   endDate: z.coerce.date().optional().openapi({
-    example: "2025-03-21",
+    example: "2025-03-21T23:59:59Z",
     description: "End of the time range (inclusive) — overridden by year/quarter if provided",
   }),
   cursor: z.string().optional().openapi({
-    description: "ISO timestamp cursor from previous response — returns rows after this point",
+    description:
+      "Pagination cursor (row id) from a previous response's nextCursor — returns rows after this point",
   }),
   take: z.coerce.number().int().positive().max(500).default(100).openapi({
     description: "Number of rows to return per page (max 500)",
@@ -70,32 +65,44 @@ export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEn
 
 export const libraryTrafficHistoryAggregatedQuerySchema = z
   .object({
-    locationId: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .openapi({ example: 245, description: "Filter results by Occuspace location ID" }),
     locationName: z.string().optional().openapi({
       example: "4th Floor - Nordstrom Honors Study Room",
       description: "Filter results by name of this floor / section",
     }),
     libraryName: z.string().optional().openapi({
       example: "Langson Library",
-      description: "Filter results by library name (averages across all locations in that library)",
+      description: "Filter results by library name (returns one row per location in that library)",
     }),
     granularity: z.enum(["hour", "day", "week", "month"]).default("hour").openapi({
       description: "Time bucket size for averaging results",
       example: "hour",
     }),
+    year: z.string().optional().openapi({
+      example: "2025",
+      description:
+        "Academic year — use with quarter to scope results to a term (overrides startDate/endDate)",
+    }),
+    quarter: z
+      .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
+      .optional()
+      .openapi({
+        example: "Winter",
+        description:
+          "Academic quarter — use with year to scope results to a term (overrides startDate/endDate)",
+      }),
+    period: z.enum(["instruction", "finals"]).default("instruction").openapi({
+      description:
+        "Which part of the term to filter to (only applies when year + quarter provided)",
+      example: "instruction",
+    }),
     startDate: z.coerce.date().openapi({
-      example: "2025-01-01",
-      description: "Start of the time range (inclusive)",
+      example: "2025-01-01T00:00:00Z",
+      description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
     }),
     endDate: z.coerce.date().openapi({
-      example: "2025-01-31",
+      example: "2025-01-31T23:59:59Z",
       description:
-        "End of the time range (inclusive). Max range: 14 days for hour, 365 days for day, 730 days for week/month.",
+        "End of the time range (inclusive) — overridden by year/quarter if provided. Max range: 14 days for hour, 365 days for day, 730 days for week/month.",
     }),
   })
   .refine(
@@ -134,12 +141,6 @@ export const libraryTrafficHistoryAggregatedSchema = z.array(
 
 export const libraryTrafficHistoryPatternQuerySchema = z
   .object({
-    locationId: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .openapi({ example: 245, description: "Filter results by Occuspace location ID" }),
     locationName: z.string().optional().openapi({
       example: "4th Floor - Nordstrom Honors Study Room",
       description: "Filter results by name of this floor / section",
@@ -152,24 +153,39 @@ export const libraryTrafficHistoryPatternQuerySchema = z
       description: "Cycle to group by — hour (0-23), day (Mon-Sun), week (1-53), month (Jan-Dec)",
       example: "hour",
     }),
+    year: z.string().optional().openapi({
+      example: "2025",
+      description: "Academic year — use with quarter to scope pattern to a term",
+    }),
+    quarter: z
+      .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
+      .optional()
+      .openapi({
+        example: "Winter",
+        description: "Academic quarter — use with year to scope pattern to a term",
+      }),
+    period: z.enum(["instruction", "finals"]).default("instruction").openapi({
+      description:
+        "Which part of the term to filter to (only applies when year + quarter provided)",
+      example: "instruction",
+    }),
     startDate: z.coerce.date().optional().openapi({
-      example: "2025-01-01",
-      description: "Start of the time range (inclusive)",
+      example: "2025-01-01T00:00:00Z",
+      description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
     }),
     endDate: z.coerce.date().optional().openapi({
-      example: "2025-12-31",
-      description: "End of the time range (inclusive). Max range: 730 days.",
+      example: "2025-12-31T23:59:59Z",
+      description: "End of the time range (inclusive) — overridden by year/quarter if provided",
     }),
   })
   .refine(
     ({ startDate, endDate }) => {
       if (startDate && endDate) {
-        const diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-        return diff >= 0 && diff <= 730;
+        return endDate.getTime() >= startDate.getTime();
       }
       return true;
     },
-    { message: "Date range must be between 0 and 730 days" },
+    { message: "endDate must be on or after startDate" },
   );
 
 export const libraryTrafficHistoryPatternEntrySchema = z.object({
