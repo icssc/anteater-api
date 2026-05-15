@@ -273,11 +273,10 @@ export class DiningService {
     }
 
     if (!query.includeHistorical) {
-      const filter = or(
-        isNull(diningSchedule.endDate),
-        gte(diningSchedule.endDate, sql`CURRENT_DATE`),
+      // standard and current/upcoming special schedules by default
+      conds.push(
+        or(isNull(diningSchedule.endDate), gte(diningSchedule.endDate, sql`CURRENT_DATE`))!,
       );
-      if (filter) conds.push(filter);
     }
 
     const rows = await this.db
