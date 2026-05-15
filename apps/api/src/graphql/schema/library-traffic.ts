@@ -49,7 +49,6 @@ type LibraryTrafficHistoryRawPage {
 }
 
 input LibraryTrafficHistoryRawQuery {
-  locationId: Int
   locationName: String
   libraryName: String
   year: String
@@ -61,7 +60,7 @@ input LibraryTrafficHistoryRawQuery {
   take: Int
 }
 
-type LibraryTrafficHistoryEntry @cacheControl(maxAge: 900) {
+type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 900) {
   locationId: Int!
   locationName: String!
   libraryName: String!
@@ -70,11 +69,13 @@ type LibraryTrafficHistoryEntry @cacheControl(maxAge: 900) {
   avgPercentage: Float!
 }
 
-input LibraryTrafficHistoryQuery {
-  locationId: Int
+input LibraryTrafficHistoryAggregatedQuery {
   locationName: String
   libraryName: String
   granularity: LibraryTrafficGranularity
+  year: String
+  quarter: LibraryTrafficQuarter
+  period: LibraryTrafficPeriod
   startDate: String!
   endDate: String!
 }
@@ -90,10 +91,12 @@ type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 900) {
 }
 
 input LibraryTrafficHistoryPatternQuery {
-  locationId: Int
   locationName: String
   libraryName: String
   granularity: LibraryTrafficGranularity
+  year: String
+  quarter: LibraryTrafficQuarter
+  period: LibraryTrafficPeriod
   startDate: String
   endDate: String
 }
@@ -101,7 +104,7 @@ input LibraryTrafficHistoryPatternQuery {
 extend type Query {
   libraryTraffic(query: LibraryTrafficQuery): [LibraryTraffic!]!
   libraryTrafficHistory(query: LibraryTrafficHistoryRawQuery): LibraryTrafficHistoryRawPage!
-  libraryTrafficHistoryAggregated(query: LibraryTrafficHistoryQuery): [LibraryTrafficHistoryEntry!]!
+  libraryTrafficHistoryAggregated(query: LibraryTrafficHistoryAggregatedQuery): [LibraryTrafficHistoryAggregatedEntry!]!
   libraryTrafficHistoryPattern(query: LibraryTrafficHistoryPatternQuery): [LibraryTrafficHistoryPatternEntry!]!
 }
 `;
