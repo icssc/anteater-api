@@ -320,7 +320,7 @@ export class DiningService {
         diningMealPeriodType,
         eq(diningScheduleMealPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
       )
-      .where(conds.length > 0 ? and(...conds) : undefined)
+      .where(and(...conds))
       .orderBy(
         sql`CASE ${diningSchedule.type} WHEN 'standard' THEN 0 ELSE 1 END`,
         sql`${diningSchedule.startDate} ASC NULLS FIRST`,
