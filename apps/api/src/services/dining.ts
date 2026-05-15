@@ -332,20 +332,21 @@ export class DiningService {
     const schedulesById = new Map<string, ScheduleResponse>();
 
     for (const { schedule, mealPeriod } of rows) {
-      let entry = schedulesById.get(schedule.id);
-      if (!entry) {
-        entry = {
-          upstreamId: schedule.upstreamId,
-          restaurantId: schedule.restaurantId as ScheduleResponse["restaurantId"],
-          name: schedule.name,
-          type: schedule.type as ScheduleResponse["type"],
-          startDate: schedule.startDate,
-          endDate: schedule.endDate,
-          mealPeriods: [],
-          updatedAt: schedule.updatedAt,
-        };
-        schedulesById.set(schedule.id, entry);
-      }
+      const entry = schedulesById
+        .set(
+          schedule.id,
+          schedulesById.get(schedule.id) ?? {
+            upstreamId: schedule.upstreamId,
+            restaurantId: schedule.restaurantId as ScheduleResponse["restaurantId"],
+            name: schedule.name,
+            type: schedule.type as ScheduleResponse["type"],
+            startDate: schedule.startDate,
+            endDate: schedule.endDate,
+            mealPeriods: [],
+            updatedAt: schedule.updatedAt,
+          },
+        )
+        .get(schedule.id)!;
 
       // skip if the leftJoin produced null
       if (mealPeriod.adobeId === null || mealPeriod.name === null || mealPeriod.position === null) {
