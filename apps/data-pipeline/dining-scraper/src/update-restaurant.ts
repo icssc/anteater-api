@@ -334,9 +334,9 @@ async function upsertSchedules(
         });
     }
 
-    // coerce to the expected string | null shape
+    // coerce to the expected string | null shape for 'date'
     const dateValue = (d: Date | string | undefined): string | null => {
-      if (!d) return null;
+      if (d === undefined) return null;
       if (typeof d === "string") return d;
       return format(d, "yyyy-MM-dd");
     };
