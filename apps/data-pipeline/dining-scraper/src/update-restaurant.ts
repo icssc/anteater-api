@@ -313,7 +313,6 @@ async function upsertSchedules(
   const catalogRows = new Map<number, typeof diningMealPeriodType.$inferInsert>();
   for (const schedule of schedules) {
     for (const mp of schedule.mealPeriods) {
-      if (typeof mp.id !== "number") continue;
       catalogRows.set(mp.id, {
         adobeId: mp.id,
         name: mp.name,
