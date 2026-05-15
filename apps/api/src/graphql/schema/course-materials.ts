@@ -19,20 +19,7 @@ enum MaterialRequirement {
     GoToClassFirst
 }
 
-type CourseMaterial {
-    year: String
-    quarter: MaterialTerm
-    department: String
-    courseNumber: String
-    sectionCode: String
-    instructors: String
-    author: String
-    title: String
-    format: TextbookFormat
-    requirement: MaterialRequirement
-}
-
-type GetCourseMaterials @cacheControl(maxAge: 86400) {
+type CourseMaterial @cacheControl(maxAge: 86400) {
     year: String!
     quarter: MaterialTerm!
     sectionCode: String!
@@ -50,7 +37,20 @@ type GetCourseMaterials @cacheControl(maxAge: 86400) {
     link: String
 }
 
+input GetCourseMaterialsQuery {
+    year: String
+    quarter: MaterialTerm
+    department: String
+    courseNumber: String
+    sectionCode: String
+    instructors: String
+    author: String
+    title: String
+    format: TextbookFormat
+    requirement: MaterialRequirement
+}
+
 extend type Query {
-    getCourseMaterials(query: GetCourseMaterials): [CourseMaterial!]!
+    getCourseMaterials(query: GetCourseMaterialsQuery): [CourseMaterial!]!
 }
 `;

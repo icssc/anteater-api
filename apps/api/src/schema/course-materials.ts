@@ -2,12 +2,6 @@ import { z } from "@hono/zod-openapi";
 import { materialRequirements, materialTerms, textbookFormats } from "@packages/db/schema";
 import { courseNumberSchema, yearSchema } from "./lib";
 
-const requirementMap: Record<string, string> = {
-  Required: "Required",
-  Recommended: "Recommended",
-  GoToClassFirst: "Go to Class First",
-};
-
 export const courseMaterialsQuerySchema = z.object({
   year: yearSchema.optional(),
   quarter: z.enum(materialTerms, { error: (_issue) => "Invalid quarter provided" }).optional(),
@@ -39,10 +33,7 @@ export const courseMaterialsQuerySchema = z.object({
     example: "ALGORITHM DESIGN",
   }),
   format: z.enum(textbookFormats).optional(),
-  requirement: z.preprocess(
-    (val) => (typeof val === "string" ? (requirementMap[val] ?? val) : val),
-    z.enum(materialRequirements).optional(),
-  ),
+  requirement: z.enum(materialRequirements).optional(),
 });
 
 export const courseMaterialsSchema = z.object({
