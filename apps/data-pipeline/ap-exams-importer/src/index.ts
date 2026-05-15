@@ -1,9 +1,9 @@
 import { exit } from "node:process";
 
 import { database } from "@packages/db";
-
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { notInArray } from "drizzle-orm";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
 
 const geCategoryToColumn = {
@@ -50,10 +50,22 @@ async function main() {
           .then((rows) => rows[0]);
 
         for (const score of reward.acceptableScores) {
-          await tx.insert(apExamToReward).values({ examId: fullName, score, reward: rewardId });
+          await tx
+            .insert(apExamToReward)
+            .values({ examId: fullName, score, reward: rewardId })
+            .onConflictDoUpdate({
+              target: [apExamToReward.examId, apExamToReward.score],
+              set: conflictUpdateSetAllCols(apExamToReward),
+            });
         }
       }
     }
+
+    await tx
+      .delete(apExamReward)
+      .where(
+        notInArray(apExamReward.id, tx.select({ id: apExamToReward.reward }).from(apExamToReward)),
+      );
   });
 
   await db.$client.end();
