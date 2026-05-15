@@ -12,6 +12,7 @@ import {
   diningStation,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
@@ -367,10 +368,8 @@ async function upsertSchedules(
     const upstreamIdToScheduleId = new Map(insertedSchedules.map((s) => [s.upstreamId, s.id]));
     const junctionRows: (typeof diningScheduleMealPeriod.$inferInsert)[] = [];
     for (const schedule of schedules) {
-      const scheduleId = upstreamIdToScheduleId.get(schedule.upstreamId);
-      if (!scheduleId) continue;
+      const scheduleId = getFromMapOrThrow(upstreamIdToScheduleId, schedule.upstreamId);
       for (const mp of schedule.mealPeriods) {
-        if (typeof mp.id !== "number") continue;
         junctionRows.push({
           scheduleId,
           mealPeriodTypeId: mp.id,
