@@ -74,7 +74,23 @@ export class LibraryTrafficService {
       .where(and(...conds));
   }
 
-  getLibraryTrafficHistoryAggregated(input: LibraryTrafficHistoryAggregatedServiceInput) {
+  async getLibraryTrafficHistoryAggregated(input: LibraryTrafficHistoryAggregatedServiceInput) {
+    let startDate = input.startDate;
+    let endDate = input.endDate;
+
+    if (input.year && input.quarter) {
+      const [term] = await this.db
+        .select()
+        .from(calendarTerm)
+        .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
+      if (!term) {
+        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
+      }
+      const isFinals = input.period === "finals";
+      startDate = isFinals ? term.finalsStart : term.instructionStart;
+      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
+    }
+
     const periodExpr = {
       hour: sql<Date>`date_trunc('hour', ${libraryTrafficHistory.timestamp})`,
       day: sql<Date>`date_trunc('day', ${libraryTrafficHistory.timestamp})`,
@@ -84,10 +100,6 @@ export class LibraryTrafficService {
 
     const conds = [];
 
-    if (input.locationId !== undefined) {
-      conds.push(eq(libraryTrafficHistory.locationId, input.locationId));
-    }
-
     if (input.locationName) {
       conds.push(eq(libraryTraffic.locationName, input.locationName));
     }
@@ -96,8 +108,8 @@ export class LibraryTrafficService {
       conds.push(eq(libraryTraffic.libraryName, input.libraryName));
     }
 
-    conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
-    conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    conds.push(gte(libraryTrafficHistory.timestamp, startDate));
+    conds.push(lte(libraryTrafficHistory.timestamp, endDate));
 
     return this.db
       .select({
@@ -121,6 +133,22 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryPattern(input: LibraryTrafficHistoryPatternServiceInput) {
+    let startDate = input.startDate;
+    let endDate = input.endDate;
+
+    if (input.year && input.quarter) {
+      const [term] = await this.db
+        .select()
+        .from(calendarTerm)
+        .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
+      if (!term) {
+        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
+      }
+      const isFinals = input.period === "finals";
+      startDate = isFinals ? term.finalsStart : term.instructionStart;
+      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
+    }
+
     const bucketExpr = {
       hour: sql<number>`EXTRACT(hour FROM ${libraryTrafficHistory.timestamp})`,
       day: sql<number>`EXTRACT(isodow FROM ${libraryTrafficHistory.timestamp})`,
@@ -130,10 +158,6 @@ export class LibraryTrafficService {
 
     const conds = [];
 
-    if (input.locationId !== undefined) {
-      conds.push(eq(libraryTrafficHistory.locationId, input.locationId));
-    }
-
     if (input.locationName) {
       conds.push(eq(libraryTraffic.locationName, input.locationName));
     }
@@ -142,12 +166,12 @@ export class LibraryTrafficService {
       conds.push(eq(libraryTraffic.libraryName, input.libraryName));
     }
 
-    if (input.startDate) {
-      conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+    if (startDate) {
+      conds.push(gte(libraryTrafficHistory.timestamp, startDate));
     }
 
-    if (input.endDate) {
-      conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    if (endDate) {
+      conds.push(lte(libraryTrafficHistory.timestamp, endDate));
     }
 
     const rows = await this.db
@@ -186,18 +210,15 @@ export class LibraryTrafficService {
         .select()
         .from(calendarTerm)
         .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
-      if (term) {
-        const isFinals = input.period === "finals";
-        startDate = isFinals ? term.finalsStart : term.instructionStart;
-        endDate = isFinals ? term.finalsEnd : term.instructionEnd;
+      if (!term) {
+        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
       }
+      const isFinals = input.period === "finals";
+      startDate = isFinals ? term.finalsStart : term.instructionStart;
+      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
     }
 
     const conds = [];
-
-    if (input.locationId !== undefined) {
-      conds.push(eq(libraryTrafficHistory.locationId, input.locationId));
-    }
 
     if (input.locationName) {
       conds.push(eq(libraryTraffic.locationName, input.locationName));
@@ -216,12 +237,20 @@ export class LibraryTrafficService {
     }
 
     if (input.cursor) {
-      const [cursorTs, cursorId] = input.cursor.split("|");
-      const ts = new Date(cursorTs);
+      const [cursorRow] = await this.db
+        .select({ timestamp: libraryTrafficHistory.timestamp })
+        .from(libraryTrafficHistory)
+        .where(eq(libraryTrafficHistory.id, input.cursor));
+      if (!cursorRow) {
+        throw new Error(`Invalid cursor: ${input.cursor}`);
+      }
       conds.push(
         or(
-          gt(libraryTrafficHistory.timestamp, ts),
-          and(eq(libraryTrafficHistory.timestamp, ts), gt(libraryTrafficHistory.id, cursorId)),
+          gt(libraryTrafficHistory.timestamp, cursorRow.timestamp),
+          and(
+            eq(libraryTrafficHistory.timestamp, cursorRow.timestamp),
+            gt(libraryTrafficHistory.id, input.cursor),
+          ),
         ),
       );
     }
@@ -243,10 +272,7 @@ export class LibraryTrafficService {
       .limit(input.take + 1);
 
     const items = rows.slice(0, input.take).map(({ id: _id, ...rest }) => rest);
-    const nextCursor =
-      rows.length > input.take
-        ? `${rows[input.take - 1].timestamp.toISOString()}|${rows[input.take - 1].id}`
-        : null;
+    const nextCursor = rows.length > input.take ? rows[input.take - 1].id : null;
 
     return { items, nextCursor };
   }
