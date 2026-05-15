@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, ilike, inArray } from "@packages/db/drizzle";
+import { and, eq, ilike, inArray, isNotNull } from "@packages/db/drizzle";
 import {
   courseMaterial,
   websocCourse,
@@ -14,6 +14,7 @@ type CourseMaterialsServiceInput = z.infer<typeof courseMaterialsQuerySchema>;
 
 function buildQuery(input: CourseMaterialsServiceInput) {
   const conditions = [];
+  conditions.push(isNotNull(courseMaterial.id));
   if (input.year) {
     conditions.push(eq(websocCourse.year, input.year));
   }
@@ -86,7 +87,7 @@ export class CourseMaterialsService {
 
     return rows
       .reduce((acc, row) => {
-        if (row?.materialId && !acc.has(row.materialId)) {
+        if (!acc.has(row.materialId)) {
           const displayQuarter = row.quarter.startsWith("Summer") ? "Summer" : row.quarter;
           acc.set(row.materialId, {
             ...row,
