@@ -223,7 +223,7 @@ export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as cons
 export const textbookFormat = pgEnum("textbook_format", textbookFormats);
 export type TextbookFormat = (typeof textbookFormats)[number];
 
-export const materialRequirements = ["Required", "Recommended", "Go to Class First"] as const;
+export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
 export const materialRequirement = pgEnum("material_requirement", materialRequirements);
 export type MaterialRequirement = (typeof materialRequirements)[number];
 

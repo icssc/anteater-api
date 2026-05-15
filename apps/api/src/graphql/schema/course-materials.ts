@@ -1,7 +1,7 @@
 export const courseMaterialsSchema = `#graphql
 enum MaterialTerm {
     Fall
-    Winer
+    Winter
     Spring
     Summer
 }

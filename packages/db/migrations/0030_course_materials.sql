@@ -1,4 +1,4 @@
-CREATE TYPE "public"."material_requirement" AS ENUM('Required', 'Recommended', 'Go to Class First');--> statement-breakpoint
+CREATE TYPE "public"."material_requirement" AS ENUM('Required', 'Recommended', 'GoToClassFirst');--> statement-breakpoint
 CREATE TYPE "public"."textbook_format" AS ENUM('Physical', 'Electronic', 'Both', 'OER');--> statement-breakpoint
 CREATE TABLE "course_material" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

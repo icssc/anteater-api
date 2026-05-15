@@ -59,6 +59,7 @@ async function main() {
     const lastSpaceIndex = deptCourseStr.lastIndexOf(" ");
     const dept = deptCourseStr.substring(0, lastSpaceIndex);
     const courseNum = deptCourseStr.substring(lastSpaceIndex + 1);
+    const inputRequirement = entry.get("Req/Rec");
     const [section] = await db
       .select({ id: websocSection.id })
       .from(websocSection)
@@ -87,7 +88,9 @@ async function main() {
       edition: entry.get("Edition"),
       isbn: entry.get("ISBN"),
       format: (entry.get("Format") || null) as TextbookFormat,
-      requirement: (entry.get("Req/Rec") || null) as MaterialRequirement,
+      requirement: (inputRequirement === "Go to Class First"
+        ? "GoToClassFirst"
+        : inputRequirement || null) as MaterialRequirement,
       mmsId: entry.get("MMS ID"),
       link: entry.get("Link"),
     });

@@ -1,5 +1,5 @@
 {
-  "id": "8215d9eb-fe64-4091-abba-19e2c30f7a92",
+  "id": "b39a6920-82ad-4dee-98e6-96a6eadcf3dc",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -4419,7 +4419,7 @@
     "public.material_requirement": {
       "name": "material_requirement",
       "schema": "public",
-      "values": ["Required", "Recommended", "Go to Class First"]
+      "values": ["Required", "Recommended", "GoToClassFirst"]
     },
     "public.term": {
       "name": "term",
