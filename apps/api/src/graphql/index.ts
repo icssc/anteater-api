@@ -11,25 +11,25 @@ import { typeDefs } from "$graphql/schema";
 const graphqlRouter = new Hono<{ Bindings: Env }>();
 
 graphqlRouter.use("*", async (c) => {
-	const context = { db: database(c.env.DB.connectionString), honoContext: c };
-	const yoga = createYoga<GraphQLContext>({
-		context,
-		maskedErrors: false,
-		plugins: [
-			EnvelopArmorPlugin({
-				blockFieldSuggestion: { enabled: false },
-				maxDepth: { n: 8 },
-			}),
-			c.env.CF_ENV === "prod"
-				? useResponseCache({
-						cache: new YogaKVCache(c.env.GQL_CACHE),
-						session: () => null,
-					})
-				: {},
-		],
-		schema: createSchema({ typeDefs, resolvers }),
-	});
-	return yoga.fetch(c.req.raw, context);
+  const context = { db: database(c.env.DB.connectionString), honoContext: c };
+  const yoga = createYoga<GraphQLContext>({
+    context,
+    maskedErrors: false,
+    plugins: [
+      EnvelopArmorPlugin({
+        blockFieldSuggestion: { enabled: false },
+        maxDepth: { n: 8 },
+      }),
+      c.env.CF_ENV === "prod"
+        ? useResponseCache({
+            cache: new YogaKVCache(c.env.GQL_CACHE),
+            session: () => null,
+          })
+        : {},
+    ],
+    schema: createSchema({ typeDefs, resolvers }),
+  });
+  return yoga.fetch(c.req.raw, context);
 });
 
 export { graphqlRouter };

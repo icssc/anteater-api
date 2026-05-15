@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.2/schema.json",
+  "root": true,
+  "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,18 +8,19 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "**/*.md",
-      "**/*.toml",
-      "**/*.yml",
-      "**/*.yaml",
-      "**/*.json",
-      "**/.next/**",
-      "**/.sst/**",
-      "**/dist/**",
-      "**/worker-configuration.d.ts",
-      "**/cloudflare-env.d.ts",
-      "**/.open-next/**"
+    "includes": [
+      "**",
+      "!**/*.md",
+      "!**/*.toml",
+      "!**/*.yml",
+      "!**/*.yaml",
+      "!**/*.json",
+      "!**/.next/**",
+      "!**/.sst/**",
+      "!**/dist/**",
+      "!**/worker-configuration.d.ts",
+      "!**/cloudflare-env.d.ts",
+      "!**/.open-next/**"
     ]
   },
   "formatter": {
@@ -28,9 +30,7 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {

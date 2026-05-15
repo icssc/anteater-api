@@ -7,10 +7,7 @@ import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { diningRouter } from "./routes/dining";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
 import { gradesRouter } from "./routes/grades";
-import {
-	instructorsCursorRouter,
-	instructorsRouter,
-} from "./routes/instructors";
+import { instructorsCursorRouter, instructorsRouter } from "./routes/instructors";
 import { larcRouter } from "./routes/larc.ts";
 import { libraryTrafficRouter } from "./routes/library-traffic";
 import { pingRouter } from "./routes/ping";

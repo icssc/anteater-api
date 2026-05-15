@@ -12,29 +12,25 @@
  * @returns startTime and endTime in minutes since midnight
  */
 export const parseStartAndEndTimes = (time: string) => {
-	let startTime: number;
-	let endTime: number;
-	const [startTimeString, endTimeString] = time
-		.trim()
-		.split("-")
-		.map((x) => x.trim());
-	const [startTimeHour, startTimeMinute] = startTimeString.split(":");
-	startTime =
-		(Number.parseInt(startTimeHour, 10) % 12) * 60 +
-		Number.parseInt(startTimeMinute, 10);
-	const [endTimeHour, endTimeMinute] = endTimeString.split(":");
-	endTime =
-		(Number.parseInt(endTimeHour, 10) % 12) * 60 +
-		Number.parseInt(endTimeMinute, 10);
-	if (endTimeMinute.includes("p")) {
-		// Ending in PM: if start < end, shift both times forward by 12 hours since both
-		// are PM, otherwise just shift end time forward because end is PM and start is AM
-		if (startTime < endTime) startTime += 12 * 60;
-		endTime += 12 * 60;
-	} else if (startTime > endTime) {
-		// Ending in AM: if start > end, start is PM and end is next day, so shift times accordingly
-		startTime += 12 * 60;
-		endTime += 24 * 60;
-	}
-	return { startTime, endTime };
+  let startTime: number;
+  let endTime: number;
+  const [startTimeString, endTimeString] = time
+    .trim()
+    .split("-")
+    .map((x) => x.trim());
+  const [startTimeHour, startTimeMinute] = startTimeString.split(":");
+  startTime = (Number.parseInt(startTimeHour, 10) % 12) * 60 + Number.parseInt(startTimeMinute, 10);
+  const [endTimeHour, endTimeMinute] = endTimeString.split(":");
+  endTime = (Number.parseInt(endTimeHour, 10) % 12) * 60 + Number.parseInt(endTimeMinute, 10);
+  if (endTimeMinute.includes("p")) {
+    // Ending in PM: if start < end, shift both times forward by 12 hours since both
+    // are PM, otherwise just shift end time forward because end is PM and start is AM
+    if (startTime < endTime) startTime += 12 * 60;
+    endTime += 12 * 60;
+  } else if (startTime > endTime) {
+    // Ending in AM: if start > end, start is PM and end is next day, so shift times accordingly
+    startTime += 12 * 60;
+    endTime += 24 * 60;
+  }
+  return { startTime, endTime };
 };

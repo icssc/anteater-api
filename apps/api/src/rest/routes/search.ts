@@ -3,53 +3,48 @@ import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { accessController, productionCache } from "$middleware";
 import {
-	response200,
-	response422,
-	response500,
-	searchQuerySchema,
-	searchResponseSchema,
+  response200,
+  response422,
+  response500,
+  searchQuerySchema,
+  searchResponseSchema,
 } from "$schema";
 import { CoursesService, InstructorsService, SearchService } from "$services";
 
 const searchRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const searchRoute = createRoute({
-	summary: "Retrieve search results",
-	operationId: "search",
-	tags: ["Other"],
-	method: "get",
-	path: "/",
-	request: { query: searchQuerySchema },
-	description:
-		"Retrieves course/instructor results for the given search query.",
-	responses: {
-		200: response200(searchResponseSchema),
-		422: response422(),
-		500: response500(),
-	},
+  summary: "Retrieve search results",
+  operationId: "search",
+  tags: ["Other"],
+  method: "get",
+  path: "/",
+  request: { query: searchQuerySchema },
+  description: "Retrieves course/instructor results for the given search query.",
+  responses: {
+    200: response200(searchResponseSchema),
+    422: response422(),
+    500: response500(),
+  },
 });
 
 searchRouter.use("*", accessController("FUZZY_SEARCH"));
 searchRouter.get(
-	"*",
-	productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
+  "*",
+  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
 );
 
 searchRouter.openapi(searchRoute, async (c) => {
-	const query = c.req.valid("query");
-	const db = database(c.env.DB.connectionString);
-	const service = new SearchService(
-		db,
-		new CoursesService(db),
-		new InstructorsService(db),
-	);
-	return c.json(
-		{
-			ok: true,
-			data: searchResponseSchema.parse(await service.doSearch(query)),
-		},
-		200,
-	);
+  const query = c.req.valid("query");
+  const db = database(c.env.DB.connectionString);
+  const service = new SearchService(db, new CoursesService(db), new InstructorsService(db));
+  return c.json(
+    {
+      ok: true,
+      data: searchResponseSchema.parse(await service.doSearch(query)),
+    },
+    200,
+  );
 });
 
 export { searchRouter };
