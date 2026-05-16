@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, getTableColumns, inArray } from "@packages/db/drizzle";
+import { and, eq, getTableColumns, gte, inArray, lte } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocInstructor,
@@ -11,11 +11,17 @@ import {
   websocSectionToInstructor,
 } from "@packages/db/schema";
 import type { z } from "zod";
-import type { enrollmentHistoryQuerySchema, enrollmentHistorySchema } from "$schema";
+import type {
+  enrollmentHistoryGranularQuerySchema,
+  enrollmentHistoryGranularSchema,
+  enrollmentHistoryQuerySchema,
+  enrollmentHistorySchema,
+} from "$schema";
 
 type EnrollmentHistoryServiceInput = z.infer<typeof enrollmentHistoryQuerySchema>;
+type EnrollmentHistoryGranularServiceInput = z.infer<typeof enrollmentHistoryGranularQuerySchema>;
 
-function buildQuery(input: EnrollmentHistoryServiceInput) {
+function buildQuery(input: EnrollmentHistoryServiceInput | EnrollmentHistoryGranularServiceInput) {
   const conditions = [];
   if (input.year) {
     conditions.push(eq(websocCourse.year, input.year));
@@ -168,5 +174,84 @@ export class EnrollmentHistoryService {
         ...rest,
       }))
       .toArray();
+  }
+
+  async getEnrollmentHistoryGranular(input: EnrollmentHistoryGranularServiceInput) {
+    const sectionRows = await this.db
+      .select({
+        course: getTableColumns(websocCourse),
+        section: getTableColumns(websocSection),
+        instructor: getTableColumns(websocInstructor),
+        location: getTableColumns(websocLocation),
+        meeting: getTableColumns(websocSectionMeeting),
+      })
+      .from(websocCourse)
+      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSection.id, websocSectionToInstructor.sectionId),
+      )
+      .leftJoin(
+        websocInstructor,
+        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
+      )
+      .innerJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
+      .innerJoin(
+        websocSectionMeetingToLocation,
+        eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
+      )
+      .innerJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
+      .where(buildQuery(input));
+    const transformedSectionRows = transformSectionRows(sectionRows);
+    const enrollmentConditions = [
+      inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()),
+    ];
+    if (input.from) {
+      enrollmentConditions.push(gte(websocSectionEnrollment.createdAt, new Date(input.from)));
+    }
+    if (input.to) {
+      enrollmentConditions.push(lte(websocSectionEnrollment.createdAt, new Date(input.to)));
+    }
+    const enrollmentRows = await this.db
+      .select()
+      .from(websocSectionEnrollment)
+      .where(and(...enrollmentConditions))
+      .orderBy(websocSectionEnrollment.createdAt);
+    const granularMapping = new Map<string, z.infer<typeof enrollmentHistoryGranularSchema>>();
+    for (const [sectionId, section] of transformedSectionRows) {
+      granularMapping.set(sectionId, {
+        year: section.year,
+        quarter: section.quarter,
+        sectionCode: section.sectionCode,
+        department: section.department,
+        courseNumber: section.courseNumber,
+        sectionType: section.sectionType,
+        sectionNum: section.sectionNum,
+        units: section.units,
+        instructors: Array.from(section.instructors),
+        meetings: section.meetings.map(({ bldg, ...rest }) => ({
+          bldg: Array.from(bldg),
+          ...rest,
+        })),
+        finalExam: section.finalExam,
+        snapshots: [],
+      });
+    }
+    for (const row of enrollmentRows) {
+      const section = granularMapping.get(row.sectionId);
+      if (section) {
+        section.snapshots.push({
+          timestamp: row.createdAt.toISOString(),
+          maxCapacity: row.maxCapacity,
+          totalEnrolled: row.numCurrentlyTotalEnrolled ?? null,
+          waitlist: row.numOnWaitlist ?? null,
+          waitlistCap: row.numWaitlistCap ?? null,
+          requested: row.numRequested ?? null,
+          newOnlyReserved: row.numNewOnlyReserved ?? null,
+          status: row.status ?? "",
+        });
+      }
+    }
+    return Array.from(granularMapping.values()).filter((s) => s.snapshots.length > 0);
   }
 }

@@ -3,6 +3,8 @@ import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
+  enrollmentHistoryGranularQuerySchema,
+  enrollmentHistoryGranularSchema,
   enrollmentHistoryQuerySchema,
   enrollmentHistorySchema,
   response200,
@@ -31,6 +33,22 @@ const enrollmentHistoryRoute = createRoute({
   },
 });
 
+const enrollmentHistoryGranularRoute = createRoute({
+  summary: "Filter granular enrollment history",
+  operationId: "enrollmentHistoryGranular",
+  tags: ["Enrollment History"],
+  method: "get",
+  path: "/granular",
+  request: { query: enrollmentHistoryGranularQuerySchema },
+  description:
+    "Retrieves high-resolution enrollment history with full timestamps for the given parameters. Use from/to to scope the response to a specific time window.",
+  responses: {
+    200: response200(enrollmentHistoryGranularSchema.array()),
+    422: response422(),
+    500: response500(),
+  },
+});
+
 enrollmentHistoryRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }),
@@ -43,6 +61,20 @@ enrollmentHistoryRouter.openapi(enrollmentHistoryRoute, async (c) => {
     {
       ok: true,
       data: enrollmentHistorySchema.array().parse(await service.getEnrollmentHistory(query)),
+    },
+    200,
+  );
+});
+
+enrollmentHistoryRouter.openapi(enrollmentHistoryGranularRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new EnrollmentHistoryService(database(c.env.DB.connectionString));
+  return c.json(
+    {
+      ok: true,
+      data: enrollmentHistoryGranularSchema
+        .array()
+        .parse(await service.getEnrollmentHistoryGranular(query)),
     },
     200,
   );
