@@ -122,6 +122,18 @@ importers:
         specifier: 1.4.8
         version: 1.4.8
 
+  apps/data-pipeline/course-materials-importer:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../../../packages/stdlib
+      node-xlsx:
+        specifier: 0.24.0
+        version: 0.24.0
+
   apps/data-pipeline/course-scraper:
     dependencies:
       '@packages/db':
