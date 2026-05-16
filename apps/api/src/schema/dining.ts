@@ -10,11 +10,11 @@ export const diningEventsQuerySchema = z
       description: "Filter events by restaurant ID",
     }),
     startDate: z.iso.date().optional().openapi({
-      description: "Only return events whose start date is on or after this date",
+      description: "If provided, only return events whose start date is on or after this date",
       example: "2026-01-01",
     }),
     endDate: z.iso.date().optional().openapi({
-      description: "Only return events whose start date is on or before this date",
+      description: "If provided, only return events whose start date is on or before this date",
       example: "2026-12-31",
     }),
   })
