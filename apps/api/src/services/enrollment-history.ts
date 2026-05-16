@@ -164,7 +164,10 @@ export class EnrollmentHistoryService {
     return filteredSections
       .map(({ instructors, meetings, ...rest }) => ({
         instructors: Array.from(instructors),
-        meetings: meetings.map(({ bldg, ...rest }) => ({ bldg: Array.from(bldg), ...rest })),
+        meetings: meetings.map(({ bldg, ...rest }) => ({
+          bldg: Array.from(bldg),
+          ...rest,
+        })),
         ...rest,
       }))
       .toArray();

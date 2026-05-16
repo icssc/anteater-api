@@ -126,6 +126,7 @@ export class DegreeworksClient {
     | {
         college?: Block;
         major?: Block;
+        otherBlock?: Block;
       }
     | undefined
   > {
@@ -149,13 +150,21 @@ export class DegreeworksClient {
 
     const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
     if (!json) return undefined;
-
+    if ("error" in json) {
+      return undefined;
+    }
+    const major = json.blockArray.find(
+      (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+    );
+    const firstRule = major?.ruleArray[0];
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
       ),
-      major: json.blockArray.find(
-        (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+      major: major,
+      // some majors (e.g., English-345, History-429) store requirements within the 'OTHER' block; passing it here to extract those values
+      otherBlock: json.blockArray.find(
+        (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
       ),
     };
   }

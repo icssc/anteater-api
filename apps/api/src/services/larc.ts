@@ -46,8 +46,14 @@ const transformSection = (section: Row["section"]): z.infer<typeof larcSectionSc
     {
       bldg: [section.building],
       days: section.daysString,
-      startTime: { hour: section.startTime.getHours(), minute: section.startTime.getMinutes() },
-      endTime: { hour: section.endTime.getHours(), minute: section.endTime.getMinutes() },
+      startTime: {
+        hour: section.startTime.getHours(),
+        minute: section.startTime.getMinutes(),
+      },
+      endTime: {
+        hour: section.endTime.getHours(),
+        minute: section.endTime.getMinutes(),
+      },
     },
   ],
   instructors: [section.instructor],

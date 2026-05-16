@@ -125,7 +125,10 @@ export const websocQuerySchema = z.object({
           });
           return z.NEVER;
         }
-        parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
+        parsedNums.push({
+          _type: "ParsedInteger",
+          value: Number.parseInt(code, 10),
+        });
       }
       return parsedNums;
     })

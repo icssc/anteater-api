@@ -43,7 +43,10 @@ const courseNumberTransform = (nums: string | undefined, ctx: z.RefinementCtx) =
     if (!isBaseTenInt(num)) {
       parsedNums.push({ _type: "ParsedString", value: num });
     } else {
-      parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(num, 10) });
+      parsedNums.push({
+        _type: "ParsedInteger",
+        value: Number.parseInt(num, 10),
+      });
     }
   }
   return parsedNums;

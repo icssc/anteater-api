@@ -184,7 +184,11 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
   }
   const courseCoreqMatch = prereq.match(/^([^()]+)\s+\( coreq \)$/);
   if (courseCoreqMatch) {
-    return { prereqType: "course", coreq: true, courseId: courseCoreqMatch[1].trim() };
+    return {
+      prereqType: "course",
+      coreq: true,
+      courseId: courseCoreqMatch[1].trim(),
+    };
   }
   if (prereq.match(/^AP.*|^[A-Z0-9&/\s]+\d\S*$/)) {
     return prereq.startsWith("AP")
@@ -204,7 +208,11 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   }
   const antiCourseMatch = prereq.match(/^NO\s([A-Z0-9&/\s]+\d\S*)$/);
   if (antiCourseMatch) {
-    return { prereqType: "course", coreq: false, courseId: antiCourseMatch[1].trim() };
+    return {
+      prereqType: "course",
+      coreq: false,
+      courseId: antiCourseMatch[1].trim(),
+    };
   }
 }
 
@@ -436,7 +444,10 @@ async function scrapeCoursesInDepartment(meta: {
   logger.info(`Scraping courses for ${deptCode}...`);
 
   const [school] = await db
-    .select({ schoolName: websocSchool.schoolName, departmentName: websocDepartment.deptName })
+    .select({
+      schoolName: websocSchool.schoolName,
+      departmentName: websocDepartment.deptName,
+    })
     .from(websocSchool)
     .innerJoin(websocDepartment, eq(websocDepartment.schoolId, websocSchool.id))
     .where(eq(websocDepartment.deptCode, deptCode))
@@ -453,7 +464,14 @@ async function scrapeCoursesInDepartment(meta: {
   const $ = load(departmentText);
   const departmentName = $("h1.page-title").text().normalize("NFKD").split("(")[0].trim();
 
-  const context: ParseContext = { $, deptCode, schoolName, departmentName, updatedAt, prereqs };
+  const context: ParseContext = {
+    $,
+    deptCode,
+    schoolName,
+    departmentName,
+    updatedAt,
+    prereqs,
+  };
 
   const courses = deepSortArray(
     $("div.courses .courseblock")
@@ -497,7 +515,10 @@ async function scrapeCoursesInDepartment(meta: {
 
   const prereqRows = deepSortArray(
     coursesForInsert
-      .map((c) => ({ id: c.id, prerequisiteList: prereqTreeToList(c.prerequisiteTree) }))
+      .map((c) => ({
+        id: c.id,
+        prerequisiteList: prereqTreeToList(c.prerequisiteTree),
+      }))
       .flatMap((c): (typeof prerequisite.$inferInsert)[] =>
         c.prerequisiteList.map((p) => ({
           prerequisiteId: p,

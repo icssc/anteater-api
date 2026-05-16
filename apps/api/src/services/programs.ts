@@ -91,15 +91,24 @@ export class ProgramsService {
   async getSpecializationRequirements(
     query: z.infer<typeof specializationRequirementsQuerySchema>,
   ) {
-    return await this.getProgramRequirements({ programType: "specialization", query });
+    return await this.getProgramRequirements({
+      programType: "specialization",
+      query,
+    });
   }
 
   private async getProgramRequirements({
     programType,
     query,
   }:
-    | { programType: "major"; query: z.infer<typeof majorRequirementsQuerySchema> }
-    | { programType: "minor"; query: z.infer<typeof minorRequirementsQuerySchema> }
+    | {
+        programType: "major";
+        query: z.infer<typeof majorRequirementsQuerySchema>;
+      }
+    | {
+        programType: "minor";
+        query: z.infer<typeof minorRequirementsQuerySchema>;
+      }
     | {
         programType: "specialization";
         query: z.infer<typeof specializationRequirementsQuerySchema>;
@@ -142,7 +151,11 @@ export class ProgramsService {
       specialization,
     }[programType];
     const [got] = await this.db
-      .select({ id: table.id, name: table.name, requirements: table.requirements })
+      .select({
+        id: table.id,
+        name: table.name,
+        requirements: table.requirements,
+      })
       .from(table)
       .where(eq(table.id, query.programId))
       .limit(1);

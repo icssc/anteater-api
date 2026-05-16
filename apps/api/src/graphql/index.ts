@@ -16,7 +16,10 @@ graphqlRouter.use("*", async (c) => {
     context,
     maskedErrors: false,
     plugins: [
-      EnvelopArmorPlugin({ blockFieldSuggestion: { enabled: false }, maxDepth: { n: 8 } }),
+      EnvelopArmorPlugin({
+        blockFieldSuggestion: { enabled: false },
+        maxDepth: { n: 8 },
+      }),
       c.env.CF_ENV === "prod"
         ? useResponseCache({
             cache: new YogaKVCache(c.env.GQL_CACHE),

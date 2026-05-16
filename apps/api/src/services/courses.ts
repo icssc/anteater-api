@@ -159,7 +159,10 @@ export class CoursesService {
   }
 
   async batchGetCourses(ids: string[]): Promise<CoursesServiceOutput[]> {
-    return this.getCoursesRaw({ where: inArray(courseView.id, ids), limit: ids.length });
+    return this.getCoursesRaw({
+      where: inArray(courseView.id, ids),
+      limit: ids.length,
+    });
   }
 
   async getCourseById(id: string): Promise<CoursesServiceOutput | null> {

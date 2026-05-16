@@ -101,7 +101,10 @@ websocRouter.openapi(websocDepartmentsRoute, async (c) => {
 
   const service = new WebsocService(database(c.env.DB.connectionString));
   return c.json(
-    { ok: true, data: websocDepartmentsResponseSchema.parse(await service.getDepartments(query)) },
+    {
+      ok: true,
+      data: websocDepartmentsResponseSchema.parse(await service.getDepartments(query)),
+    },
     200,
   );
 });

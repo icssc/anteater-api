@@ -72,9 +72,9 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courseCount: z.number().int().nonnegative().openapi({
       description: "The number of courses from this set demanded by this requirement.",
     }),
-    courses: z
-      .array(z.string())
-      .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    courses: z.array(z.string()).openapi({
+      description: "The courses permissible for fulfilling this requirement.",
+    }),
   })
   .openapi({
     description:
@@ -91,14 +91,12 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
 export const programUnitRequirementSchema = programRequirementBaseSchema
   .extend({
     requirementType: z.literal("Unit"),
-    unitCount: z
-      .number()
-      .int()
-      .nonnegative()
-      .openapi({ description: "The number of units needed for this requirement." }),
-    courses: z
-      .array(z.string())
-      .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    unitCount: z.number().int().nonnegative().openapi({
+      description: "The number of units needed for this requirement.",
+    }),
+    courses: z.array(z.string()).openapi({
+      description: "The courses permissible for fulfilling this requirement.",
+    }),
   })
   .openapi({
     description:
@@ -121,11 +119,9 @@ export const programGroupRequirementSchema: z.ZodType<
 > = programRequirementBaseSchema
   .extend({
     requirementType: z.literal("Group"),
-    requirementCount: z
-      .number()
-      .int()
-      .nonnegative()
-      .openapi({ description: "The number of sub-requirements which must be met." }),
+    requirementCount: z.number().int().nonnegative().openapi({
+      description: "The number of sub-requirements which must be met.",
+    }),
     requirements: z
       .lazy(() => programRequirementSchema)
       .array()
@@ -265,7 +261,9 @@ export const programRequirementsResponseSchema = z.object({
 });
 
 export const majorRequirementsResponseSchema = programRequirementsResponseSchema.extend({
-  id: programRequirementsResponseSchema.shape.id.openapi({ example: "BS-201" }),
+  id: programRequirementsResponseSchema.shape.id.openapi({
+    example: "BS-201",
+  }),
   name: programRequirementsResponseSchema.shape.name.openapi({
     example: "Major in Computer Science",
   }),
@@ -288,7 +286,9 @@ export const minorRequirementsResponseSchema = programRequirementsResponseSchema
 });
 
 export const specializationRequirementsResponseSchema = programRequirementsResponseSchema.extend({
-  id: programRequirementsResponseSchema.shape.id.openapi({ example: "BS-201E" }),
+  id: programRequirementsResponseSchema.shape.id.openapi({
+    example: "BS-201E",
+  }),
   name: programRequirementsResponseSchema.shape.name.openapi({
     example: "CS:Specialization in Bioinformatics",
   }),

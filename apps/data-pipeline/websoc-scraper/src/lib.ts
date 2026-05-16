@@ -758,14 +758,21 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
 
   const before = await getGECountsFromDB(db, term);
   console.log(
-    JSON.stringify({ event: "ge_scrape_db_before", term: termToName(term), counts: before }),
+    JSON.stringify({
+      event: "ge_scrape_db_before",
+      term: termToName(term),
+      counts: before,
+    }),
   );
 
   for (const ge of geCategories) {
     console.log(`Scraping ${ge}`);
     let courses: string[] = [];
     try {
-      const resp = await request(term, { ge, cancelledCourses: "Include" }).then(normalizeResponse);
+      const resp = await request(term, {
+        ge,
+        cancelledCourses: "Include",
+      }).then(normalizeResponse);
       courses = resp.schools.flatMap((school) =>
         school.departments.flatMap((dept) =>
           dept.courses.map(
@@ -841,7 +848,13 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
       return [ge, { scraped, dbCount, outcome, notInDb }];
     }),
   );
-  console.log(JSON.stringify({ event: "ge_scrape_summary", term: termToName(term), categories }));
+  console.log(
+    JSON.stringify({
+      event: "ge_scrape_summary",
+      term: termToName(term),
+      categories,
+    }),
+  );
 }
 
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {

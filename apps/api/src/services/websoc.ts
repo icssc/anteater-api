@@ -231,7 +231,9 @@ function transformRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
         string,
         Row["school"] & {
           departments: Array<
-            Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+            Row["department"] & {
+              courses: Array<Row["course"] & { sections: Row["section"][] }>;
+            }
           >;
         }
       >(),
@@ -242,7 +244,9 @@ function transformRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
       (acc, dept) => acc.set(dept.id, { ...dept, courses: [] }),
       new Map<
         string,
-        Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+        Row["department"] & {
+          courses: Array<Row["course"] & { sections: Row["section"][] }>;
+        }
       >(),
     );
   const courses = rows

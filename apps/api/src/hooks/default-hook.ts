@@ -8,7 +8,10 @@ export const defaultHook = (
 ) => {
   if (!result.success) {
     return c.json<ErrorSchema>(
-      { ok: false, message: result.error.issues.map((issue) => issue.message).join("; ") },
+      {
+        ok: false,
+        message: result.error.issues.map((issue) => issue.message).join("; "),
+      },
       422,
     );
   }

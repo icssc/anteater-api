@@ -14,7 +14,9 @@ export const batchDishesQuerySchema = z.object({
   ids: z
     .string({ error: "Parameter 'ids' is required" })
     .transform((xs) => xs.split(","))
-    .openapi({ example: "1923_101628_M34418_1_30296,1923_101628_M10094_1_19163" }),
+    .openapi({
+      example: "1923_101628_M34418_1_30296,1923_101628_M10094_1_19163",
+    }),
 });
 
 export const dishQuerySchema = z.object({
@@ -105,10 +107,9 @@ export const dishSchema = z.object({
       "Juicy chicken breast seasoned with a flavorful blend of toasted cumin, cinnamon and turmeric",
     description: "Description of the dish",
   }),
-  ingredients: z
-    .string()
-    .nullable()
-    .openapi({ example: "Chicken Breast, Canola Oil, Turmeric, Cinnamon, Cumin" }),
+  ingredients: z.string().nullable().openapi({
+    example: "Chicken Breast, Canola Oil, Turmeric, Cinnamon, Cumin",
+  }),
   category: z.string().openapi({
     example: "Grilled",
     description: "Category of the dish",

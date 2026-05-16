@@ -39,7 +39,13 @@ searchRouter.openapi(searchRoute, async (c) => {
   const query = c.req.valid("query");
   const db = database(c.env.DB.connectionString);
   const service = new SearchService(db, new CoursesService(db), new InstructorsService(db));
-  return c.json({ ok: true, data: searchResponseSchema.parse(await service.doSearch(query)) }, 200);
+  return c.json(
+    {
+      ok: true,
+      data: searchResponseSchema.parse(await service.doSearch(query)),
+    },
+    200,
+  );
 });
 
 export { searchRouter };

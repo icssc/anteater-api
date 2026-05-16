@@ -13,7 +13,9 @@ export const coursesResolvers = {
       const service = new CoursesService(db);
       const res = await service.getCourseById(id);
       if (!res)
-        throw new GraphQLError(`Course '${id}' not found`, { extensions: { code: "NOT_FOUND" } });
+        throw new GraphQLError(`Course '${id}' not found`, {
+          extensions: { code: "NOT_FOUND" },
+        });
       return res;
     },
     courses: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {

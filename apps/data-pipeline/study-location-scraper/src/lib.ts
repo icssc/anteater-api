@@ -85,9 +85,21 @@ const STUDY_LOCATIONS: Record<string, LocationDef> = {
     site: "spaces.lib.uci.edu",
   },
   Science: { name: "Science Library", lid: "6580", site: "spaces.lib.uci.edu" },
-  MRC: { name: "Multimedia Resources Center", lid: "6581", site: "spaces.lib.uci.edu" },
-  GML: { name: "Grunigen Medical Library", lid: "12189", site: "spaces.lib.uci.edu" },
-  ALP: { name: "Anteater Learning Pavillion", lid: "5448", site: "scheduler.oit.uci.edu" },
+  MRC: {
+    name: "Multimedia Resources Center",
+    lid: "6581",
+    site: "spaces.lib.uci.edu",
+  },
+  GML: {
+    name: "Grunigen Medical Library",
+    lid: "12189",
+    site: "spaces.lib.uci.edu",
+  },
+  ALP: {
+    name: "Anteater Learning Pavillion",
+    lid: "5448",
+    site: "scheduler.oit.uci.edu",
+  },
 };
 
 /**
@@ -109,7 +121,13 @@ async function getStudySpaces(
       "Content-Type": "application/x-www-form-urlencoded",
       Referer: REFERER[location.site],
     },
-    body: new URLSearchParams({ lid: location.lid, gid: "0", start, end, pageSize: "18" }),
+    body: new URLSearchParams({
+      lid: location.lid,
+      gid: "0",
+      start,
+      end,
+      pageSize: "18",
+    }),
   })
     .then((res): Promise<StudySpacesResponse> => res.json())
     .then((res) => ({
@@ -251,7 +269,9 @@ async function scrapeStudyLocations(): Promise<StudyLocation[]> {
   });
   const locations: StudyLocation[] = [];
   for (const lib in STUDY_LOCATIONS) {
-    const studyLocation: Omit<StudyLocation, "rooms"> & { rooms: Map<string, StudyRoom> } = {
+    const studyLocation: Omit<StudyLocation, "rooms"> & {
+      rooms: Map<string, StudyRoom>;
+    } = {
       id: STUDY_LOCATIONS[lib].lid,
       name: lib,
       rooms: new Map(),
