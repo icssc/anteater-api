@@ -1,9 +1,9 @@
 import { exit } from "node:process";
 
 import { database } from "@packages/db";
+import { notInArray } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import { notInArray } from "drizzle-orm";
 import apExamData, { geCategories, type geCategory } from "./data.ts";
 
 const geCategoryToColumn = {
