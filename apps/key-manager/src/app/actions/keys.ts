@@ -140,9 +140,19 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
     throw new Error("API key does not exist on user");
   }
 
-  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData), {
-    metadata: "{}",
-  });
+  await getCloudflareContext().env.API_KEYS.put(
+    key,
+    JSON.stringify({
+      ...keyData,
+      origins:
+        keyData.origins !== undefined
+          ? Object.fromEntries(keyData.origins.map(({ url }) => [url, true]))
+          : undefined,
+    }),
+    {
+      metadata: "{}",
+    },
+  );
 
   return validatedKeyData;
 }
