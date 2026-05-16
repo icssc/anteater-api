@@ -515,12 +515,12 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
               // and corresponding discussions/labs have that letter as a prefix/suffix, forming a section group
               // The intersection of potentially disjoint sets of instructors from different offerings would be empty so only intersect within section group.
               const letterMatch = section.sectionNum.match(/[a-z]+/i);
-              const groupMatch = letterMatch ? letterMatch[0] : "";
-              const groupedSection = course.sections
+              const groupMatch = letterMatch?.[0] ?? "";
+              const groupedSections = course.sections
                 .filter((section) => section.sectionNum.match(groupMatch))
                 .map((section) => new Set(section.instructors));
               const instructorIntersection = Array.from(
-                intersectAll(groupedSection[0], ...groupedSection.slice(1)),
+                intersectAll(groupedSections[0], ...groupedSections.slice(1)),
               ).map((instructor) => [section.sectionCode, instructor]);
 
               // The above pattern is heuristic. When it doesn't work, simply return the original listed instructors
