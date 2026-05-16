@@ -11,7 +11,7 @@ export const diningResolvers = {
   Query: {
     diningEvents: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getUpcomingEvents(diningEventsQuerySchema.parse(args.query ?? {}));
+      return await service.getEvents(diningEventsQuerySchema.parse(args.query ?? {}));
     },
     diningDish: async (_: unknown, { id }: { id: string }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
