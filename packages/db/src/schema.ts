@@ -878,7 +878,9 @@ export const diningPeriod = pgTable(
   "dining_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    adobeId: integer("adobe_id").notNull(),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -887,11 +889,10 @@ export const diningPeriod = pgTable(
       }),
     startTime: time("start_time"),
     endTime: time("end_time"),
-    name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    uniqueIndex().on(table.mealPeriodTypeId, table.date, table.restaurantId),
     index().on(table.date),
     index().on(table.restaurantId),
   ],
@@ -1024,6 +1025,70 @@ export const diningEvent = pgTable(
       }),
     };
   },
+);
+
+export const diningMealPeriodType = pgTable("dining_meal_period_type", {
+  adobeId: integer("adobe_id").primaryKey(),
+  name: varchar("name").notNull(),
+  position: integer("position").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningSchedule = pgTable(
+  "dining_schedule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    upstreamId: varchar("upstream_id").notNull(),
+    name: varchar("name").notNull(),
+    type: varchar("type").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex().on(table.restaurantId, table.upstreamId),
+    index().on(table.restaurantId),
+  ],
+);
+
+export const diningScheduleMealPeriod = pgTable(
+  "dining_schedule_meal_period",
+  {
+    scheduleId: uuid("schedule_id")
+      .notNull()
+      .references(() => diningSchedule.id, {
+        onDelete: "cascade",
+      }),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
+    sunOpen: time("sun_open"),
+    sunClose: time("sun_close"),
+    monOpen: time("mon_open"),
+    monClose: time("mon_close"),
+    tueOpen: time("tue_open"),
+    tueClose: time("tue_close"),
+    wedOpen: time("wed_open"),
+    wedClose: time("wed_close"),
+    thuOpen: time("thu_open"),
+    thuClose: time("thu_close"),
+    friOpen: time("fri_open"),
+    friClose: time("fri_close"),
+    satOpen: time("sat_open"),
+    satClose: time("sat_close"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "dining_schedule_meal_period_pk",
+      columns: [table.scheduleId, table.mealPeriodTypeId],
+    }),
+  ],
 );
 
 // Materialized views

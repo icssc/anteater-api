@@ -17,6 +17,8 @@ import {
   restaurantsResponseSchema,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
+  schedulesQuerySchema,
+  schedulesResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
 
@@ -120,6 +122,21 @@ const restaurantTodayRoute = createRoute({
   },
 });
 
+const schedulesRoute = createRoute({
+  summary: "Get dining schedules",
+  operationId: "getDiningSchedules",
+  tags: ["Dining"],
+  method: "get",
+  path: "/schedules",
+  request: { query: schedulesQuerySchema },
+  description: "Retrieve dining schedules with their date ranges and weekly hours for each meal period.",
+  responses: {
+    200: response200(schedulesResponseSchema),
+    422: response422(),
+    500: response500(),
+  },
+});
+
 diningRouter.openapi(eventsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new DiningService(database(c.env.DB.connectionString));
@@ -179,6 +196,14 @@ diningRouter.openapi(restaurantTodayRoute, async (c) => {
     return c.json({ ok: false, message: "No data for this day" }, 404);
   }
   return c.json({ ok: true, data: restaurantTodayResponseSchema.parse(data) }, 200);
+});
+
+diningRouter.openapi(schedulesRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+
+  const data = await service.getSchedules(query);
+  return c.json({ ok: true, data: schedulesResponseSchema.parse(data) }, 200);
 });
 
 export { diningRouter };

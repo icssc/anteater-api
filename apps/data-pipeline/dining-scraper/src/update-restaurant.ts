@@ -3,16 +3,26 @@ import {
   diningDietRestriction,
   diningDish,
   diningDishToPeriod,
+  diningMealPeriodType,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
+  diningSchedule,
+  diningScheduleMealPeriod,
   diningStation,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import { format } from "date-fns";
 import { fetchLocation } from "./fetch-location.ts";
 import { type FetchedDish, fetchMenuWeekView } from "./fetch-menu-week-view.ts";
-import { allergens, dietaryPreferences, type RestaurantId, restaurantIDToURL } from "./model.ts";
+import {
+  allergens,
+  dietaryPreferences,
+  type RestaurantId,
+  restaurantIDToURL,
+  type Schedule,
+} from "./model.ts";
 import { findCurrentlyActiveSchedule } from "./util.ts";
 
 /**
@@ -49,6 +59,8 @@ export async function updateRestaurant(
       target: diningRestaurant.id,
       set: conflictUpdateSetAllCols(diningRestaurant),
     });
+
+  await upsertSchedules(db, restaurantId, restaurantInfo.schedules, updatedAt);
 
   const stationsToUpsert = Object.keys(restaurantInfo.stationsInfo).map((id) => {
     return {
@@ -98,16 +110,15 @@ export async function updateRestaurant(
       periodsOnDay.add(period.id);
 
       const row = {
-        adobeId: period.id,
+        mealPeriodTypeId: period.id,
         date: dateString,
         restaurantId,
-        name: period.name,
         startTime: period.openHours[dayOfWeekToFetch],
         endTime: period.closeHours[dayOfWeekToFetch],
         updatedAt,
       } satisfies typeof diningPeriod.$inferInsert;
 
-      const key = `${row.adobeId}|${row.date}|${row.restaurantId}`;
+      const key = `${row.mealPeriodTypeId}|${row.date}|${row.restaurantId}`;
       periodsToUpsert.set(key, row);
     }
     dayToPeriods.set(dateString, periodsOnDay);
@@ -118,12 +129,12 @@ export async function updateRestaurant(
     .insert(diningPeriod)
     .values(Array.from(periodsToUpsert.values()))
     .onConflictDoUpdate({
-      target: [diningPeriod.adobeId, diningPeriod.date, diningPeriod.restaurantId],
+      target: [diningPeriod.mealPeriodTypeId, diningPeriod.date, diningPeriod.restaurantId],
       set: conflictUpdateSetAllCols(diningPeriod),
     })
     .returning({
       id: diningPeriod.id,
-      adobeId: diningPeriod.adobeId,
+      mealPeriodTypeId: diningPeriod.mealPeriodTypeId,
       date: diningPeriod.date,
       restaurantId: diningPeriod.restaurantId,
     });
@@ -163,8 +174,8 @@ export async function updateRestaurant(
               fetchedDish: fetchedDish,
               // this cast is ok because every periodAdobeId has a corresponding upserted row
               periodId: periodsInserted.find(
-                ({ adobeId, date, restaurantId: rId }) =>
-                  rId === restaurantId && date === dateString && adobeId === periodAdobeId,
+                ({ mealPeriodTypeId, date, restaurantId: rId }) =>
+                  rId === restaurantId && date === dateString && mealPeriodTypeId === periodAdobeId,
               )?.id as string,
               updatedAt: periodUpdatedAt,
             });
@@ -279,4 +290,116 @@ export async function updateRestaurant(
         });
     });
   }
+}
+
+/**
+ * Upserts the meal period types, schedules, and per-schedule weekly hours for a restaurant.
+ * @param db the Drizzle database instance
+ * @param restaurantId the restaurant to upsert data for ("anteatery", "brandywine")
+ * @param schedules the schedules to upsert
+ * @param updatedAt the timestamp to use for the updatedAt field for all upserted rows in this scrape
+ */
+async function upsertSchedules(
+  db: ReturnType<typeof database>,
+  restaurantId: RestaurantId,
+  schedules: Schedule[],
+  updatedAt: Date,
+): Promise<void> {
+  if (schedules.length === 0) {
+    console.warn(`No schedules returned for ${restaurantId}; skipping schedule upsert.`);
+    return;
+  }
+
+  const catalogRows = new Map<number, typeof diningMealPeriodType.$inferInsert>();
+  for (const schedule of schedules) {
+    for (const mp of schedule.mealPeriods) {
+      catalogRows.set(mp.id, {
+        adobeId: mp.id,
+        name: mp.name,
+        position: mp.position,
+        updatedAt,
+      });
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    if (catalogRows.size > 0) {
+      console.log(`Upserting ${catalogRows.size} meal period types...`);
+      await tx
+        .insert(diningMealPeriodType)
+        .values(Array.from(catalogRows.values()))
+        .onConflictDoUpdate({
+          target: diningMealPeriodType.adobeId,
+          set: conflictUpdateSetAllCols(diningMealPeriodType),
+        });
+    }
+
+    // coerce to the expected string | null shape for 'date'
+    const dateValue = (d: Date | string | undefined): string | null => {
+      if (d === undefined) return null;
+      if (typeof d === "string") return d;
+      return format(d, "yyyy-MM-dd");
+    };
+
+    const scheduleRows = schedules.map((s) => ({
+      restaurantId,
+      upstreamId: s.upstreamId,
+      name: s.name,
+      type: s.type,
+      startDate: dateValue(s.startDate),
+      endDate: dateValue(s.endDate),
+      updatedAt,
+    }));
+
+    console.log(`Upserting ${scheduleRows.length} schedules...`);
+    const insertedSchedules = await tx
+      .insert(diningSchedule)
+      .values(scheduleRows)
+      .onConflictDoUpdate({
+        target: [diningSchedule.restaurantId, diningSchedule.upstreamId],
+        set: conflictUpdateSetAllCols(diningSchedule),
+      })
+      .returning({
+        id: diningSchedule.id,
+        upstreamId: diningSchedule.upstreamId,
+      });
+
+    const upstreamIdToScheduleId = new Map(insertedSchedules.map((s) => [s.upstreamId, s.id]));
+    const junctionRows: (typeof diningScheduleMealPeriod.$inferInsert)[] = [];
+    for (const schedule of schedules) {
+      const scheduleId = getFromMapOrThrow(upstreamIdToScheduleId, schedule.upstreamId);
+      for (const mp of schedule.mealPeriods) {
+        junctionRows.push({
+          scheduleId,
+          mealPeriodTypeId: mp.id,
+          sunOpen: mp.openHours[0],
+          sunClose: mp.closeHours[0],
+          monOpen: mp.openHours[1],
+          monClose: mp.closeHours[1],
+          tueOpen: mp.openHours[2],
+          tueClose: mp.closeHours[2],
+          wedOpen: mp.openHours[3],
+          wedClose: mp.closeHours[3],
+          thuOpen: mp.openHours[4],
+          thuClose: mp.closeHours[4],
+          friOpen: mp.openHours[5],
+          friClose: mp.closeHours[5],
+          satOpen: mp.openHours[6],
+          satClose: mp.closeHours[6],
+          updatedAt,
+        });
+      }
+    }
+
+    if (junctionRows.length > 0) {
+      console.log(`Upserting ${junctionRows.length} schedule meal period rows...`);
+      await tx
+        .insert(diningScheduleMealPeriod)
+        .values(junctionRows)
+        .onConflictDoUpdate({
+          target: [diningScheduleMealPeriod.scheduleId, diningScheduleMealPeriod.mealPeriodTypeId],
+          set: conflictUpdateSetAllCols(diningScheduleMealPeriod),
+        });
+    }
+  });
 }
