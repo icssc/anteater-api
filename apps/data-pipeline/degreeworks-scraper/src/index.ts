@@ -193,6 +193,7 @@ async function main() {
           return {
             majorId: m.majorId,
             specializationId: m.specializationId,
+            catalogYear,
             requirementId: m.requirementId,
           } as typeof dwMajorSpecializationToRequirement.$inferInsert;
         }),
