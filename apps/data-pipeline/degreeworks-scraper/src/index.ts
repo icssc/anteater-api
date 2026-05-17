@@ -201,6 +201,7 @@ async function main() {
         target: [
           dwMajorSpecializationToRequirement.majorId,
           dwMajorSpecializationToRequirement.specializationId,
+          dwMajorSpecializationToRequirement.catalogYear,
         ],
         set: conflictUpdateSetAllCols(dwMajorSpecializationToRequirement),
       });
