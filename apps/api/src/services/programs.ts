@@ -51,12 +51,21 @@ export class ProgramsService {
         .select({
           id: dwMajor.id,
           name: dwMajor.name,
-          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${dwSpecialization.id}), NULL)`.as(
-            "specializations",
-          ),
+          specializations:
+            sql`ARRAY_REMOVE(ARRAY_AGG(${dwMajorSpecializationToRequirement.specializationId}), NULL)`.as(
+              "specializations",
+            ),
         })
         .from(dwMajor)
-        .leftJoin(dwSpecialization, eq(dwMajor.id, dwSpecialization.majorId))
+        .leftJoin(
+          dwMajorSpecializationToRequirement,
+          eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+        )
+        .where(
+          query.catalogYear !== undefined
+            ? eq(dwMajorSpecializationToRequirement.catalogYear, query.catalogYear)
+            : undefined,
+        )
         .groupBy(dwMajor.id),
     );
 
@@ -73,12 +82,7 @@ export class ProgramsService {
       .from(majorSpecialization)
       .innerJoin(dwMajor, eq(majorSpecialization.id, dwMajor.id))
       .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id))
-      .where(
-        and(
-          query.id ? eq(majorSpecialization.id, query.id) : undefined,
-          this.catalogYearCondition(dwMajorYear, query.catalogYear),
-        ),
-      );
+      .where(and(query.id ? eq(majorSpecialization.id, query.id) : undefined));
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {
@@ -138,11 +142,11 @@ export class ProgramsService {
           },
         })
         .from(dwMajor)
-        .leftJoin(
+        .innerJoin(
           dwMajorSpecializationToRequirement,
           eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
         )
-        .leftJoin(
+        .innerJoin(
           dwMajorRequirement,
           eq(dwMajorSpecializationToRequirement.requirementId, dwMajorRequirement.id),
         )
@@ -156,7 +160,17 @@ export class ProgramsService {
           ),
         )
         .limit(1);
-      return orNull(got);
+
+      const converted =
+        got !== undefined
+          ? {
+              ...got,
+              schoolRequirements:
+                got.schoolRequirements.requirements !== null ? got.schoolRequirements : null,
+            }
+          : undefined;
+
+      return orNull(converted);
     }
 
     const [baseTable, requirementsTable] = {
