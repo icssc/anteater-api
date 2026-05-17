@@ -211,6 +211,13 @@
       "when": 1777243439626,
       "tag": "0029_polymorphic_major_requirements",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1778984287184,
+      "tag": "0030_dw_catalog_years",
+      "breakpoints": true
     }
   ]
 }

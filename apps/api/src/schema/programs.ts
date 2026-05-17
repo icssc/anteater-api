@@ -4,11 +4,18 @@ const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
 });
 
+const catalogYearSchema = z.string().optional().openapi({
+  description:
+    "If specified, data is derived from this catalog year; otherwise, data is from an unspecified year",
+  example: "20242025",
+});
+
 export const majorsQuerySchema = z.object({
   id: z.string().optional().openapi({
     description: "The ID of a single major to request, if provided",
     example: "BA-163",
   }),
+  catalogYear: catalogYearSchema,
 });
 
 export const minorsQuerySchema = z.object({
@@ -35,6 +42,7 @@ export const majorRequirementsQuerySchema = z.object({
       "if provided, fetch major requirements given this specialization; providing no specialization when one is required has unspecified behavior",
     example: "BS-201A",
   }),
+  catalogYear: catalogYearSchema,
 });
 
 export const minorRequirementsQuerySchema = z.object({
@@ -42,6 +50,7 @@ export const minorRequirementsQuerySchema = z.object({
     description: "A minor ID to query requirements for",
     example: "459",
   }),
+  catalogYear: catalogYearSchema,
 });
 
 export const specializationRequirementsQuerySchema = z.object({
@@ -49,12 +58,14 @@ export const specializationRequirementsQuerySchema = z.object({
     description: "A specialization ID to query requirements for",
     example: "BS-201E",
   }),
+  catalogYear: catalogYearSchema,
 });
 
 export const UgradRequirementsBlockIds = ["UC", "GE", "CHC4", "CHC2"] as const;
 
 export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
+  catalogYear: catalogYearSchema,
 });
 
 export const programRequirementBaseSchema = z.object({
