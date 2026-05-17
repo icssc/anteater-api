@@ -550,9 +550,6 @@ const doChunkUpsert = async (
             })
             .filter(notNull),
         )
-        .onConflictDoNothing({
-          target: [websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt],
-        })
         .returning({ id: websocSectionEnrollment.id });
       console.log(`Inserted ${enrollmentEntries.length} enrollment entries`);
     }
