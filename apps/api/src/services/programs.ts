@@ -1,7 +1,5 @@
 import type { database } from "@packages/db";
-import type { TableConfig } from "@packages/db/drizzle";
-import { and, type ColumnBaseConfig, eq, max, sql } from "@packages/db/drizzle";
-import type { PgColumn, PgTableWithColumns } from "@packages/db/drizzle-pg";
+import { and, eq, max, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   dwDegree,
@@ -32,15 +30,15 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  private catalogYearCondition<
-    // is config covariant over columns? if so, one of these parameters is obsolete
-    Config extends {
-      columns: Columns;
-    } & TableConfig,
-    Columns extends {
-      catalogYear: PgColumn<ColumnBaseConfig<"string", string>>;
-    },
-  >(table: PgTableWithColumns<Config>, catalogYear: string | undefined) {
+  private catalogYearCondition(
+    table:
+      | typeof dwSchoolRequirement
+      | typeof dwMajorYear
+      | typeof dwMajorSpecializationToRequirement
+      | typeof dwMinorRequirement
+      | typeof dwSpecializationRequirement,
+    catalogYear: string | undefined,
+  ) {
     return eq(
       table.catalogYear,
       catalogYear ?? this.db.select({ m: max(table.catalogYear).as("m") }).from(table),
@@ -189,9 +187,13 @@ export class ProgramsService {
         id: dwSchoolRequirement.id,
         requirements: dwSchoolRequirement.requirements,
       })
-      // todo: CATALOG YEAR
       .from(dwSchoolRequirement)
-      .where(eq(dwSchoolRequirement.id, query.id))
+      .where(
+        and(
+          eq(dwSchoolRequirement.id, query.id),
+          this.catalogYearCondition(dwSchoolRequirement, query.catalogYear),
+        ),
+      )
       .limit(1);
 
     return orNull(got);
