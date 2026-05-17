@@ -129,7 +129,7 @@ const schedulesRoute = createRoute({
   method: "get",
   path: "/schedules",
   request: { query: schedulesQuerySchema },
-  description: "Retrieve dining schedules with their date ranges and per-meal-period weekly hours.",
+  description: "Retrieve dining schedules with their date ranges and weekly hours for each meal period.",
   responses: {
     200: response200(schedulesResponseSchema),
     422: response422(),
