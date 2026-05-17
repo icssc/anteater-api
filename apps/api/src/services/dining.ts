@@ -298,13 +298,13 @@ export class DiningService {
                 'name', ${diningMealPeriodType.name},
                 'position', ${diningMealPeriodType.position},
                 'hours', JSONB_BUILD_OBJECT(
-                  'sunday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.sunOpen},  'close', ${diningScheduleMealPeriod.sunClose}),
-                  'monday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.monOpen},  'close', ${diningScheduleMealPeriod.monClose}),
-                  'tuesday',   JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.tueOpen},  'close', ${diningScheduleMealPeriod.tueClose}),
-                  'wednesday', JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.wedOpen},  'close', ${diningScheduleMealPeriod.wedClose}),
-                  'thursday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.thuOpen},  'close', ${diningScheduleMealPeriod.thuClose}),
-                  'friday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.friOpen},  'close', ${diningScheduleMealPeriod.friClose}),
-                  'saturday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.satOpen},  'close', ${diningScheduleMealPeriod.satClose})
+                  'sunday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.sunOpen}, 'close', ${diningScheduleMealPeriod.sunClose}),
+                  'monday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.monOpen}, 'close', ${diningScheduleMealPeriod.monClose}),
+                  'tuesday',   JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.tueOpen}, 'close', ${diningScheduleMealPeriod.tueClose}),
+                  'wednesday', JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.wedOpen}, 'close', ${diningScheduleMealPeriod.wedClose}),
+                  'thursday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.thuOpen}, 'close', ${diningScheduleMealPeriod.thuClose}),
+                  'friday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.friOpen}, 'close', ${diningScheduleMealPeriod.friClose}),
+                  'saturday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.satOpen}, 'close', ${diningScheduleMealPeriod.satClose})
                 )
               )
               ORDER BY ${diningMealPeriodType.position}
