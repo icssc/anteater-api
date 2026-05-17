@@ -1,5 +1,5 @@
 {
-  "id": "0d4ecc05-1d7f-44ab-a620-c998153492e6",
+  "id": "3eb820c4-beb9-43c7-ba7b-a07945a9f16f",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -1430,10 +1430,10 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "dw_major_specialization_to_requirement_major_id_specialization_id_unique": {
-          "name": "dw_major_specialization_to_requirement_major_id_specialization_id_unique",
+        "dw_major_specialization_to_requirement_major_id_specialization_id_catalog_year_unique": {
+          "name": "dw_major_specialization_to_requirement_major_id_specialization_id_catalog_year_unique",
           "nullsNotDistinct": true,
-          "columns": ["major_id", "specialization_id"]
+          "columns": ["major_id", "specialization_id", "catalog_year"]
         }
       },
       "policies": {},
@@ -1608,7 +1608,7 @@
           "tableTo": "dw_minor",
           "columnsFrom": ["program_id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
