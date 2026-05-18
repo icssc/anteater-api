@@ -133,70 +133,74 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryPattern(input: LibraryTrafficHistoryPatternServiceInput) {
-    let startDate = input.startDate;
-    let endDate = input.endDate;
-
-    if (input.year && input.quarter) {
-      const [term] = await this.db
-        .select()
-        .from(calendarTerm)
-        .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
-      if (!term) {
-        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
-      }
-      const isFinals = input.period === "finals";
-      startDate = isFinals ? term.finalsStart : term.instructionStart;
-      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
-    }
+    const isFinals = input.period === "finals";
+    const periodStart = isFinals ? calendarTerm.finalsStart : calendarTerm.instructionStart;
+    const periodEnd = isFinals ? calendarTerm.finalsEnd : calendarTerm.instructionEnd;
+    const isWeek = input.granularity === "week";
+    const separateByTerm = isWeek && !!input.quarter;
 
     const bucketExpr = {
       hour: sql<number>`EXTRACT(hour FROM ${libraryTrafficHistory.timestamp})`,
       day: sql<number>`EXTRACT(isodow FROM ${libraryTrafficHistory.timestamp})`,
-      week: sql<number>`EXTRACT(week FROM ${libraryTrafficHistory.timestamp})`,
+      week: sql<number>`floor(extract(epoch from (${libraryTrafficHistory.timestamp} - ${periodStart})) / 604800)::int + 1`,
       month: sql<number>`EXTRACT(month FROM ${libraryTrafficHistory.timestamp})`,
     }[input.granularity];
 
     const conds = [];
 
-    if (input.locationName) {
-      conds.push(eq(libraryTraffic.locationName, input.locationName));
-    }
+    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
+    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
+    if (input.year) conds.push(eq(calendarTerm.year, input.year));
+    if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
+    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
 
-    if (input.libraryName) {
-      conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-    }
+    const groupBy = [
+      libraryTrafficHistory.locationId,
+      libraryTraffic.locationName,
+      libraryTraffic.libraryName,
+      bucketExpr,
+    ] as const;
 
-    if (startDate) {
-      conds.push(gte(libraryTrafficHistory.timestamp, startDate));
-    }
-
-    if (endDate) {
-      conds.push(lte(libraryTrafficHistory.timestamp, endDate));
-    }
-
-    const rows = await this.db
+    const base = this.db
       .select({
         locationId: libraryTrafficHistory.locationId,
         locationName: libraryTraffic.locationName,
         libraryName: libraryTraffic.libraryName,
+        year: separateByTerm ? calendarTerm.year : sql<string | null>`null`,
+        quarter: separateByTerm ? calendarTerm.quarter : sql<string | null>`null`,
         bucket: bucketExpr,
         avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
         avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
       })
       .from(libraryTrafficHistory)
       .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-      .where(and(...conds))
-      .groupBy(
-        libraryTrafficHistory.locationId,
-        libraryTraffic.locationName,
-        libraryTraffic.libraryName,
-        bucketExpr,
+      .innerJoin(
+        calendarTerm,
+        sql`${libraryTrafficHistory.timestamp} BETWEEN ${periodStart} AND ${periodEnd}`,
       )
-      .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
+      .where(and(...conds));
+
+    const rows = await (separateByTerm
+      ? base
+          .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
+          .orderBy(
+            asc(calendarTerm.year),
+            asc(calendarTerm.quarter),
+            asc(libraryTrafficHistory.locationId),
+            asc(bucketExpr),
+          )
+      : base.groupBy(...groupBy).orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr)));
 
     return rows.map((row) => ({
       ...row,
       bucket: Number(row.bucket),
+      year: separateByTerm ? (row.year ?? undefined) : input.year,
+      quarter: separateByTerm
+        ? row.quarter != null
+          ? String(row.quarter)
+          : undefined
+        : input.quarter,
       label: patternLabel(input.granularity, Number(row.bucket)),
     }));
   }
