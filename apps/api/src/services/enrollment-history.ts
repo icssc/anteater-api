@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, getTableColumns, gte, inArray, lte } from "@packages/db/drizzle";
+import { and, desc, eq, getTableColumns, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocInstructor,
@@ -146,10 +146,17 @@ export class EnrollmentHistoryService {
       .where(buildQuery(input));
     const transformedSectionRows = transformSectionRows(sectionRows);
     const enrollmentRows = await this.db
-      .select()
+      .selectDistinctOn([
+        sql`DATE(${websocSectionEnrollment.createdAt})`,
+        websocSectionEnrollment.sectionId,
+      ])
       .from(websocSectionEnrollment)
       .where(inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()))
-      .orderBy(websocSectionEnrollment.createdAt);
+      .orderBy(
+        sql`DATE(${websocSectionEnrollment.createdAt})`,
+        websocSectionEnrollment.sectionId,
+        desc(websocSectionEnrollment.createdAt),
+      );
     for (const row of enrollmentRows) {
       const section = transformedSectionRows.get(row.sectionId);
       if (section) {
