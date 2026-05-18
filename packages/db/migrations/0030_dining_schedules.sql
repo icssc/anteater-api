@@ -68,3 +68,15 @@ ON CONFLICT ("adobe_id") DO NOTHING;
 ALTER TABLE "dining_period" ADD CONSTRAINT "dining_period_meal_period_type_id_dining_meal_period_type_adobe_id_fk" FOREIGN KEY ("meal_period_type_id") REFERENCES "public"."dining_meal_period_type"("adobe_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "dining_period_meal_period_type_id_date_restaurant_id_index" ON "dining_period" USING btree ("meal_period_type_id","date","restaurant_id");--> statement-breakpoint
 ALTER TABLE "dining_period" DROP COLUMN "name";
+--> statement-breakpoint
+DELETE FROM "dining_schedule" s
+USING "dining_schedule" s2
+WHERE s2."restaurant_id" = s."restaurant_id"
+  AND s2."name" = s."name"
+  AND s2."start_date" IS NOT DISTINCT FROM s."start_date"
+  AND s2."end_date" IS NOT DISTINCT FROM s."end_date"
+  AND (s2."updated_at" > s."updated_at"
+       OR (s2."updated_at" = s."updated_at" AND s2."id" > s."id"));
+--> statement-breakpoint
+DROP INDEX "dining_schedule_restaurant_id_upstream_id_index";--> statement-breakpoint
+ALTER TABLE "dining_schedule" ADD CONSTRAINT "dining_schedule_restaurant_id_name_start_date_end_date_unique" UNIQUE NULLS NOT DISTINCT("restaurant_id","name","start_date","end_date");

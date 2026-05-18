@@ -1,5 +1,5 @@
 {
-  "id": "f4c1e668-a43d-4eba-867f-c1d2e1050a29",
+  "id": "1ee83131-f4fc-4ff4-bfc4-9f9bd56186c6",
   "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
   "version": "7",
   "dialect": "postgresql",
@@ -1344,27 +1344,6 @@
         }
       },
       "indexes": {
-        "dining_schedule_restaurant_id_upstream_id_index": {
-          "name": "dining_schedule_restaurant_id_upstream_id_index",
-          "columns": [
-            {
-              "expression": "restaurant_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "upstream_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "dining_schedule_restaurant_id_index": {
           "name": "dining_schedule_restaurant_id_index",
           "columns": [
@@ -1393,7 +1372,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "dining_schedule_restaurant_id_name_start_date_end_date_unique": {
+          "name": "dining_schedule_restaurant_id_name_start_date_end_date_unique",
+          "nullsNotDistinct": true,
+          "columns": ["restaurant_id", "name", "start_date", "end_date"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
