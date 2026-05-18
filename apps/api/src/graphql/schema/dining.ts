@@ -156,6 +156,6 @@ extend type Query {
   diningDateRange: DiningDateRange!
   getRestaurants(query: RestaurantsQuery): [Restaurant!]!
   getRestaurantToday(query: RestaurantTodayQuery!): RestaurantToday!
-  getDiningSchedules(query: SchedulesQuery): [Schedule!]!
+  diningSchedules(query: SchedulesQuery): [Schedule!]!
 }
 `;
