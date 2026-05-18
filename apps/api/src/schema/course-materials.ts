@@ -2,43 +2,47 @@ import { z } from "@hono/zod-openapi";
 import { materialRequirements, materialTerms, textbookFormats } from "@packages/db/schema";
 import { courseNumberSchema, yearSchema } from "./lib";
 
-export const courseMaterialsQuerySchema = z.object({
-  year: yearSchema.optional(),
-  quarter: z.enum(materialTerms, { error: (_issue) => "Invalid quarter provided" }).optional(),
-  department: z.string().optional().openapi({
-    description: "Only include materials from courses offered by the specified department code",
-    example: "I&C SCI",
-  }),
-  courseNumber: courseNumberSchema.optional().openapi({
-    description: "Only include materials from courses with the specified course number(s).",
-  }),
-  sectionCode: z
-    .string()
-    .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
-    .optional()
-    .openapi({ description: "The 5-digit section code", example: "35630" }),
-  instructor: z.string().optional().openapi({
-    description:
-      "Only include materials from courses taught by the specified instructor (case-insensitive)",
-    example: "DILLENCOURT, M.",
-  }),
-  author: z.string().optional().openapi({
-    description:
-      "Only include materials from the specified author (case-insensitive, last name only)",
-    example: "KLEINBERG",
-  }),
-  title: z.string().optional().openapi({
-    description:
-      "Only include materials whose title contains the specified string (case-insensitive)",
-    example: "ALGORITHM DESIGN",
-  }),
-  format: z
-    .enum(textbookFormats, { error: (_issue) => "Invalid textbook format provided" })
-    .optional(),
-  requirement: z
-    .enum(materialRequirements, { error: (_issue) => "Invalid requirement provided" })
-    .optional(),
-});
+export const courseMaterialsQuerySchema = z
+  .object({
+    year: yearSchema.optional(),
+    quarter: z.enum(materialTerms, { error: (_issue) => "Invalid quarter provided" }).optional(),
+    department: z.string().optional().openapi({
+      description: "Only include materials from courses offered by the specified department code",
+      example: "I&C SCI",
+    }),
+    courseNumber: courseNumberSchema.optional().openapi({
+      description: "Only include materials from courses with the specified course number(s).",
+    }),
+    sectionCode: z
+      .string()
+      .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
+      .optional()
+      .openapi({ description: "The 5-digit section code", example: "35630" }),
+    instructor: z.string().optional().openapi({
+      description:
+        "Only include materials from courses taught by the specified instructor (case-insensitive)",
+      example: "DILLENCOURT, M.",
+    }),
+    author: z.string().optional().openapi({
+      description:
+        "Only include materials from the specified author (case-insensitive, last name only)",
+      example: "KLEINBERG",
+    }),
+    title: z.string().optional().openapi({
+      description:
+        "Only include materials whose title contains the specified string (case-insensitive)",
+      example: "ALGORITHM DESIGN",
+    }),
+    format: z
+      .enum(textbookFormats, { error: (_issue) => "Invalid textbook format provided" })
+      .optional(),
+    requirement: z
+      .enum(materialRequirements, { error: (_issue) => "Invalid requirement provided" })
+      .optional(),
+  })
+  .refine((x) => (x.department && x.courseNumber) || (x.sectionCode && x.year && x.quarter), {
+    message: "Must provide department and course number; or section code and year/quarter",
+  });
 
 export const courseMaterialsSchema = z.object({
   year: z.string(),
