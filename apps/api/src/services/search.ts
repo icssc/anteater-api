@@ -65,17 +65,15 @@ export class SearchService {
     if (input.department) {
       return inArray(
         instructor.department,
-        (
-          await this.db
-            .selectDistinct({ name: websocDepartment.deptName })
-            .from(websocDepartment)
-            .where(
-              and(
-                inArray(websocDepartment.deptCode, input.department),
-                notLike(websocDepartment.deptName, "%*"),
-              ),
-            )
-        ).map((w) => w.name),
+        this.db
+          .select({ name: websocDepartment.deptName })
+          .from(websocDepartment)
+          .where(
+            and(
+              inArray(websocDepartment.deptCode, input.department),
+              notLike(websocDepartment.deptName, "%*"),
+            ),
+          ),
       );
     }
   }
