@@ -41,7 +41,7 @@ const enrollmentHistoryGranularRoute = createRoute({
   path: "/granular",
   request: { query: enrollmentHistoryGranularQuerySchema },
   description:
-    "Retrieves high-resolution enrollment history with full timestamps for the given parameters. Use from/to to scope the response to a specific time window.",
+    "Retrieves high-resolution enrollment history with full timestamps for the given parameters. Use from/to to scope the response to a specific time window. High-resolution snapshots are only available for recent terms; older data may return one snapshot per day.",
   responses: {
     200: response200(enrollmentHistoryGranularSchema.array()),
     422: response422(),
