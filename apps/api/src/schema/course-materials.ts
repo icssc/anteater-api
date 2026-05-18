@@ -41,7 +41,7 @@ export const courseMaterialsQuerySchema = z
       .optional(),
   })
   .refine((x) => (x.department && x.courseNumber) || (x.sectionCode && x.year && x.quarter), {
-    message: "Must provide department and course number; or section code and year/quarter",
+    message: "Must provide department and course number, or section code and year/quarter",
   });
 
 export const courseMaterialsSchema = z.object({

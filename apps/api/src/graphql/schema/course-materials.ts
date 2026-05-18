@@ -37,7 +37,7 @@ type CourseMaterial @cacheControl(maxAge: 86400) {
     link: String
 }
 
-input GetCourseMaterialsQuery {
+input CourseMaterialsQuery {
     year: String
     quarter: MaterialTerm
     department: String
@@ -51,6 +51,6 @@ input GetCourseMaterialsQuery {
 }
 
 extend type Query {
-    getCourseMaterials(query: GetCourseMaterialsQuery): [CourseMaterial!]!
+    courseMaterials(query: CourseMaterialsQuery): [CourseMaterial!]!
 }
 `;
