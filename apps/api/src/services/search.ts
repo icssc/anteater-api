@@ -3,7 +3,7 @@ import type { database } from "@packages/db";
 import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor } from "@packages/db/schema";
-import { getFromMapOrThrow } from "@packages/stdlib";
+import { DEPT_TO_ALIAS, type DeptCode, getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
   instructorSchema,
@@ -31,22 +31,21 @@ const INSTRUCTORS_WEIGHTS = sql`(
   SETWEIGHT(TO_TSVECTOR('english', COALESCE(${instructor.title}, '')), 'B')
   )`;
 
-function splitAtLastNumber(s: string): string {
-  const i = s
-    .matchAll(/\d+/g)
-    .map((x) => x.index)
-    .toArray()
-    .slice(-1)[0];
-  return i === undefined ? s : `${s.slice(0, i)} ${s.slice(i)}`;
-}
-
-function toQuery(query: string) {
-  const normalizedQuery = splitAtLastNumber(query)
+function toQuery(query: string, resultType?: "instructor" | "course") {
+  let normalizedQuery = query
     .replaceAll(/ {2,}/g, " ")
     .replaceAll(/-/g, "\\-")
     .split(" ")
     .map((x) => x.replace(/^\\-/, "-"))
     .join(" ");
+
+  if (resultType === "course")
+    for (const code in DEPT_TO_ALIAS)
+      normalizedQuery = normalizedQuery.replaceAll(
+        new RegExp(`(^|\\s)${DEPT_TO_ALIAS[code as DeptCode].toLocaleLowerCase()}(?!i)`, "gi"),
+        `${code.toLowerCase()} `,
+      );
+
   const tsQuery = sql`WEBSEARCH_TO_TSQUERY('english', ${normalizedQuery})`;
   return sql`CASE WHEN NUMNODE(${tsQuery}) > 0 THEN TO_TSQUERY('english', ${tsQuery}::TEXT || ':*') ELSE '' END`;
 }
@@ -164,7 +163,7 @@ export class SearchService {
   }
 
   async doSearch(input: SearchServiceInput): Promise<z.infer<typeof searchResponseSchema>> {
-    const query = toQuery(input.query);
+    const query = toQuery(input.query, input.resultType);
 
     if (input.resultType === "instructor") {
       return this.doSearchForInstructors(input, query);
@@ -174,15 +173,19 @@ export class SearchService {
       return this.doSearchForCourses(input, query);
     }
 
+    const courseAdjustedQuery = toQuery(input.query, "course");
+
     const results = await unionAll(
       this.db
         .select({
           type: sql<SearchResultType>`'course'`,
           id: course.id,
-          rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${query})`.mapWith(Number),
+          rank: sql`TS_RANK(${COURSES_WEIGHTS}, ${courseAdjustedQuery})`.mapWith(Number),
         })
         .from(course)
-        .where(and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${query}`)),
+        .where(
+          and(this.buildCourseConditions(input), sql`${COURSES_WEIGHTS} @@ ${courseAdjustedQuery}`),
+        ),
       this.db
         .select({
           type: sql<SearchResultType>`'instructor'`,
