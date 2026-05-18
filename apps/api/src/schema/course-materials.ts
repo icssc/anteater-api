@@ -32,8 +32,12 @@ export const courseMaterialsQuerySchema = z.object({
       "Only include materials whose title contains the specified string (case-insensitive)",
     example: "ALGORITHM DESIGN",
   }),
-  format: z.enum(textbookFormats).optional(),
-  requirement: z.enum(materialRequirements).optional(),
+  format: z
+    .enum(textbookFormats, { error: (_issue) => "Invalid textbook format provided" })
+    .optional(),
+  requirement: z
+    .enum(materialRequirements, { error: (_issue) => "Invalid requirement provided" })
+    .optional(),
 });
 
 export const courseMaterialsSchema = z.object({
