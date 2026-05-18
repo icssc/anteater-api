@@ -156,9 +156,7 @@ export class SearchService {
         rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
       })
       .from(instructor)
-      .where(
-        and(await this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
-      )
+      .where(and(this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`))
       .offset(input.skip)
       .limit(input.take)
       .orderBy((t) => [desc(t.rank), asc(t.id)])
@@ -212,9 +210,7 @@ export class SearchService {
           rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(instructor)
-        .where(
-          and(await this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
-        ),
+        .where(and(this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)),
     ).then((rows) =>
       rows.reduce(
         (acc, row) => {
