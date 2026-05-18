@@ -8,13 +8,13 @@ const MAX_RANGE_DAYS: Record<string, number> = {
 };
 
 export const libraryTrafficHistoryRawQuerySchema = z.object({
-  locationName: z.string().optional().openapi({
-    example: "4th Floor - Nordstrom Honors Study Room",
-    description: "Filter results by name of this floor / section",
-  }),
   libraryName: z.string().optional().openapi({
     example: "Langson Library",
     description: "Filter results by library name",
+  }),
+  locationName: z.string().optional().openapi({
+    example: "4th Floor - Nordstrom Honors Study Room",
+    description: "Filter results by name of this floor / section",
   }),
   year: z.string().optional().openapi({
     example: "2025",
@@ -50,7 +50,7 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
 });
 
 export const libraryTrafficHistoryRawEntrySchema = z.object({
-  locationId: z.number().int().openapi({ example: 245 }),
+  locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.string().openapi({ example: "Langson Library" }),
   trafficCount: z.number().int().nonnegative().openapi({ example: 57 }),
@@ -65,15 +65,15 @@ export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEn
 
 export const libraryTrafficHistoryAggregatedQuerySchema = z
   .object({
-    locationName: z.string().optional().openapi({
-      example: "4th Floor - Nordstrom Honors Study Room",
-      description: "Filter results by name of this floor / section",
-    }),
     libraryName: z.string().optional().openapi({
       example: "Langson Library",
       description: "Filter results by library name (returns one row per location in that library)",
     }),
-    granularity: z.enum(["hour", "day", "week", "month"]).default("hour").openapi({
+    locationName: z.string().optional().openapi({
+      example: "4th Floor - Nordstrom Honors Study Room",
+      description: "Filter results by name of this floor / section",
+    }),
+    granularity: z.enum(["hour", "day", "week", "month"]).openapi({
       description: "Time bucket size for averaging results",
       example: "hour",
     }),
@@ -115,7 +115,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
   );
 
 export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
-  locationId: z.number().int().openapi({ example: 245 }),
+  locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.string().openapi({ example: "Langson Library" }),
   period: z.coerce
@@ -141,15 +141,15 @@ export const libraryTrafficHistoryAggregatedSchema = z.array(
 
 export const libraryTrafficHistoryPatternQuerySchema = z
   .object({
-    locationName: z.string().optional().openapi({
-      example: "4th Floor - Nordstrom Honors Study Room",
-      description: "Filter results by name of this floor / section",
-    }),
     libraryName: z.string().optional().openapi({
       example: "Langson Library",
       description: "Filter results by library name",
     }),
-    granularity: z.enum(["hour", "day", "week", "month"]).default("hour").openapi({
+    locationName: z.string().optional().openapi({
+      example: "4th Floor - Nordstrom Honors Study Room",
+      description: "Filter results by name of this floor / section",
+    }),
+    granularity: z.enum(["hour", "day", "week", "month"]).openapi({
       description: "Cycle to group by — hour (0-23), day (Mon-Sun), week (1-53), month (Jan-Dec)",
       example: "hour",
     }),
@@ -189,14 +189,25 @@ export const libraryTrafficHistoryPatternQuerySchema = z
   );
 
 export const libraryTrafficHistoryPatternEntrySchema = z.object({
-  locationId: z.number().int().openapi({ example: 245 }),
+  locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.string().openapi({ example: "Langson Library" }),
-  bucket: z.number().int().openapi({
-    example: 14,
-    description: "Hour (0-23), ISO day of week (1=Mon-7=Sun), week of year (1-53), or month (1-12)",
+  year: z.string().optional().openapi({
+    example: "2025",
+    description: "Academic year this bucket belongs to (week granularity only)",
   }),
-  label: z.string().openapi({ example: "2pm", description: "Human-readable bucket label" }),
+  quarter: z.string().optional().openapi({
+    example: "Fall",
+    description: "Academic quarter this bucket belongs to (week granularity only)",
+  }),
+  bucket: z.number().int().openapi({
+    example: 5,
+    description: "Hour (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10), or month (1-12)",
+  }),
+  label: z.string().openapi({
+    example: "2pm",
+    description: "Human-readable bucket label (e.g. '2pm', 'Monday', 'Week 7', 'June')",
+  }),
   avgCount: z.number().openapi({
     example: 87.3,
     description: "Average number of people detected during this bucket",
@@ -227,7 +238,7 @@ export const libraryTrafficQuerySchema = z.object({
 });
 
 export const libraryTrafficEntrySchema = z.object({
-  id: z.number().int().nonnegative().openapi({ example: 245 }),
+  id: z.number().int().nonnegative().openapi({ example: 212 }),
   libraryName: z.string().openapi({
     example: "Langson Library",
     description: "Name of the library which contains this location",
@@ -236,6 +247,7 @@ export const libraryTrafficEntrySchema = z.object({
     example: "4th Floor - Nordstrom Honors Study Room",
     description: "Name of this floor / section",
   }),
+  locationId: z.number().int().openapi({ example: 212 }),
   trafficCount: z.number().int().nonnegative().openapi({
     example: 57,
     description: "Number of people currently detected at the location",
