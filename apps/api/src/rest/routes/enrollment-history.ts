@@ -25,7 +25,7 @@ const enrollmentHistoryRoute = createRoute({
   path: "/",
   request: { query: enrollmentHistoryQuerySchema },
   description:
-    "Retrieves historical enrollment data for the given parameters. Granular history arrays only available for recent terms.",
+    "Retrieves daily enrollment history for the given parameters. For high-resolution snapshots within enrollment periods, use /granular.",
   responses: {
     200: response200(enrollmentHistorySchema.array()),
     422: response422(),
