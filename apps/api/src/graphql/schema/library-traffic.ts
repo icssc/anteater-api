@@ -1,5 +1,5 @@
 export const libraryTrafficSchema = `#graphql
-type LibraryTraffic @cacheControl(maxAge: 900) {
+type LibraryTraffic @cacheControl(maxAge: 1800) {
   id: Int!
   libraryName: String!
   locationName: String!
@@ -34,7 +34,7 @@ enum LibraryTrafficPeriod {
   finals
 }
 
-type LibraryTrafficHistoryRawEntry @cacheControl(maxAge: 900) {
+type LibraryTrafficHistoryRawEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
   libraryName: String!
@@ -49,8 +49,8 @@ type LibraryTrafficHistoryRawPage {
 }
 
 input LibraryTrafficHistoryRawQuery {
-  locationName: String
   libraryName: String
+  locationName: String
   year: String
   quarter: LibraryTrafficQuarter
   period: LibraryTrafficPeriod
@@ -60,7 +60,7 @@ input LibraryTrafficHistoryRawQuery {
   take: Int
 }
 
-type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 900) {
+type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
   libraryName: String!
@@ -70,9 +70,9 @@ type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 900) {
 }
 
 input LibraryTrafficHistoryAggregatedQuery {
-  locationName: String
   libraryName: String
-  granularity: LibraryTrafficGranularity
+  locationName: String
+  granularity: LibraryTrafficGranularity!
   year: String
   quarter: LibraryTrafficQuarter
   period: LibraryTrafficPeriod
@@ -80,10 +80,12 @@ input LibraryTrafficHistoryAggregatedQuery {
   endDate: String!
 }
 
-type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 900) {
+type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
   libraryName: String!
+  year: String
+  quarter: String
   bucket: Int!
   label: String!
   avgCount: Float!
@@ -91,9 +93,9 @@ type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 900) {
 }
 
 input LibraryTrafficHistoryPatternQuery {
-  locationName: String
   libraryName: String
-  granularity: LibraryTrafficGranularity
+  locationName: String
+  granularity: LibraryTrafficGranularity!
   year: String
   quarter: LibraryTrafficQuarter
   period: LibraryTrafficPeriod

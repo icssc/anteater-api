@@ -22,7 +22,7 @@ const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook })
 
 libraryTrafficRouter.get(
   "*",
-  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=900" }),
+  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=1800" }),
 );
 
 const libraryTrafficRoute = createRoute({
