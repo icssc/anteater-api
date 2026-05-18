@@ -69,7 +69,7 @@ const transformCourse = ({
   maxUnits: Number.parseFloat(course.maxUnits),
   courseLevel: mapCourseLevel(course.courseLevel),
   geList: courseToGEList(course),
-  repeatabilityTimesType: course.repeatabilityTimesType as "credit_hours" | "times" | null,
+  repeatabilityType: course.repeatabilityType as "credit_hours" | "times" | null,
 });
 
 function buildQuery(input: CoursesServiceInput | CoursesByCursorServiceInput) {

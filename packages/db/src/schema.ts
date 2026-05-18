@@ -580,7 +580,7 @@ export const course = pgTable(
     prerequisiteText: text("prerequisite_text").notNull(),
     repeatability: varchar("repeatability").notNull(),
     repeatabilityTimes: integer("repeatability_times"),
-    repeatabilityTimesType: varchar("repeatability_times_type"),
+    repeatabilityType: varchar("repeatability_type"),
     gradingOption: varchar("grading_option").notNull(),
     concurrent: varchar("concurrent").notNull(),
     sameAs: varchar("same_as").notNull(),

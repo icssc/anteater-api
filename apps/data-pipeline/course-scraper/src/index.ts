@@ -143,7 +143,7 @@ function parseCourseBlock(
     prerequisiteText: prereqText,
     repeatability: repeatText,
     repeatabilityTimes: repeatabilityData.repeatabilityTimes,
-    repeatabilityTimesType: repeatabilityData.units,
+    repeatabilityType: repeatabilityData.units,
     gradingOption: gradingText,
     concurrent: concText,
     sameAs: sameAsText,
