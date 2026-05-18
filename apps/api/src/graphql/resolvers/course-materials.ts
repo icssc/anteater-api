@@ -6,7 +6,7 @@ export const courseMaterialsResolvers = {
   Query: {
     courseMaterials: async (_: unknown, args: { query?: unknown }, { db }: GraphQLContext) => {
       const service = new CourseMaterialsService(db);
-      return await service.courseMaterials(courseMaterialsQuerySchema.parse(args.query));
+      return await service.getCourseMaterials(courseMaterialsQuerySchema.parse(args.query));
     },
   },
 };
