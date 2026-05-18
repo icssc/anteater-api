@@ -59,7 +59,6 @@ export class CourseMaterialsService {
     const rows = await this.db
       .select({
         materialId: courseMaterial.id,
-        id: websocSection.id,
         year: websocSection.year,
         quarter: websocSection.quarter,
         sectionCode: websocSection.sectionCode,
