@@ -31,8 +31,7 @@ const eventsRoute = createRoute({
   method: "get",
   path: "/events",
   request: { query: diningEventsQuerySchema },
-  description:
-    "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with null end time are served for 2 weeks after their removal from the underlying data source. Use startDate and/or endDate to include past events.",
+  description: "Retrieves dining events matching the given filters",
   responses: {
     200: response200(diningEventsResponseSchema),
     422: response422(),
