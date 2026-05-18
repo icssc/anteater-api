@@ -356,7 +356,12 @@ async function upsertSchedules(
       .insert(diningSchedule)
       .values(scheduleRows)
       .onConflictDoUpdate({
-        target: [diningSchedule.restaurantId, diningSchedule.upstreamId],
+        target: [
+          diningSchedule.restaurantId,
+          diningSchedule.name,
+          diningSchedule.startDate,
+          diningSchedule.endDate,
+        ],
         set: conflictUpdateSetAllCols(diningSchedule),
       })
       .returning({

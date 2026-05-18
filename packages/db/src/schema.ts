@@ -1051,7 +1051,7 @@ export const diningSchedule = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.restaurantId, table.upstreamId),
+    unique().on(table.restaurantId, table.name, table.startDate, table.endDate).nullsNotDistinct(), // forbid multiple Standard schedules with null start/end dates
     index().on(table.restaurantId),
   ],
 );
