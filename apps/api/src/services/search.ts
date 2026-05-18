@@ -1,6 +1,6 @@
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, asc, desc, eq, inArray, notLike, or, type SQL, sql } from "@packages/db/drizzle";
+import { and, asc, desc, inArray, notLike, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
 import { course, instructor, websocDepartment } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
@@ -62,23 +62,22 @@ export class SearchService {
   ) {}
 
   private async buildInstructorConditions(input: SearchServiceInput) {
-    const deptNames = [];
-
-    if (input.department)
-      for (const deptCode of input.department) {
-        const nameEntries = await this.db
-          .select({ name: websocDepartment.deptName })
-          .from(websocDepartment)
-          .where(
-            and(eq(websocDepartment.deptCode, deptCode), notLike(websocDepartment.deptName, "%*")),
-          )
-          .limit(1);
-
-        if (nameEntries.length) deptNames.push(nameEntries[0].name);
-      }
-    else return and();
-
-    return inArray(instructor.department, deptNames);
+    if (input.department) {
+      return inArray(
+        instructor.department,
+        (
+          await this.db
+            .selectDistinct({ name: websocDepartment.deptName })
+            .from(websocDepartment)
+            .where(
+              and(
+                inArray(websocDepartment.deptCode, input.department),
+                notLike(websocDepartment.deptName, "%*"),
+              ),
+            )
+        ).map((w) => w.name),
+      );
+    }
   }
 
   private buildCourseConditions(input: SearchServiceInput) {
