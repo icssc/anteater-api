@@ -71,8 +71,8 @@ input EnrollmentHistoryGranularQuery {
     courseNumber: String
     sectionCode: Int
     sectionType: SectionType
-    from: String!
-    to: String!
+    from: String
+    to: String
 }
 
 extend type Query {
