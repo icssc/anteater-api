@@ -385,8 +385,8 @@ function parseRepeatability(repeatText: string): {
   repeatabilityTimes: number | undefined;
   units: "credit_hours" | "times" | undefined;
 } {
-  const timesMatch1 = /May be taken for credit (\d+) times/.exec(repeatText);
-  const timesMatch2 = /May be taken (\d+) times*/.exec(repeatText);
+  const timesMatch1 = /May be taken for credit (\d+) time(s)?/.exec(repeatText);
+  const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
   const unitsMatch = /May be taken for credit for (\d+) units/.exec(repeatText);
 
   if (timesMatch1)
@@ -404,7 +404,7 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
       units: "credit_hours",
     };
-  else if (repeatText.toLowerCase() === "may be taken unlimited times")
+  else if (repeatText.toLowerCase().includes("unlimited"))
     return {
       repeatabilityTimes: undefined,
       units: undefined,
