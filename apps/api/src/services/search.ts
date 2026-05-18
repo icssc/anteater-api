@@ -61,7 +61,7 @@ export class SearchService {
     private readonly instructorsService: InstructorsService,
   ) {}
 
-  private async buildInstructorConditions(input: SearchServiceInput) {
+  private buildInstructorConditions(input: SearchServiceInput) {
     if (input.department) {
       return inArray(
         instructor.department,
