@@ -118,8 +118,10 @@ function transformSectionRows(
 export class EnrollmentHistoryService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getEnrollmentHistory(input: EnrollmentHistoryServiceInput) {
-    const sectionRows = await this.db
+  private async fetchSectionRows(
+    input: EnrollmentHistoryServiceInput | EnrollmentHistoryGranularServiceInput,
+  ) {
+    return this.db
       .select({
         course: getTableColumns(websocCourse),
         section: getTableColumns(websocSection),
@@ -144,6 +146,10 @@ export class EnrollmentHistoryService {
       )
       .innerJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
       .where(buildQuery(input));
+  }
+
+  async getEnrollmentHistory(input: EnrollmentHistoryServiceInput) {
+    const sectionRows = await this.fetchSectionRows(input);
     const transformedSectionRows = transformSectionRows(sectionRows);
     const enrollmentRows = await this.db
       .selectDistinctOn([
@@ -184,31 +190,7 @@ export class EnrollmentHistoryService {
   }
 
   async getEnrollmentHistoryGranular(input: EnrollmentHistoryGranularServiceInput) {
-    const sectionRows = await this.db
-      .select({
-        course: getTableColumns(websocCourse),
-        section: getTableColumns(websocSection),
-        instructor: getTableColumns(websocInstructor),
-        location: getTableColumns(websocLocation),
-        meeting: getTableColumns(websocSectionMeeting),
-      })
-      .from(websocCourse)
-      .innerJoin(websocSection, eq(websocCourse.id, websocSection.courseId))
-      .leftJoin(
-        websocSectionToInstructor,
-        eq(websocSection.id, websocSectionToInstructor.sectionId),
-      )
-      .leftJoin(
-        websocInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
-      .innerJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
-      .innerJoin(
-        websocSectionMeetingToLocation,
-        eq(websocSectionMeeting.id, websocSectionMeetingToLocation.meetingId),
-      )
-      .innerJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId))
-      .where(buildQuery(input));
+    const sectionRows = await this.fetchSectionRows(input);
     const transformedSectionRows = transformSectionRows(sectionRows);
     const enrollmentConditions = [
       inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()),
