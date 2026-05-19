@@ -29,6 +29,7 @@ import {
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
   baseTenIntOrNull,
+  intersectAll,
   notNull,
   parseMeetingDays,
   parseStartAndEndTimes,
@@ -526,13 +527,14 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
               // The above pattern is heuristic. When it doesn't work, simply return the original listed instructors
               return instructorIntersection.length
                 ? instructorIntersection
-                : section.instructors.map((ins) => [section.sectionCode, 
-                  {
-                    name: ins,
-                    school: school.schoolName,
-                    department: dept.deptName,
-                  },
-               ]);
+                : section.instructors.map((ins) => [
+                    section.sectionCode,
+                    {
+                      name: ins,
+                      school: school.schoolName,
+                      department: dept.deptName,
+                    },
+                  ]);
             }),
           ),
         ),
