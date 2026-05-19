@@ -61,3 +61,4 @@ CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "cours
           END
         ), ARRAY[]::JSONB[]), NULL)
          as "instructors" from "course" left join "websoc_course" on "websoc_course"."course_id" = "course"."id" left join "websoc_section" on "websoc_section"."course_id" = "websoc_course"."id" left join "websoc_section_to_instructor" on "websoc_section_to_instructor"."section_id" = "websoc_section"."id" left join "websoc_instructor" on "websoc_instructor"."name" = "websoc_section_to_instructor"."instructor_name" left join "instructor_to_websoc_instructor" on "instructor_to_websoc_instructor"."websoc_instructor_name" = "websoc_instructor"."name" left join "instructor" on ("instructor"."ucinetid" = "instructor_to_websoc_instructor"."instructor_ucinetid" and "instructor"."ucinetid" is not null and "instructor"."ucinetid" <> 'student') group by "course"."id");
+REFRESH MATERIALIZED VIEW course_view;
