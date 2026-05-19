@@ -5,7 +5,7 @@ import { courseNumberSchema, yearSchema } from "./lib";
 export const courseMaterialsQuerySchema = z
   .object({
     year: yearSchema.optional(),
-    quarter: z.enum(materialTerms, { error: (_issue) => "Invalid quarter provided" }).optional(),
+    quarter: z.enum(materialTerms, { error: "Invalid quarter provided" }).optional(),
     department: z.string().optional().openapi({
       description: "Only include materials from courses offered by the specified department code",
       example: "I&C SCI",
@@ -33,12 +33,8 @@ export const courseMaterialsQuerySchema = z
         "Only include materials whose title contains the specified string (case-insensitive)",
       example: "ALGORITHM DESIGN",
     }),
-    format: z
-      .enum(textbookFormats, { error: (_issue) => "Invalid textbook format provided" })
-      .optional(),
-    requirement: z
-      .enum(materialRequirements, { error: (_issue) => "Invalid requirement provided" })
-      .optional(),
+    format: z.enum(textbookFormats, { error: "Invalid textbook format provided" }).optional(),
+    requirement: z.enum(materialRequirements, { error: "Invalid requirement provided" }).optional(),
   })
   .refine((x) => (x.department && x.courseNumber) || (x.sectionCode && x.year && x.quarter), {
     message: "Must provide department and course number, or section code and year/quarter",
