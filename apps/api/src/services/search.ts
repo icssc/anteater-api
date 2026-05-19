@@ -1,8 +1,8 @@
 import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
-import { and, asc, desc, inArray, or, type SQL, sql } from "@packages/db/drizzle";
+import { and, asc, desc, inArray, notLike, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
-import { course, instructor } from "@packages/db/schema";
+import { course, instructor, websocDepartment } from "@packages/db/schema";
 import { DEPT_TO_ALIAS, type DeptCode, getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
@@ -59,6 +59,23 @@ export class SearchService {
     private readonly coursesService: CoursesService,
     private readonly instructorsService: InstructorsService,
   ) {}
+
+  private buildInstructorConditions(input: SearchServiceInput) {
+    if (input.department) {
+      return inArray(
+        instructor.department,
+        this.db
+          .select({ name: websocDepartment.deptName })
+          .from(websocDepartment)
+          .where(
+            and(
+              inArray(websocDepartment.deptCode, input.department),
+              notLike(websocDepartment.deptName, "%*"),
+            ),
+          ),
+      );
+    }
+  }
 
   private buildCourseConditions(input: SearchServiceInput) {
     const geIn = input.ge ?? [];
@@ -139,7 +156,7 @@ export class SearchService {
         rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
       })
       .from(instructor)
-      .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)
+      .where(and(this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`))
       .offset(input.skip)
       .limit(input.take)
       .orderBy((t) => [desc(t.rank), asc(t.id)])
@@ -193,7 +210,7 @@ export class SearchService {
           rank: sql`TS_RANK(${INSTRUCTORS_WEIGHTS}, ${query})`.mapWith(Number),
         })
         .from(instructor)
-        .where(sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`),
+        .where(and(this.buildInstructorConditions(input), sql`${INSTRUCTORS_WEIGHTS} @@ ${query}`)),
     ).then((rows) =>
       rows.reduce(
         (acc, row) => {
