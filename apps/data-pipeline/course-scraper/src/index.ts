@@ -389,26 +389,29 @@ function parseRepeatability(repeatText: string): {
   const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
   const unitsMatch = /May be taken for credit for (\d+) units/.exec(repeatText);
 
-  if (timesMatch1)
+  if (timesMatch1) {
     return {
       repeatabilityTimes: Number.parseInt(timesMatch1[1], 10),
       units: "times",
     };
-  else if (timesMatch2)
+  } else if (timesMatch2) {
     return {
       repeatabilityTimes: Number.parseInt(timesMatch2[1], 10),
       units: "times",
     };
-  else if (unitsMatch)
+  } else if (unitsMatch) {
     return {
       repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
       units: "credit_hours",
     };
-  else if (repeatText.toLowerCase().includes("unlimited"))
+  } else if (repeatText.toLowerCase().includes("unlimited")) {
     return {
       repeatabilityTimes: undefined,
       units: undefined,
     };
+  } else if (repeatText.trim() !== "") {
+    throw new Error(`Unrecognized repeatability text: ${repeatText}`);
+  }
 
   return {
     repeatabilityTimes: 0,
