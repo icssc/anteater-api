@@ -55,7 +55,7 @@ const CreateKey = () => {
     setIsCreating(true);
     const result = await createUserApiKey(values);
     if (result.ok) {
-      setKey(key);
+      setKey(result.key);
       setIsDialogOpen(true);
     } else {
       setError(result.error);

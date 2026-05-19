@@ -3,7 +3,6 @@ export * from "./calendar";
 export * from "./course-materials";
 export * from "./courses";
 export * from "./dining";
-export { default as DiningService } from "./dining";
 export * from "./enrollment-history";
 export * from "./grades";
 export * from "./instructors";
