@@ -445,10 +445,20 @@ export const websocLocation = pgTable(
   (table) => [uniqueIndex().on(table.building, table.room)],
 );
 
-export const websocInstructor = pgTable("websoc_instructor", {
-  name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-});
+export const websocInstructor = pgTable(
+  "websoc_instructor",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name").notNull(),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    school: varchar("school"),
+    department: varchar("department"),
+  },
+  (table) => [uniqueIndex().on(table.name, table.school)],
+);
 
 export const websocSectionToInstructor = pgTable(
   "websoc_section_to_instructor",
@@ -457,11 +467,11 @@ export const websocSectionToInstructor = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    instructorName: varchar("instructor_name")
-      .references(() => websocInstructor.name)
+    instructorId: uuid("instructor_id")
+      .references(() => websocInstructor.id)
       .notNull(),
   },
-  (table) => [index().on(table.sectionId), index().on(table.instructorName)],
+  (table) => [index().on(table.sectionId), index().on(table.instructorId)],
 );
 
 export const websocSectionMeetingToLocation = pgTable(
@@ -657,14 +667,14 @@ export const instructorToWebsocInstructor = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     instructorUcinetid: varchar("instructor_ucinetid").references(() => instructor.ucinetid),
-    websocInstructorName: varchar("websoc_instructor_name")
+    websocInstructorId: uuid("websoc_instructor_id")
       .notNull()
-      .references(() => websocInstructor.name),
+      .references(() => websocInstructor.id),
   },
   (table) => [
     index().on(table.instructorUcinetid),
-    index().on(table.websocInstructorName),
-    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
+    index().on(table.websocInstructorId),
+    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorId),
   ],
 );
 
@@ -868,7 +878,6 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
-// dining stuff
 export const diningRestaurant = pgTable("dining_restaurant", {
   id: varchar("id").primaryKey(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
@@ -1155,7 +1164,7 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
             'email', ${instructor.email},
             'department', ${instructor.department},
             'shortenedNames', ARRAY(
-              SELECT ${instructorToWebsocInstructor.websocInstructorName}
+              SELECT ${instructorToWebsocInstructor.websocInstructorId}
               FROM ${instructorToWebsocInstructor}
               WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
             )
@@ -1168,10 +1177,10 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
     .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
     .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
     .leftJoin(websocSectionToInstructor, eq(websocSectionToInstructor.sectionId, websocSection.id))
-    .leftJoin(websocInstructor, eq(websocInstructor.name, websocSectionToInstructor.instructorName))
+    .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
     .leftJoin(
       instructorToWebsocInstructor,
-      eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
     )
     .leftJoin(
       instructor,
@@ -1189,11 +1198,13 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
     qb
       .select({
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
-          "shortened_names",
-        ),
+        shortenedNames: sql<string[]>`ARRAY_AGG(${websocInstructor.name})`.as("shortened_names"),
       })
       .from(instructorToWebsocInstructor)
+      .innerJoin(
+        websocInstructor,
+        eq(websocInstructor.id, instructorToWebsocInstructor.websocInstructorId),
+      )
       .groupBy(instructorToWebsocInstructor.instructorUcinetid),
   );
   const termsCte = qb.$with("terms_cte").as(
@@ -1215,13 +1226,10 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
         websocSectionToInstructor,
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
-      .leftJoin(
-        websocInstructor,
-        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
-      )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .leftJoin(
         instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+        eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
       )
       .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
   );
