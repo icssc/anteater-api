@@ -340,10 +340,7 @@ export class WebsocService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
-      .leftJoin(
-        websocInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
+      .leftJoin(websocInstructor, eq(websocSectionToInstructor.instructorId, websocInstructor.id))
       .leftJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
       .leftJoin(
         websocSectionMeetingToLocation,
