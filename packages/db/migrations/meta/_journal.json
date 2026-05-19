@@ -218,6 +218,13 @@
       "when": 1777449716686,
       "tag": "0030_dining_schedules",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1779214381101,
+      "tag": "0031_course_materials",
+      "breakpoints": true
     }
   ]
 }
