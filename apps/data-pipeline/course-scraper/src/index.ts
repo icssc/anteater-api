@@ -382,8 +382,8 @@ function generateGEs(rawCourse: string[]) {
 }
 
 function parseRepeatability(repeatText: string): {
-  repeatabilityTimes: number | undefined;
-  units: "credit_hours" | "times" | undefined;
+  repeatabilityTimes: number | null;
+  units: "credit_hours" | "times" | null;
 } {
   const timesMatch1 = /May be taken for credit (\d+) time(s)?/.exec(repeatText);
   const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
@@ -406,8 +406,8 @@ function parseRepeatability(repeatText: string): {
     };
   } else if (repeatText.toLowerCase().includes("unlimited")) {
     return {
-      repeatabilityTimes: undefined,
-      units: undefined,
+      repeatabilityTimes: null,
+      units: null,
     };
   } else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
