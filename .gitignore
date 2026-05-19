@@ -15,6 +15,7 @@ node_modules
 # IDEs
 .idea/
 .vscode/
+*.session.sql
 
 # wrangler
 .wrangler/

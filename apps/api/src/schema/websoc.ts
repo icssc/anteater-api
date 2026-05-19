@@ -337,3 +337,29 @@ export const websocDepartmentsResponseSchema = z
     deptName: z.string().openapi({ example: "Biological Sciences" }),
   })
   .array();
+
+export const syllabiQuerySchema = z.object({
+  courseId: z.string().openapi({
+    description: "The course ID to retrieve syllabi for",
+    example: "COMPSCI161",
+  }),
+  year: yearSchema.optional().openapi({ example: "2025" }),
+  quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
+  instructor: z.string().optional().openapi({
+    description: "Only include syllabi for sections taught by the specified instructor",
+    example: "SHINDLER, M.",
+  }),
+});
+
+export const syllabiSchema = z.object({
+  year: z.string().openapi({ example: "2025" }),
+  quarter: z.enum(terms).openapi({ example: "Fall" }),
+  instructorNames: z
+    .string()
+    .array()
+    .openapi({ example: ["SHINDLER, M."] }),
+  url: z.string().openapi({
+    example:
+      "https://canvas.eee.uci.edu/courses/sis_course_id:CourseSpace-Section-F25-34190/assignments/syllabus",
+  }),
+});

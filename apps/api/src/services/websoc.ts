@@ -13,6 +13,7 @@ import {
   lte,
   ne,
   or,
+  sql,
 } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import {
@@ -26,10 +27,11 @@ import {
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
 } from "@packages/db/schema";
-import { isFalse, isTrue } from "@packages/db/utils";
+import { isFalse, isTrue, websocTermSortOrder } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
 import type {
+  syllabiQuerySchema,
   websocDepartmentsQuerySchema,
   websocQuerySchema,
   websocResponseSchema,
@@ -41,15 +43,6 @@ import {
   buildGEQuery,
   buildMultiCourseNumberQuery,
 } from "./util.ts";
-
-const termOrder = {
-  Winter: 0,
-  Spring: 1,
-  Summer1: 2,
-  Summer10wk: 3,
-  Summer2: 4,
-  Fall: 5,
-};
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
@@ -381,18 +374,9 @@ export class WebsocService {
     return this.db
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
       .from(websocSchool)
-      .then((rows) =>
-        new Map(rows.map((row) => [`${row.year} ${row.quarter}`, row]))
-          .values()
-          .toArray()
-          .sort(({ year: y1, quarter: q1 }, { year: y2, quarter: q2 }) =>
-            y1 === y2
-              ? termOrder[q1] - termOrder[q2]
-              : Number.parseInt(y1, 10) - Number.parseInt(y2, 10),
-          )
-          .reverse()
-          .map(transformTerm),
-      );
+      .groupBy(websocSchool.year, websocSchool.quarter)
+      .orderBy(desc(websocSchool.year), desc(websocTermSortOrder(websocSchool.quarter)))
+      .then((rows) => rows.map(transformTerm));
   }
 
   async getDepartments(input: z.infer<typeof websocDepartmentsQuerySchema>) {
@@ -403,17 +387,15 @@ export class WebsocService {
       if (!input.sinceQuarter) {
         sinceOptions.push(eq(websocDepartment.year, input.sinceYear));
       } else {
-        for (const [term, order] of Object.entries(termOrder)) {
-          if (order >= termOrder[input.sinceQuarter]) {
-            sinceOptions.push(
-              and(
-                eq(websocDepartment.year, input.sinceYear),
-                // cast is safe because term comes from a statically known object
-                eq(websocDepartment.quarter, term as Term),
-              ),
-            );
-          }
-        }
+        sinceOptions.push(
+          and(
+            eq(websocDepartment.year, input.sinceYear),
+            gte(
+              websocTermSortOrder(websocDepartment.quarter),
+              websocTermSortOrder(input.sinceQuarter),
+            ),
+          ),
+        );
       }
       sinceOptions.push(gt(websocDepartment.year, input.sinceYear));
     }
@@ -422,16 +404,15 @@ export class WebsocService {
       if (!input.untilQuarter) {
         untilOptions.push(eq(websocDepartment.year, input.untilYear));
       } else {
-        for (const [term, order] of Object.entries(termOrder)) {
-          if (order <= termOrder[input.untilQuarter]) {
-            untilOptions.push(
-              and(
-                eq(websocDepartment.year, input.untilYear),
-                eq(websocDepartment.quarter, term as Term),
-              ),
-            );
-          }
-        }
+        untilOptions.push(
+          and(
+            eq(websocDepartment.year, input.untilYear),
+            lte(
+              websocTermSortOrder(websocDepartment.quarter),
+              websocTermSortOrder(input.untilQuarter),
+            ),
+          ),
+        );
       }
       untilOptions.push(lt(websocDepartment.year, input.untilYear));
     }
@@ -443,5 +424,36 @@ export class WebsocService {
       .from(websocDepartment)
       .where(and(or(...sinceOptions), or(...untilOptions)))
       .orderBy(websocDepartment.deptCode, desc(websocDepartment.year));
+  }
+
+  async getSyllabi(input: z.infer<typeof syllabiQuerySchema>) {
+    const conditions = [eq(websocCourse.courseId, input.courseId), ne(websocSection.webURL, "")];
+    if (input.year) {
+      conditions.push(eq(websocSection.year, input.year));
+    }
+    if (input.quarter) {
+      conditions.push(eq(websocSection.quarter, input.quarter));
+    }
+    if (input.instructor) {
+      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+    }
+    return this.db
+      .select({
+        year: websocSection.year,
+        quarter: websocSection.quarter,
+        url: websocSection.webURL,
+        instructorNames: sql<
+          string[]
+        >`ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName}), NULL)`,
+      })
+      .from(websocSection)
+      .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .where(and(...conditions))
+      .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
+      .orderBy(desc(websocSection.year), desc(websocTermSortOrder(websocSection.quarter)));
   }
 }
