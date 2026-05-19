@@ -198,3 +198,71 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
     }),
   ),
 });
+
+const dayHoursSchema = z.object({
+  open: z.iso.time().nullable().openapi({
+    description: "The opening time on this day, or null if not served on this day",
+    example: "07:15:00",
+  }),
+  close: z.iso.time().nullable().openapi({
+    description: "The closing time on this day, or null if not served on this day",
+    example: "11:00:00",
+  }),
+});
+
+export const scheduleMealPeriodSchema = z.object({
+  adobeId: z.number().int().openapi({
+    description: "Meal period type id",
+    example: 10,
+  }),
+  name: z.string().openapi({ example: "Breakfast" }),
+  position: z.number().int().openapi({
+    description: "Upstream display order; smaller values come earlier",
+    example: 50,
+  }),
+  hours: z.object({
+    sunday: dayHoursSchema,
+    monday: dayHoursSchema,
+    tuesday: dayHoursSchema,
+    wednesday: dayHoursSchema,
+    thursday: dayHoursSchema,
+    friday: dayHoursSchema,
+    saturday: dayHoursSchema,
+  }),
+});
+
+export const scheduleSchema = z.object({
+  upstreamId: z.string().openapi({
+    description: "Schedule identifier from dining system",
+    example: "zuq1l1b",
+  }),
+  restaurantId: restaurantIdSchema,
+  name: z.string().openapi({ example: "Move In Weekend" }),
+  type: z.enum(["standard", "special"]).openapi({
+    description:
+      "The type of the schedule. 'Special' schedules have a date range, while 'standard' is the default schedule",
+  }),
+  startDate: z.iso.date().nullable().openapi({
+    description: "Start date of the special schedule; null for standard schedule",
+  }),
+  endDate: z.iso.date().nullable().openapi({
+    description: "End date of the special schedule; null for standard schedule",
+  }),
+  mealPeriods: scheduleMealPeriodSchema.array(),
+  updatedAt: z.date(),
+});
+
+export const schedulesQuerySchema = z.object({
+  restaurantId: restaurantIdSchema.optional().openapi({
+    description: "If present, only return schedules for the restaurant with this ID",
+  }),
+  includeHistorical: z
+    .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
+    .optional()
+    .openapi({
+      description:
+        "If true, include past schedules whose end date is before today. Defaults to false.",
+    }),
+});
+
+export const schedulesResponseSchema = scheduleSchema.array();

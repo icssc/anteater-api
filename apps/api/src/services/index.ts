@@ -2,7 +2,6 @@ export * from "./ap-exams";
 export * from "./calendar";
 export * from "./courses";
 export * from "./dining";
-export { default as DiningService } from "./dining";
 export * from "./enrollment-history";
 export * from "./grades";
 export * from "./instructors";
