@@ -143,7 +143,7 @@ function parseCourseBlock(
     prerequisiteText: prereqText,
     repeatability: repeatText,
     repeatabilityTimes: repeatabilityData.repeatabilityTimes,
-    repeatabilityType: repeatabilityData.units,
+    repeatabilityType: repeatabilityData.unit,
     gradingOption: gradingText,
     concurrent: concText,
     sameAs: sameAsText,
@@ -383,7 +383,7 @@ function generateGEs(rawCourse: string[]) {
 
 function parseRepeatability(repeatText: string): {
   repeatabilityTimes: number | null;
-  units: "credit_hours" | "times" | null;
+  unit: "credit_hours" | "times" | null;
 } {
   const timesMatch1 = /May be taken for credit (\d+) time(s)?/.exec(repeatText);
   const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
@@ -392,22 +392,22 @@ function parseRepeatability(repeatText: string): {
   if (timesMatch1) {
     return {
       repeatabilityTimes: Number.parseInt(timesMatch1[1], 10),
-      units: "times",
+      unit: "times",
     };
   } else if (timesMatch2) {
     return {
       repeatabilityTimes: Number.parseInt(timesMatch2[1], 10),
-      units: "times",
+      unit: "times",
     };
   } else if (unitsMatch) {
     return {
       repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
-      units: "credit_hours",
+      unit: "credit_hours",
     };
   } else if (repeatText.toLowerCase().includes("unlimited")) {
     return {
       repeatabilityTimes: null,
-      units: null,
+      unit: null,
     };
   } else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
@@ -415,7 +415,7 @@ function parseRepeatability(repeatText: string): {
 
   return {
     repeatabilityTimes: 0,
-    units: "times",
+    unit: "times",
   };
 }
 
