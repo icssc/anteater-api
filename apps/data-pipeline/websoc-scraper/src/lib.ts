@@ -507,14 +507,27 @@ const doChunkUpsert = async (db: ReturnType<typeof database>, term: Term, resp: 
       .flatMap((school) =>
         school.departments.flatMap((dept) =>
           dept.courses.flatMap((course) =>
-            course.sections.flatMap((section) =>
-              Array.from(
-                intersectAll(
-                  new Set(course.sections[0].instructors),
-                  ...course.sections.slice(1).map((section) => new Set(section.instructors)),
-                ),
-              ).map((instructor) => [section.sectionCode, instructor]),
-            ),
+            course.sections.flatMap((section) => {
+              // Try to prevent TAs from being included
+              // Lec sections (usually) only contain the primary instructor, so the intersection of instructors in Dis and Lec sections finds the primary instructor
+
+              // When a course has multiple offerings, lectures are (usually) labeled with an alphabet
+              // and corresponding discussions/labs have that letter as a prefix/suffix, forming a section group
+              // The intersection of potentially disjoint sets of instructors from different offerings would be empty so only intersect within section group.
+              const letterMatch = section.sectionNum.match(/[a-z]+/i);
+              const groupMatch = letterMatch?.[0] ?? "";
+              const groupedSections = course.sections
+                .filter((section) => section.sectionNum.match(groupMatch))
+                .map((section) => new Set(section.instructors));
+              const instructorIntersection = Array.from(
+                intersectAll(groupedSections[0], ...groupedSections.slice(1)),
+              ).map((instructor) => [section.sectionCode, instructor]);
+
+              // The above pattern is heuristic. When it doesn't work, simply return the original listed instructors
+              return instructorIntersection.length
+                ? instructorIntersection
+                : section.instructors.map((instructor) => [section.sectionCode, instructor]);
+            }),
           ),
         ),
       )
