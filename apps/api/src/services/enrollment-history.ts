@@ -212,17 +212,6 @@ export class EnrollmentHistoryService {
         year: section.year,
         quarter: section.quarter,
         sectionCode: section.sectionCode,
-        department: section.department,
-        courseNumber: section.courseNumber,
-        sectionType: section.sectionType,
-        sectionNum: section.sectionNum,
-        units: section.units,
-        instructors: Array.from(section.instructors),
-        meetings: section.meetings.map(({ bldg, ...rest }) => ({
-          bldg: Array.from(bldg),
-          ...rest,
-        })),
-        finalExam: section.finalExam,
         snapshots: [],
       });
     }

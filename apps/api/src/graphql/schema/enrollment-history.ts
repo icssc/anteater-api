@@ -42,14 +42,6 @@ type EnrollmentHistoryGranular @cacheControl(maxAge: 300) {
     year: String!
     quarter: Term!
     sectionCode: String!
-    department: String!
-    courseNumber: String!
-    sectionType: SectionType!
-    sectionNum: String!
-    units: String!
-    instructors: [String!]!
-    meetings: [EnrollmentHistoryMeeting!]!
-    finalExam: String!
     snapshots: [EnrollmentHistoryGranularSnapshot!]!
 }
 

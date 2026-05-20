@@ -120,14 +120,6 @@ export const enrollmentHistoryGranularSchema = z.object({
   year: z.string(),
   quarter: z.enum(terms),
   sectionCode: z.string(),
-  department: z.string(),
-  courseNumber: z.string(),
-  sectionType: z.enum(websocSectionTypes),
-  sectionNum: z.string(),
-  units: z.string(),
-  instructors: z.string().array(),
-  meetings: z.object({ bldg: z.string().array(), days: z.string(), time: z.string() }).array(),
-  finalExam: z.string(),
   snapshots: z
     .object({
       timestamp: z.string(),
