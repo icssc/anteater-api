@@ -225,6 +225,13 @@
       "when": 1779214381101,
       "tag": "0031_course_materials",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779233554981,
+      "tag": "0032_course_repeatability_parsing",
+      "breakpoints": true
     }
   ]
 }
