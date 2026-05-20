@@ -11,9 +11,7 @@ import {
 } from "$schema";
 import { LibraryTrafficService } from "$services";
 
-const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({
-  defaultHook,
-});
+const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 const libraryTrafficRoute = createRoute({
   summary: "Retrieve latest library traffic data",
@@ -38,10 +36,7 @@ libraryTrafficRouter.openapi(libraryTrafficRoute, async (c) => {
 
   if (res.length === 0) {
     return c.json(
-      {
-        ok: false,
-        message: "Library traffic data not found: check for typos in query",
-      },
+      { ok: false, message: "Library traffic data not found: check for typos in query" },
       400,
     );
   }

@@ -100,10 +100,7 @@ async function main() {
       if (obj.college) {
         const collegeRequirementId = await tx
           .insert(collegeRequirement)
-          .values({
-            requirements: obj.college.requirements,
-            name: obj.college.name,
-          })
+          .values({ requirements: obj.college.requirements, name: obj.college.name })
           .onConflictDoUpdate({
             target: collegeRequirement.id,
             set: conflictUpdateSetAllCols(collegeRequirement),
@@ -190,26 +187,17 @@ async function main() {
     await tx
       .insert(degree)
       .values(degreeData)
-      .onConflictDoUpdate({
-        target: degree.id,
-        set: conflictUpdateSetAllCols(degree),
-      });
+      .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
 
     await tx
       .insert(major)
       .values(majorData)
-      .onConflictDoUpdate({
-        target: major.id,
-        set: conflictUpdateSetAllCols(major),
-      });
+      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
 
     await tx
       .insert(minor)
       .values(minorData)
-      .onConflictDoUpdate({
-        target: minor.id,
-        set: conflictUpdateSetAllCols(minor),
-      });
+      .onConflictDoUpdate({ target: minor.id, set: conflictUpdateSetAllCols(minor) });
     await tx
       .insert(specialization)
       .values(specData)

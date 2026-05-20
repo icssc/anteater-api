@@ -1,5 +1,4 @@
 {
-  "root": true,
   "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
   "vcs": {
     "enabled": true,
@@ -15,12 +14,12 @@
       "!**/*.yml",
       "!**/*.yaml",
       "!**/*.json",
-      "!**/.next/**",
-      "!**/.sst/**",
-      "!**/dist/**",
+      "!**/.next/",
+      "!**/.sst/",
+      "!**/dist/",
       "!**/worker-configuration.d.ts",
       "!**/cloudflare-env.d.ts",
-      "!**/.open-next/**"
+      "!**/.open-next/"
     ]
   },
   "formatter": {
@@ -40,12 +39,20 @@
           "level": "error",
           "fix": "safe"
         }
+      },
+      "suspicious": {
+        "noUnknownAtRules": "info"
       }
     }
   },
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

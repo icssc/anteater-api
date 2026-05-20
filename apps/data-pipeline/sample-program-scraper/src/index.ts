@@ -97,9 +97,7 @@ async function fetchWithDelay(url: string, delayMs = 1000): Promise<string> {
   try {
     logger.info(`Making request to ${url}`);
     await sleep(delayMs);
-    const res = await fetch(url, {
-      headers: { Connection: "keep-alive" },
-    }).then((x) => x.text());
+    const res = await fetch(url, { headers: { Connection: "keep-alive" } }).then((x) => x.text());
     logger.info("Request succeeded");
     return res;
   } catch {
@@ -274,12 +272,7 @@ async function transformCourseCodesToIds(
           Promise.all(year.spring.map((code) => interpretCourseString(db, code))),
         ]);
 
-        transformedSampleProgram.push({
-          year: year.year,
-          fall,
-          winter,
-          spring,
-        });
+        transformedSampleProgram.push({ year: year.year, fall, winter, spring });
       }
 
       transformedVariations.push({
@@ -339,14 +332,8 @@ async function storeSampleProgramsInDB(
     .from(sampleProgramVariation)
     .where(inArray(sampleProgramVariation.programId, programIds));
 
-  const dbData = {
-    catalogPrograms: existingCatalogPrograms,
-    variations: existingVariations,
-  };
-  const scrapedData = {
-    catalogPrograms: catalogueRows,
-    variations: variationRows,
-  };
+  const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
+  const scrapedData = { catalogPrograms: catalogueRows, variations: variationRows };
 
   const sortedDbData = sortKeys(
     {
@@ -415,10 +402,7 @@ function parseTable($: ReturnType<typeof load>, $table: Cheerio<AnyNode>): Scrap
       const yearText = $tr.find("th").text().trim();
       if (yearText) {
         if (currentYear !== null) {
-          sampleYears.push({
-            year: currentYear,
-            curriculum: currentCurriculum,
-          });
+          sampleYears.push({ year: currentYear, curriculum: currentCurriculum });
         }
         currentYear = yearText as StandingYearType;
         currentCurriculum = [];

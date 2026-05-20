@@ -28,10 +28,7 @@ export type RuleGroup = {
  */
 export type RuleIfStmt = {
   ruleType: "IfStmt";
-  requirement: {
-    ifPart: { ruleArray: Rule[] };
-    elsePart?: { ruleArray: Rule[] };
-  };
+  requirement: { ifPart: { ruleArray: Rule[] }; elsePart?: { ruleArray: Rule[] } };
 };
 
 export type RuleSubset = {
