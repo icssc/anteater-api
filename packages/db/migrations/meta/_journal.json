@@ -232,6 +232,13 @@
       "when": 1779233554981,
       "tag": "0032_course_repeatability_parsing",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1779237547865,
+      "tag": "0033_enrollment_created_at_timestamp",
+      "breakpoints": true
     }
   ]
 }
