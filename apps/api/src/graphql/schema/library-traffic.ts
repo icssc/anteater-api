@@ -64,7 +64,7 @@ type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
   libraryName: String!
-  period: String!
+  bucketStart: String!
   avgCount: Float!
   avgPercentage: Float!
 }
@@ -76,8 +76,8 @@ input LibraryTrafficHistoryAggregatedQuery {
   year: String
   quarter: LibraryTrafficQuarter
   period: LibraryTrafficPeriod
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
 }
 
 type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 1800) {
