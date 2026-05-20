@@ -1,6 +1,3 @@
--- so we can add non-null column catalog_year
-truncate major_specialization_to_requirement;
-truncate school_requirement;
 CREATE TABLE "dw_major_year" (
 	"program_id" varchar NOT NULL,
 	"catalog_year" varchar NOT NULL,
@@ -32,6 +29,8 @@ ALTER TABLE "school_requirement" RENAME TO "dw_school_requirement";--> statement
 ALTER TABLE "specialization" RENAME TO "dw_specialization";--> statement-breakpoint
 ALTER TABLE "dw_major_specialization_to_requirement" DROP CONSTRAINT "major_specialization_to_requirement_major_id_specialization_id_unique";--> statement-breakpoint
 ALTER TABLE "dw_major" DROP CONSTRAINT "major_degree_id_degree_id_fk";
+--> statement-breakpoint
+ALTER TABLE "dw_major" DROP CONSTRAINT "major_college_requirement_id_college_requirement_id_fk";
 --> statement-breakpoint
 ALTER TABLE "dw_major_specialization_to_requirement" DROP CONSTRAINT "major_specialization_to_requirement_major_id_major_id_fk";
 --> statement-breakpoint

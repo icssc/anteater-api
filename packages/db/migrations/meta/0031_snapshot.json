@@ -1,6 +1,6 @@
 {
-  "id": "1ee83131-f4fc-4ff4-bfc4-9f9bd56186c6",
-  "prevId": "1c6a6181-72f7-401d-b9f2-520795373a0f",
+  "id": "7ee771fc-dd20-452b-bd10-de39498e3490",
+  "prevId": "1ee83131-f4fc-4ff4-bfc4-9f9bd56186c6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -593,6 +593,108 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.course_material": {
+      "name": "course_material",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "section_id": {
+          "name": "section_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isbn": {
+          "name": "isbn",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "author": {
+          "name": "author",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "edition": {
+          "name": "edition",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "format": {
+          "name": "format",
+          "type": "textbook_format",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requirement": {
+          "name": "requirement",
+          "type": "material_requirement",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mms_id": {
+          "name": "mms_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "course_material_section_id_index": {
+          "name": "course_material_section_id_index",
+          "columns": [
+            {
+              "expression": "section_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "course_material_section_id_websoc_section_id_fk": {
+          "name": "course_material_section_id_websoc_section_id_fk",
+          "tableFrom": "course_material",
+          "tableTo": "websoc_section",
+          "columnsFrom": ["section_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -4587,10 +4689,20 @@
       "schema": "public",
       "values": ["Undergraduate", "Graduate"]
     },
+    "public.material_requirement": {
+      "name": "material_requirement",
+      "schema": "public",
+      "values": ["Required", "Recommended", "GoToClassFirst"]
+    },
     "public.term": {
       "name": "term",
       "schema": "public",
       "values": ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"]
+    },
+    "public.textbook_format": {
+      "name": "textbook_format",
+      "schema": "public",
+      "values": ["Physical", "Electronic", "Both", "OER"]
     },
     "public.websoc_section_type": {
       "name": "websoc_section_type",
