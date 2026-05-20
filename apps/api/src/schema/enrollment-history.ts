@@ -97,11 +97,11 @@ export const enrollmentHistoryGranularQuerySchema = z
       .enum(websocSectionTypes, { error: (_issue) => "Invalid sectionType provided" })
       .optional(),
     from: z.iso.datetime({ error: "Invalid from date provided" }).optional().openapi({
-      description: "Start of the time range (ISO 8601 timestamp). Optional.",
+      description: "Start of the time range (ISO 8601 timestamp).",
       example: "2026-02-23T00:00:00.000Z",
     }),
     to: z.iso.datetime({ error: "Invalid to date provided" }).optional().openapi({
-      description: "End of the time range (ISO 8601 timestamp). Optional.",
+      description: "End of the time range (ISO 8601 timestamp).",
       example: "2026-03-13T00:00:00.000Z",
     }),
   })
