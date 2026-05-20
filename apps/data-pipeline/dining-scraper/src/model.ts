@@ -20,6 +20,7 @@ export type MealPeriodWithHours = MealPeriod & {
 };
 
 export type Schedule = {
+  upstreamId: string;
   name: string;
   type: string;
   startDate?: Date;

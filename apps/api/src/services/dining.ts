@@ -5,9 +5,12 @@ import {
   diningDish,
   diningDishToPeriod,
   diningEvent,
+  diningMealPeriodType,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
+  diningSchedule,
+  diningScheduleMealPeriod,
   diningStation,
 } from "@packages/db/schema";
 import { getFromMapOrThrow, orNull } from "@packages/stdlib";
@@ -20,6 +23,8 @@ import type {
   restaurantsResponseSchema,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
+  scheduleSchema,
+  schedulesQuerySchema,
 } from "$schema";
 
 type DiningDishQuery = z.infer<typeof dishQuerySchema>;
@@ -190,11 +195,11 @@ export class DiningService {
         },
         period: {
           id: diningPeriod.id,
-          name: diningPeriod.name,
           startTime: diningPeriod.startTime,
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
         },
+        periodName: diningMealPeriodType.name,
         station: {
           id: diningStation.id,
           updatedAt: diningStation.updatedAt,
@@ -205,6 +210,10 @@ export class DiningService {
       })
       .from(diningRestaurant)
       .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
+      .leftJoin(
+        diningMealPeriodType,
+        eq(diningPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
       .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
       .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
       .leftJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
@@ -213,6 +222,7 @@ export class DiningService {
         // yes, we actually need all of these
         diningRestaurant.id,
         diningPeriod.id,
+        diningMealPeriodType.name,
         diningPeriod.startTime,
         diningPeriod.endTime,
         diningPeriod.updatedAt,
@@ -227,14 +237,14 @@ export class DiningService {
     type PeriodsRecord = z.infer<typeof restaurantTodayResponseSchema>["periods"];
     const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
-    for (const { period, station, dishes } of rows) {
+    for (const { period, periodName, station, dishes } of rows) {
       if (period === null) {
         continue;
       }
 
       if (!periods.has(period.id)) {
         periods.set(period.id, {
-          name: period.name,
+          name: periodName ?? "",
           startTime: period.startTime,
           endTime: period.endTime,
           stationToDishes: {},
@@ -253,6 +263,76 @@ export class DiningService {
       updatedAt: rows[0].restaurant.updatedAt,
     };
   }
-}
 
-export default DiningService;
+  async getSchedules(
+    query: z.infer<typeof schedulesQuerySchema>,
+  ): Promise<z.infer<typeof scheduleSchema>[]> {
+    const conds: SQL[] = [];
+    if (query.restaurantId) {
+      conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
+    }
+
+    if (!query.includeHistorical) {
+      // standard and current/upcoming special schedules by default
+      conds.push(
+        or(isNull(diningSchedule.endDate), gte(diningSchedule.endDate, sql`CURRENT_DATE`))!,
+      );
+    }
+
+    type ScheduleResponse = z.infer<typeof scheduleSchema>;
+
+    const rows = await this.db
+      .select({
+        upstreamId: diningSchedule.upstreamId,
+        restaurantId: diningSchedule.restaurantId,
+        name: diningSchedule.name,
+        type: diningSchedule.type,
+        startDate: diningSchedule.startDate,
+        endDate: diningSchedule.endDate,
+        updatedAt: diningSchedule.updatedAt,
+        mealPeriods: sql<ScheduleResponse["mealPeriods"]>`
+          COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'adobeId', ${diningScheduleMealPeriod.mealPeriodTypeId},
+                'name', ${diningMealPeriodType.name},
+                'position', ${diningMealPeriodType.position},
+                'hours', JSONB_BUILD_OBJECT(
+                  'sunday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.sunOpen}, 'close', ${diningScheduleMealPeriod.sunClose}),
+                  'monday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.monOpen}, 'close', ${diningScheduleMealPeriod.monClose}),
+                  'tuesday',   JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.tueOpen}, 'close', ${diningScheduleMealPeriod.tueClose}),
+                  'wednesday', JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.wedOpen}, 'close', ${diningScheduleMealPeriod.wedClose}),
+                  'thursday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.thuOpen}, 'close', ${diningScheduleMealPeriod.thuClose}),
+                  'friday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.friOpen}, 'close', ${diningScheduleMealPeriod.friClose}),
+                  'saturday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.satOpen}, 'close', ${diningScheduleMealPeriod.satClose})
+                )
+              )
+              ORDER BY ${diningMealPeriodType.position}
+            ) FILTER (
+              WHERE ${diningScheduleMealPeriod.scheduleId} IS NOT NULL
+                AND ${diningMealPeriodType.adobeId} IS NOT NULL
+            ),
+            '[]'::jsonb
+          )
+        `.as("mealPeriods"),
+      })
+      .from(diningSchedule)
+      .leftJoin(
+        diningScheduleMealPeriod,
+        eq(diningSchedule.id, diningScheduleMealPeriod.scheduleId),
+      )
+      .leftJoin(
+        diningMealPeriodType,
+        eq(diningScheduleMealPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
+      .where(and(...conds))
+      .groupBy(diningSchedule.id)
+      .orderBy(
+        sql`CASE ${diningSchedule.type} WHEN 'standard' THEN 0 ELSE 1 END`,
+        sql`${diningSchedule.startDate} ASC NULLS FIRST`,
+        diningSchedule.upstreamId,
+      );
+
+    return rows as ScheduleResponse[];
+  }
+}

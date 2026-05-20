@@ -21,6 +21,7 @@ const searchRoute = createRoute({
   path: "/",
   request: { query: searchQuerySchema },
   description: "Retrieves course/instructor results for the given search query.",
+  security: [{ ApiKeyAuth: [] }],
   responses: {
     200: response200(searchResponseSchema),
     422: response422(),
