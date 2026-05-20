@@ -150,9 +150,6 @@ export class DegreeworksClient {
 
     const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
     if (!json) return undefined;
-    if ("error" in json) {
-      return undefined;
-    }
     const major = json.blockArray.find(
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
