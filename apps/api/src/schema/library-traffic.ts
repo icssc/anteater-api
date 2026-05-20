@@ -67,7 +67,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
   .object({
     libraryName: z.string().optional().openapi({
       example: "Langson Library",
-      description: "Filter results by library name (returns one row per location in that library)",
+      description: "Filter results by library name",
     }),
     locationName: z.string().optional().openapi({
       example: "4th Floor - Nordstrom Honors Study Room",
@@ -95,18 +95,23 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
         "Which part of the term to filter to (only applies when year + quarter provided)",
       example: "instruction",
     }),
-    startDate: z.coerce.date().openapi({
+    startDate: z.coerce.date().optional().openapi({
       example: "2025-01-01T00:00:00Z",
-      description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
+      description:
+        "Start of the time range (inclusive). Required unless year + quarter are provided.",
     }),
-    endDate: z.coerce.date().openapi({
+    endDate: z.coerce.date().optional().openapi({
       example: "2025-01-31T23:59:59Z",
       description:
-        "End of the time range (inclusive) — overridden by year/quarter if provided. Max range: 14 days for hour, 365 days for day, 730 days for week/month.",
+        "End of the time range (inclusive). Required unless year + quarter are provided. Max range: 14 days for hour, 365 days for day, 730 days for week/month.",
     }),
+  })
+  .refine(({ year, quarter, startDate, endDate }) => (year && quarter) || (startDate && endDate), {
+    message: "Either (year + quarter) or (startDate + endDate) must be provided",
   })
   .refine(
     ({ granularity, startDate, endDate }) => {
+      if (!startDate || !endDate) return true;
       const cap = MAX_RANGE_DAYS[granularity];
       const diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
       return diff >= 0 && diff <= cap;
@@ -118,7 +123,7 @@ export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.string().openapi({ example: "Langson Library" }),
-  period: z.coerce
+  bucketStart: z.coerce
     .date()
     .transform((d) => d.toISOString())
     .openapi({
@@ -194,11 +199,13 @@ export const libraryTrafficHistoryPatternEntrySchema = z.object({
   libraryName: z.string().openapi({ example: "Langson Library" }),
   year: z.string().optional().openapi({
     example: "2025",
-    description: "Academic year this bucket belongs to (week granularity only)",
+    description:
+      "Academic year for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the year query param if provided.",
   }),
   quarter: z.string().optional().openapi({
     example: "Fall",
-    description: "Academic quarter this bucket belongs to (week granularity only)",
+    description:
+      "Academic quarter for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the quarter query param if provided.",
   }),
   bucket: z.number().int().openapi({
     example: 5,
