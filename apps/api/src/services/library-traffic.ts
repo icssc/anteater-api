@@ -1,6 +1,7 @@
 import type { database } from "@packages/db";
 import { and, asc, avg, eq, gt, gte, lte, or, sql } from "@packages/db/drizzle";
 import { calendarTerm, libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
+import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type {
   libraryTrafficHistoryAggregatedQuerySchema,
@@ -84,14 +85,16 @@ export class LibraryTrafficService {
         .from(calendarTerm)
         .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
       if (!term) {
-        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
+        throw new HTTPException(400, {
+          message: `No calendar term found for ${input.year} ${input.quarter}`,
+        });
       }
       const isFinals = input.period === "finals";
       startDate = isFinals ? term.finalsStart : term.instructionStart;
       endDate = isFinals ? term.finalsEnd : term.instructionEnd;
     }
 
-    const periodExpr = {
+    const bucketStartExpr = {
       hour: sql<Date>`date_trunc('hour', ${libraryTrafficHistory.timestamp})`,
       day: sql<Date>`date_trunc('day', ${libraryTrafficHistory.timestamp})`,
       week: sql<Date>`date_trunc('week', ${libraryTrafficHistory.timestamp})`,
@@ -108,6 +111,11 @@ export class LibraryTrafficService {
       conds.push(eq(libraryTraffic.libraryName, input.libraryName));
     }
 
+    if (!startDate || !endDate) {
+      throw new HTTPException(400, {
+        message: "Either (year + quarter) or (startDate + endDate) must be provided",
+      });
+    }
     conds.push(gte(libraryTrafficHistory.timestamp, startDate));
     conds.push(lte(libraryTrafficHistory.timestamp, endDate));
 
@@ -116,7 +124,7 @@ export class LibraryTrafficService {
         locationId: libraryTrafficHistory.locationId,
         locationName: libraryTraffic.locationName,
         libraryName: libraryTraffic.libraryName,
-        period: periodExpr,
+        bucketStart: bucketStartExpr,
         avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
         avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
       })
@@ -127,9 +135,9 @@ export class LibraryTrafficService {
         libraryTrafficHistory.locationId,
         libraryTraffic.locationName,
         libraryTraffic.libraryName,
-        periodExpr,
+        bucketStartExpr,
       )
-      .orderBy(asc(libraryTrafficHistory.locationId), asc(periodExpr));
+      .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketStartExpr));
   }
 
   async getLibraryTrafficHistoryPattern(input: LibraryTrafficHistoryPatternServiceInput) {
@@ -215,7 +223,9 @@ export class LibraryTrafficService {
         .from(calendarTerm)
         .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
       if (!term) {
-        throw new Error(`No calendar term found for ${input.year} ${input.quarter}`);
+        throw new HTTPException(400, {
+          message: `No calendar term found for ${input.year} ${input.quarter}`,
+        });
       }
       const isFinals = input.period === "finals";
       startDate = isFinals ? term.finalsStart : term.instructionStart;
@@ -246,7 +256,7 @@ export class LibraryTrafficService {
         .from(libraryTrafficHistory)
         .where(eq(libraryTrafficHistory.id, input.cursor));
       if (!cursorRow) {
-        throw new Error(`Invalid cursor: ${input.cursor}`);
+        throw new HTTPException(400, { message: `Invalid cursor: ${input.cursor}` });
       }
       conds.push(
         or(
