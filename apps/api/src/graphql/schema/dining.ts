@@ -133,8 +133,8 @@ type Schedule @cacheControl(maxAge: 3600) {
 
 input DiningEventsQuery {
   restaurantId: RestaurantId
-  startDate: String
-  endDate: String
+  after: String
+  before: String
 }
 
 input RestaurantsQuery {

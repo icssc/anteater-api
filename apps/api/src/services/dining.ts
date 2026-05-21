@@ -1,6 +1,7 @@
 import type { database } from "@packages/db";
 import {
   and,
+  asc,
   eq,
   gte,
   inArray,
@@ -48,15 +49,15 @@ export class DiningService {
   async getEvents(input: DiningEventQuery) {
     const conds = [];
 
-    if (input.startDate || input.endDate) {
-      if (input.startDate) {
-        conds.push(gte(diningEvent.start, sql`${input.startDate}::timestamp`));
+    if (input.after || input.before) {
+      if (input.after) {
+        conds.push(gte(diningEvent.start, sql`${input.after}::timestamp`));
       }
-      if (input.endDate) {
-        conds.push(lt(diningEvent.start, sql`${input.endDate}::date + INTERVAL '1 day'`));
+      if (input.before) {
+        conds.push(lt(diningEvent.start, sql`${input.before}::date + INTERVAL '1 day'`));
       }
     } else {
-      // default: // only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
+      // default: only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
       conds.push(
         or(
           gte(diningEvent.end, sql`NOW()`),
@@ -80,7 +81,8 @@ export class DiningService {
         updatedAt: diningEvent.updatedAt,
       })
       .from(diningEvent)
-      .where(and(...conds));
+      .where(and(...conds))
+      .orderBy(asc(diningEvent.start));
   }
 
   async getDishesRaw(input: { where?: SQL }): Promise<z.infer<typeof dishSchema>[]> {

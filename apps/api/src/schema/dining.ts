@@ -9,19 +9,19 @@ export const diningEventsQuerySchema = z
     restaurantId: restaurantIdSchema.optional().openapi({
       description: "Filter events by restaurant ID",
     }),
-    startDate: z.iso.date().optional().openapi({
+    after: z.iso.date().optional().openapi({
       description:
-        "If provided, only return events whose start date is on or after this date. If neither startDate nor endDate is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
+        "If provided, only return events whose start date is on or after this date. If neither after nor before is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
       example: "2026-01-01",
     }),
-    endDate: z.iso.date().optional().openapi({
+    before: z.iso.date().optional().openapi({
       description: "If provided, only return events whose start date is on or before this date",
       example: "2026-12-31",
     }),
   })
-  .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
-    message: "startDate must be on or before endDate",
-    path: ["endDate"],
+  .refine((data) => !data.after || !data.before || data.after <= data.before, {
+    message: "after must be on or before the before date",
+    path: ["before"],
   });
 
 export const batchDishesQuerySchema = z.object({
