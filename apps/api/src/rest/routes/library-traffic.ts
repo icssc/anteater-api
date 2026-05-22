@@ -67,7 +67,6 @@ const libraryTrafficHistoryRawRoute = createRoute({
     "Retrieves paginated raw occupancy records. Filter by location and date range or academic term (year + quarter + period).",
   responses: {
     200: response200(libraryTrafficHistoryRawSchema, { isCursor: true }),
-    400: response404("No matching data found for provided parameters"),
     422: response422(),
     500: response500(),
   },
@@ -77,14 +76,6 @@ libraryTrafficRouter.openapi(libraryTrafficHistoryRawRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new LibraryTrafficService(database(c.env.DB.connectionString));
   const { items, nextCursor } = await service.getLibraryTrafficHistoryRaw(query);
-
-  if (items.length === 0) {
-    return c.json(
-      { ok: false, message: "Library traffic history not found: check for typos in query" },
-      400,
-    );
-  }
-
   return c.json(
     {
       ok: true,
@@ -105,10 +96,9 @@ const libraryTrafficHistoryAggregatedRoute = createRoute({
   path: "/history/aggregated",
   request: { query: libraryTrafficHistoryAggregatedQuerySchema },
   description:
-    "Retrieves time-averaged occupancy metrics grouped by granularity. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
+    "Retrieves time-averaged occupancy metrics grouped by granularity. Scope with either (startDate + endDate) or (year + quarter). Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
   responses: {
     200: response200(libraryTrafficHistoryAggregatedSchema),
-    400: response404("No matching data found for provided parameters"),
     422: response422(),
     500: response500(),
   },
@@ -118,14 +108,6 @@ libraryTrafficRouter.openapi(libraryTrafficHistoryAggregatedRoute, async (c) => 
   const query = c.req.valid("query");
   const service = new LibraryTrafficService(database(c.env.DB.connectionString));
   const res = await service.getLibraryTrafficHistoryAggregated(query);
-
-  if (res.length === 0) {
-    return c.json(
-      { ok: false, message: "Library traffic history not found: check for typos in query" },
-      400,
-    );
-  }
-
   return c.json({ ok: true, data: libraryTrafficHistoryAggregatedSchema.parse(res) }, 200);
 });
 
@@ -137,10 +119,9 @@ const libraryTrafficHistoryPatternRoute = createRoute({
   path: "/history/pattern",
   request: { query: libraryTrafficHistoryPatternQuerySchema },
   description:
-    "Retrieves typical occupancy averaged across recurring time slots (e.g. all Mondays, all 2pm hours). Granularity controls the cycle: hour → 24 buckets, day → 7, week → 52, month → 12.",
+    "Retrieves typical occupancy averaged across recurring time slots (e.g. all Mondays, all 2pm hours). Granularity controls the cycle: hour → 24 buckets (0-23), day → 7 (1=Mon...7=Sun), week → 10 buckets (week-of-term), month → 12.",
   responses: {
     200: response200(libraryTrafficHistoryPatternSchema),
-    400: response404("No matching data found for provided parameters"),
     422: response422(),
     500: response500(),
   },
@@ -150,14 +131,6 @@ libraryTrafficRouter.openapi(libraryTrafficHistoryPatternRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new LibraryTrafficService(database(c.env.DB.connectionString));
   const res = await service.getLibraryTrafficHistoryPattern(query);
-
-  if (res.length === 0) {
-    return c.json(
-      { ok: false, message: "Library traffic history not found: check for typos in query" },
-      400,
-    );
-  }
-
   return c.json({ ok: true, data: libraryTrafficHistoryPatternSchema.parse(res) }, 200);
 });
 
