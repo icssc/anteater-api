@@ -80,7 +80,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
     year: z.string().optional().openapi({
       example: "2025",
       description:
-        "Academic year — use with quarter to scope results to a term (overrides startDate/endDate)",
+        "Academic year — use with quarter to scope results to a term (alternative to startDate/endDate)",
     }),
     quarter: z
       .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
@@ -88,7 +88,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
       .openapi({
         example: "Winter",
         description:
-          "Academic quarter — use with year to scope results to a term (overrides startDate/endDate)",
+          "Academic quarter — use with year to scope results to a term (alternative to startDate/endDate)",
       }),
     period: z.enum(["instruction", "finals"]).default("instruction").openapi({
       description:
@@ -155,32 +155,32 @@ export const libraryTrafficHistoryPatternQuerySchema = z
       description: "Filter results by name of this floor / section",
     }),
     granularity: z.enum(["hour", "day", "week", "month"]).openapi({
-      description: "Cycle to group by — hour (0-23), day (Mon-Sun), week (1-53), month (Jan-Dec)",
+      description:
+        "Cycle to group by — hour-of-day (0-23), day-of-week (1=Mon...7=Sun), week-of-term (1-10), or month (1-12)",
       example: "hour",
     }),
     year: z.string().optional().openapi({
       example: "2025",
-      description: "Academic year — use with quarter to scope pattern to a term",
+      description: "Academic year — use with quarter to scope results to a term",
     }),
     quarter: z
       .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
       .optional()
       .openapi({
         example: "Winter",
-        description: "Academic quarter — use with year to scope pattern to a term",
+        description: "Academic quarter — use with year to scope results to a term",
       }),
     period: z.enum(["instruction", "finals"]).default("instruction").openapi({
-      description:
-        "Which part of the term to filter to (only applies when year + quarter provided)",
+      description: "Which part of the term to filter to",
       example: "instruction",
     }),
     startDate: z.coerce.date().optional().openapi({
       example: "2025-01-01T00:00:00Z",
-      description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
+      description: "Start of the time range (inclusive) — combined with year/quarter filters",
     }),
     endDate: z.coerce.date().optional().openapi({
       example: "2025-12-31T23:59:59Z",
-      description: "End of the time range (inclusive) — overridden by year/quarter if provided",
+      description: "End of the time range (inclusive) — combined with year/quarter filters",
     }),
   })
   .refine(
