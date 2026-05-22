@@ -30,15 +30,9 @@ export const libraryTrafficResolvers = {
 
     libraryTrafficHistory: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new LibraryTrafficService(db);
-      const input = libraryTrafficHistoryRawQuerySchema.parse(args.query);
-      const { items, nextCursor } = await service.getLibraryTrafficHistoryRaw(input);
-
-      if (items.length === 0) {
-        throw new GraphQLError("Library traffic history not found: check for typos in query", {
-          extensions: { code: "BAD_REQUEST" },
-        });
-      }
-
+      const { items, nextCursor } = await service.getLibraryTrafficHistoryRaw(
+        libraryTrafficHistoryRawQuerySchema.parse(args.query ?? {}),
+      );
       return { items: libraryTrafficHistoryRawSchema.parse(items), nextCursor };
     },
 
@@ -48,16 +42,11 @@ export const libraryTrafficResolvers = {
       { db }: GraphQLContext,
     ) => {
       const service = new LibraryTrafficService(db);
-      const input = libraryTrafficHistoryAggregatedQuerySchema.parse(args.query);
-      const res = await service.getLibraryTrafficHistoryAggregated(input);
-
-      if (res.length === 0) {
-        throw new GraphQLError("Library traffic history not found: check for typos in query", {
-          extensions: { code: "BAD_REQUEST" },
-        });
-      }
-
-      return libraryTrafficHistoryAggregatedSchema.parse(res);
+      return libraryTrafficHistoryAggregatedSchema.parse(
+        await service.getLibraryTrafficHistoryAggregated(
+          libraryTrafficHistoryAggregatedQuerySchema.parse(args.query ?? {}),
+        ),
+      );
     },
 
     libraryTrafficHistoryPattern: async (
@@ -66,16 +55,11 @@ export const libraryTrafficResolvers = {
       { db }: GraphQLContext,
     ) => {
       const service = new LibraryTrafficService(db);
-      const input = libraryTrafficHistoryPatternQuerySchema.parse(args.query ?? {});
-      const res = await service.getLibraryTrafficHistoryPattern(input);
-
-      if (res.length === 0) {
-        throw new GraphQLError("Library traffic history not found: check for typos in query", {
-          extensions: { code: "BAD_REQUEST" },
-        });
-      }
-
-      return libraryTrafficHistoryPatternSchema.parse(res);
+      return libraryTrafficHistoryPatternSchema.parse(
+        await service.getLibraryTrafficHistoryPattern(
+          libraryTrafficHistoryPatternQuerySchema.parse(args.query ?? {}),
+        ),
+      );
     },
   },
 };
