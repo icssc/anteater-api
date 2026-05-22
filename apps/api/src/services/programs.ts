@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, max, sql } from "@packages/db/drizzle";
+import { and, eq, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   dwDegree,
@@ -40,9 +40,7 @@ export class ProgramsService {
     catalogYear: string | undefined,
   ) {
     return [
-      catalogYear !== undefined
-        ? eq(table.catalogYear, this.db.select({ m: max(table.catalogYear).as("m") }).from(table))
-        : undefined,
+      catalogYear !== undefined ? eq(table.catalogYear, catalogYear) : undefined,
       catalogYear !== undefined
         ? sql`CASE
   WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
