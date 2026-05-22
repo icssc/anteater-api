@@ -1,5 +1,5 @@
 {
-  "id": "6cf1a183-c0d1-4da8-ad99-b428bfd5fd1b",
+  "id": "62b9c667-c6d7-4b68-b168-5b67a4b367ec",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -2012,7 +2012,7 @@
         "id": {
           "name": "id",
           "type": "varchar",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "catalog_year": {
@@ -2028,7 +2028,29 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dw_school_requirement_id_catalog_year_index": {
+          "name": "dw_school_requirement_id_catalog_year_index",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
