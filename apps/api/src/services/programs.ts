@@ -58,7 +58,6 @@ export class ProgramsService {
       dwMajorSpecializationToRequirement,
       query.catalogYear,
     );
-    const [majorWhere, majorOrder] = this.catalogYearModifiers(dwMajorYear, query.catalogYear);
 
     const majorSpecializationInner = this.db
       .select({
