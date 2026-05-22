@@ -30,7 +30,7 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  private catalogYearCondition(
+  private catalogYearModifiers(
     table:
       | typeof dwSchoolRequirement
       | typeof dwMajorYear
@@ -39,41 +39,59 @@ export class ProgramsService {
       | typeof dwSpecializationRequirement,
     catalogYear: string | undefined,
   ) {
-    return eq(
-      table.catalogYear,
-      catalogYear ?? this.db.select({ m: max(table.catalogYear).as("m") }).from(table),
-    );
+    return [
+      catalogYear !== undefined
+        ? eq(table.catalogYear, this.db.select({ m: max(table.catalogYear).as("m") }).from(table))
+        : undefined,
+      catalogYear !== undefined
+        ? sql`CASE
+  WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
+  WHEN ${table.catalogYear} = ${catalogYear} THEN 0
+  WHEN ${table.catalogYear} < ${catalogYear} THEN SUBSTRING(${catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real + 0.5
+  END`
+        : undefined,
+    ];
   }
 
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
-    const majorSpecialization = this.db.$with("major_specialization").as(
-      this.db
-        .select({
-          id: dwMajor.id,
-          name: dwMajor.name,
-          specializations:
-            sql`ARRAY_REMOVE(ARRAY_AGG(${dwMajorSpecializationToRequirement.specializationId}), NULL)`.as(
-              "specializations",
-            ),
-        })
-        .from(dwMajor)
-        .leftJoin(
-          dwMajorSpecializationToRequirement,
-          eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
-        )
-        .where(
-          query.catalogYear !== undefined
-            ? eq(dwMajorSpecializationToRequirement.catalogYear, query.catalogYear)
-            : undefined,
-        )
-        .groupBy(dwMajor.id),
+    const [specsWhere, specsOrder] = this.catalogYearModifiers(
+      dwMajorSpecializationToRequirement,
+      query.catalogYear,
     );
+    const [majorWhere, majorOrder] = this.catalogYearModifiers(dwMajorYear, query.catalogYear);
+
+    const majorSpecializationInner = this.db
+      .select({
+        id: dwMajor.id,
+        name: dwMajor.name,
+        catalogYear: dwMajorSpecializationToRequirement.catalogYear,
+        specializations:
+          sql`ARRAY_REMOVE(ARRAY_AGG(${dwMajorSpecializationToRequirement.specializationId}), NULL)`.as(
+            "specializations",
+          ),
+      })
+      .from(dwMajor)
+      .leftJoin(
+        dwMajorSpecializationToRequirement,
+        eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+      )
+      .where(specsWhere);
+
+    const majorSpecialization = this.db
+      .$with("major_specialization")
+      .as(
+        (specsOrder !== undefined
+          ? majorSpecializationInner.orderBy(specsOrder)
+          : majorSpecializationInner
+        ).groupBy(dwMajor.id, dwMajorSpecializationToRequirement.catalogYear),
+      );
 
     return this.db
       .with(majorSpecialization)
       .select({
         id: majorSpecialization.id,
         name: majorSpecialization.name,
+        catalogYear: majorSpecialization.catalogYear,
         specializationRequired: dwMajorYear.specializationRequired,
         specializations: majorSpecialization.specializations,
         type: dwDegree.name,
@@ -82,6 +100,13 @@ export class ProgramsService {
       .from(majorSpecialization)
       .innerJoin(dwMajor, eq(majorSpecialization.id, dwMajor.id))
       .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id))
+      .innerJoin(
+        dwMajorYear,
+        and(
+          eq(dwMajor.id, dwMajorYear.programId),
+          eq(majorSpecialization.catalogYear, dwMajorYear.catalogYear),
+        ),
+      )
       .where(and(query.id ? eq(majorSpecialization.id, query.id) : undefined));
   }
 
@@ -131,10 +156,16 @@ export class ProgramsService {
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
     if (programType === "major") {
-      const [got] = await this.db
+      const [where, order] = this.catalogYearModifiers(
+        dwMajorSpecializationToRequirement,
+        query.catalogYear,
+      );
+
+      const base = this.db
         .select({
           id: dwMajor.id,
           name: dwMajor.name,
+          catalogYear: dwMajorYear.catalogYear,
           requirements: dwMajorRequirement.requirements,
           schoolRequirements: {
             name: dwMajorYear.collegeRequirements,
@@ -150,16 +181,17 @@ export class ProgramsService {
           dwMajorRequirement,
           eq(dwMajorSpecializationToRequirement.requirementId, dwMajorRequirement.id),
         )
+        .innerJoin(dwMajorYear, eq(dwMajor.id, dwMajorYear.programId))
         .where(
           and(
             eq(dwMajor.id, query.programId),
             query.specializationId
               ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
               : undefined,
-            this.catalogYearCondition(dwMajorSpecializationToRequirement, query.catalogYear),
+            where,
           ),
-        )
-        .limit(1);
+        );
+      const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
 
       const converted =
         got !== undefined
@@ -177,39 +209,37 @@ export class ProgramsService {
       minor: [dwMinor, dwMinorRequirement] as const,
       specialization: [dwSpecialization, dwSpecializationRequirement] as const,
     }[programType];
-    const [got] = await this.db
+
+    const [where, order] = this.catalogYearModifiers(requirementsTable, query.catalogYear);
+
+    const base = this.db
       .select({
         id: baseTable.id,
         name: baseTable.name,
+        catalogYear: requirementsTable.catalogYear,
         requirements: requirementsTable.requirements,
       })
       .from(baseTable)
       .leftJoin(requirementsTable, eq(baseTable.id, requirementsTable.programId))
-      .where(
-        and(
-          eq(baseTable.id, query.programId),
-          this.catalogYearCondition(requirementsTable, query.catalogYear),
-        ),
-      )
-      .limit(1);
+      .where(and(eq(baseTable.id, query.programId), where));
+
+    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
-    const [got] = await this.db
+    const [where, order] = this.catalogYearModifiers(dwSchoolRequirement, query.catalogYear);
+
+    const base = this.db
       .select({
         id: dwSchoolRequirement.id,
         requirements: dwSchoolRequirement.requirements,
+        catalogYear: dwSchoolRequirement.catalogYear,
       })
       .from(dwSchoolRequirement)
-      .where(
-        and(
-          eq(dwSchoolRequirement.id, query.id),
-          this.catalogYearCondition(dwSchoolRequirement, query.catalogYear),
-        ),
-      )
-      .limit(1);
+      .where(and(eq(dwSchoolRequirement.id, query.id), where));
 
+    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
   }
 
