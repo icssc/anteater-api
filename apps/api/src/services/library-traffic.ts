@@ -145,11 +145,14 @@ export class LibraryTrafficService {
     const periodStart = isFinals ? calendarTerm.finalsStart : calendarTerm.instructionStart;
     const periodEnd = isFinals ? calendarTerm.finalsEnd : calendarTerm.instructionEnd;
     const isWeek = input.granularity === "week";
+    // Week bucket is term-relative (1-10), which only makes sense per-quarter; for other
+    // granularities (hour-of-day, day-of-week, month) we always combine all terms
     const separateByTerm = isWeek && !!input.quarter;
 
     const bucketExpr = {
       hour: sql<number>`EXTRACT(hour FROM ${libraryTrafficHistory.timestamp})`,
       day: sql<number>`EXTRACT(isodow FROM ${libraryTrafficHistory.timestamp})`,
+      // Week of term: weeks elapsed since the term's period start, 1-indexed
       week: sql<number>`floor(extract(epoch from (${libraryTrafficHistory.timestamp} - ${periodStart})) / 604800)::int + 1`,
       month: sql<number>`EXTRACT(month FROM ${libraryTrafficHistory.timestamp})`,
     }[input.granularity];
