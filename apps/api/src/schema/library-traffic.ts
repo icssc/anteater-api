@@ -1,5 +1,26 @@
 import { z } from "@hono/zod-openapi";
 
+// Format a UTC Date as ISO 8601 with Pacific time offset (e.g. "2025-11-15T14:00:00-08:00").
+// Handles PST/PDT automatically via IANA timezone data.
+function toPacificISO(utcDate: Date): string {
+  const la = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(utcDate);
+  const localStr = la.replace(" ", "T");
+  const offsetMin = (Date.parse(`${localStr}Z`) - utcDate.getTime()) / 60000;
+  const sign = offsetMin >= 0 ? "+" : "-";
+  const abs = Math.abs(offsetMin);
+  const offset = `${sign}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(abs % 60).padStart(2, "0")}`;
+  return `${localStr}${offset}`;
+}
+
 const MAX_RANGE_DAYS: Record<string, number> = {
   hour: 14,
   day: 365,
@@ -57,8 +78,8 @@ export const libraryTrafficHistoryRawEntrySchema = z.object({
   trafficPercentage: z.coerce.number().openapi({ example: 0.38 }),
   timestamp: z.coerce
     .date()
-    .transform((d) => d.toISOString())
-    .openapi({ example: "2025-01-15T14:00:00.000Z" }),
+    .transform(toPacificISO)
+    .openapi({ example: "2025-01-15T14:00:00-08:00" }),
 });
 
 export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEntrySchema);
@@ -123,13 +144,10 @@ export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.string().openapi({ example: "Langson Library" }),
-  bucketStart: z.coerce
-    .date()
-    .transform((d) => d.toISOString())
-    .openapi({
-      example: "2025-01-15T14:00:00.000Z",
-      description: "Start of the time bucket (ISO 8601)",
-    }),
+  bucketStart: z.coerce.date().transform(toPacificISO).openapi({
+    example: "2025-01-15T14:00:00-08:00",
+    description: "Start of the time bucket (ISO 8601, Pacific time)",
+  }),
   avgCount: z.number().openapi({
     example: 42.5,
     description: "Average number of people detected during this period",
@@ -263,13 +281,10 @@ export const libraryTrafficEntrySchema = z.object({
     example: 0.33,
     description: "Occupancy as a fraction of stated capacity (0 to 1, or >1 if over-occupied)",
   }),
-  timestamp: z.coerce
-    .date()
-    .transform((d) => d.toISOString())
-    .openapi({
-      example: "2025-01-01T12:34:56.789Z",
-      description: "When the library traffic was recorded (ISO 8601 timestamp)",
-    }),
+  timestamp: z.coerce.date().transform(toPacificISO).openapi({
+    example: "2025-01-01T12:34:56-08:00",
+    description: "When the library traffic was recorded (ISO 8601, Pacific time)",
+  }),
 });
 
 export const libraryTrafficSchema = z.array(libraryTrafficEntrySchema);

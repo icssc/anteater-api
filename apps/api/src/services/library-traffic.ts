@@ -94,11 +94,14 @@ export class LibraryTrafficService {
       endDate = isFinals ? term.finalsEnd : term.instructionEnd;
     }
 
+    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
+    // Truncate in Pacific time then convert back to UTC so Drizzle receives a true UTC moment
+    // and the response transform (toPacificISO) can reconstruct the correct Pacific offset.
     const bucketStartExpr = {
-      hour: sql<Date>`date_trunc('hour', ${libraryTrafficHistory.timestamp})`,
-      day: sql<Date>`date_trunc('day', ${libraryTrafficHistory.timestamp})`,
-      week: sql<Date>`date_trunc('week', ${libraryTrafficHistory.timestamp})`,
-      month: sql<Date>`date_trunc('month', ${libraryTrafficHistory.timestamp})`,
+      hour: sql<Date>`(date_trunc('hour', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      day: sql<Date>`(date_trunc('day', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      week: sql<Date>`(date_trunc('week', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      month: sql<Date>`(date_trunc('month', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
     }[input.granularity];
 
     const conds = [];
@@ -149,22 +152,28 @@ export class LibraryTrafficService {
     // granularities (hour-of-day, day-of-week, month) we always combine all terms
     const separateByTerm = isWeek && !!input.quarter;
 
+    // Convert stored UTC timestamps to Pacific time before extracting hour/day/month buckets
+    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
+
     const bucketExpr = {
-      hour: sql<number>`EXTRACT(hour FROM ${libraryTrafficHistory.timestamp})`,
-      day: sql<number>`EXTRACT(isodow FROM ${libraryTrafficHistory.timestamp})`,
-      // Week of term: weeks elapsed since the term's period start, 1-indexed
-      week: sql<number>`floor(extract(epoch from (${libraryTrafficHistory.timestamp} - ${periodStart})) / 604800)::int + 1`,
-      month: sql<number>`EXTRACT(month FROM ${libraryTrafficHistory.timestamp})`,
+      hour: sql<number>`EXTRACT(hour FROM ${localTs})`,
+      day: sql<number>`EXTRACT(isodow FROM ${localTs})`,
+      // Week of term: weeks since period start, 1-indexed.
+      // Fall starts on Thursday so add 4-day offset to align week boundaries to Monday,
+      // matching the convention in the /week endpoint (the Thu–Sun stub becomes week 0).
+      week: sql<number>`floor(extract(epoch from (
+        ${libraryTrafficHistory.timestamp} - ${periodStart}
+        - CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN INTERVAL '4 days' ELSE INTERVAL '0 days' END
+      )) / 604800)::int + 1`,
+      month: sql<number>`EXTRACT(month FROM ${localTs})`,
     }[input.granularity];
 
-    const conds = [];
-
-    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
-    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-    if (input.year) conds.push(eq(calendarTerm.year, input.year));
-    if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
-    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
-    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    // Conditions on libraryTrafficHistory and libraryTraffic (used in both query paths)
+    const localConds = [];
+    if (input.locationName) localConds.push(eq(libraryTraffic.locationName, input.locationName));
+    if (input.libraryName) localConds.push(eq(libraryTraffic.libraryName, input.libraryName));
+    if (input.startDate) localConds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+    if (input.endDate) localConds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
 
     const groupBy = [
       libraryTrafficHistory.locationId,
@@ -173,35 +182,67 @@ export class LibraryTrafficService {
       bucketExpr,
     ] as const;
 
-    const base = this.db
-      .select({
-        locationId: libraryTrafficHistory.locationId,
-        locationName: libraryTraffic.locationName,
-        libraryName: libraryTraffic.libraryName,
-        year: separateByTerm ? calendarTerm.year : sql<string | null>`null`,
-        quarter: separateByTerm ? calendarTerm.quarter : sql<string | null>`null`,
-        bucket: bucketExpr,
-        avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
-        avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
-      })
-      .from(libraryTrafficHistory)
-      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-      .innerJoin(
-        calendarTerm,
-        sql`${libraryTrafficHistory.timestamp} BETWEEN ${periodStart} AND ${periodEnd}`,
-      )
-      .where(and(...conds));
+    const selectFields = {
+      locationId: libraryTrafficHistory.locationId,
+      locationName: libraryTraffic.locationName,
+      libraryName: libraryTraffic.libraryName,
+      year: separateByTerm ? calendarTerm.year : sql<string | null>`null`,
+      quarter: separateByTerm ? calendarTerm.quarter : sql<string | null>`null`,
+      bucket: bucketExpr,
+      avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
+      avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
+    };
 
-    const rows = await (separateByTerm
-      ? base
-          .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
-          .orderBy(
-            asc(calendarTerm.year),
-            asc(calendarTerm.quarter),
-            asc(libraryTrafficHistory.locationId),
-            asc(bucketExpr),
+    const rows = await (async () => {
+      if (isWeek) {
+        // JOIN calendarTerm: needed for periodStart (week-of-term math) and Fall offset.
+        // Exactly one term matches per row when quarter is provided; without quarter,
+        // summer term overlap is a known edge case (specify quarter for accurate week data).
+        const conds = [...localConds];
+        if (input.year) conds.push(eq(calendarTerm.year, input.year));
+        if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
+
+        const base = this.db
+          .select(selectFields)
+          .from(libraryTrafficHistory)
+          .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+          .innerJoin(
+            calendarTerm,
+            sql`${libraryTrafficHistory.timestamp} BETWEEN ${periodStart} AND ${periodEnd}`,
           )
-      : base.groupBy(...groupBy).orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr)));
+          .where(and(...conds));
+
+        return separateByTerm
+          ? base
+              .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
+              .orderBy(
+                asc(calendarTerm.year),
+                asc(calendarTerm.quarter),
+                asc(libraryTrafficHistory.locationId),
+                asc(bucketExpr),
+              )
+          : base
+              .groupBy(...groupBy)
+              .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
+      }
+
+      // Use EXISTS instead of JOIN to avoid summer term overlap double-counting rows.
+      // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate
+      // rows for those timestamps and bias the averages.
+      const yearClause = input.year ? sql` AND ct.year = ${input.year}` : sql``;
+      const quarterClause = input.quarter ? sql` AND ct.quarter = ${input.quarter}` : sql``;
+      const existsClause = isFinals
+        ? sql`EXISTS (SELECT 1 FROM calendar_term ct WHERE ${libraryTrafficHistory.timestamp} BETWEEN ct.finals_start AND ct.finals_end${yearClause}${quarterClause})`
+        : sql`EXISTS (SELECT 1 FROM calendar_term ct WHERE ${libraryTrafficHistory.timestamp} BETWEEN ct.instruction_start AND ct.instruction_end${yearClause}${quarterClause})`;
+
+      return this.db
+        .select(selectFields)
+        .from(libraryTrafficHistory)
+        .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+        .where(and(...localConds, existsClause))
+        .groupBy(...groupBy)
+        .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
+    })();
 
     return rows.map((row) => ({
       ...row,
