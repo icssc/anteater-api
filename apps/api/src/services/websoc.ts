@@ -66,6 +66,9 @@ function buildQuery(input: WebsocServiceInput) {
   if (input.courseTitle) {
     conditions.push(eq(websocCourse.courseTitle, input.courseTitle));
   }
+  if (input.courseId) {
+    conditions.push(eq(websocCourse.courseId, input.courseId));
+  }
   conditions.push(...buildMultiCourseNumberQuery(input.courseNumber));
   if (input.sectionCodes) {
     const sectionCodesConditions: Array<SQL | undefined> = [];

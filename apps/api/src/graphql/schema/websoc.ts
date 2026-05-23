@@ -50,6 +50,7 @@ type WebsocSection @cacheControl(maxAge: 300) {
 
 type WebsocCourse @cacheControl(maxAge: 300) {
     sections: [WebsocSection!]!
+    courseId: String!
     deptCode: String!
     courseTitle: String!
     courseNumber: String!
@@ -102,6 +103,7 @@ input WebsocQuery {
     quarter: Term!
     ge: String
     department: String
+    courseId: String
     courseNumber: String
     sectionCodes: String
     instructorName: String
