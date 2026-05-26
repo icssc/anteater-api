@@ -4,11 +4,25 @@ export const restaurantIdSchema = z
   .enum(["anteatery", "brandywine"])
   .openapi({ example: "anteatery" });
 
-export const diningEventsQuerySchema = z.object({
-  restaurantId: restaurantIdSchema.optional().openapi({
-    description: "Filter events by restaurant ID",
-  }),
-});
+export const diningEventsQuerySchema = z
+  .object({
+    restaurantId: restaurantIdSchema.optional().openapi({
+      description: "Filter events by restaurant ID",
+    }),
+    after: z.iso.date().optional().openapi({
+      description:
+        "If provided, only return events whose start date is on or after this date. If neither after nor before is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
+      example: "2026-01-01",
+    }),
+    before: z.iso.date().optional().openapi({
+      description: "If provided, only return events whose start date is on or before this date",
+      example: "2026-12-31",
+    }),
+  })
+  .refine((data) => !data.after || !data.before || data.after <= data.before, {
+    message: "after must be on or before the before date",
+    path: ["before"],
+  });
 
 export const batchDishesQuerySchema = z.object({
   ids: z
