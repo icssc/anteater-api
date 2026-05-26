@@ -15,8 +15,8 @@ function parseEventDate(dateStr: string | null, time: string | null): Date | nul
 
   const naive = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
   const laStr = naive.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour12: false });
-
   const laDate = new Date(laStr);
+
   const offset = naive.getTime() - laDate.getTime();
   return new Date(naive.getTime() + offset);
 }
