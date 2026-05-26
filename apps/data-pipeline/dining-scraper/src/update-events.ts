@@ -13,7 +13,7 @@ function parseEventDate(dateStr: string | null, time: string | null): Date | nul
   const [year, month, day] = dateStr.split("-").map(Number);
   const [hour, minute, second] = time.split(":").map(Number);
 
-  const naive = new Date(Date.UTC(year, month - 1, day, hour, minute, second || 0));
+  const naive = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
   const laStr = naive.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour12: false });
 
   const laDate = new Date(laStr);
