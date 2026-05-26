@@ -28,10 +28,17 @@ export class AuditParser {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
-  parseBlock = async (blockId: string, block: Block): Promise<DegreeWorksProgram> => ({
+  parseBlock = async (
+    blockId: string,
+    block: Block,
+    otherBlock?: Block,
+  ): Promise<DegreeWorksProgram> => ({
     ...this.parseBlockId(blockId),
     name: block.title,
-    requirements: await this.ruleArrayToRequirements(block.ruleArray),
+    requirements: await this.ruleArrayToRequirements([
+      ...(otherBlock?.ruleArray ?? []),
+      ...block.ruleArray,
+    ]),
     // populate later; we cannot determine specializations on the spot
     specs: [],
     specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
@@ -159,7 +166,10 @@ export class AuditParser {
     return year * 10 + termOrder[term];
   }
 
-  static getSchoolYearTermRange(catalogYear: string): { min: number; max: number } {
+  static getSchoolYearTermRange(catalogYear: string): {
+    min: number;
+    max: number;
+  } {
     const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
     const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
     return {
