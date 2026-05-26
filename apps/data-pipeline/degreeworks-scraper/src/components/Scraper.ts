@@ -183,6 +183,7 @@ export class Scraper {
         major: await this.ap.parseBlock(
           `${collegeCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
+          audit.otherBlock,
         ),
         specCode,
       });
