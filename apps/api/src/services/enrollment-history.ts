@@ -152,12 +152,22 @@ export class EnrollmentHistoryService {
     const sectionRows = await this.fetchSectionRows(input);
     const transformedSectionRows = transformSectionRows(sectionRows);
     const enrollmentRows = await this.db
-      .selectDistinctOn([
-        sql`DATE(${websocSectionEnrollment.createdAt})`,
-        websocSectionEnrollment.sectionId,
-      ])
+      .selectDistinctOn(
+        [sql`DATE(${websocSectionEnrollment.createdAt})`, websocSectionEnrollment.sectionId],
+        getTableColumns(websocSectionEnrollment),
+      )
       .from(websocSectionEnrollment)
-      .where(inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()))
+      .innerJoin(websocSection, eq(websocSection.id, websocSectionEnrollment.sectionId))
+      .innerJoin(websocCourse, eq(websocCourse.id, websocSection.courseId))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .leftJoin(
+        websocInstructor,
+        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+      )
+      .where(buildQuery(input))
       .orderBy(
         sql`DATE(${websocSectionEnrollment.createdAt})`,
         websocSectionEnrollment.sectionId,
