@@ -111,7 +111,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchoolRequirement.id,
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
           set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
@@ -127,7 +127,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchoolRequirement.id,
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
           set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
@@ -143,7 +143,7 @@ async function main() {
           },
         ])
         .onConflictDoUpdate({
-          target: dwSchoolRequirement.id,
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
           set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
@@ -184,6 +184,28 @@ async function main() {
       .onConflictDoUpdate({
         target: [dwMajorYear.programId, dwMajorYear.catalogYear],
         set: conflictUpdateSetAllCols(dwMajorYear),
+      });
+
+    await tx
+      .insert(dwSpecialization)
+      .values(specData)
+      .onConflictDoUpdate({
+        target: dwSpecialization.id,
+        set: conflictUpdateSetAllCols(dwSpecialization),
+      });
+
+    await tx
+      .insert(dwSpecializationRequirement)
+      .values(
+        specData.map((s) => ({
+          programId: s.id,
+          catalogYear,
+          requirements: s.requirements,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [dwSpecializationRequirement.programId, dwSpecializationRequirement.catalogYear],
+        set: conflictUpdateSetAllCols(dwSpecializationRequirement),
       });
 
     await tx
@@ -235,28 +257,6 @@ async function main() {
       .onConflictDoUpdate({
         target: [dwMinorRequirement.programId, dwMinorRequirement.catalogYear],
         set: conflictUpdateSetAllCols(dwMinorRequirement),
-      });
-
-    await tx
-      .insert(dwSpecialization)
-      .values(specData)
-      .onConflictDoUpdate({
-        target: dwSpecialization.id,
-        set: conflictUpdateSetAllCols(dwSpecialization),
-      });
-
-    await tx
-      .insert(dwSpecializationRequirement)
-      .values(
-        specData.map((s) => ({
-          programId: s.id,
-          catalogYear,
-          requirements: s.requirements,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: [dwSpecializationRequirement.programId, dwSpecializationRequirement.catalogYear],
-        set: conflictUpdateSetAllCols(dwSpecializationRequirement),
       });
   });
   exit(0);
