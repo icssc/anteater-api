@@ -30,7 +30,13 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  private catalogYearModifiers(
+  // for any table with catalogYear column, build the matching conditions as follows:
+  // - if a catalog year not specified, do whatever postgres feels like
+  // - if a catalog year is specified, order the returned years as follows:
+  //   - prefer an exact match best
+  //   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
+  //     (in opposite directions), prefer the more recent one
+  private catalogYearOrder(
     table:
       | typeof dwSchoolRequirement
       | typeof dwMajorYear
@@ -39,23 +45,17 @@ export class ProgramsService {
       | typeof dwSpecializationRequirement,
     catalogYear: string | undefined,
   ) {
-    return [
-      catalogYear !== undefined ? eq(table.catalogYear, catalogYear) : undefined,
-      catalogYear !== undefined
-        ? sql`CASE
+    return catalogYear !== undefined
+      ? sql`CASE
   WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
   WHEN ${table.catalogYear} = ${catalogYear} THEN 0
   WHEN ${table.catalogYear} < ${catalogYear} THEN SUBSTRING(${catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real + 0.5
   END`
-        : undefined,
-    ];
+      : undefined;
   }
 
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
-    const [specsWhere, specsOrder] = this.catalogYearModifiers(
-      dwMajorSpecializationToRequirement,
-      query.catalogYear,
-    );
+    const specsOrder = this.catalogYearOrder(dwMajorSpecializationToRequirement, query.catalogYear);
 
     const majorSpecializationInner = this.db
       .select({
@@ -71,8 +71,7 @@ export class ProgramsService {
       .leftJoin(
         dwMajorSpecializationToRequirement,
         eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
-      )
-      .where(specsWhere);
+      );
 
     const majorSpecialization = this.db
       .$with("major_specialization")
@@ -153,10 +152,7 @@ export class ProgramsService {
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
     if (programType === "major") {
-      const [where, order] = this.catalogYearModifiers(
-        dwMajorSpecializationToRequirement,
-        query.catalogYear,
-      );
+      const order = this.catalogYearOrder(dwMajorSpecializationToRequirement, query.catalogYear);
 
       const base = this.db
         .select({
@@ -185,7 +181,6 @@ export class ProgramsService {
             query.specializationId
               ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
               : undefined,
-            where,
           ),
         );
       const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
@@ -207,7 +202,7 @@ export class ProgramsService {
       specialization: [dwSpecialization, dwSpecializationRequirement] as const,
     }[programType];
 
-    const [where, order] = this.catalogYearModifiers(requirementsTable, query.catalogYear);
+    const order = this.catalogYearOrder(requirementsTable, query.catalogYear);
 
     const base = this.db
       .select({
@@ -218,14 +213,14 @@ export class ProgramsService {
       })
       .from(baseTable)
       .leftJoin(requirementsTable, eq(baseTable.id, requirementsTable.programId))
-      .where(and(eq(baseTable.id, query.programId), where));
+      .where(eq(baseTable.id, query.programId));
 
     const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
-    const [where, order] = this.catalogYearModifiers(dwSchoolRequirement, query.catalogYear);
+    const order = this.catalogYearOrder(dwSchoolRequirement, query.catalogYear);
 
     const base = this.db
       .select({
@@ -234,7 +229,7 @@ export class ProgramsService {
         catalogYear: dwSchoolRequirement.catalogYear,
       })
       .from(dwSchoolRequirement)
-      .where(and(eq(dwSchoolRequirement.id, query.id), where));
+      .where(eq(dwSchoolRequirement.id, query.id));
 
     const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
