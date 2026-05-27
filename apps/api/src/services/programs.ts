@@ -194,15 +194,18 @@ export class ProgramsService {
           },
         })
         .from(dwMajor)
+        .innerJoin(dwMajorYear, eq(dwMajor.id, dwMajorYear.programId))
         .innerJoin(
           dwMajorSpecializationToRequirement,
-          eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+          and(
+            eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+            eq(dwMajorYear.catalogYear, dwMajorSpecializationToRequirement.catalogYear),
+          ),
         )
         .innerJoin(
           dwMajorRequirement,
           eq(dwMajorSpecializationToRequirement.requirementId, dwMajorRequirement.id),
         )
-        .innerJoin(dwMajorYear, eq(dwMajor.id, dwMajorYear.programId))
         .where(
           and(
             eq(dwMajor.id, query.programId),
