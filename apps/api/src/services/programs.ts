@@ -103,7 +103,7 @@ export class ProgramsService {
           eq(majorSpecialization.catalogYear, dwMajorYear.catalogYear),
         ),
       )
-      .where(and(query.id ? eq(majorSpecialization.id, query.id) : undefined));
+      .where(query.id ? eq(majorSpecialization.id, query.id) : undefined);
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {
