@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, sql } from "@packages/db/drizzle";
+import { and, eq, type SQL, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   dwDegree,
@@ -118,13 +118,41 @@ export class ProgramsService {
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
-      .select({
+      .selectDistinct({
         id: dwSpecialization.id,
         majorId: dwSpecialization.majorId,
         name: dwSpecialization.name,
       })
       .from(dwSpecialization)
-      .where(query.majorId ? eq(dwSpecialization.majorId, query.majorId) : undefined);
+      .leftJoin(
+        dwMajorSpecializationToRequirement,
+        and(
+          eq(dwSpecialization.majorId, dwMajorSpecializationToRequirement.majorId),
+          eq(dwSpecialization.id, dwMajorSpecializationToRequirement.specializationId),
+        ),
+      )
+      .where(
+        and(
+          query.majorId ? eq(dwSpecialization.majorId, query.majorId) : undefined,
+          query.catalogYear
+            ? eq(
+                dwMajorSpecializationToRequirement,
+                this.db
+                  .select({ best: dwMajorSpecializationToRequirement.catalogYear })
+                  .from(dwMajorSpecializationToRequirement)
+                  .orderBy(
+                    // we are inside a catalogYear guard, so this is not undefined
+                    this.catalogYearOrder(
+                      dwMajorSpecializationToRequirement,
+                      query.catalogYear,
+                    ) as SQL<unknown>,
+                  )
+                  .limit(1)
+                  .as("best_year"),
+              )
+            : undefined,
+        ),
+      );
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {

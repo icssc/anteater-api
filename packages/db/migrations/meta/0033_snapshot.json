@@ -1,5 +1,5 @@
 {
-  "id": "62b9c667-c6d7-4b68-b168-5b67a4b367ec",
+  "id": "88f8af3a-3bdf-4745-9491-c7cf5f09e73a",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -1785,7 +1785,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dw_major_specialization_to_requirement_catalog_year_index": {
+          "name": "dw_major_specialization_to_requirement_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "dw_major_specialization_to_requirement_major_id_dw_major_id_fk": {
           "name": "dw_major_specialization_to_requirement_major_id_dw_major_id_fk",

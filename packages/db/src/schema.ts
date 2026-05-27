@@ -725,6 +725,7 @@ export const dwMajorSpecializationToRequirement = pgTable(
   },
   (table) => [
     unique().on(table.majorId, table.specializationId, table.catalogYear).nullsNotDistinct(),
+    index().on(table.catalogYear),
   ],
 );
 

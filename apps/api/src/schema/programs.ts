@@ -31,6 +31,10 @@ export const specializationsQuerySchema = z.object({
     description: "Only fetch specializations associated with the major with this ID, if provided",
     example: "BS-201",
   }),
+  catalogYear: catalogYearInputSchema.openapi({
+    description:
+      "If specified, return specializations valid in the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, return all specializations over all years",
+  }),
 });
 
 export const majorRequirementsQuerySchema = z.object({

@@ -78,6 +78,7 @@ ALTER TABLE "dw_minor_requirement" ADD CONSTRAINT "dw_minor_requirement_program_
 ALTER TABLE "dw_specialization" ADD CONSTRAINT "dw_specialization_major_id_dw_major_id_fk" FOREIGN KEY ("major_id") REFERENCES "public"."dw_major"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dw_specialization_requirement" ADD CONSTRAINT "dw_specialization_requirement_program_id_dw_specialization_id_fk" FOREIGN KEY ("program_id") REFERENCES "public"."dw_specialization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "dw_major_degree_id_index" ON "dw_major" USING btree ("degree_id");--> statement-breakpoint
+CREATE INDEX "dw_major_specialization_to_requirement_catalog_year_index" ON "dw_major_specialization_to_requirement" USING btree ("catalog_year");--> statement-breakpoint
 CREATE UNIQUE INDEX "dw_major_year_program_id_catalog_year_index" ON "dw_major_year" USING btree ("program_id","catalog_year");--> statement-breakpoint
 CREATE UNIQUE INDEX "dw_minor_requirement_program_id_catalog_year_index" ON "dw_minor_requirement" USING btree ("program_id","catalog_year");--> statement-breakpoint
 CREATE INDEX "dw_minor_requirement_catalog_year_index" ON "dw_minor_requirement" USING btree ("catalog_year");--> statement-breakpoint
