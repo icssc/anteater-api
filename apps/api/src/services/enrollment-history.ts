@@ -10,6 +10,7 @@ import {
   websocSectionMeetingToLocation,
   websocSectionToInstructor,
 } from "@packages/db/schema";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import type { z } from "zod";
 import type {
   enrollmentHistoryGranularQuerySchema,
@@ -174,17 +175,15 @@ export class EnrollmentHistoryService {
         desc(websocSectionEnrollment.createdAt),
       );
     for (const row of enrollmentRows) {
-      const section = transformedSectionRows.get(row.sectionId);
-      if (section) {
-        section.dates.push(row.createdAt.toISOString().split("T")[0]);
-        section.maxCapacityHistory.push(row.maxCapacity.toString(10));
-        section.totalEnrolledHistory.push(row.numCurrentlyTotalEnrolled?.toString(10) ?? "");
-        section.waitlistHistory.push(row.numOnWaitlist?.toString(10) ?? "");
-        section.waitlistCapHistory.push(row.numWaitlistCap?.toString(10) ?? "");
-        section.requestedHistory.push(row.numRequested?.toString(10) ?? "");
-        section.newOnlyReservedHistory.push(row.numNewOnlyReserved?.toString(10) ?? "");
-        section.statusHistory.push(row.status ?? "");
-      }
+      const section = getFromMapOrThrow(transformedSectionRows, row.sectionId);
+      section.dates.push(row.createdAt.toISOString().split("T")[0]);
+      section.maxCapacityHistory.push(row.maxCapacity.toString(10));
+      section.totalEnrolledHistory.push(row.numCurrentlyTotalEnrolled?.toString(10) ?? "");
+      section.waitlistHistory.push(row.numOnWaitlist?.toString(10) ?? "");
+      section.waitlistCapHistory.push(row.numWaitlistCap?.toString(10) ?? "");
+      section.requestedHistory.push(row.numRequested?.toString(10) ?? "");
+      section.newOnlyReservedHistory.push(row.numNewOnlyReserved?.toString(10) ?? "");
+      section.statusHistory.push(row.status ?? "");
     }
     const filteredSections = transformedSectionRows.values().filter((section) => {
       return section.dates.length > 0;
@@ -226,19 +225,17 @@ export class EnrollmentHistoryService {
       });
     }
     for (const row of enrollmentRows) {
-      const section = granularMapping.get(row.sectionId);
-      if (section) {
-        section.snapshots.push({
-          timestamp: row.createdAt.toISOString(),
-          maxCapacity: row.maxCapacity,
-          totalEnrolled: row.numCurrentlyTotalEnrolled ?? null,
-          waitlist: row.numOnWaitlist ?? null,
-          waitlistCap: row.numWaitlistCap ?? null,
-          requested: row.numRequested ?? null,
-          newOnlyReserved: row.numNewOnlyReserved ?? null,
-          status: row.status ?? "",
-        });
-      }
+      const section = getFromMapOrThrow(granularMapping, row.sectionId);
+      section.snapshots.push({
+        timestamp: row.createdAt.toISOString(),
+        maxCapacity: row.maxCapacity,
+        totalEnrolled: row.numCurrentlyTotalEnrolled ?? null,
+        waitlist: row.numOnWaitlist ?? null,
+        waitlistCap: row.numWaitlistCap ?? null,
+        requested: row.numRequested ?? null,
+        newOnlyReserved: row.numNewOnlyReserved ?? null,
+        status: row.status ?? "",
+      });
     }
     return Array.from(granularMapping.values()).filter((s) => s.snapshots.length > 0);
   }
