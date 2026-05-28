@@ -306,12 +306,13 @@ export class DiningService {
     if (query.after) {
       dateRangeConds.push(gte(diningSchedule.endDate, query.after));
     }
-    if (!query.after && !query.before) {
-      if (!query.includeHistorical) {
-        dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
-      }
+    if (!query.after && !query.before && !query.includeHistorical) {
+      dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
     }
-    conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds))!);
+
+    if (dateRangeConds.length) {
+      conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds))!);
+    }
 
     type ScheduleResponse = z.infer<typeof scheduleSchema>;
 
