@@ -10,7 +10,7 @@ import type {
 } from "@icssc/libwebsoc-next";
 import { request } from "@icssc/libwebsoc-next";
 import type { database } from "@packages/db";
-import { and, asc, eq, gte, inArray, lte, max, sql } from "@packages/db/drizzle";
+import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
@@ -724,6 +724,9 @@ const doChunkUpsert = async (
       // the next scraping attempt will try another term first (if such another candidate term exists)
       // before retrying this one
       lastScraped: updatedAt,
+      ...(snapshotDecision.shouldSnapshot && {
+        lastSnapshot: snapshotDecision.scraperStartTime,
+      }),
     };
     await tx
       .insert(websocMeta)
@@ -928,11 +931,10 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
 
   // Get last snapshot scoped per-term to calculate time elapsed
   const lastSnapshot = await db
-    .select({ createdAt: max(websocSectionEnrollment.createdAt) })
-    .from(websocSectionEnrollment)
-    .innerJoin(websocSection, eq(websocSectionEnrollment.sectionId, websocSection.id))
-    .where(and(eq(websocSection.year, term.year), eq(websocSection.quarter, term.quarter)))
-    .then(([row]) => row?.createdAt);
+    .select({ lastSnapshot: websocMeta.lastSnapshot })
+    .from(websocMeta)
+    .where(eq(websocMeta.name, termToName(term)))
+    .then(([row]) => row?.lastSnapshot ?? undefined);
   /*
    * NOTE: Intervals are based on scraper start times, so actual data collection intervals
    * are ~20-30 seconds shorter (e.g., hourly = ~59min 40sec). This discrepancy is acceptable for our use case.

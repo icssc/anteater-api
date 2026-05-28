@@ -239,6 +239,13 @@
       "when": 1779237547865,
       "tag": "0033_enrollment_created_at_timestamp",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1779992364084,
+      "tag": "0034_add_lastSnapshot_column",
+      "breakpoints": true
     }
   ]
 }
