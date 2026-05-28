@@ -1,5 +1,5 @@
 {
-  "id": "88f8af3a-3bdf-4745-9491-c7cf5f09e73a",
+  "id": "942e154c-1b24-45f9-9c20-b330ff6a8473",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -1896,6 +1896,21 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dw_major_year_catalog_year_index": {
+          "name": "dw_major_year_catalog_year_index",
+          "columns": [
+            {
+              "expression": "catalog_year",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}

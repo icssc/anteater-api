@@ -80,6 +80,7 @@ ALTER TABLE "dw_specialization_requirement" ADD CONSTRAINT "dw_specialization_re
 CREATE INDEX "dw_major_degree_id_index" ON "dw_major" USING btree ("degree_id");--> statement-breakpoint
 CREATE INDEX "dw_major_specialization_to_requirement_catalog_year_index" ON "dw_major_specialization_to_requirement" USING btree ("catalog_year");--> statement-breakpoint
 CREATE UNIQUE INDEX "dw_major_year_program_id_catalog_year_index" ON "dw_major_year" USING btree ("program_id","catalog_year");--> statement-breakpoint
+CREATE INDEX "dw_major_year_catalog_year_index" ON "dw_major_year" USING btree ("catalog_year");--> statement-breakpoint
 CREATE UNIQUE INDEX "dw_minor_requirement_program_id_catalog_year_index" ON "dw_minor_requirement" USING btree ("program_id","catalog_year");--> statement-breakpoint
 CREATE INDEX "dw_minor_requirement_catalog_year_index" ON "dw_minor_requirement" USING btree ("catalog_year");--> statement-breakpoint
 CREATE UNIQUE INDEX "dw_school_requirement_id_catalog_year_index" ON "dw_school_requirement" USING btree ("id","catalog_year");--> statement-breakpoint

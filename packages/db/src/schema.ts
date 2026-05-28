@@ -747,7 +747,7 @@ export const dwMajorYear = pgTable(
     collegeRequirementsTitle: varchar("college_requirements_title"),
     collegeRequirements: jsonb("college_requirements").$type<DegreeWorksRequirement[]>(),
   },
-  (table) => [uniqueIndex().on(table.programId, table.catalogYear)],
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
 );
 
 export const dwMinor = pgTable("dw_minor", {
