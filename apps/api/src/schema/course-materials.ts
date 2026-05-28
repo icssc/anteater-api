@@ -36,8 +36,8 @@ export const courseMaterialsQuerySchema = z
     format: z.enum(textbookFormats, { error: "Invalid textbook format provided" }).optional(),
     requirement: z.enum(materialRequirements, { error: "Invalid requirement provided" }).optional(),
   })
-  .refine((x) => (x.department && x.courseNumber) || (x.sectionCode && x.year && x.quarter), {
-    message: "Must provide department and course number, or section code and year/quarter",
+  .refine((x) => (x.department && x.courseNumber) || (x.year && x.quarter), {
+    message: "Must provide department and course number, or year and quarter",
   });
 
 export const courseMaterialsSchema = z.object({
