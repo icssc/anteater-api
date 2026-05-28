@@ -133,6 +133,7 @@ type Schedule @cacheControl(maxAge: 3600) {
 
 input DiningEventsQuery {
   restaurantId: RestaurantId
+  includeHistorical: Boolean
   after: String
   before: String
 }
@@ -148,7 +149,8 @@ input RestaurantTodayQuery {
 
 input SchedulesQuery {
   restaurantId: RestaurantId
-  includeHistorical: Boolean
+  after: String
+  before: String
 }
 
 extend type Query {

@@ -7,6 +7,7 @@ import {
   inArray,
   isNull,
   lt,
+  lte,
   max,
   min,
   or,
@@ -297,12 +298,20 @@ export class DiningService {
       conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
     }
 
-    if (!query.includeHistorical) {
-      // standard and current/upcoming special schedules by default
-      conds.push(
-        or(isNull(diningSchedule.endDate), gte(diningSchedule.endDate, sql`CURRENT_DATE`))!,
-      );
+    const dateRangeConds: SQL[] = [];
+
+    if (query.before) {
+      dateRangeConds.push(lte(diningSchedule.startDate, query.before));
     }
+    if (query.after) {
+      dateRangeConds.push(gte(diningSchedule.endDate, query.after));
+    }
+    if (!query.after && !query.before) {
+      if (!query.includeHistorical) {
+        dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
+      }
+    }
+    conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds))!);
 
     type ScheduleResponse = z.infer<typeof scheduleSchema>;
 
