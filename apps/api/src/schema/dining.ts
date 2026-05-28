@@ -272,6 +272,13 @@ export const schedulesQuerySchema = z
     restaurantId: restaurantIdSchema.optional().openapi({
       description: "If present, only return schedules for the restaurant with this ID",
     }),
+    includeHistorical: z
+      .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
+      .optional()
+      .openapi({
+        description:
+          "If true, include past schedules whose end date is before today. Defaults to false.",
+      }),
     after: z.iso.date().optional().openapi({
       description:
         "If provided, return only schedules active after this date. If neither `before` nor `after` is specified, retrieve schedules whose end date has not passed",

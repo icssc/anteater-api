@@ -299,6 +299,7 @@ export class DiningService {
     }
 
     const dateRangeConds: SQL[] = [];
+
     if (query.before) {
       dateRangeConds.push(lte(diningSchedule.startDate, query.before));
     }
@@ -306,7 +307,9 @@ export class DiningService {
       dateRangeConds.push(gte(diningSchedule.endDate, query.after));
     }
     if (!query.after && !query.before) {
-      dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
+      if (!query.includeHistorical) {
+        dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
+      }
     }
     conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds))!);
 
