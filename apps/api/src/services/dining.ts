@@ -293,7 +293,7 @@ export class DiningService {
   async getSchedules(
     query: z.infer<typeof schedulesQuerySchema>,
   ): Promise<z.infer<typeof scheduleSchema>[]> {
-    const conds: SQL[] = [];
+    const conds: (SQL | undefined)[] = [];
     if (query.restaurantId) {
       conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
     }
@@ -311,7 +311,7 @@ export class DiningService {
     }
 
     if (dateRangeConds.length) {
-      conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds))!);
+      conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds)));
     }
 
     type ScheduleResponse = z.infer<typeof scheduleSchema>;
