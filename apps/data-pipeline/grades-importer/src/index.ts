@@ -61,7 +61,7 @@ async function main() {
     const columns = data[0];
     return data
       .slice(1)
-      .filter((x) => x)
+      .filter((x) => x?.some((y) => y))
       .map(
         (row) =>
           new Map(
