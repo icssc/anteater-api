@@ -11,11 +11,12 @@ export const diningEventsQuerySchema = z
     }),
     after: z.iso.date().optional().openapi({
       description:
-        "If provided, only return events whose start date is on or after this date. If neither after nor before is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
+        "If provided, only return events whose start date is on or after this date. If neither `after` nor `before` is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
       example: "2026-01-01",
     }),
     before: z.iso.date().optional().openapi({
-      description: "If provided, only return events whose start date is on or before this date",
+      description:
+        "If provided, only return events whose start date is on or before this date. If neither `after` nor `before` is provided, only return events whose end date has not passed and events with no end date that were updated in the last 2 weeks",
       example: "2026-12-31",
     }),
   })
@@ -266,17 +267,25 @@ export const scheduleSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const schedulesQuerySchema = z.object({
-  restaurantId: restaurantIdSchema.optional().openapi({
-    description: "If present, only return schedules for the restaurant with this ID",
-  }),
-  includeHistorical: z
-    .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
-    .optional()
-    .openapi({
-      description:
-        "If true, include past schedules whose end date is before today. Defaults to false.",
+export const schedulesQuerySchema = z
+  .object({
+    restaurantId: restaurantIdSchema.optional().openapi({
+      description: "If present, only return schedules for the restaurant with this ID",
     }),
-});
+    after: z.iso.date().optional().openapi({
+      description:
+        "If provided, return only schedules active after this date. If neither `before` nor `after` is specified, retrieve schedules whose end date has not passed",
+      example: "2026-02-23",
+    }),
+    before: z.iso.date().optional().openapi({
+      description:
+        "If provided, return only schedules that were active before this date. If neither `before` nor `after` is specified, retrieve schedules whose end date has not passed",
+      example: "2026-05-31",
+    }),
+  })
+  .refine(({ after, before }) => !after || !before || after <= before, {
+    message: "after must be on or before the before date",
+    path: ["before"],
+  });
 
 export const schedulesResponseSchema = scheduleSchema.array();

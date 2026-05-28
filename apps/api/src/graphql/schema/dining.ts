@@ -148,7 +148,8 @@ input RestaurantTodayQuery {
 
 input SchedulesQuery {
   restaurantId: RestaurantId
-  includeHistorical: Boolean
+  after: String
+  before: String
 }
 
 extend type Query {
