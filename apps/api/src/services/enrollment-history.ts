@@ -154,7 +154,7 @@ export class EnrollmentHistoryService {
     const transformedSectionRows = transformSectionRows(sectionRows);
     const enrollmentRows = await this.db
       .selectDistinctOn(
-        [sql`DATE(${websocSectionEnrollment.createdAt})`, websocSectionEnrollment.sectionId],
+        [websocSectionEnrollment.sectionId, sql`DATE(${websocSectionEnrollment.createdAt})`],
         getTableColumns(websocSectionEnrollment),
       )
       .from(websocSectionEnrollment)
@@ -170,8 +170,8 @@ export class EnrollmentHistoryService {
       )
       .where(buildQuery(input))
       .orderBy(
-        sql`DATE(${websocSectionEnrollment.createdAt})`,
         websocSectionEnrollment.sectionId,
+        sql`DATE(${websocSectionEnrollment.createdAt})`,
         desc(websocSectionEnrollment.createdAt),
       );
     for (const row of enrollmentRows) {
