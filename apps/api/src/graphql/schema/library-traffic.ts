@@ -20,15 +20,6 @@ enum LibraryTrafficGranularity {
   month
 }
 
-enum LibraryTrafficQuarter {
-  Fall
-  Winter
-  Spring
-  Summer1
-  Summer10wk
-  Summer2
-}
-
 enum LibraryTrafficPeriod {
   instruction
   finals
@@ -52,7 +43,7 @@ input LibraryTrafficHistoryRawQuery {
   libraryName: String
   locationName: String
   year: String
-  quarter: LibraryTrafficQuarter
+  quarter: Term
   period: LibraryTrafficPeriod
   startDate: String
   endDate: String
@@ -74,7 +65,7 @@ input LibraryTrafficHistoryAggregatedQuery {
   locationName: String
   granularity: LibraryTrafficGranularity!
   year: String
-  quarter: LibraryTrafficQuarter
+  quarter: Term
   period: LibraryTrafficPeriod
   startDate: String
   endDate: String
@@ -97,7 +88,7 @@ input LibraryTrafficHistoryPatternQuery {
   locationName: String
   granularity: LibraryTrafficGranularity!
   year: String
-  quarter: LibraryTrafficQuarter
+  quarter: Term
   period: LibraryTrafficPeriod
   startDate: String
   endDate: String
