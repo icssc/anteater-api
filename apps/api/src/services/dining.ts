@@ -7,6 +7,7 @@ import {
   inArray,
   isNull,
   lt,
+  lte,
   max,
   min,
   or,
@@ -292,16 +293,25 @@ export class DiningService {
   async getSchedules(
     query: z.infer<typeof schedulesQuerySchema>,
   ): Promise<z.infer<typeof scheduleSchema>[]> {
-    const conds: SQL[] = [];
+    const conds: (SQL | undefined)[] = [];
     if (query.restaurantId) {
       conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
     }
 
-    if (!query.includeHistorical) {
-      // standard and current/upcoming special schedules by default
-      conds.push(
-        or(isNull(diningSchedule.endDate), gte(diningSchedule.endDate, sql`CURRENT_DATE`))!,
-      );
+    const dateRangeConds: SQL[] = [];
+
+    if (query.before) {
+      dateRangeConds.push(lte(diningSchedule.startDate, query.before));
+    }
+    if (query.after) {
+      dateRangeConds.push(gte(diningSchedule.endDate, query.after));
+    }
+    if (!query.after && !query.before && !query.includeHistorical) {
+      dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
+    }
+
+    if (dateRangeConds.length) {
+      conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds)));
     }
 
     type ScheduleResponse = z.infer<typeof scheduleSchema>;
