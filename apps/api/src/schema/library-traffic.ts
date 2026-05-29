@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { terms } from "@packages/db/schema";
 
 // Format a UTC Date as ISO 8601 with Pacific time offset (e.g. "2025-11-15T14:00:00-08:00").
 // Handles PST/PDT automatically via IANA timezone data.
@@ -21,6 +22,8 @@ function toPacificISO(utcDate: Date): string {
   return `${localStr}${offset}`;
 }
 
+const libraryNames = ["Langson Library", "Science Library", "Gateway Study Center"] as const;
+
 const MAX_RANGE_DAYS: Record<string, number> = {
   hour: 14,
   day: 365,
@@ -29,7 +32,7 @@ const MAX_RANGE_DAYS: Record<string, number> = {
 };
 
 export const libraryTrafficHistoryRawQuerySchema = z.object({
-  libraryName: z.string().optional().openapi({
+  libraryName: z.enum(libraryNames).optional().openapi({
     example: "Langson Library",
     description: "Filter results by library name",
   }),
@@ -41,24 +44,23 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
     example: "2025",
     description: "Academic year — use with quarter to scope results to a term",
   }),
-  quarter: z
-    .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
-    .optional()
-    .openapi({
-      example: "Winter",
-      description: "Academic quarter — use with year to scope results to a term",
-    }),
+  quarter: z.enum(terms).optional().openapi({
+    example: "Winter",
+    description: "Academic quarter — use with year to scope results to a term",
+  }),
   period: z.enum(["instruction", "finals"]).default("instruction").openapi({
     description: "Which part of the term to filter to (only applies when year + quarter provided)",
     example: "instruction",
   }),
   startDate: z.coerce.date().optional().openapi({
     example: "2025-01-01T00:00:00Z",
-    description: "Start of the time range (inclusive) — overridden by year/quarter if provided",
+    description:
+      "Start of the time range (inclusive). If year/quarter are also given, the tighter of the two bounds applies.",
   }),
   endDate: z.coerce.date().optional().openapi({
     example: "2025-03-21T23:59:59Z",
-    description: "End of the time range (inclusive) — overridden by year/quarter if provided",
+    description:
+      "End of the time range (inclusive). If year/quarter are also given, the tighter of the two bounds applies.",
   }),
   cursor: z.string().optional().openapi({
     description:
@@ -73,9 +75,9 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
 export const libraryTrafficHistoryRawEntrySchema = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
-  libraryName: z.string().openapi({ example: "Langson Library" }),
+  libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
   trafficCount: z.number().int().nonnegative().openapi({ example: 57 }),
-  trafficPercentage: z.coerce.number().openapi({ example: 0.38 }),
+  trafficPercentage: z.number().openapi({ example: 0.38 }),
   timestamp: z.coerce
     .date()
     .transform(toPacificISO)
@@ -86,7 +88,7 @@ export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEn
 
 export const libraryTrafficHistoryAggregatedQuerySchema = z
   .object({
-    libraryName: z.string().optional().openapi({
+    libraryName: z.enum(libraryNames).optional().openapi({
       example: "Langson Library",
       description: "Filter results by library name",
     }),
@@ -103,14 +105,11 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
       description:
         "Academic year — use with quarter to scope results to a term (alternative to startDate/endDate)",
     }),
-    quarter: z
-      .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
-      .optional()
-      .openapi({
-        example: "Winter",
-        description:
-          "Academic quarter — use with year to scope results to a term (alternative to startDate/endDate)",
-      }),
+    quarter: z.enum(terms).optional().openapi({
+      example: "Winter",
+      description:
+        "Academic quarter — use with year to scope results to a term (alternative to startDate/endDate)",
+    }),
     period: z.enum(["instruction", "finals"]).default("instruction").openapi({
       description:
         "Which part of the term to filter to (only applies when year + quarter provided)",
@@ -119,7 +118,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
     startDate: z.coerce.date().optional().openapi({
       example: "2025-01-01T00:00:00Z",
       description:
-        "Start of the time range (inclusive). Required unless year + quarter are provided.",
+        "Start of the time range (inclusive). Required unless year + quarter are provided. If both are given, the tighter bound applies.",
     }),
     endDate: z.coerce.date().optional().openapi({
       example: "2025-01-31T23:59:59Z",
@@ -143,7 +142,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
 export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
-  libraryName: z.string().openapi({ example: "Langson Library" }),
+  libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
   bucketStart: z.coerce.date().transform(toPacificISO).openapi({
     example: "2025-01-15T14:00:00-08:00",
     description: "Start of the time bucket (ISO 8601, Pacific time)",
@@ -164,7 +163,7 @@ export const libraryTrafficHistoryAggregatedSchema = z.array(
 
 export const libraryTrafficHistoryPatternQuerySchema = z
   .object({
-    libraryName: z.string().optional().openapi({
+    libraryName: z.enum(libraryNames).optional().openapi({
       example: "Langson Library",
       description: "Filter results by library name",
     }),
@@ -181,13 +180,10 @@ export const libraryTrafficHistoryPatternQuerySchema = z
       example: "2025",
       description: "Academic year — use with quarter to scope results to a term",
     }),
-    quarter: z
-      .enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"])
-      .optional()
-      .openapi({
-        example: "Winter",
-        description: "Academic quarter — use with year to scope results to a term",
-      }),
+    quarter: z.enum(terms).optional().openapi({
+      example: "Winter",
+      description: "Academic quarter — use with year to scope results to a term",
+    }),
     period: z.enum(["instruction", "finals"]).default("instruction").openapi({
       description: "Which part of the term to filter to",
       example: "instruction",
@@ -214,7 +210,7 @@ export const libraryTrafficHistoryPatternQuerySchema = z
 export const libraryTrafficHistoryPatternEntrySchema = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
-  libraryName: z.string().openapi({ example: "Langson Library" }),
+  libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
   year: z.string().optional().openapi({
     example: "2025",
     description:
@@ -247,7 +243,7 @@ export const libraryTrafficHistoryPatternSchema = z.array(libraryTrafficHistoryP
 
 export const libraryTrafficQuerySchema = z.object({
   libraryName: z
-    .string()
+    .enum(libraryNames)
     .openapi({
       example: "Langson Library",
       description: "Filter results by library name",
@@ -264,7 +260,7 @@ export const libraryTrafficQuerySchema = z.object({
 
 export const libraryTrafficEntrySchema = z.object({
   id: z.number().int().nonnegative().openapi({ example: 212 }),
-  libraryName: z.string().openapi({
+  libraryName: z.enum(libraryNames).openapi({
     example: "Langson Library",
     description: "Name of the library which contains this location",
   }),
@@ -272,12 +268,11 @@ export const libraryTrafficEntrySchema = z.object({
     example: "4th Floor - Nordstrom Honors Study Room",
     description: "Name of this floor / section",
   }),
-  locationId: z.number().int().openapi({ example: 212 }),
   trafficCount: z.number().int().nonnegative().openapi({
     example: 57,
     description: "Number of people currently detected at the location",
   }),
-  trafficPercentage: z.coerce.number().openapi({
+  trafficPercentage: z.number().openapi({
     example: 0.33,
     description: "Occupancy as a fraction of stated capacity (0 to 1, or >1 if over-occupied)",
   }),
