@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, asc, avg, eq, gt, gte, lte, or, sql } from "@packages/db/drizzle";
+import { and, asc, avg, eq, exists, gt, gte, lte, or, sql } from "@packages/db/drizzle";
 import { calendarTerm, libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
@@ -90,8 +90,11 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      startDate = isFinals ? term.finalsStart : term.instructionStart;
-      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
+      const termStart = isFinals ? term.finalsStart : term.instructionStart;
+      const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
+      // Intersect the term range with any explicit dates so both filters apply
+      startDate = startDate && startDate > termStart ? startDate : termStart;
+      endDate = endDate && endDate < termEnd ? endDate : termEnd;
     }
 
     const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
@@ -208,7 +211,10 @@ export class LibraryTrafficService {
           .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
           .innerJoin(
             calendarTerm,
-            sql`${libraryTrafficHistory.timestamp} BETWEEN ${periodStart} AND ${periodEnd}`,
+            and(
+              gte(libraryTrafficHistory.timestamp, periodStart),
+              lte(libraryTrafficHistory.timestamp, periodEnd),
+            ),
           )
           .where(and(...conds));
 
@@ -229,17 +235,25 @@ export class LibraryTrafficService {
       // Use EXISTS instead of JOIN to avoid summer term overlap double-counting rows.
       // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate
       // rows for those timestamps and bias the averages.
-      const yearClause = input.year ? sql` AND ct.year = ${input.year}` : sql``;
-      const quarterClause = input.quarter ? sql` AND ct.quarter = ${input.quarter}` : sql``;
-      const existsClause = isFinals
-        ? sql`EXISTS (SELECT 1 FROM calendar_term ct WHERE ${libraryTrafficHistory.timestamp} BETWEEN ct.finals_start AND ct.finals_end${yearClause}${quarterClause})`
-        : sql`EXISTS (SELECT 1 FROM calendar_term ct WHERE ${libraryTrafficHistory.timestamp} BETWEEN ct.instruction_start AND ct.instruction_end${yearClause}${quarterClause})`;
+      const inTerm = exists(
+        this.db
+          .select({ one: sql`1` })
+          .from(calendarTerm)
+          .where(
+            and(
+              gte(libraryTrafficHistory.timestamp, periodStart),
+              lte(libraryTrafficHistory.timestamp, periodEnd),
+              input.year ? eq(calendarTerm.year, input.year) : undefined,
+              input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
+            ),
+          ),
+      );
 
       return this.db
         .select(selectFields)
         .from(libraryTrafficHistory)
         .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-        .where(and(...localConds, existsClause))
+        .where(and(...localConds, inTerm))
         .groupBy(...groupBy)
         .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
     })();
@@ -272,8 +286,11 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      startDate = isFinals ? term.finalsStart : term.instructionStart;
-      endDate = isFinals ? term.finalsEnd : term.instructionEnd;
+      const termStart = isFinals ? term.finalsStart : term.instructionStart;
+      const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
+      // Intersect the term range with any explicit dates so both filters apply
+      startDate = startDate && startDate > termStart ? startDate : termStart;
+      endDate = endDate && endDate < termEnd ? endDate : termEnd;
     }
 
     const conds = [];
