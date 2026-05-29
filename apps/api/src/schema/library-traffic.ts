@@ -55,12 +55,12 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
   startDate: z.coerce.date().optional().openapi({
     example: "2025-01-01T00:00:00Z",
     description:
-      "Start of the time range (inclusive). If year/quarter are also given, the tighter of the two bounds applies.",
+      "Start of the time range (inclusive). Combined with year/quarter when both are provided.",
   }),
   endDate: z.coerce.date().optional().openapi({
     example: "2025-03-21T23:59:59Z",
     description:
-      "End of the time range (inclusive). If year/quarter are also given, the tighter of the two bounds applies.",
+      "End of the time range (inclusive). Combined with year/quarter when both are provided.",
   }),
   cursor: z.string().optional().openapi({
     description:
@@ -118,12 +118,12 @@ export const libraryTrafficHistoryAggregatedQuerySchema = z
     startDate: z.coerce.date().optional().openapi({
       example: "2025-01-01T00:00:00Z",
       description:
-        "Start of the time range (inclusive). Required unless year + quarter are provided. If both are given, the tighter bound applies.",
+        "Start of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided.",
     }),
     endDate: z.coerce.date().optional().openapi({
       example: "2025-01-31T23:59:59Z",
       description:
-        "End of the time range (inclusive). Required unless year + quarter are provided. Max range: 14 days for hour, 365 days for day, 730 days for week/month.",
+        "End of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
     }),
   })
   .refine(({ year, quarter, startDate, endDate }) => (year && quarter) || (startDate && endDate), {
@@ -190,11 +190,13 @@ export const libraryTrafficHistoryPatternQuerySchema = z
     }),
     startDate: z.coerce.date().optional().openapi({
       example: "2025-01-01T00:00:00Z",
-      description: "Start of the time range (inclusive) — combined with year/quarter filters",
+      description:
+        "Start of the time range (inclusive). Combined with year/quarter when both are provided.",
     }),
     endDate: z.coerce.date().optional().openapi({
       example: "2025-12-31T23:59:59Z",
-      description: "End of the time range (inclusive) — combined with year/quarter filters",
+      description:
+        "End of the time range (inclusive). Combined with year/quarter when both are provided.",
     }),
   })
   .refine(

@@ -92,7 +92,7 @@ export class LibraryTrafficService {
       const isFinals = input.period === "finals";
       const termStart = isFinals ? term.finalsStart : term.instructionStart;
       const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
-      // Intersect the term range with any explicit dates so both filters apply
+      // Combine the term range with any explicit dates so both filters apply
       startDate = startDate && startDate > termStart ? startDate : termStart;
       endDate = endDate && endDate < termEnd ? endDate : termEnd;
     }
@@ -288,7 +288,7 @@ export class LibraryTrafficService {
       const isFinals = input.period === "finals";
       const termStart = isFinals ? term.finalsStart : term.instructionStart;
       const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
-      // Intersect the term range with any explicit dates so both filters apply
+      // Combine the term range with any explicit dates so both filters apply
       startDate = startDate && startDate > termStart ? startDate : termStart;
       endDate = endDate && endDate < termEnd ? endDate : termEnd;
     }
