@@ -51,9 +51,9 @@ type WebsocSection @cacheControl(maxAge: 300) {
 type WebsocCourse @cacheControl(maxAge: 300) {
     sections: [WebsocSection!]!
     deptCode: String!
+    courseTitle: String!
     courseNumber: String!
     courseId: String!
-    courseTitle: String!
     courseComment: String!
     prerequisiteLink: String!
     updatedAt: String!
