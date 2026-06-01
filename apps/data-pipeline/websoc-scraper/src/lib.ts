@@ -725,7 +725,7 @@ const doChunkUpsert = async (
       // before retrying this one
       lastScraped: updatedAt,
       ...(snapshotDecision.shouldSnapshot && {
-        lastSnapshot: snapshotDecision.scraperStartTime,
+        lastEnrollmentSnapshot: snapshotDecision.scraperStartTime,
       }),
     };
     await tx
@@ -931,10 +931,10 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
 
   // Get last snapshot scoped per-term to calculate time elapsed
   const lastSnapshot = await db
-    .select({ lastSnapshot: websocMeta.lastSnapshot })
+    .select({ lastEnrollmentSnapshot: websocMeta.lastEnrollmentSnapshot })
     .from(websocMeta)
     .where(eq(websocMeta.name, termToName(term)))
-    .then(([row]) => row?.lastSnapshot ?? undefined);
+    .then(([row]) => row?.lastEnrollmentSnapshot ?? undefined);
   /*
    * NOTE: Intervals are based on scraper start times, so actual data collection intervals
    * are ~20-30 seconds shorter (e.g., hourly = ~59min 40sec). This discrepancy is acceptable for our use case.

@@ -1,5 +1,5 @@
 {
-  "id": "3c3e1a2d-bd60-4393-b107-cf581065f2f8",
+  "id": "eba40ce8-d81e-4486-a23a-bd9ef7850a26",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -3664,8 +3664,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "last_snapshot": {
-          "name": "last_snapshot",
+        "last_enrollment_snapshot": {
+          "name": "last_enrollment_snapshot",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false

@@ -257,7 +257,10 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
-  lastSnapshot: timestamp("last_snapshot", { mode: "date", withTimezone: true }),
+  lastEnrollmentSnapshot: timestamp("last_enrollment_snapshot", {
+    mode: "date",
+    withTimezone: true,
+  }),
 });
 
 export const websocSchool = pgTable(
