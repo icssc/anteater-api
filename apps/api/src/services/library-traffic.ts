@@ -76,8 +76,23 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryAggregated(input: LibraryTrafficHistoryAggregatedServiceInput) {
-    let startDate = input.startDate;
-    let endDate = input.endDate;
+    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
+    // Pacific calendar date of each reading — used for term-based date filters to avoid the
+    // UTC-midnight cutoff that would drop the last ~8h of data on the final day of a term.
+    const localDate = sql`${localTs}::date`;
+    // Truncate in Pacific time then convert back to UTC so Drizzle receives a true UTC moment
+    // and the response transform (toPacificISO) can reconstruct the correct Pacific offset.
+    const bucketStartExpr = {
+      hour: sql<Date>`(date_trunc('hour', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      day: sql<Date>`(date_trunc('day', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      week: sql<Date>`(date_trunc('week', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+      month: sql<Date>`(date_trunc('month', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
+    }[input.granularity];
+
+    const conds = [];
+
+    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
+    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
 
     if (input.year && input.quarter) {
       const [term] = await this.db
@@ -90,40 +105,15 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      const termStart = isFinals ? term.finalsStart : term.instructionStart;
-      const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
-      // Combine the term range with any explicit dates so both filters apply
-      startDate = startDate && startDate > termStart ? startDate : termStart;
-      endDate = endDate && endDate < termEnd ? endDate : termEnd;
+      // Compare Pacific calendar date so readings on the last day of the term are included
+      // in full — a UTC midnight bound would drop the last ~8h of evening data.
+      conds.push(gte(localDate, isFinals ? term.finalsStart : term.instructionStart));
+      conds.push(lte(localDate, isFinals ? term.finalsEnd : term.instructionEnd));
     }
 
-    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
-    // Truncate in Pacific time then convert back to UTC so Drizzle receives a true UTC moment
-    // and the response transform (toPacificISO) can reconstruct the correct Pacific offset.
-    const bucketStartExpr = {
-      hour: sql<Date>`(date_trunc('hour', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
-      day: sql<Date>`(date_trunc('day', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
-      week: sql<Date>`(date_trunc('week', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
-      month: sql<Date>`(date_trunc('month', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
-    }[input.granularity];
-
-    const conds = [];
-
-    if (input.locationName) {
-      conds.push(eq(libraryTraffic.locationName, input.locationName));
-    }
-
-    if (input.libraryName) {
-      conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-    }
-
-    if (!startDate || !endDate) {
-      throw new HTTPException(400, {
-        message: "Either (year + quarter) or (startDate + endDate) must be provided",
-      });
-    }
-    conds.push(gte(libraryTrafficHistory.timestamp, startDate));
-    conds.push(lte(libraryTrafficHistory.timestamp, endDate));
+    // Explicit date range intersects with the term filter when both are provided
+    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
 
     return this.db
       .select({
@@ -211,10 +201,7 @@ export class LibraryTrafficService {
           .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
           .innerJoin(
             calendarTerm,
-            and(
-              gte(libraryTrafficHistory.timestamp, periodStart),
-              lte(libraryTrafficHistory.timestamp, periodEnd),
-            ),
+            and(gte(sql`${localTs}::date`, periodStart), lte(sql`${localTs}::date`, periodEnd)),
           )
           .where(and(...conds));
 
@@ -241,8 +228,8 @@ export class LibraryTrafficService {
           .from(calendarTerm)
           .where(
             and(
-              gte(libraryTrafficHistory.timestamp, periodStart),
-              lte(libraryTrafficHistory.timestamp, periodEnd),
+              gte(sql`${localTs}::date`, periodStart),
+              lte(sql`${localTs}::date`, periodEnd),
               input.year ? eq(calendarTerm.year, input.year) : undefined,
               input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
             ),
@@ -272,8 +259,12 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryRaw(input: LibraryTrafficHistoryRawServiceInput) {
-    let startDate = input.startDate;
-    let endDate = input.endDate;
+    const localDate = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')::date`;
+
+    const conds = [];
+
+    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
+    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
 
     if (input.year && input.quarter) {
       const [term] = await this.db
@@ -286,30 +277,12 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      const termStart = isFinals ? term.finalsStart : term.instructionStart;
-      const termEnd = isFinals ? term.finalsEnd : term.instructionEnd;
-      // Combine the term range with any explicit dates so both filters apply
-      startDate = startDate && startDate > termStart ? startDate : termStart;
-      endDate = endDate && endDate < termEnd ? endDate : termEnd;
+      conds.push(gte(localDate, isFinals ? term.finalsStart : term.instructionStart));
+      conds.push(lte(localDate, isFinals ? term.finalsEnd : term.instructionEnd));
     }
 
-    const conds = [];
-
-    if (input.locationName) {
-      conds.push(eq(libraryTraffic.locationName, input.locationName));
-    }
-
-    if (input.libraryName) {
-      conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-    }
-
-    if (startDate) {
-      conds.push(gte(libraryTrafficHistory.timestamp, startDate));
-    }
-
-    if (endDate) {
-      conds.push(lte(libraryTrafficHistory.timestamp, endDate));
-    }
+    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
 
     if (input.cursor) {
       const [cursorRow] = await this.db
