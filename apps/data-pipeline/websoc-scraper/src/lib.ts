@@ -929,7 +929,6 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     )
     .limit(1);
 
-  // Get last snapshot scoped per-term to calculate time elapsed
   const lastSnapshot = await db
     .select({ lastEnrollmentSnapshot: websocMeta.lastEnrollmentSnapshot })
     .from(websocMeta)
@@ -1050,9 +1049,9 @@ async function ingestChunk(
       `Chunk ${codeRangePretty} failed (probably too large); bisecting and trying again...`,
     );
 
-    const middleInt = lower + Math.floor((upper - lower) / 2);
-    await ingestChunk(db, term, lower, middleInt, snapshotDecision);
-    await ingestChunk(db, term, middleInt + 1, upper, snapshotDecision);
+    const middle = lower + Math.floor((upper - lower) / 2);
+    await ingestChunk(db, term, lower, middle, snapshotDecision);
+    await ingestChunk(db, term, middle + 1, upper, snapshotDecision);
   }
 }
 
