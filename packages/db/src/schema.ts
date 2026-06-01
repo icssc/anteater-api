@@ -504,7 +504,7 @@ export const websocSectionEnrollment = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     maxCapacity: integer("max_capacity").notNull(),

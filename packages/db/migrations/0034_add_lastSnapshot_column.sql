@@ -1,1 +1,0 @@
-ALTER TABLE "websoc_meta" ADD COLUMN "last_snapshot" timestamp with time zone;

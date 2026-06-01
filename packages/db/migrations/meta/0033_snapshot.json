@@ -1,5 +1,5 @@
 {
-  "id": "9d6ec040-f605-4004-8b3b-6ccc79aa31f5",
+  "id": "3c3e1a2d-bd60-4393-b107-cf581065f2f8",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -3663,6 +3663,12 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "last_snapshot": {
+          "name": "last_snapshot",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -4122,7 +4128,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
