@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, desc, eq, getTableColumns, gte, inArray, lte, sql } from "@packages/db/drizzle";
+import { and, eq, getTableColumns, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocInstructor,
@@ -172,7 +172,7 @@ export class EnrollmentHistoryService {
       .orderBy(
         websocSectionEnrollment.sectionId,
         sql`DATE(${websocSectionEnrollment.createdAt})`,
-        desc(websocSectionEnrollment.createdAt),
+        websocSectionEnrollment.createdAt,
       );
     for (const row of enrollmentRows) {
       const section = getFromMapOrThrow(transformedSectionRows, row.sectionId);
