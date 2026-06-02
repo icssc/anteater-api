@@ -53,6 +53,7 @@ type WebsocCourse @cacheControl(maxAge: 300) {
     deptCode: String!
     courseTitle: String!
     courseNumber: String!
+    courseId: String!
     courseComment: String!
     prerequisiteLink: String!
     updatedAt: String!
@@ -103,6 +104,7 @@ input WebsocQuery {
     ge: String
     department: String
     courseNumber: String
+    courseId: String
     sectionCodes: String
     instructorName: String
     days: String

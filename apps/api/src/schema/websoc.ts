@@ -92,6 +92,11 @@ export const websocQuerySchema = z.object({
   }),
   courseNumber: courseNumberSchema.optional().openapi({
     description: "Only include courses with the specified course number",
+    example: "45C",
+  }),
+  courseId: z.string().optional().openapi({
+    description: "Only include courses with the specified course ID",
+    example: "I&CSCI45C",
   }),
   sectionCodes: z
     .string()
@@ -272,6 +277,7 @@ export const websocCourseSchema = z.object({
   deptCode: z.string(),
   courseTitle: z.string(),
   courseNumber: z.string(),
+  courseId: z.string(),
   courseComment: z.string(),
   prerequisiteLink: z.string(),
   updatedAt: z.coerce.date(),
