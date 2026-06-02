@@ -1036,6 +1036,7 @@ export const diningDishToPeriod = pgTable(
 export const diningEvent = pgTable(
   "dining_event",
   {
+    id: uuid().primaryKey().defaultRandom(),
     title: varchar("title").notNull(),
     image: varchar("image"),
     restaurantId: varchar("restaurant_id")
@@ -1048,14 +1049,10 @@ export const diningEvent = pgTable(
     end: timestamp("end"),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
-  (table) => {
-    return {
-      pk: primaryKey({
-        name: "dining_event_pk",
-        columns: [table.title, table.restaurantId, table.start],
-      }),
-    };
-  },
+  (table) => [
+    // We assume that restaurants cannot have event with the same start and end times, and such cases are simply a rename of the previous event.
+    unique().on(table.restaurantId, table.start, table.end).nullsNotDistinct(),
+  ],
 );
 
 export const diningMealPeriodType = pgTable("dining_meal_period_type", {

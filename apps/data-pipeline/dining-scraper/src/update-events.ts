@@ -164,7 +164,7 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
       .insert(diningEvent)
       .values(allEvents)
       .onConflictDoUpdate({
-        target: [diningEvent.title, diningEvent.restaurantId, diningEvent.start],
+        target: [diningEvent.restaurantId, diningEvent.start, diningEvent.end],
         set: conflictUpdateSetAllCols(diningEvent),
       });
   } catch (error) {
