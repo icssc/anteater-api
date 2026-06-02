@@ -59,7 +59,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Study Rooms",
       description:
-        "Data sourced from the UCI Libraries reservation site (https://spaces.lib.uci.edu/) and Plaza Verde amenity reservations site (https://outlook.office365.com/book/PlazaVerde3@americancampus.onmicrosoft.com/)",
+        "Data sourced from the [UCI Libraries reservation site](https://spaces.lib.uci.edu/), [UCI OIT Space Scheduler site](https://scheduler.oit.uci.edu/reserve/), and [Plaza Verde amenity reservations site](https://outlook.office365.com/book/PlazaVerde3@americancampus.onmicrosoft.com/).",
     },
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     {
@@ -74,6 +74,11 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Dining",
       description: "Data from UCI Dining via MyDiningHub and Adobe Commerce vendored systems.",
+    },
+    {
+      name: "Course Materials",
+      description:
+        "Data on low/no-cost course materials for UCI classes. Data is provided by UCI Libraries (https://www.lib.uci.edu/).",
     },
     { name: "Other" },
   ],

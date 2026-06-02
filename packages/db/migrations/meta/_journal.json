@@ -211,6 +211,27 @@
       "when": 1777243439626,
       "tag": "0029_polymorphic_major_requirements",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1777449716686,
+      "tag": "0030_dining_schedules",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1779214381101,
+      "tag": "0031_course_materials",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779233554981,
+      "tag": "0032_course_repeatability_parsing",
+      "breakpoints": true
     }
   ]
 }

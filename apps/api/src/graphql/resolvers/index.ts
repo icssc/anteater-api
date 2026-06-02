@@ -1,6 +1,7 @@
 import { apExamResolvers } from "$graphql/resolvers/ap-exams";
 import { calendarResolvers } from "$graphql/resolvers/calendar";
 import { catalogueResolvers } from "$graphql/resolvers/catalogue.ts";
+import { courseMaterialsResolvers } from "$graphql/resolvers/course-materials.ts";
 import { coursesResolvers } from "$graphql/resolvers/courses";
 import { diningResolvers } from "$graphql/resolvers/dining.ts";
 import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
@@ -17,6 +18,7 @@ import { weekResolvers } from "$graphql/resolvers/week";
 export const resolvers = [
   apExamResolvers,
   calendarResolvers,
+  courseMaterialsResolvers,
   coursesResolvers,
   diningResolvers,
   enrollmentHistoryResolvers,

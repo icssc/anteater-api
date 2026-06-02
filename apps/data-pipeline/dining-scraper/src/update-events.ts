@@ -8,7 +8,17 @@ import { queryAdobeECommerce } from "./query.ts";
 
 function parseEventDate(dateStr: string | null, time: string | null): Date | null {
   if (!dateStr || !time) return null;
-  return new Date(`${dateStr}T${time}`);
+
+  // convert out of UCI time
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute, second] = time.split(":").map(Number);
+
+  const naive = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  const laStr = naive.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour12: false });
+  const laDate = new Date(laStr);
+
+  const offset = naive.getTime() - laDate.getTime();
+  return new Date(naive.getTime() + offset);
 }
 
 const getAEMEventsQuery = `
