@@ -220,11 +220,12 @@ export class DiningService {
         },
         period: {
           id: diningPeriod.id,
+          name: diningMealPeriodType.name,
           startTime: diningPeriod.startTime,
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
+          stationToDishes: sql<Record<string, string[]>>`JSONB_BUILD_OBJECT()`,
         },
-        periodName: diningMealPeriodType.name,
         station: {
           id: diningStation.id,
           updatedAt: diningStation.updatedAt,
@@ -234,26 +235,28 @@ export class DiningService {
         >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
       })
       .from(diningRestaurant)
-      .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
-      .leftJoin(
+      .innerJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
+      .innerJoin(
         diningMealPeriodType,
         eq(diningPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
       )
-      .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
+      .innerJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
       .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
-      .leftJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
-      .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
+      .innerJoin(
+        diningDish,
+        and(
+          eq(diningStation.id, diningDish.stationId),
+          eq(diningDish.id, diningDishToPeriod.dishId),
+        ),
+      )
       .groupBy(
-        // yes, we actually need all of these
         diningRestaurant.id,
         diningPeriod.id,
         diningMealPeriodType.name,
-        diningPeriod.startTime,
-        diningPeriod.endTime,
-        diningPeriod.updatedAt,
         diningStation.id,
         diningDishToPeriod.periodId,
-      );
+      )
+      .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)));
 
     if (rows.length === 0) {
       return null;
@@ -262,24 +265,12 @@ export class DiningService {
     type PeriodsRecord = z.infer<typeof restaurantTodayResponseSchema>["periods"];
     const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
-    for (const { period, periodName, station, dishes } of rows) {
-      if (period === null) {
-        continue;
-      }
-
+    for (const { period, station, dishes } of rows) {
       if (!periods.has(period.id)) {
-        periods.set(period.id, {
-          name: periodName ?? "",
-          startTime: period.startTime,
-          endTime: period.endTime,
-          stationToDishes: {},
-          updatedAt: period.updatedAt,
-        });
+        periods.set(period.id, period);
       }
 
-      if (station !== null) {
-        getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
-      }
+      getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
     }
 
     return {
