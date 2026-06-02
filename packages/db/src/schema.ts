@@ -1051,7 +1051,7 @@ export const diningEvent = pgTable(
   },
   (table) => [
     // We assume that restaurants cannot have event with the same start and end times, and such cases are simply a rename of the previous event.
-    unique().on(table.restaurantId, table.start, table.end).nullsNotDistinct(),
+    unique().on(table.restaurantId, table.start, table.end),
   ],
 );
 

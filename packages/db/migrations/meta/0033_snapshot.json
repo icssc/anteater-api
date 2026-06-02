@@ -1,5 +1,5 @@
 {
-  "id": "851442e3-4752-47fc-b48e-57bdaeb89e15",
+  "id": "20952a03-d128-4439-8c4e-3077cb9b56c7",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -1077,7 +1077,7 @@
       "uniqueConstraints": {
         "dining_event_restaurant_id_start_end_unique": {
           "name": "dining_event_restaurant_id_start_end_unique",
-          "nullsNotDistinct": true,
+          "nullsNotDistinct": false,
           "columns": ["restaurant_id", "start", "end"]
         }
       },
