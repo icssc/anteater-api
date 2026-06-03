@@ -15,7 +15,9 @@ function toPacificISO(utcDate: Date): string {
     hour12: false,
   }).format(utcDate);
   const localStr = la.replace(" ", "T");
-  const offsetMin = (Date.parse(`${localStr}Z`) - utcDate.getTime()) / 60000;
+  // Round to nearest minute — floating-point division can yield e.g. 420.004 instead of 420,
+  // which breaks the padStart formatting of the minutes component.
+  const offsetMin = Math.round((Date.parse(`${localStr}Z`) - utcDate.getTime()) / 60000);
   const sign = offsetMin >= 0 ? "+" : "-";
   const abs = Math.abs(offsetMin);
   const offset = `${sign}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(abs % 60).padStart(2, "0")}`;
@@ -152,7 +154,7 @@ export const libraryTrafficHistoryPatternQuerySchema = historyFilterBase
   .extend({
     granularity: z.enum(granularities).openapi({
       description:
-        "Recurring cycle to group readings by — hour-of-day (0-23), day-of-week (1=Mon...7=Sun), week-of-term (1-10), or month (1-12)",
+        "Recurring cycle to group readings by — hour-of-day (0-23), day-of-week (1=Mon...7=Sun), week-of-term (1-10; Fall 0-10), or month (1-12)",
     }),
   })
   .refine(
@@ -182,7 +184,7 @@ export const libraryTrafficHistoryPatternEntrySchema = z.object({
   bucket: z.number().int().openapi({
     example: 5,
     description:
-      "Position within the granularity's cycle (its meaning is set by the request's granularity): hour of day (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10), or month (1-12). See `label` for the human-readable form.",
+      "Position within the granularity's cycle (its meaning is set by the request's granularity): hour of day (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10; Fall 0-10), or month (1-12). See `label` for the human-readable form.",
   }),
   label: z.string().openapi({
     example: "2pm",
