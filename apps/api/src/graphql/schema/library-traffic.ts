@@ -1,7 +1,13 @@
 export const libraryTrafficSchema = `#graphql
+enum LibraryName {
+  LANGSON_LIBRARY
+  SCIENCE_LIBRARY
+  GATEWAY_STUDY_CENTER
+}
+
 type LibraryTraffic @cacheControl(maxAge: 1800) {
   id: Int!
-  libraryName: String!
+  libraryName: LibraryName!
   locationName: String!
   trafficCount: Int!
   trafficPercentage: Float!
@@ -9,7 +15,7 @@ type LibraryTraffic @cacheControl(maxAge: 1800) {
 }
 
 input LibraryTrafficQuery {
-  libraryName: String
+  libraryName: LibraryName
   locationName: String
 }
 
@@ -28,19 +34,19 @@ enum LibraryTrafficPeriod {
 type LibraryTrafficHistoryRawEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
-  libraryName: String!
+  libraryName: LibraryName!
   trafficCount: Int!
   trafficPercentage: Float!
   timestamp: String!
 }
 
-type LibraryTrafficHistoryRawPage {
+type LibraryTrafficHistoryRawPage @cacheControl(maxAge: 1800) {
   items: [LibraryTrafficHistoryRawEntry!]!
   nextCursor: String
 }
 
 input LibraryTrafficHistoryRawQuery {
-  libraryName: String
+  libraryName: LibraryName
   locationName: String
   year: String
   quarter: Term
@@ -54,14 +60,14 @@ input LibraryTrafficHistoryRawQuery {
 type LibraryTrafficHistoryAggregatedEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
-  libraryName: String!
+  libraryName: LibraryName!
   bucketStart: String!
   avgCount: Float!
   avgPercentage: Float!
 }
 
 input LibraryTrafficHistoryAggregatedQuery {
-  libraryName: String
+  libraryName: LibraryName
   locationName: String
   granularity: LibraryTrafficGranularity!
   year: String
@@ -74,7 +80,7 @@ input LibraryTrafficHistoryAggregatedQuery {
 type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
-  libraryName: String!
+  libraryName: LibraryName!
   year: String
   quarter: String
   bucket: Int!
@@ -84,7 +90,7 @@ type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 1800) {
 }
 
 input LibraryTrafficHistoryPatternQuery {
-  libraryName: String
+  libraryName: LibraryName
   locationName: String
   granularity: LibraryTrafficGranularity!
   year: String
