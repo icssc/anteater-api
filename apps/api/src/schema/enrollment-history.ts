@@ -5,12 +5,7 @@ import { yearSchema } from "./lib";
 export const enrollmentHistoryQuerySchema = z
   .object({
     year: yearSchema.optional(),
-    quarter: z
-      .enum(terms, {
-        error: (issue) =>
-          issue.value === undefined ? "quarter is required" : "Invalid quarter provided",
-      })
-      .optional(),
+    quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
     instructorName: z.string().optional().openapi({
       description: "Only include courses taught by the specified instructor (case-insensitive)",
       example: "THORNTON, A.",
@@ -69,12 +64,7 @@ export const enrollmentHistorySchema = z.object({
 export const enrollmentHistoryGranularQuerySchema = z
   .object({
     year: yearSchema.optional(),
-    quarter: z
-      .enum(terms, {
-        error: (issue) =>
-          issue.value === undefined ? "quarter is required" : "Invalid quarter provided",
-      })
-      .optional(),
+    quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
     instructorName: z.string().optional().openapi({
       description: "Only include courses taught by the specified instructor (case-insensitive)",
       example: "THORNTON, A.",
