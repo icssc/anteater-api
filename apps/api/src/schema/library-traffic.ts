@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
 
-// Format a UTC Date as ISO 8601 with Pacific time offset (e.g. "2025-11-15T14:00:00-08:00").
+// Format a UTC Date as ISO 8601 with Pacific time offset (e.g. "2026-11-15T14:00:00-08:00").
 // Handles PST/PDT automatically via IANA timezone data.
 function toPacificISO(utcDate: Date): string {
   const la = new Intl.DateTimeFormat("sv-SE", {
@@ -23,15 +23,20 @@ function toPacificISO(utcDate: Date): string {
 }
 
 const libraryNames = ["Langson Library", "Science Library", "Gateway Study Center"] as const;
+const granularities = ["hour", "day", "week", "month"] as const;
 
-const MAX_RANGE_DAYS: Record<string, number> = {
+// Max span (in days) allowed for an explicit startDate/endDate range, per granularity —
+// keeps fine-grained (e.g. hourly) queries from scanning unbounded history.
+const MAX_RANGE_DAYS = {
   hour: 14,
   day: 365,
   week: 730,
   month: 730,
-};
+} as const;
 
-export const libraryTrafficHistoryRawQuerySchema = z.object({
+// Query-parameter fields shared by every history endpoint. Each endpoint extends this base
+// with the fields that differ (granularity, pagination, per-granularity range notes).
+const historyFilterBase = z.object({
   libraryName: z.enum(libraryNames).optional().openapi({
     example: "Langson Library",
     description: "Filter results by library name",
@@ -41,27 +46,33 @@ export const libraryTrafficHistoryRawQuerySchema = z.object({
     description: "Filter results by name of this floor / section",
   }),
   year: z.string().optional().openapi({
-    example: "2025",
-    description: "Academic year — use with quarter to scope results to a term",
+    example: "2026",
+    description:
+      "Academic year of the term to scope to. Combined with quarter, restricts results to readings recorded during that term.",
   }),
   quarter: z.enum(terms).optional().openapi({
-    example: "Winter",
-    description: "Academic quarter — use with year to scope results to a term",
+    example: "Fall",
+    description:
+      "Academic quarter of the term to scope to. Combined with year, restricts results to readings recorded during that term.",
   }),
   period: z.enum(["instruction", "finals"]).default("instruction").openapi({
-    description: "Which part of the term to filter to (only applies when year + quarter provided)",
     example: "instruction",
+    description:
+      "When scoping by year + quarter, which part of the term to include — instruction weeks or finals week.",
   }),
   startDate: z.coerce.date().optional().openapi({
-    example: "2025-01-01T00:00:00Z",
+    example: "2026-01-01T00:00:00Z",
     description:
       "Start of the time range (inclusive). Combined with year/quarter when both are provided.",
   }),
   endDate: z.coerce.date().optional().openapi({
-    example: "2025-03-21T23:59:59Z",
+    example: "2026-01-31T23:59:59Z",
     description:
       "End of the time range (inclusive). Combined with year/quarter when both are provided.",
   }),
+});
+
+export const libraryTrafficHistoryRawQuerySchema = historyFilterBase.extend({
   cursor: z.string().optional().openapi({
     description:
       "Pagination cursor (row id) from a previous response's nextCursor — returns rows after this point",
@@ -81,47 +92,23 @@ export const libraryTrafficHistoryRawEntrySchema = z.object({
   timestamp: z.coerce
     .date()
     .transform(toPacificISO)
-    .openapi({ example: "2025-01-15T14:00:00-08:00" }),
+    .openapi({ example: "2026-01-15T14:00:00-08:00" }),
 });
 
 export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEntrySchema);
 
-export const libraryTrafficHistoryAggregatedQuerySchema = z
-  .object({
-    libraryName: z.enum(libraryNames).optional().openapi({
-      example: "Langson Library",
-      description: "Filter results by library name",
-    }),
-    locationName: z.string().optional().openapi({
-      example: "4th Floor - Nordstrom Honors Study Room",
-      description: "Filter results by name of this floor / section",
-    }),
-    granularity: z.enum(["hour", "day", "week", "month"]).openapi({
-      description: "Time bucket size for averaging results",
-      example: "hour",
-    }),
-    year: z.string().optional().openapi({
-      example: "2025",
-      description:
-        "Academic year — use with quarter to scope results to a term (alternative to startDate/endDate)",
-    }),
-    quarter: z.enum(terms).optional().openapi({
-      example: "Winter",
-      description:
-        "Academic quarter — use with year to scope results to a term (alternative to startDate/endDate)",
-    }),
-    period: z.enum(["instruction", "finals"]).default("instruction").openapi({
-      description:
-        "Which part of the term to filter to (only applies when year + quarter provided)",
-      example: "instruction",
+export const libraryTrafficHistoryAggregatedQuerySchema = historyFilterBase
+  .extend({
+    granularity: z.enum(granularities).openapi({
+      description: "Size of each time bucket that readings are averaged into",
     }),
     startDate: z.coerce.date().optional().openapi({
-      example: "2025-01-01T00:00:00Z",
+      example: "2026-01-01T00:00:00Z",
       description:
         "Start of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided.",
     }),
     endDate: z.coerce.date().optional().openapi({
-      example: "2025-01-31T23:59:59Z",
+      example: "2026-01-31T23:59:59Z",
       description:
         "End of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
     }),
@@ -144,7 +131,7 @@ export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
   bucketStart: z.coerce.date().transform(toPacificISO).openapi({
-    example: "2025-01-15T14:00:00-08:00",
+    example: "2026-01-15T14:00:00-08:00",
     description: "Start of the time bucket (ISO 8601, Pacific time)",
   }),
   avgCount: z.number().openapi({
@@ -161,42 +148,11 @@ export const libraryTrafficHistoryAggregatedSchema = z.array(
   libraryTrafficHistoryAggregatedEntrySchema,
 );
 
-export const libraryTrafficHistoryPatternQuerySchema = z
-  .object({
-    libraryName: z.enum(libraryNames).optional().openapi({
-      example: "Langson Library",
-      description: "Filter results by library name",
-    }),
-    locationName: z.string().optional().openapi({
-      example: "4th Floor - Nordstrom Honors Study Room",
-      description: "Filter results by name of this floor / section",
-    }),
-    granularity: z.enum(["hour", "day", "week", "month"]).openapi({
+export const libraryTrafficHistoryPatternQuerySchema = historyFilterBase
+  .extend({
+    granularity: z.enum(granularities).openapi({
       description:
-        "Cycle to group by — hour-of-day (0-23), day-of-week (1=Mon...7=Sun), week-of-term (1-10), or month (1-12)",
-      example: "hour",
-    }),
-    year: z.string().optional().openapi({
-      example: "2025",
-      description: "Academic year — use with quarter to scope results to a term",
-    }),
-    quarter: z.enum(terms).optional().openapi({
-      example: "Winter",
-      description: "Academic quarter — use with year to scope results to a term",
-    }),
-    period: z.enum(["instruction", "finals"]).default("instruction").openapi({
-      description: "Which part of the term to filter to",
-      example: "instruction",
-    }),
-    startDate: z.coerce.date().optional().openapi({
-      example: "2025-01-01T00:00:00Z",
-      description:
-        "Start of the time range (inclusive). Combined with year/quarter when both are provided.",
-    }),
-    endDate: z.coerce.date().optional().openapi({
-      example: "2025-12-31T23:59:59Z",
-      description:
-        "End of the time range (inclusive). Combined with year/quarter when both are provided.",
+        "Recurring cycle to group readings by — hour-of-day (0-23), day-of-week (1=Mon...7=Sun), week-of-term (1-10), or month (1-12)",
     }),
   })
   .refine(
@@ -214,7 +170,7 @@ export const libraryTrafficHistoryPatternEntrySchema = z.object({
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
   year: z.string().optional().openapi({
-    example: "2025",
+    example: "2026",
     description:
       "Academic year for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the year query param if provided.",
   }),
@@ -225,7 +181,8 @@ export const libraryTrafficHistoryPatternEntrySchema = z.object({
   }),
   bucket: z.number().int().openapi({
     example: 5,
-    description: "Hour (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10), or month (1-12)",
+    description:
+      "Position within the granularity's cycle (its meaning is set by the request's granularity): hour of day (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10), or month (1-12). See `label` for the human-readable form.",
   }),
   label: z.string().openapi({
     example: "2pm",
@@ -279,7 +236,7 @@ export const libraryTrafficEntrySchema = z.object({
     description: "Occupancy as a fraction of stated capacity (0 to 1, or >1 if over-occupied)",
   }),
   timestamp: z.coerce.date().transform(toPacificISO).openapi({
-    example: "2025-01-01T12:34:56-08:00",
+    example: "2026-01-01T12:34:56-08:00",
     description: "When the library traffic was recorded (ISO 8601, Pacific time)",
   }),
 });
