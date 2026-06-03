@@ -20,6 +20,25 @@ export const withClauseSchema = z.object({
 });
 
 /**
+ * A specification on requirement or block for course exclusivity, max course count, etc
+ */
+
+export const qualifierClauseBaseSchema = z.object({
+  name: z.string(),
+  text: z.string(),
+  subTextList: z.array(z.string()).optional(),
+});
+
+/**
+ * TODO: continue to serve other qualifiers here. some qualifiers have extra properties i.e `class` in MAXCLASS
+ */
+
+export const qualifierClauseSchema = z.union([
+  // kept in to prevent zod from screaming when encountering an unknown code
+  qualifierClauseBaseSchema,
+]);
+
+/**
  * An object that represents a (range of) course(s).
  */
 export const courseSchema = z.object({
@@ -62,6 +81,7 @@ export const ruleCourseSchema = ruleBaseSchema.extend({
     creditsBegin: z.string().optional(),
     classesBegin: z.string().optional(),
     courseArray: z.array(courseSchema),
+    qualifierArray: z.array(qualifierClauseSchema).optional(),
     except: z
       .object({
         courseArray: z.array(courseSchema),
@@ -151,6 +171,11 @@ export const blockSchema = z.object({
   requirementValue: z.string(),
   title: z.string(),
   ruleArray: z.array(ruleSchema),
+  header: z
+    .object({
+      qualifierArray: z.array(qualifierClauseSchema).optional(),
+    })
+    .optional(),
   catalogYear: z.string(),
 });
 
