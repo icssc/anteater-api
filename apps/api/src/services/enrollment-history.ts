@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, getTableColumns, gte, inArray, lte, sql } from "@packages/db/drizzle";
+import { and, eq, getTableColumns, gte, lte, sql } from "@packages/db/drizzle";
 import {
   websocCourse,
   websocInstructor,
@@ -14,7 +14,6 @@ import { getFromMapOrThrow } from "@packages/stdlib";
 import type { z } from "zod";
 import type {
   enrollmentHistoryGranularQuerySchema,
-  enrollmentHistoryGranularSchema,
   enrollmentHistoryQuerySchema,
   enrollmentHistorySchema,
 } from "$schema";
@@ -199,11 +198,7 @@ export class EnrollmentHistoryService {
   }
 
   async getEnrollmentHistoryGranular(input: EnrollmentHistoryGranularServiceInput) {
-    const sectionRows = await this.fetchSectionRows(input);
-    const transformedSectionRows = transformSectionRows(sectionRows);
-    const enrollmentConditions = [
-      inArray(websocSectionEnrollment.sectionId, transformedSectionRows.keys().toArray()),
-    ];
+    const enrollmentConditions = [buildQuery(input)];
     if (input.from) {
       enrollmentConditions.push(gte(websocSectionEnrollment.createdAt, new Date(input.from)));
     }
@@ -211,32 +206,41 @@ export class EnrollmentHistoryService {
       enrollmentConditions.push(lte(websocSectionEnrollment.createdAt, new Date(input.to)));
     }
     const enrollmentRows = await this.db
-      .select()
+      .selectDistinctOn([websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt], {
+        ...getTableColumns(websocSectionEnrollment),
+        sectionCode: websocSection.sectionCode,
+      })
       .from(websocSectionEnrollment)
+      .innerJoin(websocSection, eq(websocSection.id, websocSectionEnrollment.sectionId))
+      .innerJoin(websocCourse, eq(websocCourse.id, websocSection.courseId))
+      .leftJoin(
+        websocSectionToInstructor,
+        eq(websocSectionToInstructor.sectionId, websocSection.id),
+      )
+      .leftJoin(
+        websocInstructor,
+        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+      )
       .where(and(...enrollmentConditions))
-      .orderBy(websocSectionEnrollment.createdAt);
-    const granularMapping = new Map<string, z.infer<typeof enrollmentHistoryGranularSchema>>();
-    for (const [sectionId, section] of transformedSectionRows) {
-      granularMapping.set(sectionId, {
-        year: section.year,
-        quarter: section.quarter,
-        sectionCode: section.sectionCode,
-        snapshots: [],
-      });
-    }
-    for (const row of enrollmentRows) {
-      const section = getFromMapOrThrow(granularMapping, row.sectionId);
-      section.snapshots.push({
-        timestamp: row.createdAt.toISOString(),
-        maxCapacity: row.maxCapacity,
-        totalEnrolled: row.numCurrentlyTotalEnrolled ?? null,
-        waitlist: row.numOnWaitlist ?? null,
-        waitlistCap: row.numWaitlistCap ?? null,
-        requested: row.numRequested ?? null,
-        newOnlyReserved: row.numNewOnlyReserved ?? null,
-        status: row.status ?? "",
-      });
-    }
-    return Array.from(granularMapping.values()).filter((s) => s.snapshots.length > 0);
+      .orderBy(websocSectionEnrollment.sectionId, websocSectionEnrollment.createdAt);
+
+    return Map.groupBy(enrollmentRows, (row) => row.sectionId)
+      .values()
+      .map((rows) => ({
+        year: rows[0].year,
+        quarter: rows[0].quarter,
+        sectionCode: rows[0].sectionCode.toString(10).padStart(5, "0"),
+        snapshots: rows.map((row) => ({
+          timestamp: row.createdAt.toISOString(),
+          maxCapacity: row.maxCapacity,
+          totalEnrolled: row.numCurrentlyTotalEnrolled ?? null,
+          waitlist: row.numOnWaitlist ?? null,
+          waitlistCap: row.numWaitlistCap ?? null,
+          requested: row.numRequested ?? null,
+          newOnlyReserved: row.numNewOnlyReserved ?? null,
+          status: row.status ?? "",
+        })),
+      }))
+      .toArray();
   }
 }
