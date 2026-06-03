@@ -96,7 +96,7 @@ const libraryTrafficHistoryAggregatedRoute = createRoute({
   path: "/history/aggregated",
   request: { query: libraryTrafficHistoryAggregatedQuerySchema },
   description:
-    "Retrieves time-averaged occupancy metrics grouped by granularity. Scope with either (startDate + endDate) or (year + quarter). Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
+    "Averages occupancy into consecutive time buckets sized by the `granularity` parameter (hour/day/week/month). Set the window with `startDate` + `endDate` and/or `year` + `quarter` to scope to a term; per-granularity range caps are documented on `endDate`.",
   responses: {
     200: response200(libraryTrafficHistoryAggregatedSchema),
     422: response422(),
@@ -119,7 +119,7 @@ const libraryTrafficHistoryPatternRoute = createRoute({
   path: "/history/pattern",
   request: { query: libraryTrafficHistoryPatternQuerySchema },
   description:
-    "Retrieves typical occupancy averaged across recurring time slots (e.g. all Mondays, all 2pm hours). Granularity controls the cycle: hour → 24 buckets (0-23), day → 7 (1=Mon...7=Sun), week → 10 buckets (week-of-term), month → 12.",
+    "Averages occupancy across recurring time slots to reveal typical patterns (e.g. all Mondays, all 2pm hours). The recurring cycle is set by the `granularity` parameter.",
   responses: {
     200: response200(libraryTrafficHistoryPatternSchema),
     422: response422(),
