@@ -1,5 +1,5 @@
 {
-  "id": "20952a03-d128-4439-8c4e-3077cb9b56c7",
+  "id": "2c386bea-dbce-4baf-ad76-2947a42e9cfb",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -1061,7 +1061,57 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "dining_event_restaurant_id_start_end_index": {
+          "name": "dining_event_restaurant_id_start_end_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "end",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dining_event_restaurant_id_title_index": {
+          "name": "dining_event_restaurant_id_title_index",
+          "columns": [
+            {
+              "expression": "restaurant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "title",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"start\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "dining_event_restaurant_id_dining_restaurant_id_fk": {
           "name": "dining_event_restaurant_id_dining_restaurant_id_fk",
@@ -1074,13 +1124,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "dining_event_restaurant_id_start_end_unique": {
-          "name": "dining_event_restaurant_id_start_end_unique",
-          "nullsNotDistinct": false,
-          "columns": ["restaurant_id", "start", "end"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -1050,8 +1050,8 @@ export const diningEvent = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    // We assume that restaurants cannot have event with the same start and end times, and such cases are simply a rename of the previous event.
-    unique().on(table.restaurantId, table.start, table.end),
+    uniqueIndex().on(table.restaurantId, table.start, table.end),
+    uniqueIndex().on(table.restaurantId, table.title).where(isNull(table.start)),
   ],
 );
 
