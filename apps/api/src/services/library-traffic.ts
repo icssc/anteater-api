@@ -148,17 +148,19 @@ export class LibraryTrafficService {
     // Convert stored UTC timestamps to Pacific time before extracting hour/day/month buckets
     const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
 
+    // mapWith(Number) decodes these numeric SQL results to JS numbers, so callers (and the
+    // groupBy/orderBy/label code below) get real numbers without re-casting each row.
     const bucketExpr = {
-      hour: sql<number>`EXTRACT(hour FROM ${localTs})`,
-      day: sql<number>`EXTRACT(isodow FROM ${localTs})`,
+      hour: sql`EXTRACT(hour FROM ${localTs})`.mapWith(Number),
+      day: sql`EXTRACT(isodow FROM ${localTs})`.mapWith(Number),
       // Week of term: weeks since period start, 1-indexed.
       // Fall starts on Thursday so add 4-day offset to align week boundaries to Monday,
       // matching the convention in the /week endpoint (the Thu–Sun stub becomes week 0).
-      week: sql<number>`floor(extract(epoch from (
+      week: sql`floor(extract(epoch from (
         ${libraryTrafficHistory.timestamp} - ${periodStart}
         - CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN INTERVAL '4 days' ELSE INTERVAL '0 days' END
-      )) / 604800)::int + 1`,
-      month: sql<number>`EXTRACT(month FROM ${localTs})`,
+      )) / 604800)::int + 1`.mapWith(Number),
+      month: sql`EXTRACT(month FROM ${localTs})`.mapWith(Number),
     }[input.granularity];
 
     // Conditions on libraryTrafficHistory and libraryTraffic (used in both query paths)
@@ -186,75 +188,73 @@ export class LibraryTrafficService {
       avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
     };
 
-    const rows = await (async () => {
-      if (isWeek) {
-        // JOIN calendarTerm: needed for periodStart (week-of-term math) and Fall offset.
-        // Exactly one term matches per row when quarter is provided; without quarter,
-        // summer term overlap is a known edge case (specify quarter for accurate week data).
-        const conds = [...localConds];
-        if (input.year) conds.push(eq(calendarTerm.year, input.year));
-        if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
-
-        const base = this.db
-          .select(selectFields)
-          .from(libraryTrafficHistory)
-          .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-          .innerJoin(
-            calendarTerm,
-            and(gte(sql`${localTs}::date`, periodStart), lte(sql`${localTs}::date`, periodEnd)),
-          )
-          .where(and(...conds));
-
-        return separateByTerm
-          ? base
-              .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
-              .orderBy(
-                asc(calendarTerm.year),
-                asc(calendarTerm.quarter),
-                asc(libraryTrafficHistory.locationId),
-                asc(bucketExpr),
-              )
-          : base
-              .groupBy(...groupBy)
-              .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
-      }
-
-      // Use EXISTS instead of JOIN to avoid summer term overlap double-counting rows.
-      // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate
-      // rows for those timestamps and bias the averages.
-      const inTerm = exists(
-        this.db
-          .select({ one: sql`1` })
-          .from(calendarTerm)
-          .where(
-            and(
-              gte(sql`${localTs}::date`, periodStart),
-              lte(sql`${localTs}::date`, periodEnd),
-              input.year ? eq(calendarTerm.year, input.year) : undefined,
-              input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
-            ),
+    // Default (non-week) path: EXISTS instead of JOIN avoids summer term overlap double-counting.
+    // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows for
+    // those timestamps and bias the averages.
+    const inTerm = exists(
+      this.db
+        .select({ one: sql`1` })
+        .from(calendarTerm)
+        .where(
+          and(
+            gte(sql`${localTs}::date`, periodStart),
+            lte(sql`${localTs}::date`, periodEnd),
+            input.year ? eq(calendarTerm.year, input.year) : undefined,
+            input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
           ),
-      );
+        ),
+    );
 
-      return this.db
+    const nonWeekQuery = this.db
+      .select(selectFields)
+      .from(libraryTrafficHistory)
+      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+      .where(and(...localConds, inTerm))
+      .groupBy(...groupBy)
+      .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
+
+    let rows: Awaited<typeof nonWeekQuery>;
+    if (isWeek) {
+      // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
+      // Exactly one term matches per row when quarter is provided; without quarter, summer
+      // term overlap is a known edge case (specify quarter for accurate week data).
+      const conds = [...localConds];
+      if (input.year) conds.push(eq(calendarTerm.year, input.year));
+      if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
+
+      const base = this.db
         .select(selectFields)
         .from(libraryTrafficHistory)
         .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-        .where(and(...localConds, inTerm))
-        .groupBy(...groupBy)
-        .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
-    })();
+        .innerJoin(
+          calendarTerm,
+          and(gte(sql`${localTs}::date`, periodStart), lte(sql`${localTs}::date`, periodEnd)),
+        )
+        .where(and(...conds));
+
+      rows = await (separateByTerm
+        ? base
+            .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
+            .orderBy(
+              asc(calendarTerm.year),
+              asc(calendarTerm.quarter),
+              asc(libraryTrafficHistory.locationId),
+              asc(bucketExpr),
+            )
+        : base.groupBy(...groupBy).orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr)));
+    } else {
+      rows = await nonWeekQuery;
+    }
 
     return rows.map((row) => ({
       ...row,
-      bucket: Number(row.bucket),
       year: separateByTerm ? (row.year ?? undefined) : input.year,
       quarter: separateByTerm
         ? row.quarter != null
           ? String(row.quarter)
           : undefined
         : input.quarter,
-      label: patternLabel(input.granularity, Number(row.bucket)),
+      label: patternLabel(input.granularity, row.bucket),
     }));
   }
 
