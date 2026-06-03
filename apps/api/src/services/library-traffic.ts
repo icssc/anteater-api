@@ -48,6 +48,12 @@ function patternLabel(granularity: string, bucket: number): string {
   ][bucket - 1];
 }
 
+// A Drizzle date({ mode: "date" }) value is a JS Date; postgres.js can't bind a Date as a
+// parameter inside a raw sql`` comparison (there's no column type to encode it with), so render
+// it to a YYYY-MM-DD string and cast it in SQL instead. UTC slice is exact since the driver
+// parses date-only values at UTC midnight.
+const toDateString = (d: Date): string => d.toISOString().slice(0, 10);
+
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
@@ -107,8 +113,15 @@ export class LibraryTrafficService {
       const isFinals = input.period === "finals";
       // Compare Pacific calendar date so readings on the last day of the term are included
       // in full — a UTC midnight bound would drop the last ~8h of evening data.
-      conds.push(gte(localDate, isFinals ? term.finalsStart : term.instructionStart));
-      conds.push(lte(localDate, isFinals ? term.finalsEnd : term.instructionEnd));
+      conds.push(
+        gte(
+          localDate,
+          sql`${toDateString(isFinals ? term.finalsStart : term.instructionStart)}::date`,
+        ),
+      );
+      conds.push(
+        lte(localDate, sql`${toDateString(isFinals ? term.finalsEnd : term.instructionEnd)}::date`),
+      );
     }
 
     // Explicit date range intersects with the term filter when both are provided
@@ -153,13 +166,15 @@ export class LibraryTrafficService {
     const bucketExpr = {
       hour: sql`EXTRACT(hour FROM ${localTs})`.mapWith(Number),
       day: sql`EXTRACT(isodow FROM ${localTs})`.mapWith(Number),
-      // Week of term: weeks since period start, 1-indexed.
-      // Fall starts on Thursday so add 4-day offset to align week boundaries to Monday,
-      // matching the convention in the /week endpoint (the Thu–Sun stub becomes week 0).
-      week: sql`floor(extract(epoch from (
-        ${libraryTrafficHistory.timestamp} - ${periodStart}
-        - CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN INTERVAL '4 days' ELSE INTERVAL '0 days' END
-      )) / 604800)::int + 1`.mapWith(Number),
+      // Week of term: calendar-date difference in Pacific time, 1-indexed.
+      // Using Pacific dates (not raw UTC instants) matches the /week endpoint convention and
+      // avoids mis-attributing late-Sunday-Pacific readings to the following week.
+      // Fall starts on Thursday so subtract 4 days so that Monday of the first full week = day 0,
+      // meaning the Thu–Sun stub is "week 0" (matching /week) and Mon of week 1 = day 7.
+      week: sql`floor(
+        (${localTs}::date - ${periodStart}
+         - CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN 4 ELSE 0 END)::numeric / 7
+      )::int + 1`.mapWith(Number),
       month: sql`EXTRACT(month FROM ${localTs})`.mapWith(Number),
     }[input.granularity];
 
@@ -277,8 +292,15 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      conds.push(gte(localDate, isFinals ? term.finalsStart : term.instructionStart));
-      conds.push(lte(localDate, isFinals ? term.finalsEnd : term.instructionEnd));
+      conds.push(
+        gte(
+          localDate,
+          sql`${toDateString(isFinals ? term.finalsStart : term.instructionStart)}::date`,
+        ),
+      );
+      conds.push(
+        lte(localDate, sql`${toDateString(isFinals ? term.finalsEnd : term.instructionEnd)}::date`),
+      );
     }
 
     if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
