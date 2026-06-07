@@ -1,29 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { terms } from "@packages/db/schema";
 
-// Format a UTC Date as ISO 8601 with Pacific time offset (e.g. "2026-11-15T14:00:00-08:00").
-// Handles PST/PDT automatically via IANA timezone data.
-function toPacificISO(utcDate: Date): string {
-  const la = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "America/Los_Angeles",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(utcDate);
-  const localStr = la.replace(" ", "T");
-  // Round to nearest minute — floating-point division can yield e.g. 420.004 instead of 420,
-  // which breaks the padStart formatting of the minutes component.
-  const offsetMin = Math.round((Date.parse(`${localStr}Z`) - utcDate.getTime()) / 60000);
-  const sign = offsetMin >= 0 ? "+" : "-";
-  const abs = Math.abs(offsetMin);
-  const offset = `${sign}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(abs % 60).padStart(2, "0")}`;
-  return `${localStr}${offset}`;
-}
-
 const libraryNames = ["Langson Library", "Science Library", "Gateway Study Center"] as const;
 const granularities = ["hour", "day", "week", "month"] as const;
 
@@ -36,8 +13,6 @@ const MAX_RANGE_DAYS = {
   month: 730,
 } as const;
 
-// Query-parameter fields shared by every history endpoint. Each endpoint extends this base
-// with the fields that differ (granularity, pagination, per-granularity range notes).
 const historyFilterBase = z.object({
   libraryName: z.enum(libraryNames).optional().openapi({
     example: "Langson Library",
@@ -45,12 +20,11 @@ const historyFilterBase = z.object({
   }),
   locationName: z.string().optional().openapi({
     example: "4th Floor - Nordstrom Honors Study Room",
-    description: "Filter results by name of this floor / section",
+    description: "Filter results by location name",
   }),
   year: z.string().optional().openapi({
     example: "2026",
-    description:
-      "Academic year of the term to scope to. Combined with quarter, restricts results to readings recorded during that term.",
+    description: "Academic year of the term to scope results to",
   }),
   quarter: z.enum(terms).optional().openapi({
     example: "Fall",
@@ -58,7 +32,6 @@ const historyFilterBase = z.object({
       "Academic quarter of the term to scope to. Combined with year, restricts results to readings recorded during that term.",
   }),
   period: z.enum(["instruction", "finals"]).default("instruction").openapi({
-    example: "instruction",
     description:
       "When scoping by year + quarter, which part of the term to include — instruction weeks or finals week.",
   }),
@@ -85,16 +58,19 @@ export const libraryTrafficHistoryRawQuerySchema = historyFilterBase.extend({
   }),
 });
 
-export const libraryTrafficHistoryRawEntrySchema = z.object({
+const historyLocationBase = z.object({
   locationId: z.number().int().openapi({ example: 212 }),
   locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
   libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
+});
+
+export const libraryTrafficHistoryRawEntrySchema = historyLocationBase.extend({
   trafficCount: z.number().int().nonnegative().openapi({ example: 57 }),
   trafficPercentage: z.number().openapi({ example: 0.38 }),
   timestamp: z.coerce
     .date()
-    .transform(toPacificISO)
-    .openapi({ example: "2026-01-15T14:00:00-08:00" }),
+    .transform((d) => d.toISOString())
+    .openapi({ example: "2026-01-15T22:00:00.000Z", description: "Timestamp (UTC, ISO 8601)" }),
 });
 
 export const libraryTrafficHistoryRawSchema = z.array(libraryTrafficHistoryRawEntrySchema);
@@ -128,14 +104,14 @@ export const libraryTrafficHistoryAggregatedQuerySchema = historyFilterBase
     { message: "Date range exceeds the maximum allowed for the selected granularity" },
   );
 
-export const libraryTrafficHistoryAggregatedEntrySchema = z.object({
-  locationId: z.number().int().openapi({ example: 212 }),
-  locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
-  libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
-  bucketStart: z.coerce.date().transform(toPacificISO).openapi({
-    example: "2026-01-15T14:00:00-08:00",
-    description: "Start of the time bucket (ISO 8601, Pacific time)",
-  }),
+export const libraryTrafficHistoryAggregatedEntrySchema = historyLocationBase.extend({
+  bucketStart: z.coerce
+    .date()
+    .transform((d) => d.toISOString())
+    .openapi({
+      example: "2026-01-15T22:00:00.000Z",
+      description: "Start of the time bucket (UTC, ISO 8601)",
+    }),
   avgCount: z.number().openapi({
     example: 42.5,
     description: "Average number of people detected during this period",
@@ -167,10 +143,7 @@ export const libraryTrafficHistoryPatternQuerySchema = historyFilterBase
     { message: "endDate must be on or after startDate" },
   );
 
-export const libraryTrafficHistoryPatternEntrySchema = z.object({
-  locationId: z.number().int().openapi({ example: 212 }),
-  locationName: z.string().openapi({ example: "4th Floor - Nordstrom Honors Study Room" }),
-  libraryName: z.enum(libraryNames).openapi({ example: "Langson Library" }),
+export const libraryTrafficHistoryPatternEntrySchema = historyLocationBase.extend({
   year: z.string().optional().openapi({
     example: "2026",
     description:
@@ -182,7 +155,7 @@ export const libraryTrafficHistoryPatternEntrySchema = z.object({
       "Academic quarter for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the quarter query param if provided.",
   }),
   bucket: z.number().int().openapi({
-    example: 5,
+    example: 14,
     description:
       "Position within the granularity's cycle (its meaning is set by the request's granularity): hour of day (0-23), ISO day of week (1=Mon-7=Sun), week of term (1-10; Fall 0-10), or month (1-12). See `label` for the human-readable form.",
   }),
@@ -214,7 +187,7 @@ export const libraryTrafficQuerySchema = z.object({
     .string()
     .openapi({
       example: "4th Floor - Nordstrom Honors Study Room",
-      description: "Filter results by name of this floor / section",
+      description: "Filter results by location name",
     })
     .optional(),
 });
@@ -227,7 +200,7 @@ export const libraryTrafficEntrySchema = z.object({
   }),
   locationName: z.string().openapi({
     example: "4th Floor - Nordstrom Honors Study Room",
-    description: "Name of this floor / section",
+    description: "Name of this location",
   }),
   trafficCount: z.number().int().nonnegative().openapi({
     example: 57,
@@ -237,10 +210,13 @@ export const libraryTrafficEntrySchema = z.object({
     example: 0.33,
     description: "Occupancy as a fraction of stated capacity (0 to 1, or >1 if over-occupied)",
   }),
-  timestamp: z.coerce.date().transform(toPacificISO).openapi({
-    example: "2026-01-01T12:34:56-08:00",
-    description: "When the library traffic was recorded (ISO 8601, Pacific time)",
-  }),
+  timestamp: z.coerce
+    .date()
+    .transform((d) => d.toISOString())
+    .openapi({
+      example: "2026-01-01T20:34:56.000Z",
+      description: "When the library traffic was recorded (UTC, ISO 8601)",
+    }),
 });
 
 export const libraryTrafficSchema = z.array(libraryTrafficEntrySchema);
