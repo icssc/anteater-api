@@ -78,7 +78,14 @@ export class ProgramsService {
           eq(dwMajorYear.catalogYear, dwMajorSpecializationToRequirement.catalogYear),
         ),
       )
-      .groupBy(dwMajor.id, dwMajorSpecializationToRequirement.catalogYear)
+      .groupBy(
+        dwMajor.id,
+        dwMajor.name,
+        dwMajorYear.catalogYear,
+        dwMajorYear.specializationRequired,
+        dwDegree.name,
+        dwDegree.division,
+      )
       .where(
         and(
           query.id ? eq(dwMajor.id, query.id) : undefined,
