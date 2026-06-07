@@ -132,21 +132,34 @@ export async function fetchLocation(
 
   // Get all of the schedules
   const parsedSchedules: Schedule[] = schedules.map((schedule) => {
-    const scheduleMealPeriods: MealPeriodWithHours[] = schedule.meal_periods.map((mealPeriod) => {
-      const mealPeriodInfo = commerceMealPeriods.find((cmp) => cmp.name === mealPeriod.meal_period);
+    const scheduleMealPeriods: MealPeriodWithHours[] = schedule.meal_periods.flatMap(
+      (mealPeriod) => {
+        const mealPeriodInfo = commerceMealPeriods.find(
+          (cmp) => cmp.name === mealPeriod.meal_period,
+        );
+        if (!mealPeriodInfo) {
+          console.warn(
+            `Meal period "${mealPeriod.meal_period}" not found in Commerce_mealPeriods catalog; skipping.`,
+          );
+          return [];
+        }
 
-      const [openHours, closeHours] = parseOpeningHours(mealPeriod.opening_hours);
+        const [openHours, closeHours] = parseOpeningHours(mealPeriod.opening_hours);
 
-      return {
-        name: mealPeriod.meal_period,
-        id: mealPeriodInfo?.id ?? "UNIDENTIFIED",
-        position: mealPeriodInfo?.position ?? 0,
-        openHours,
-        closeHours,
-      } as MealPeriodWithHours;
-    });
+        return [
+          {
+            name: mealPeriod.meal_period,
+            id: mealPeriodInfo.id,
+            position: mealPeriodInfo.position,
+            openHours,
+            closeHours,
+          },
+        ];
+      },
+    );
 
     return {
+      upstreamId: schedule.id,
       name: schedule.name,
       type: schedule.type,
       startDate: schedule.start_date,

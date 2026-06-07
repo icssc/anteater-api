@@ -257,6 +257,16 @@ export const divisions = ["Undergraduate", "Graduate"] as const;
 export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
 
+export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
+
+export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
+export const textbookFormat = pgEnum("textbook_format", textbookFormats);
+export type TextbookFormat = (typeof textbookFormats)[number];
+
+export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
+export const materialRequirement = pgEnum("material_requirement", materialRequirements);
+export type MaterialRequirement = (typeof materialRequirements)[number];
+
 // WebSoc enums
 
 export const websocStatuses = ["OPEN", "Waitl", "FULL", "NewOnly"] as const;
@@ -619,6 +629,8 @@ export const course = pgTable(
     prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
     prerequisiteText: text("prerequisite_text").notNull(),
     repeatability: varchar("repeatability").notNull(),
+    repeatabilityTimes: integer("repeatability_times"),
+    repeatabilityType: varchar("repeatability_type"),
     gradingOption: varchar("grading_option").notNull(),
     concurrent: varchar("concurrent").notNull(),
     sameAs: varchar("same_as").notNull(),
@@ -908,6 +920,25 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
+export const courseMaterial = pgTable(
+  "course_material",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id")
+      .references(() => websocSection.id)
+      .notNull(),
+    isbn: varchar("isbn"),
+    author: varchar("author"),
+    title: varchar("title").notNull(),
+    edition: varchar("edition"),
+    format: textbookFormat("format").notNull(),
+    requirement: materialRequirement("requirement"),
+    mmsId: varchar("mms_id"),
+    link: text("link"),
+  },
+  (table) => [index().on(table.sectionId)],
+);
+
 // dining stuff
 export const diningRestaurant = pgTable("dining_restaurant", {
   id: varchar("id").primaryKey(),
@@ -918,7 +949,9 @@ export const diningPeriod = pgTable(
   "dining_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    adobeId: integer("adobe_id").notNull(),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -927,11 +960,10 @@ export const diningPeriod = pgTable(
       }),
     startTime: time("start_time"),
     endTime: time("end_time"),
-    name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    uniqueIndex().on(table.mealPeriodTypeId, table.date, table.restaurantId),
     index().on(table.date),
     index().on(table.restaurantId),
   ],
@@ -1064,6 +1096,70 @@ export const diningEvent = pgTable(
       }),
     };
   },
+);
+
+export const diningMealPeriodType = pgTable("dining_meal_period_type", {
+  adobeId: integer("adobe_id").primaryKey(),
+  name: varchar("name").notNull(),
+  position: integer("position").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningSchedule = pgTable(
+  "dining_schedule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
+      }),
+    upstreamId: varchar("upstream_id").notNull(),
+    name: varchar("name").notNull(),
+    type: varchar("type").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    unique().on(table.restaurantId, table.name, table.startDate, table.endDate).nullsNotDistinct(), // forbid multiple Standard schedules with null start/end dates
+    index().on(table.restaurantId),
+  ],
+);
+
+export const diningScheduleMealPeriod = pgTable(
+  "dining_schedule_meal_period",
+  {
+    scheduleId: uuid("schedule_id")
+      .notNull()
+      .references(() => diningSchedule.id, {
+        onDelete: "cascade",
+      }),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
+    sunOpen: time("sun_open"),
+    sunClose: time("sun_close"),
+    monOpen: time("mon_open"),
+    monClose: time("mon_close"),
+    tueOpen: time("tue_open"),
+    tueClose: time("tue_close"),
+    wedOpen: time("wed_open"),
+    wedClose: time("wed_close"),
+    thuOpen: time("thu_open"),
+    thuClose: time("thu_close"),
+    friOpen: time("fri_open"),
+    friClose: time("fri_close"),
+    satOpen: time("sat_open"),
+    satClose: time("sat_close"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "dining_schedule_meal_period_pk",
+      columns: [table.scheduleId, table.mealPeriodTypeId],
+    }),
+  ],
 );
 
 // Materialized views

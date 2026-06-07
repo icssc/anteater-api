@@ -1,13 +1,30 @@
 import type { database } from "@packages/db";
-import { and, eq, gte, inArray, isNull, max, min, or, type SQL, sql } from "@packages/db/drizzle";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  max,
+  min,
+  or,
+  type SQL,
+  sql,
+} from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
   diningDishToPeriod,
   diningEvent,
+  diningMealPeriodType,
   diningNutritionInfo,
   diningPeriod,
   diningRestaurant,
+  diningSchedule,
+  diningScheduleMealPeriod,
   diningStation,
 } from "@packages/db/schema";
 import { getFromMapOrThrow, orNull } from "@packages/stdlib";
@@ -20,6 +37,8 @@ import type {
   restaurantsResponseSchema,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
+  scheduleSchema,
+  schedulesQuerySchema,
 } from "$schema";
 
 type DiningDishQuery = z.infer<typeof dishQuerySchema>;
@@ -28,14 +47,25 @@ type DiningEventQuery = z.infer<typeof diningEventsQuerySchema>;
 export class DiningService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  async getUpcomingEvents(input: DiningEventQuery) {
-    // only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
-    const conds = [
-      or(
-        gte(diningEvent.end, sql`NOW()`),
-        and(isNull(diningEvent.end), gte(diningEvent.updatedAt, sql`NOW() - INTERVAL '2 WEEKS'`)),
-      ),
-    ];
+  async getEvents(input: DiningEventQuery) {
+    const conds = [];
+
+    if (input.after || input.before) {
+      if (input.after) {
+        conds.push(gte(diningEvent.start, sql`${input.after}::timestamp`));
+      }
+      if (input.before) {
+        conds.push(lt(diningEvent.start, sql`${input.before}::date + INTERVAL '1 day'`));
+      }
+    } else {
+      // default: only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
+      conds.push(
+        or(
+          gte(diningEvent.end, sql`NOW()`),
+          and(isNull(diningEvent.end), gte(diningEvent.updatedAt, sql`NOW() - INTERVAL '2 WEEKS'`)),
+        ),
+      );
+    }
 
     if (input.restaurantId) {
       conds.push(eq(diningEvent.restaurantId, input.restaurantId));
@@ -52,7 +82,8 @@ export class DiningService {
         updatedAt: diningEvent.updatedAt,
       })
       .from(diningEvent)
-      .where(and(...conds));
+      .where(and(...conds))
+      .orderBy(asc(diningEvent.start));
   }
 
   async getDishesRaw(input: { where?: SQL }): Promise<z.infer<typeof dishSchema>[]> {
@@ -190,10 +221,11 @@ export class DiningService {
         },
         period: {
           id: diningPeriod.id,
-          name: diningPeriod.name,
+          name: diningMealPeriodType.name,
           startTime: diningPeriod.startTime,
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
+          stationToDishes: sql<Record<string, string[]>>`JSONB_BUILD_OBJECT()`,
         },
         station: {
           id: diningStation.id,
@@ -204,21 +236,28 @@ export class DiningService {
         >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
       })
       .from(diningRestaurant)
-      .leftJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
-      .leftJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
+      .innerJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
+      .innerJoin(
+        diningMealPeriodType,
+        eq(diningPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
+      .innerJoin(diningStation, eq(diningRestaurant.id, diningStation.restaurantId))
       .leftJoin(diningDishToPeriod, eq(diningPeriod.id, diningDishToPeriod.periodId))
-      .leftJoin(diningDish, eq(diningDish.id, diningDishToPeriod.dishId))
-      .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)))
+      .innerJoin(
+        diningDish,
+        and(
+          eq(diningStation.id, diningDish.stationId),
+          eq(diningDish.id, diningDishToPeriod.dishId),
+        ),
+      )
       .groupBy(
-        // yes, we actually need all of these
         diningRestaurant.id,
         diningPeriod.id,
-        diningPeriod.startTime,
-        diningPeriod.endTime,
-        diningPeriod.updatedAt,
+        diningMealPeriodType.name,
         diningStation.id,
         diningDishToPeriod.periodId,
-      );
+      )
+      .where(and(eq(diningRestaurant.id, query.id), eq(diningPeriod.date, query.date)));
 
     if (rows.length === 0) {
       return null;
@@ -228,23 +267,11 @@ export class DiningService {
     const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
     for (const { period, station, dishes } of rows) {
-      if (period === null) {
-        continue;
-      }
-
       if (!periods.has(period.id)) {
-        periods.set(period.id, {
-          name: period.name,
-          startTime: period.startTime,
-          endTime: period.endTime,
-          stationToDishes: {},
-          updatedAt: period.updatedAt,
-        });
+        periods.set(period.id, period);
       }
 
-      if (station !== null) {
-        getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
-      }
+      getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
     }
 
     return {
@@ -253,6 +280,85 @@ export class DiningService {
       updatedAt: rows[0].restaurant.updatedAt,
     };
   }
-}
 
-export default DiningService;
+  async getSchedules(
+    query: z.infer<typeof schedulesQuerySchema>,
+  ): Promise<z.infer<typeof scheduleSchema>[]> {
+    const conds: (SQL | undefined)[] = [];
+    if (query.restaurantId) {
+      conds.push(eq(diningSchedule.restaurantId, query.restaurantId));
+    }
+
+    const dateRangeConds: SQL[] = [];
+
+    if (query.before) {
+      dateRangeConds.push(lte(diningSchedule.startDate, query.before));
+    }
+    if (query.after) {
+      dateRangeConds.push(gte(diningSchedule.endDate, query.after));
+    }
+    if (!query.after && !query.before && !query.includeHistorical) {
+      dateRangeConds.push(gte(diningSchedule.endDate, sql`CURRENT_DATE`));
+    }
+
+    if (dateRangeConds.length) {
+      conds.push(or(isNull(diningSchedule.endDate), and(...dateRangeConds)));
+    }
+
+    type ScheduleResponse = z.infer<typeof scheduleSchema>;
+
+    const rows = await this.db
+      .select({
+        upstreamId: diningSchedule.upstreamId,
+        restaurantId: diningSchedule.restaurantId,
+        name: diningSchedule.name,
+        type: diningSchedule.type,
+        startDate: diningSchedule.startDate,
+        endDate: diningSchedule.endDate,
+        updatedAt: diningSchedule.updatedAt,
+        mealPeriods: sql<ScheduleResponse["mealPeriods"]>`
+          COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'adobeId', ${diningScheduleMealPeriod.mealPeriodTypeId},
+                'name', ${diningMealPeriodType.name},
+                'position', ${diningMealPeriodType.position},
+                'hours', JSONB_BUILD_OBJECT(
+                  'sunday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.sunOpen}, 'close', ${diningScheduleMealPeriod.sunClose}),
+                  'monday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.monOpen}, 'close', ${diningScheduleMealPeriod.monClose}),
+                  'tuesday',   JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.tueOpen}, 'close', ${diningScheduleMealPeriod.tueClose}),
+                  'wednesday', JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.wedOpen}, 'close', ${diningScheduleMealPeriod.wedClose}),
+                  'thursday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.thuOpen}, 'close', ${diningScheduleMealPeriod.thuClose}),
+                  'friday',    JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.friOpen}, 'close', ${diningScheduleMealPeriod.friClose}),
+                  'saturday',  JSONB_BUILD_OBJECT('open', ${diningScheduleMealPeriod.satOpen}, 'close', ${diningScheduleMealPeriod.satClose})
+                )
+              )
+              ORDER BY ${diningMealPeriodType.position}
+            ) FILTER (
+              WHERE ${diningScheduleMealPeriod.scheduleId} IS NOT NULL
+                AND ${diningMealPeriodType.adobeId} IS NOT NULL
+            ),
+            '[]'::jsonb
+          )
+        `.as("mealPeriods"),
+      })
+      .from(diningSchedule)
+      .leftJoin(
+        diningScheduleMealPeriod,
+        eq(diningSchedule.id, diningScheduleMealPeriod.scheduleId),
+      )
+      .leftJoin(
+        diningMealPeriodType,
+        eq(diningScheduleMealPeriod.mealPeriodTypeId, diningMealPeriodType.adobeId),
+      )
+      .where(and(...conds))
+      .groupBy(diningSchedule.id)
+      .orderBy(
+        sql`CASE ${diningSchedule.type} WHEN 'standard' THEN 0 ELSE 1 END`,
+        sql`${diningSchedule.startDate} ASC NULLS FIRST`,
+        diningSchedule.upstreamId,
+      );
+
+    return rows as ScheduleResponse[];
+  }
+}

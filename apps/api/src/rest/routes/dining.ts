@@ -17,6 +17,8 @@ import {
   restaurantsResponseSchema,
   restaurantTodayQuerySchema,
   restaurantTodayResponseSchema,
+  schedulesQuerySchema,
+  schedulesResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
 
@@ -31,8 +33,7 @@ const eventsRoute = createRoute({
   method: "get",
   path: "/events",
   request: { query: diningEventsQuerySchema },
-  description:
-    "Retrieves all ongoing and upcoming dining events at the current timestamp. Events with null end time are served for 2 weeks after their removal from the underlying data source,",
+  description: "Retrieves dining events matching the given filters",
   responses: {
     200: response200(diningEventsResponseSchema),
     422: response422(),
@@ -120,10 +121,26 @@ const restaurantTodayRoute = createRoute({
   },
 });
 
+const schedulesRoute = createRoute({
+  summary: "Get dining schedules",
+  operationId: "getDiningSchedules",
+  tags: ["Dining"],
+  method: "get",
+  path: "/schedules",
+  request: { query: schedulesQuerySchema },
+  description:
+    "Retrieve dining schedules with their date ranges and weekly hours for each meal period.",
+  responses: {
+    200: response200(schedulesResponseSchema),
+    422: response422(),
+    500: response500(),
+  },
+});
+
 diningRouter.openapi(eventsRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new DiningService(database(c.env.DB.connectionString));
-  const events = await service.getUpcomingEvents(query);
+  const events = await service.getEvents(query);
 
   return c.json({ ok: true, data: diningEventsResponseSchema.parse(events) }, 200);
 });
@@ -179,6 +196,14 @@ diningRouter.openapi(restaurantTodayRoute, async (c) => {
     return c.json({ ok: false, message: "No data for this day" }, 404);
   }
   return c.json({ ok: true, data: restaurantTodayResponseSchema.parse(data) }, 200);
+});
+
+diningRouter.openapi(schedulesRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new DiningService(database(c.env.DB.connectionString));
+
+  const data = await service.getSchedules(query);
+  return c.json({ ok: true, data: schedulesResponseSchema.parse(data) }, 200);
 });
 
 export { diningRouter };

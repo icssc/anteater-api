@@ -21,8 +21,8 @@ import {
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
-// 'majorName;specCode'. If no specialization is taken, simply 'majorName'
-type MajorSpecId = string | `${string};${string}`;
+// 'degreeCode-majorCode;specCode'. If no specialization is taken, simply 'degreeCode-majorCode'
+type MajorSpecId = string | `${string}-${string}` | `${string}-${string};${string}`;
 
 export class Scraper {
   private ap!: AuditParser;
@@ -56,8 +56,16 @@ export class Scraper {
     );
   }
 
-  private asMajorSpecId(majorName: string, specCode: string | undefined): MajorSpecId {
-    return specCode ? `${majorName};${specCode}` : majorName;
+  private asMajorSpecId(
+    degreeCode: string | undefined,
+    majorCode: string,
+    specCode: string | undefined,
+  ): MajorSpecId {
+    if (degreeCode === undefined)
+      throw Error(
+        `No degree code given. asMajorSpecId was probably called with a non-major program id`,
+      );
+    return `${degreeCode ? `${degreeCode}-` : ""}${majorCode}${specCode ? `;${specCode}` : ""}`;
   }
 
   private findDwNameFor(
@@ -168,12 +176,12 @@ export class Scraper {
         console.log(`Requirements block not found ${majorLogInfo}`);
         continue;
       }
-      if (ret.has(this.asMajorSpecId(majorAudit.title, specCode))) {
+      if (ret.has(this.asMajorSpecId(degreeCode, majorCode, specCode))) {
         console.log(`Requirements block already exists for "${majorAudit.title}" ${majorLogInfo}`);
         continue;
       }
 
-      ret.set(this.asMajorSpecId(majorAudit.title, specCode), {
+      ret.set(this.asMajorSpecId(degreeCode, majorCode, specCode), {
         college: audit?.college
           ? await this.ap.parseBlock(
               `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
@@ -183,6 +191,7 @@ export class Scraper {
         major: await this.ap.parseBlock(
           `${collegeCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
+          audit.otherBlock,
         ),
         specCode,
       });
@@ -202,7 +211,7 @@ export class Scraper {
     // as of this commit, this spec is seemingly valid with any major but that's not really true
     if (specCode === "OACSC") {
       // "optional american chemical society certification"
-      const inMap = this.parsedPrograms.get(this.asMajorSpecId("Major in Chemistry", undefined));
+      const inMap = this.parsedPrograms.get(this.asMajorSpecId("BS", "153", undefined));
       return inMap ? [inMap.major] : [];
     }
 
@@ -329,7 +338,7 @@ export class Scraper {
         if (got !== null) {
           specBlock = got.block;
           const majorProgram = this.parsedPrograms.get(
-            this.asMajorSpecId(got.parent.name, undefined),
+            this.asMajorSpecId(got.parent.degreeType, got.parent.code, undefined),
           );
           if (majorProgram) {
             foundMajor = majorProgram.major;
@@ -445,7 +454,7 @@ export class Scraper {
     // cleaner way to address this, but this is such an insanely niche case
     // that it's probably not worth the effort to write a general solution.
 
-    const x = this.parsedPrograms.get(this.asMajorSpecId("Major in Art History", undefined));
+    const x = this.parsedPrograms.get(this.asMajorSpecId("BA", "093", undefined));
     const y = this.parsedSpecializations.get("AHGEO")?.[2];
     const z = this.parsedSpecializations.get("AHPER")?.[2];
     if (x && y && z) {
@@ -454,9 +463,9 @@ export class Scraper {
       x.major.requirements = [...x.major.requirements, ...y.requirements, ...z.requirements];
       this.parsedSpecializations.delete("AHGEO");
       this.parsedSpecializations.delete("AHPER");
-      this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHPER"));
-      this.parsedPrograms.delete(this.asMajorSpecId("Major in Art History", "AHGEO"));
-      this.parsedPrograms.set(this.asMajorSpecId("Major in Art History", undefined), x);
+      this.parsedPrograms.delete(this.asMajorSpecId("BA", "093", "AHPER"));
+      this.parsedPrograms.delete(this.asMajorSpecId("BA", "093", "AHGEO"));
+      this.parsedPrograms.set(this.asMajorSpecId("BA", "094", undefined), x);
     }
 
     this.done = true;
