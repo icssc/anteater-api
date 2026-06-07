@@ -119,7 +119,7 @@ const libraryTrafficHistoryPatternRoute = createRoute({
   path: "/history/pattern",
   request: { query: libraryTrafficHistoryPatternQuerySchema },
   description:
-    "Averages occupancy across recurring time slots to reveal typical patterns (e.g. all Mondays, all 2pm hours). The recurring cycle is set by the `granularity` parameter.",
+    "Averages occupancy across every occurrence of a repeating slot to reveal typical usage patterns. The `granularity` sets both the window size (e.g. 1-hour windows like 2-3pm) and the stride (every Monday, 2pm, Week 3, etc.).",
   responses: {
     200: response200(libraryTrafficHistoryPatternSchema),
     422: response422(),
