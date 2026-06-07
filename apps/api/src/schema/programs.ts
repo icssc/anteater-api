@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { type CourseConstraintTree, WithConstraintCode } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -57,6 +58,35 @@ export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
 });
 
+const courseConstraintSchema = z.object({
+  code: z.enum(WithConstraintCode),
+  operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
+  valueList: z.array(z.string()),
+});
+
+const courseConstraintLeafSchema = courseConstraintSchema.extend({
+  type: z.literal("leaf"),
+});
+
+const courseConstraintTreeSchema: z.ZodType<CourseConstraintTree> = z
+  .union([
+    courseConstraintLeafSchema,
+    z.object({
+      type: z.enum(["AND", "OR"]),
+      children: z.lazy(() => courseConstraintTreeSchema).array(),
+    }),
+  ])
+  .openapi("CourseConstraintTree");
+
+const courseConstraintsSchema = z
+  .record(z.string(), courseConstraintTreeSchema)
+  .optional()
+  .openapi({
+    description:
+      "A map from course ID to the boolean expression tree of constraints for that course. " +
+      "If this field is omitted, or a course is missing from this map, no additional constraints apply.",
+  });
+
 export const programRequirementBaseSchema = z.object({
   label: z.string().openapi({
     description: "Human description of this requirement",
@@ -75,6 +105,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    courseConstraints: courseConstraintsSchema,
   })
   .openapi({
     description:
@@ -99,6 +130,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
+    courseConstraints: courseConstraintsSchema,
   })
   .openapi({
     description:
