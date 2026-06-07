@@ -88,7 +88,7 @@ export class ProgramsService {
                 this.db
                   .select({ best: dwMajorYear.catalogYear })
                   .from(dwMajorYear)
-                  .where(and(query.id ? eq(dwMajorYear.programId, query.id) : undefined))
+                  .where(query.id ? eq(dwMajorYear.programId, query.id) : undefined)
                   .orderBy(
                     this.catalogYearPriorityExpression(
                       dwMajorYear,
