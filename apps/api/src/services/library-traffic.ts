@@ -1,6 +1,7 @@
 import type { database } from "@packages/db";
 import { and, asc, avg, eq, exists, gt, gte, lte, or, sql } from "@packages/db/drizzle";
 import { calendarTerm, libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
+import { toDateString } from "@packages/db/utils";
 import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type {
@@ -48,12 +49,6 @@ function patternLabel(granularity: string, bucket: number): string {
   ][bucket - 1];
 }
 
-// A Drizzle date({ mode: "date" }) value is a JS Date; postgres.js can't bind a Date as a
-// parameter inside a raw sql`` comparison (there's no column type to encode it with), so render
-// it to a YYYY-MM-DD string and cast it in SQL instead. UTC slice is exact since the driver
-// parses date-only values at UTC midnight.
-const toDateString = (d: Date): string => d.toISOString().slice(0, 10);
-
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
@@ -86,8 +81,8 @@ export class LibraryTrafficService {
     // Pacific calendar date of each reading — used for term-based date filters to avoid the
     // UTC-midnight cutoff that would drop the last ~8h of data on the final day of a term.
     const localDate = sql`${localTs}::date`;
-    // Truncate in Pacific time then convert back to UTC so Drizzle receives a true UTC moment
-    // and the response transform (toPacificISO) can reconstruct the correct Pacific offset.
+    // Truncate in Pacific time then convert back to UTC so the returned timestamp is a true UTC
+    // moment aligned to the bucket boundary in Pacific time.
     const bucketStartExpr = {
       hour: sql<Date>`(date_trunc('hour', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
       day: sql<Date>`(date_trunc('day', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
@@ -111,8 +106,6 @@ export class LibraryTrafficService {
         });
       }
       const isFinals = input.period === "finals";
-      // Compare Pacific calendar date so readings on the last day of the term are included
-      // in full — a UTC midnight bound would drop the last ~8h of evening data.
       conds.push(
         gte(
           localDate,
@@ -161,19 +154,16 @@ export class LibraryTrafficService {
     // Convert stored UTC timestamps to Pacific time before extracting hour/day/month buckets
     const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
 
-    // mapWith(Number) decodes these numeric SQL results to JS numbers, so callers (and the
-    // groupBy/orderBy/label code below) get real numbers without re-casting each row.
     const bucketExpr = {
       hour: sql`EXTRACT(hour FROM ${localTs})`.mapWith(Number),
       day: sql`EXTRACT(isodow FROM ${localTs})`.mapWith(Number),
-      // Week of term: calendar-date difference in Pacific time, 1-indexed.
-      // Using Pacific dates (not raw UTC instants) matches the /week endpoint convention and
-      // avoids mis-attributing late-Sunday-Pacific readings to the following week.
-      // Fall starts on Thursday so subtract 4 days so that Monday of the first full week = day 0,
-      // meaning the Thu–Sun stub is "week 0" (matching /week) and Mon of week 1 = day 7.
+      // Same week-of-term logic as getWeek() in week.ts: Pacific calendar dates, 1-indexed,
+      // with Fall's 4-day Thursday offset applied only during instruction so that Monday of the
+      // first full week = week 1 and the Thu–Sun stub = week 0. Finals always start on a fixed
+      // weekday so the offset is not applied there.
       week: sql`floor(
         (${localTs}::date - ${periodStart}
-         - CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN 4 ELSE 0 END)::numeric / 7
+         - CASE WHEN ${calendarTerm.quarter} = 'Fall' AND NOT ${isFinals} THEN 4 ELSE 0 END)::numeric / 7
       )::int + 1`.mapWith(Number),
       month: sql`EXTRACT(month FROM ${localTs})`.mapWith(Number),
     }[input.granularity];
@@ -203,32 +193,16 @@ export class LibraryTrafficService {
       avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
     };
 
-    // Default (non-week) path: EXISTS instead of JOIN avoids summer term overlap double-counting.
-    // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows for
-    // those timestamps and bias the averages.
-    const inTerm = exists(
-      this.db
-        .select({ one: sql`1` })
-        .from(calendarTerm)
-        .where(
-          and(
-            gte(sql`${localTs}::date`, periodStart),
-            lte(sql`${localTs}::date`, periodEnd),
-            input.year ? eq(calendarTerm.year, input.year) : undefined,
-            input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
-          ),
-        ),
-    );
-
-    const nonWeekQuery = this.db
-      .select(selectFields)
-      .from(libraryTrafficHistory)
-      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-      .where(and(...localConds, inTerm))
-      .groupBy(...groupBy)
-      .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
-
-    let rows: Awaited<typeof nonWeekQuery>;
+    let rows: {
+      locationId: number;
+      locationName: string | null;
+      libraryName: string | null;
+      year: string | null;
+      quarter: string | null;
+      bucket: number;
+      avgCount: number;
+      avgPercentage: number;
+    }[];
     if (isWeek) {
       // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
       // Exactly one term matches per row when quarter is provided; without quarter, summer
@@ -258,7 +232,29 @@ export class LibraryTrafficService {
             )
         : base.groupBy(...groupBy).orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr)));
     } else {
-      rows = await nonWeekQuery;
+      // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows
+      // for timestamps that fall in multiple terms and bias the averages. EXISTS avoids that.
+      const inTerm = exists(
+        this.db
+          .select({ one: sql`1` })
+          .from(calendarTerm)
+          .where(
+            and(
+              gte(sql`${localTs}::date`, periodStart),
+              lte(sql`${localTs}::date`, periodEnd),
+              input.year ? eq(calendarTerm.year, input.year) : undefined,
+              input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
+            ),
+          ),
+      );
+
+      rows = await this.db
+        .select(selectFields)
+        .from(libraryTrafficHistory)
+        .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+        .where(and(...localConds, inTerm))
+        .groupBy(...groupBy)
+        .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
     }
 
     return rows.map((row) => ({
