@@ -95,8 +95,7 @@ export class ProgramsService {
                       query.catalogYear,
                     ) as SQL<unknown>,
                   )
-                  .limit(1)
-                  .as("best_year"),
+                  .limit(1),
               )
             : undefined,
         ),
@@ -150,8 +149,7 @@ export class ProgramsService {
                       query.catalogYear,
                     ) as SQL<unknown>,
                   )
-                  .limit(1)
-                  .as("best_year"),
+                  .limit(1),
               )
             : undefined,
         ),
