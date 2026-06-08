@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { isNull } from "@packages/db/drizzle";
 import { diningEvent, diningRestaurant } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import z from "zod";
@@ -160,11 +161,24 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
       });
 
     console.log(`Upserting ${allEvents.length} events...`);
+    // If an event has a start time, we target unique on [restaurantId, start, end] which means
+    // differnt titles for an event happening at the same place and time is considered a rename of the same event
     await db
       .insert(diningEvent)
-      .values(allEvents)
+      .values(allEvents.filter((e) => e.start))
       .onConflictDoUpdate({
-        target: [diningEvent.title, diningEvent.restaurantId, diningEvent.start],
+        target: [diningEvent.restaurantId, diningEvent.start, diningEvent.end],
+        set: conflictUpdateSetAllCols(diningEvent),
+      });
+
+    // If an event has neither a start nor end time (i.e. Amnesty Week), we target a unique title in order to prevent
+    // duplicate events from being added each scrape
+    await db
+      .insert(diningEvent)
+      .values(allEvents.filter((e) => !e.start))
+      .onConflictDoUpdate({
+        target: [diningEvent.restaurantId, diningEvent.title],
+        targetWhere: isNull(diningEvent.start),
         set: conflictUpdateSetAllCols(diningEvent),
       });
   } catch (error) {
