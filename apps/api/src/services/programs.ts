@@ -121,7 +121,7 @@ export class ProgramsService {
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
-      .selectDistinct({
+      .select({
         id: dwSpecialization.id,
         majorId: dwSpecialization.majorId,
         name: dwSpecialization.name,
@@ -144,11 +144,9 @@ export class ProgramsService {
                   .select({ best: dwMajorSpecializationToRequirement.catalogYear })
                   .from(dwMajorSpecializationToRequirement)
                   .where(
-                    and(
-                      query.majorId
-                        ? eq(dwMajorSpecializationToRequirement.majorId, query.majorId)
-                        : undefined,
-                    ),
+                    query.majorId
+                      ? eq(dwMajorSpecializationToRequirement.majorId, query.majorId)
+                      : undefined,
                   )
                   .orderBy(
                     this.catalogYearPriorityExpression(
@@ -200,8 +198,8 @@ export class ProgramsService {
           catalogYear: dwMajorYear.catalogYear,
           requirements: dwMajorRequirement.requirements,
           schoolRequirements: {
-            name: dwMajorYear.collegeRequirements,
-            requirements: dwMajorYear.collegeRequirementsTitle,
+            name: dwMajorYear.collegeRequirementsTitle,
+            requirements: dwMajorYear.collegeRequirements,
           },
         })
         .from(dwMajor)
