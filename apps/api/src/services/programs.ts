@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, inArray, type SQL, sql } from "@packages/db/drizzle";
+import { and, eq, inArray, isNull, type SQL, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   dwDegree,
@@ -121,7 +121,7 @@ export class ProgramsService {
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
-      .select({
+      .selectDistinct({
         id: dwSpecialization.id,
         majorId: dwSpecialization.majorId,
         name: dwSpecialization.name,
@@ -220,7 +220,7 @@ export class ProgramsService {
             eq(dwMajor.id, query.programId),
             query.specializationId
               ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
-              : undefined,
+              : isNull(dwMajorSpecializationToRequirement.specializationId),
           ),
         );
       const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);

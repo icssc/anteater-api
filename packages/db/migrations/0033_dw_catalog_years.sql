@@ -46,7 +46,7 @@ CREATE TABLE "dw_minor_requirement" (
 CREATE TABLE "dw_school_requirement" (
 	"id" varchar NOT NULL,
 	"catalog_year" varchar NOT NULL,
-	"requirements" json NOT NULL
+	"requirements" jsonb NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "dw_specialization" (

@@ -1,5 +1,5 @@
 {
-  "id": "942e154c-1b24-45f9-9c20-b330ff6a8473",
+  "id": "4d4a4b66-410a-426b-b91e-fa18126d2fee",
   "prevId": "4fc5b237-e928-4233-afb7-0a5dc4302e71",
   "version": "7",
   "dialect": "postgresql",
@@ -2054,7 +2054,7 @@
         },
         "requirements": {
           "name": "requirements",
-          "type": "json",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         }

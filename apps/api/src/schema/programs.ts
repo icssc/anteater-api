@@ -5,23 +5,34 @@ const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
 });
 
-const requirementsCatalogYearInputSchema = z.string().optional().openapi({
-  description:
-    "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is from an unspecified year",
-  example: "20242025",
-});
-
-const majorCatalogYearInputSchema = requirementsCatalogYearInputSchema.openapi({
-  description:
-    "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is aggregated over all known years",
-});
+const catalogYearInputSchema = z
+  .string()
+  .length(8)
+  .refine(
+    (s) => {
+      const [l, r] = [s.slice(undefined, 4), s.slice(4)];
+      return Number(l) === Number(r) - 1;
+    },
+    {
+      error: "catalogYear takes form of two contiguous years, e.g. 20242025",
+    },
+  )
+  .optional()
+  .openapi({
+    description:
+      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is from an unspecified year",
+    example: "20242025",
+  });
 
 export const majorsQuerySchema = z.object({
   id: z.string().optional().openapi({
     description: "The ID of a single major to request, if provided",
     example: "BA-163",
   }),
-  catalogYear: majorCatalogYearInputSchema,
+  catalogYear: catalogYearInputSchema.openapi({
+    description:
+      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is aggregated over all known years",
+  }),
 });
 
 export const minorsQuerySchema = z.object({
@@ -37,7 +48,7 @@ export const specializationsQuerySchema = z.object({
     description: "Only fetch specializations associated with the major with this ID, if provided",
     example: "BS-201",
   }),
-  catalogYear: majorCatalogYearInputSchema.openapi({
+  catalogYear: catalogYearInputSchema.openapi({
     description:
       "If specified, return specializations valid in the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, return all specializations over all years",
   }),
@@ -53,7 +64,7 @@ export const majorRequirementsQuerySchema = z.object({
       "if provided, fetch major requirements given this specialization; providing no specialization when one is required has unspecified behavior",
     example: "BS-201A",
   }),
-  catalogYear: requirementsCatalogYearInputSchema,
+  catalogYear: catalogYearInputSchema,
 });
 
 export const minorRequirementsQuerySchema = z.object({
@@ -61,7 +72,7 @@ export const minorRequirementsQuerySchema = z.object({
     description: "A minor ID to query requirements for",
     example: "459",
   }),
-  catalogYear: requirementsCatalogYearInputSchema,
+  catalogYear: catalogYearInputSchema,
 });
 
 export const specializationRequirementsQuerySchema = z.object({
@@ -69,14 +80,14 @@ export const specializationRequirementsQuerySchema = z.object({
     description: "A specialization ID to query requirements for",
     example: "BS-201E",
   }),
-  catalogYear: requirementsCatalogYearInputSchema,
+  catalogYear: catalogYearInputSchema,
 });
 
 export const UgradRequirementsBlockIds = ["UC", "GE", "CHC4", "CHC2"] as const;
 
 export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
-  catalogYear: requirementsCatalogYearInputSchema,
+  catalogYear: catalogYearInputSchema,
 });
 
 const catalogYearOutputSchema = z.string().openapi({
