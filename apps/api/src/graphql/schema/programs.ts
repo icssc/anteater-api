@@ -40,6 +40,7 @@ type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(ma
     requirementType: String!
     courseCount: Int!
     courses: [String!]!
+    courseConstraints: JSON
 }
 
 type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -48,6 +49,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
     requirementType: String!
     unitCount: Int!
     courses: [String!]!
+    courseConstraints: JSON
 }
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
