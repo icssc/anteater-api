@@ -27,6 +27,24 @@ type EnrollmentHistory @cacheControl(maxAge: 300) {
     statusHistory: [String!]!
 }
 
+type EnrollmentHistoryGranularSnapshot @cacheControl(maxAge: 300) {
+    timestamp: String!
+    maxCapacity: Int!
+    totalEnrolled: Int
+    waitlist: Int
+    waitlistCap: Int
+    requested: Int
+    newOnlyReserved: Int
+    status: String!
+}
+
+type EnrollmentHistoryGranular @cacheControl(maxAge: 300) {
+    year: String!
+    quarter: Term!
+    sectionCode: String!
+    snapshots: [EnrollmentHistoryGranularSnapshot!]!
+}
+
 input EnrollmentHistoryQuery {
     year: String
     quarter: Term
@@ -37,7 +55,20 @@ input EnrollmentHistoryQuery {
     sectionType: SectionType
 }
 
+input EnrollmentHistoryGranularQuery {
+    year: String
+    quarter: Term
+    instructorName: String
+    department: String
+    courseNumber: String
+    sectionCode: Int
+    sectionType: SectionType
+    from: String
+    to: String
+}
+
 extend type Query {
     enrollmentHistory(query: EnrollmentHistoryQuery): [EnrollmentHistory!]!
+    enrollmentHistoryGranular(query: EnrollmentHistoryGranularQuery): [EnrollmentHistoryGranular!]!
 }
 `;

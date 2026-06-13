@@ -512,6 +512,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../stdlib
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20241230.0)(postgres@3.4.8)
