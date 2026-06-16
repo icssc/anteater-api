@@ -111,14 +111,17 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
 input MajorRequirementsQuery {
     programId: String!
     specializationId: String
+    catalogYear: String
 }
 
 input ProgramRequirementsQuery {
     programId: String!
+    catalogYear: String
 }
 
 input MajorsQuery {
-    id: String!
+    id: String
+    catalogYear: String
 }
 
 input MinorsQuery {
@@ -131,6 +134,7 @@ input SpecializationsQuery {
 
 input UgradRequrementsQuery {
     id: UgradRequirementsBlockId!
+    catalogYear: String
 }
 
 extend type Query {
