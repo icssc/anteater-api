@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, eq, inArray, isNull, type SQL, sql } from "@packages/db/drizzle";
+import { and, eq, inArray, isNull, max, type SQL, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
   dwDegree,
@@ -104,7 +104,10 @@ export class ProgramsService {
                   )
                   .limit(1),
               )
-            : undefined,
+            : eq(
+                dwMajorYear.catalogYear,
+                this.db.select({ best: max(dwMajorYear.catalogYear) }).from(dwMajorYear),
+              ),
         ),
       );
   }

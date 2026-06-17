@@ -31,7 +31,7 @@ export const majorsQuerySchema = z.object({
   }),
   catalogYear: catalogYearInputSchema.openapi({
     description:
-      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is aggregated over all known years",
+      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is from the latest known catalog year",
   }),
 });
 
