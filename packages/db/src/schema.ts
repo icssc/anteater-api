@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -1109,6 +1109,7 @@ export const diningDishToPeriod = pgTable(
 export const diningEvent = pgTable(
   "dining_event",
   {
+    id: uuid().primaryKey().defaultRandom(),
     title: varchar("title").notNull(),
     image: varchar("image"),
     restaurantId: varchar("restaurant_id")
@@ -1121,14 +1122,11 @@ export const diningEvent = pgTable(
     end: timestamp("end"),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
-  (table) => {
-    return {
-      pk: primaryKey({
-        name: "dining_event_pk",
-        columns: [table.title, table.restaurantId, table.start],
-      }),
-    };
-  },
+  (table) => [
+    // Drizzle does not support `nullsNotDistinct` on a `uniqueIndex`, but `uniqueIndex` is required to implement a partial index. The comment below is implemented in migrations/0034_dining_event_null_start.sql
+    // uniqueIndex().on(table.restaurantId, table.start, table.end).nullsNotDistinct().where(isNotNull(table.start)),
+    uniqueIndex().on(table.restaurantId, table.title).where(isNull(table.start)),
+  ],
 );
 
 export const diningMealPeriodType = pgTable("dining_meal_period_type", {
