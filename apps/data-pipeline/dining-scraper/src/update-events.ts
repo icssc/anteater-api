@@ -162,7 +162,7 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
 
     console.log(`Upserting ${allEvents.length} events...`);
     // If an event has a start time, we target unique on [restaurantId, start, end] which means
-    // differnt titles for an event happening at the same place and time is considered a rename of the same event
+    // different titles for an event happening at the same place and time is considered a rename of the same event
     await db
       .insert(diningEvent)
       .values(allEvents.filter((e) => e.start))

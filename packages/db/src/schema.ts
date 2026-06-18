@@ -1050,7 +1050,7 @@ export const diningEvent = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.restaurantId, table.start, table.end),
+    unique().on(table.restaurantId, table.start, table.end).nullsNotDistinct(),
     uniqueIndex().on(table.restaurantId, table.title).where(isNull(table.start)),
   ],
 );
