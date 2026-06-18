@@ -1123,7 +1123,8 @@ export const diningEvent = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    unique().on(table.restaurantId, table.start, table.end).nullsNotDistinct(),
+    // Drizzle does not support `nullsNotDistinct` on a `uniqueIndex`, but `uniqueIndex` is required to implement a partial index. The comment below is implemented in migrations/0034_dining_event_null_start.sql
+    // uniqueIndex().on(table.restaurantId, table.start, table.end).nullsNotDistinct().where(isNotNull(table.start)),
     uniqueIndex().on(table.restaurantId, table.title).where(isNull(table.start)),
   ],
 );

@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { isNull } from "@packages/db/drizzle";
+import { isNotNull, isNull } from "@packages/db/drizzle";
 import { diningEvent, diningRestaurant } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import z from "zod";
@@ -168,6 +168,7 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
       .values(allEvents.filter((e) => e.start))
       .onConflictDoUpdate({
         target: [diningEvent.restaurantId, diningEvent.start, diningEvent.end],
+        targetWhere: isNotNull(diningEvent.start),
         set: conflictUpdateSetAllCols(diningEvent),
       });
 
