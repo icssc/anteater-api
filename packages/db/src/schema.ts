@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, eq, getTableColumns, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -18,6 +18,7 @@ import {
   text,
   time,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -104,16 +105,75 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
 };
 
 /**
- * (school, major) pair, because school requirements can vary by major
+ * Information nessessary to find complete major requirements
+ * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
+ * @param degreeCode a degree code, e.g. "BS"
+ * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
+ * @param majorCode a major code
+ * @param specCode a specialization code
+ */
+export type ProgramCodes = {
+  schoolCode: string;
+  degreeCode: string;
+  collegeCode?: string;
+  majorCode: string;
+  specCode?: string;
+};
+
+/**
+ * college requirements can vary by major and major requirements can vary by specialization
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
-export type MajorProgram = [DegreeWorksProgram | undefined, DegreeWorksProgram];
+export type MajorProgram = {
+  college?: DegreeWorksProgram;
+  major: DegreeWorksProgram;
+  specCode?: string;
+};
+
+/**
+ * constraint codes we've found in withArray constraints
+ * We use a runtime value so zod schema can consume it
+ */
+export const WithConstraintCode = [
+  "DWCREDIT",
+  "DWCREDITS",
+  "DWTERM",
+  "DWLOCATION",
+  "DWTITLE",
+  "DWGRADETYPE",
+  "DWPASSFAIL",
+] as const;
+
+export type WithConstraintCode = (typeof WithConstraintCode)[number];
+
+/**
+ * Boolean expression tree for per-course constraints (withArray clauses)
+ * DegreeWorks serves these in a flat shape for display
+ * We parse it into a statement tree for evaluation and downstream use.
+ */
+export type CourseConstraint = {
+  code: WithConstraintCode;
+  operator: "<" | "<=" | "=" | ">" | ">=" | "<>";
+  valueList: string[];
+};
+
+export type CourseConstraintLeaf = CourseConstraint & {
+  type: "leaf";
+};
+
+export type CourseConstraintNode = {
+  type: "AND" | "OR";
+  children: CourseConstraintTree[];
+};
+
+export type CourseConstraintTree = CourseConstraintLeaf | CourseConstraintNode;
 
 export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
   qualifiers?: DegreeWorksRequirementQualifier[];
+  courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
 export type DegreeWorksUnitRequirement = {
@@ -121,6 +181,7 @@ export type DegreeWorksUnitRequirement = {
   unitCount: number;
   courses: string[];
   qualifiers?: DegreeWorksRequirementQualifier[];
+  courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
 export type DegreeWorksGroupRequirement = {
@@ -211,6 +272,16 @@ export type CourseLevel = (typeof courseLevels)[number];
 export const divisions = ["Undergraduate", "Graduate"] as const;
 export const division = pgEnum("division", divisions);
 export type Division = (typeof divisions)[number];
+
+export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
+
+export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
+export const textbookFormat = pgEnum("textbook_format", textbookFormats);
+export type TextbookFormat = (typeof textbookFormats)[number];
+
+export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
+export const materialRequirement = pgEnum("material_requirement", materialRequirements);
+export type MaterialRequirement = (typeof materialRequirements)[number];
 
 // WebSoc enums
 
@@ -574,6 +645,8 @@ export const course = pgTable(
     prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
     prerequisiteText: text("prerequisite_text").notNull(),
     repeatability: varchar("repeatability").notNull(),
+    repeatabilityTimes: integer("repeatability_times"),
+    repeatabilityType: varchar("repeatability_type"),
     gradingOption: varchar("grading_option").notNull(),
     concurrent: varchar("concurrent").notNull(),
     sameAs: varchar("same_as").notNull(),
@@ -665,64 +738,118 @@ export const instructorToWebsocInstructor = pgTable(
 
 // DegreeWorks data tables
 
-export const degree = pgTable("degree", {
+export const dwDegree = pgTable("dw_degree", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
   division: division("division").notNull(),
 });
 
-export const schoolRequirement = pgTable("school_requirement", {
-  id: varchar("id").primaryKey(),
-  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
-  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-});
+export const dwSchoolRequirement = pgTable(
+  "dw_school_requirement",
+  {
+    id: varchar("id").notNull(),
+    catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.id, table.catalogYear)],
+);
 
-export const collegeRequirement = pgTable("college_requirement", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name").notNull(),
-  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
-  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
-  requirementsHash: bigint("requirements_hash", { mode: "bigint" })
-    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`)
-    .unique(),
-});
-
-export const major = pgTable(
-  "major",
+export const dwMajor = pgTable(
+  "dw_major",
   {
     id: varchar("id").primaryKey(),
     degreeId: varchar("degree_id")
-      .references(() => degree.id)
+      .references(() => dwDegree.id)
       .notNull(),
     code: varchar("code").notNull(),
     name: varchar("name").notNull(),
-    specializationRequired: boolean("specialization_required").notNull(),
-    collegeRequirement: uuid("college_requirement").references(() => collegeRequirement.id),
-    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
-  (table) => [index().on(table.degreeId), index().on(table.collegeRequirement)],
+  (table) => [index().on(table.degreeId)],
 );
 
-export const minor = pgTable("minor", {
-  id: varchar("id").primaryKey(),
-  name: varchar("name").notNull(),
-  header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
-  requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+export const dwMajorSpecializationToRequirement = pgTable(
+  "dw_major_specialization_to_requirement",
+  {
+    majorId: varchar("major_id")
+      .notNull()
+      .references(() => dwMajor.id),
+    specializationId: varchar("specialization_id").references(() => dwSpecialization.id),
+    catalogYear: varchar("catalog_year").notNull(),
+    requirementId: bigint("requirement_id", { mode: "bigint" })
+      .notNull()
+      .references(() => dwMajorRequirement.id),
+  },
+  (table) => [
+    unique().on(table.majorId, table.specializationId, table.catalogYear).nullsNotDistinct(),
+    index().on(table.catalogYear),
+  ],
+);
+
+export const dwMajorRequirement = pgTable("dw_major_requirement", {
+  id: bigint("id", { mode: "bigint" })
+    .primaryKey()
+    .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+  header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
+  requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
-export const specialization = pgTable(
-  "specialization",
+export const dwMajorYear = pgTable(
+  "dw_major_year",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwMajor.id, { onDelete: "cascade" }),
+    catalogYear: varchar("catalog_year").notNull(),
+    specializationRequired: boolean("specialization_required").notNull(),
+    collegeRequirementsTitle: varchar("college_requirements_title"),
+    collegeHeader: jsonb("college_header").$type<DegreeWorksRequirementQualifier[]>(),
+    collegeRequirements: jsonb("college_requirements").$type<DegreeWorksRequirement[]>(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
+);
+
+export const dwMinor = pgTable("dw_minor", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+});
+
+export const dwMinorRequirement = pgTable(
+  "dw_minor_requirement",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwMinor.id, { onDelete: "cascade" }),
+    catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
+);
+
+export const dwSpecialization = pgTable(
+  "dw_specialization",
   {
     id: varchar("id").primaryKey(),
     majorId: varchar("major_id")
-      .references(() => major.id)
+      .references(() => dwMajor.id)
       .notNull(),
     name: varchar("name").notNull(),
-    header: json("header").$type<DegreeWorksRequirementQualifier[]>(),
-    requirements: json("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [index().on(table.majorId)],
+);
+
+export const dwSpecializationRequirement = pgTable(
+  "dw_specialization_requirement",
+  {
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => dwSpecialization.id),
+    catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
+    requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
+  },
+  (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
 );
 
 // Misc. tables
@@ -847,6 +974,25 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
+export const courseMaterial = pgTable(
+  "course_material",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sectionId: uuid("section_id")
+      .references(() => websocSection.id)
+      .notNull(),
+    isbn: varchar("isbn"),
+    author: varchar("author"),
+    title: varchar("title").notNull(),
+    edition: varchar("edition"),
+    format: textbookFormat("format").notNull(),
+    requirement: materialRequirement("requirement"),
+    mmsId: varchar("mms_id"),
+    link: text("link"),
+  },
+  (table) => [index().on(table.sectionId)],
+);
+
 // dining stuff
 export const diningRestaurant = pgTable("dining_restaurant", {
   id: varchar("id").primaryKey(),
@@ -857,7 +1003,9 @@ export const diningPeriod = pgTable(
   "dining_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    adobeId: integer("adobe_id").notNull(),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
     date: date("date").notNull(),
     restaurantId: varchar("restaurant_id")
       .notNull()
@@ -866,11 +1014,10 @@ export const diningPeriod = pgTable(
       }),
     startTime: time("start_time"),
     endTime: time("end_time"),
-    name: varchar("name").notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex().on(table.adobeId, table.date, table.restaurantId),
+    uniqueIndex().on(table.mealPeriodTypeId, table.date, table.restaurantId),
     index().on(table.date),
     index().on(table.restaurantId),
   ],
@@ -983,6 +1130,7 @@ export const diningDishToPeriod = pgTable(
 export const diningEvent = pgTable(
   "dining_event",
   {
+    id: uuid().primaryKey().defaultRandom(),
     title: varchar("title").notNull(),
     image: varchar("image"),
     restaurantId: varchar("restaurant_id")
@@ -995,14 +1143,75 @@ export const diningEvent = pgTable(
     end: timestamp("end"),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
-  (table) => {
-    return {
-      pk: primaryKey({
-        name: "dining_event_pk",
-        columns: [table.title, table.restaurantId, table.start],
+  (table) => [
+    // Drizzle does not support `nullsNotDistinct` on a `uniqueIndex`, but `uniqueIndex` is required to implement a partial index. The comment below is implemented in migrations/0034_dining_event_null_start.sql
+    // uniqueIndex().on(table.restaurantId, table.start, table.end).nullsNotDistinct().where(isNotNull(table.start)),
+    uniqueIndex().on(table.restaurantId, table.title).where(isNull(table.start)),
+  ],
+);
+
+export const diningMealPeriodType = pgTable("dining_meal_period_type", {
+  adobeId: integer("adobe_id").primaryKey(),
+  name: varchar("name").notNull(),
+  position: integer("position").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
+export const diningSchedule = pgTable(
+  "dining_schedule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    restaurantId: varchar("restaurant_id")
+      .notNull()
+      .references(() => diningRestaurant.id, {
+        onDelete: "cascade",
       }),
-    };
+    upstreamId: varchar("upstream_id").notNull(),
+    name: varchar("name").notNull(),
+    type: varchar("type").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   },
+  (table) => [
+    unique().on(table.restaurantId, table.name, table.startDate, table.endDate).nullsNotDistinct(), // forbid multiple Standard schedules with null start/end dates
+    index().on(table.restaurantId),
+  ],
+);
+
+export const diningScheduleMealPeriod = pgTable(
+  "dining_schedule_meal_period",
+  {
+    scheduleId: uuid("schedule_id")
+      .notNull()
+      .references(() => diningSchedule.id, {
+        onDelete: "cascade",
+      }),
+    mealPeriodTypeId: integer("meal_period_type_id")
+      .notNull()
+      .references(() => diningMealPeriodType.adobeId),
+    sunOpen: time("sun_open"),
+    sunClose: time("sun_close"),
+    monOpen: time("mon_open"),
+    monClose: time("mon_close"),
+    tueOpen: time("tue_open"),
+    tueClose: time("tue_close"),
+    wedOpen: time("wed_open"),
+    wedClose: time("wed_close"),
+    thuOpen: time("thu_open"),
+    thuClose: time("thu_close"),
+    friOpen: time("fri_open"),
+    friClose: time("fri_close"),
+    satOpen: time("sat_open"),
+    satClose: time("sat_close"),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "dining_schedule_meal_period_pk",
+      columns: [table.scheduleId, table.mealPeriodTypeId],
+    }),
+  ],
 );
 
 // Materialized views

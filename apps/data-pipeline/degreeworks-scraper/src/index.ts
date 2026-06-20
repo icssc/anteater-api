@@ -1,14 +1,17 @@
-import * as assert from "node:assert";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import type { Division } from "@packages/db/schema";
 import {
-  collegeRequirement,
-  degree,
-  major,
-  minor,
-  schoolRequirement,
-  specialization,
+  type Division,
+  dwDegree,
+  dwMajor,
+  dwMajorRequirement,
+  dwMajorSpecializationToRequirement,
+  dwMajorYear,
+  dwMinor,
+  dwMinorRequirement,
+  dwSchoolRequirement,
+  dwSpecialization,
+  dwSpecializationRequirement,
 } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { Scraper } from "$components";
@@ -23,6 +26,7 @@ async function main() {
   });
   await scraper.run();
   const {
+    catalogYear,
     degreesAwarded,
     parsedUgradRequirements,
     parsedSpecializations,
@@ -43,46 +47,28 @@ async function main() {
     }))
     .toArray();
 
-  const collegeBlocks = [] as (typeof collegeRequirement.$inferInsert)[];
-  const majorData = parsedPrograms
+  const majorSpecData = parsedPrograms
     .values()
-    .map(([college, { name, degreeType, code, requirements, header, specializationRequired }]) => {
-      let collegeBlockIndex: number | undefined;
-      if (college?.requirements) {
-        const wouldInsert = { name: college.name, requirements: college.requirements };
-        const existing = collegeBlocks.findIndex((schoolExisting) => {
-          try {
-            assert.deepStrictEqual(schoolExisting, wouldInsert);
-            return true;
-          } catch {
-            return false;
-          }
-        });
-
-        if (existing === -1) {
-          collegeBlocks.push(wouldInsert);
-          collegeBlockIndex = collegeBlocks.length - 1;
-        } else {
-          collegeBlockIndex = existing;
-        }
-      }
-
-      return {
-        id: `${degreeType}-${code}`,
-        degreeId: degreeType ?? "",
-        code,
-        name,
-        specializationRequired,
-        header,
-        requirements,
-        ...(collegeBlockIndex !== undefined ? { collegeBlockIndex } : {}),
-      };
-    })
-    .toArray();
-
-  const minorData = parsedMinorPrograms
-    .values()
-    .map(({ name, code: id, requirements }) => ({ id, name, requirements }))
+    .map(
+      ({
+        college,
+        major: { name, degreeType, code, requirements, header, specializationRequired },
+        specCode,
+      }) => {
+        return {
+          majorId: `${degreeType}-${code}`,
+          degreeId: degreeType ?? "",
+          code,
+          ...(specCode !== undefined ? { specializationId: `${degreeType}-${specCode}` } : {}),
+          name,
+          specializationRequired,
+          header,
+          requirements,
+          college,
+          requirementId: undefined as bigint | undefined,
+        };
+      },
+    )
     .toArray();
 
   const specData = parsedSpecializations
@@ -94,91 +80,185 @@ async function main() {
       requirements,
     }))
     .toArray();
+
   await db.transaction(async (tx) => {
+    for (const obj of majorSpecData) {
+      const requirementId = await tx
+        .insert(dwMajorRequirement)
+        .values(obj)
+        .onConflictDoUpdate({
+          target: dwMajorRequirement.id,
+          set: conflictUpdateSetAllCols(dwMajorRequirement),
+        })
+        .returning({ id: dwMajorRequirement.id })
+        .then(([r]) => r.id);
+
+      obj.requirementId = requirementId;
+    }
+
     if (ucRequirementData && geRequirementData) {
       await tx
-        .insert(schoolRequirement)
+        .insert(dwSchoolRequirement)
         .values([
           {
             id: "UC",
+            catalogYear,
             requirements: ucRequirementData,
           },
           {
             id: "GE",
+            catalogYear,
             requirements: geRequirementData,
           },
         ])
         .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
+          set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
 
     if (honorsFourRequirementData) {
       await tx
-        .insert(schoolRequirement)
+        .insert(dwSchoolRequirement)
         .values([
           {
             id: "CHC4",
+            catalogYear,
             requirements: honorsFourRequirementData,
           },
         ])
         .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
+          set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
 
     if (honorsTwoRequirementData) {
       await tx
-        .insert(schoolRequirement)
+        .insert(dwSchoolRequirement)
         .values([
           {
             id: "CHC2",
+            catalogYear,
             requirements: honorsTwoRequirementData,
           },
         ])
         .onConflictDoUpdate({
-          target: schoolRequirement.id,
-          set: conflictUpdateSetAllCols(schoolRequirement),
+          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
+          set: conflictUpdateSetAllCols(dwSchoolRequirement),
         });
     }
 
     await tx
-      .insert(degree)
+      .insert(dwDegree)
       .values(degreeData)
-      .onConflictDoUpdate({ target: degree.id, set: conflictUpdateSetAllCols(degree) });
+      .onConflictDoUpdate({ target: dwDegree.id, set: conflictUpdateSetAllCols(dwDegree) });
 
-    // we need to determine the db ID of school blocks and update major objects accordingly first
-    const collegeBlockIds = await tx
-      .insert(collegeRequirement)
-      .values(collegeBlocks)
+    await tx
+      .insert(dwMajor)
+      .values(
+        majorSpecData
+          // skip additional (major, spec) entries; add exactly once for each major
+          .filter((m) => m.specializationId === undefined)
+          .map((m) => ({
+            id: m.majorId,
+            name: m.name,
+            code: m.code,
+            degreeId: m.degreeId,
+          })),
+      )
+      .onConflictDoUpdate({ target: dwMajor.id, set: conflictUpdateSetAllCols(dwMajor) });
+
+    await tx
+      .insert(dwMajorYear)
+      .values(
+        majorSpecData
+          .filter((m) => m.specializationId === undefined)
+          .map((m) => ({
+            programId: m.majorId,
+            catalogYear,
+            specializationRequired: m.specializationRequired,
+            collegeRequirementsTitle: m.college?.name,
+            collegeRequirements: m.college?.requirements,
+          })),
+      )
       .onConflictDoUpdate({
-        target: collegeRequirement.requirementsHash,
-        set: conflictUpdateSetAllCols(collegeRequirement),
-      })
-      .returning({ id: collegeRequirement.id })
-      .then((rows) => rows.map(({ id }) => id));
-
-    for (const majorObj of majorData) {
-      if (majorObj.collegeBlockIndex !== undefined) {
-        (majorObj as typeof major.$inferInsert).collegeRequirement =
-          collegeBlockIds[majorObj.collegeBlockIndex];
-      }
-    }
+        target: [dwMajorYear.programId, dwMajorYear.catalogYear],
+        set: conflictUpdateSetAllCols(dwMajorYear),
+      });
 
     await tx
-      .insert(major)
-      .values(majorData)
-      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(major) });
-    await tx
-      .insert(minor)
-      .values(minorData)
-      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(minor) });
-    await tx
-      .insert(specialization)
+      .insert(dwSpecialization)
       .values(specData)
-      .onConflictDoUpdate({ target: major.id, set: conflictUpdateSetAllCols(specialization) });
+      .onConflictDoUpdate({
+        target: dwSpecialization.id,
+        set: conflictUpdateSetAllCols(dwSpecialization),
+      });
+
+    await tx
+      .insert(dwSpecializationRequirement)
+      .values(
+        specData.map((s) => ({
+          programId: s.id,
+          catalogYear,
+          requirements: s.requirements,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [dwSpecializationRequirement.programId, dwSpecializationRequirement.catalogYear],
+        set: conflictUpdateSetAllCols(dwSpecializationRequirement),
+      });
+
+    await tx
+      .insert(dwMajorSpecializationToRequirement)
+      .values(
+        majorSpecData.map((m) => {
+          return {
+            majorId: m.majorId,
+            specializationId: m.specializationId,
+            catalogYear,
+            requirementId: m.requirementId,
+          } as typeof dwMajorSpecializationToRequirement.$inferInsert;
+        }),
+      )
+      .onConflictDoUpdate({
+        target: [
+          dwMajorSpecializationToRequirement.majorId,
+          dwMajorSpecializationToRequirement.specializationId,
+          dwMajorSpecializationToRequirement.catalogYear,
+        ],
+        set: conflictUpdateSetAllCols(dwMajorSpecializationToRequirement),
+      });
+
+    await tx
+      .insert(dwMinor)
+      .values(
+        parsedMinorPrograms
+          .values()
+          .map((m) => ({
+            id: m.code,
+            name: m.name,
+          }))
+          .toArray(),
+      )
+      .onConflictDoUpdate({ target: dwMinor.id, set: conflictUpdateSetAllCols(dwMinor) });
+
+    await tx
+      .insert(dwMinorRequirement)
+      .values(
+        parsedMinorPrograms
+          .values()
+          .map((m) => ({
+            programId: m.code,
+            catalogYear,
+            requirements: m.requirements,
+          }))
+          .toArray(),
+      )
+      .onConflictDoUpdate({
+        target: [dwMinorRequirement.programId, dwMinorRequirement.catalogYear],
+        set: conflictUpdateSetAllCols(dwMinorRequirement),
+      });
   });
   exit(0);
 }

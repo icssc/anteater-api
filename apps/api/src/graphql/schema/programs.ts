@@ -40,6 +40,7 @@ type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(ma
     requirementType: String!
     courseCount: Int!
     courses: [String!]!
+    courseConstraints: JSON
 }
 
 type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -48,6 +49,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
     requirementType: String!
     unitCount: Int!
     courses: [String!]!
+    courseConstraints: JSON
 }
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -106,12 +108,20 @@ type UgradRequirements @cacheControl(maxAge: 86400) {
     requirements: [ProgramRequirement!]!,
 }
 
+input MajorRequirementsQuery {
+    programId: String!
+    specializationId: String
+    catalogYear: String
+}
+
 input ProgramRequirementsQuery {
     programId: String!
+    catalogYear: String
 }
 
 input MajorsQuery {
-    id: String!
+    id: String
+    catalogYear: String
 }
 
 input MinorsQuery {
@@ -124,13 +134,14 @@ input SpecializationsQuery {
 
 input UgradRequrementsQuery {
     id: UgradRequirementsBlockId!
+    catalogYear: String
 }
 
 extend type Query {
     majors(query: MajorsQuery): [MajorPreview!]!
     minors(query: MinorsQuery): [MinorPreview!]!
     specializations(query: SpecializationsQuery): [SpecializationPreview!]!
-    major(query: ProgramRequirementsQuery!): Major!
+    major(query: MajorRequirementsQuery!): Major!
     minor(query: ProgramRequirementsQuery!): Minor!
     specialization(query: ProgramRequirementsQuery!): Specialization!
     ugradRequirements(query: UgradRequrementsQuery!): UgradRequirements!

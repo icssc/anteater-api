@@ -1,14 +1,18 @@
 import type { database } from "@packages/db";
-import { eq, sql } from "@packages/db/drizzle";
+import { and, eq, inArray, isNull, max, type SQL, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
-  collegeRequirement,
-  degree,
-  major,
-  minor,
+  dwDegree,
+  dwMajor,
+  dwMajorRequirement,
+  dwMajorSpecializationToRequirement,
+  dwMajorYear,
+  dwMinor,
+  dwMinorRequirement,
+  dwSchoolRequirement,
+  dwSpecialization,
+  dwSpecializationRequirement,
   sampleProgramVariation,
-  schoolRequirement,
-  specialization,
 } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
@@ -26,56 +30,138 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
+  // for any table with catalogYear column, build a score as follows:
+  // - if a catalog year not specified, do whatever postgres feels like
+  // - if a catalog year is specified, order the returned years as follows:
+  //   - prefer an exact match best
+  //   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
+  //     (in opposite directions), prefer the more recent one
+  private catalogYearPriorityExpression(
+    table:
+      | typeof dwSchoolRequirement
+      | typeof dwMajorYear
+      | typeof dwMajorSpecializationToRequirement
+      | typeof dwMinorRequirement
+      | typeof dwSpecializationRequirement,
+    catalogYear: string | undefined,
+  ) {
+    return catalogYear !== undefined
+      ? sql`CASE
+  WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
+  WHEN ${table.catalogYear} = ${catalogYear} THEN 0
+  WHEN ${table.catalogYear} < ${catalogYear} THEN SUBSTRING(${catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real + 0.5
+  END`
+      : undefined;
+  }
+
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
-    const majorSpecialization = this.db.$with("major_specialization").as(
-      this.db
-        .select({
-          id: major.id,
-          name: major.name,
-          specializations: sql`ARRAY_REMOVE(ARRAY_AGG(${specialization.id}), NULL)`.as(
+    return await this.db
+      .select({
+        id: dwMajor.id,
+        name: dwMajor.name,
+        catalogYear: dwMajorYear.catalogYear,
+        specializationRequired: dwMajorYear.specializationRequired,
+        specializations:
+          sql`ARRAY_REMOVE(ARRAY_AGG(${dwMajorSpecializationToRequirement.specializationId}), NULL)`.as(
             "specializations",
           ),
-        })
-        .from(major)
-        .leftJoin(specialization, eq(major.id, specialization.majorId))
-        .groupBy(major.id),
-    );
-
-    return this.db
-      .with(majorSpecialization)
-      .select({
-        id: majorSpecialization.id,
-        name: majorSpecialization.name,
-        specializationRequired: major.specializationRequired,
-        specializations: majorSpecialization.specializations,
-        type: degree.name,
-        division: degree.division,
+        type: dwDegree.name,
+        division: dwDegree.division,
       })
-      .from(majorSpecialization)
-      .where(query.id ? eq(majorSpecialization.id, query.id) : undefined)
-      .innerJoin(major, eq(majorSpecialization.id, major.id))
-      .innerJoin(degree, eq(major.degreeId, degree.id));
+      .from(dwMajor)
+      .innerJoin(dwDegree, eq(dwMajor.degreeId, dwDegree.id))
+      .innerJoin(dwMajorYear, eq(dwMajor.id, dwMajorYear.programId))
+      .innerJoin(
+        dwMajorSpecializationToRequirement,
+        and(
+          eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+          eq(dwMajorYear.catalogYear, dwMajorSpecializationToRequirement.catalogYear),
+        ),
+      )
+      .groupBy(
+        dwMajor.id,
+        dwMajor.name,
+        dwMajorYear.catalogYear,
+        dwMajorYear.specializationRequired,
+        dwDegree.name,
+        dwDegree.division,
+      )
+      .where(
+        and(
+          query.id ? eq(dwMajor.id, query.id) : undefined,
+          query.catalogYear
+            ? inArray(
+                dwMajorYear.catalogYear,
+                this.db
+                  .select({ best: dwMajorYear.catalogYear })
+                  .from(dwMajorYear)
+                  .where(query.id ? eq(dwMajorYear.programId, query.id) : undefined)
+                  .orderBy(
+                    this.catalogYearPriorityExpression(
+                      dwMajorYear,
+                      query.catalogYear,
+                    ) as SQL<unknown>,
+                  )
+                  .limit(1),
+              )
+            : eq(
+                dwMajorYear.catalogYear,
+                this.db.select({ best: max(dwMajorYear.catalogYear) }).from(dwMajorYear),
+              ),
+        ),
+      );
   }
 
   async getMinors(query: z.infer<typeof minorsQuerySchema>) {
     return this.db
       .select({
-        id: minor.id,
-        name: minor.name,
+        id: dwMinor.id,
+        name: dwMinor.name,
       })
-      .from(minor)
-      .where(query.id ? eq(minor.id, query.id) : undefined);
+      .from(dwMinor)
+      .where(query.id ? eq(dwMinor.id, query.id) : undefined);
   }
 
   async getSpecializations(query: z.infer<typeof specializationsQuerySchema>) {
     return this.db
-      .select({
-        id: specialization.id,
-        majorId: specialization.majorId,
-        name: specialization.name,
+      .selectDistinct({
+        id: dwSpecialization.id,
+        majorId: dwSpecialization.majorId,
+        name: dwSpecialization.name,
       })
-      .from(specialization)
-      .where(query.majorId ? eq(specialization.majorId, query.majorId) : undefined);
+      .from(dwSpecialization)
+      .leftJoin(
+        dwMajorSpecializationToRequirement,
+        and(
+          eq(dwSpecialization.majorId, dwMajorSpecializationToRequirement.majorId),
+          eq(dwSpecialization.id, dwMajorSpecializationToRequirement.specializationId),
+        ),
+      )
+      .where(
+        and(
+          query.majorId ? eq(dwSpecialization.majorId, query.majorId) : undefined,
+          query.catalogYear
+            ? inArray(
+                dwMajorSpecializationToRequirement.catalogYear,
+                this.db
+                  .select({ best: dwMajorSpecializationToRequirement.catalogYear })
+                  .from(dwMajorSpecializationToRequirement)
+                  .where(
+                    query.majorId
+                      ? eq(dwMajorSpecializationToRequirement.majorId, query.majorId)
+                      : undefined,
+                  )
+                  .orderBy(
+                    this.catalogYearPriorityExpression(
+                      dwMajorSpecializationToRequirement,
+                      query.catalogYear,
+                    ) as SQL<unknown>,
+                  )
+                  .limit(1),
+              )
+            : undefined,
+        ),
+      );
   }
 
   async getMajorRequirements(query: z.infer<typeof majorRequirementsQuerySchema>) {
@@ -102,51 +188,95 @@ export class ProgramsService {
         programType: "specialization";
         query: z.infer<typeof specializationRequirementsQuerySchema>;
       }) {
-    const table = {
-      major,
-      minor,
-      specialization,
+    if (programType === "major") {
+      const order = this.catalogYearPriorityExpression(
+        dwMajorSpecializationToRequirement,
+        query.catalogYear,
+      );
+
+      const base = this.db
+        .select({
+          id: dwMajor.id,
+          name: dwMajor.name,
+          catalogYear: dwMajorYear.catalogYear,
+          header: dwMajorRequirement.header,
+          requirements: dwMajorRequirement.requirements,
+          schoolRequirements: {
+            name: dwMajorYear.collegeRequirementsTitle,
+            requirements: dwMajorYear.collegeRequirements,
+          },
+        })
+        .from(dwMajor)
+        .innerJoin(dwMajorYear, eq(dwMajor.id, dwMajorYear.programId))
+        .innerJoin(
+          dwMajorSpecializationToRequirement,
+          and(
+            eq(dwMajor.id, dwMajorSpecializationToRequirement.majorId),
+            eq(dwMajorYear.catalogYear, dwMajorSpecializationToRequirement.catalogYear),
+          ),
+        )
+        .innerJoin(
+          dwMajorRequirement,
+          eq(dwMajorSpecializationToRequirement.requirementId, dwMajorRequirement.id),
+        )
+        .where(
+          and(
+            eq(dwMajor.id, query.programId),
+            query.specializationId
+              ? eq(dwMajorSpecializationToRequirement.specializationId, query.specializationId)
+              : isNull(dwMajorSpecializationToRequirement.specializationId),
+          ),
+        );
+      const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
+
+      const converted =
+        got !== undefined
+          ? {
+              ...got,
+              schoolRequirements:
+                got.schoolRequirements.requirements !== null ? got.schoolRequirements : null,
+            }
+          : undefined;
+
+      return orNull(converted);
+    }
+
+    const [baseTable, requirementsTable] = {
+      minor: [dwMinor, dwMinorRequirement] as const,
+      specialization: [dwSpecialization, dwSpecializationRequirement] as const,
     }[programType];
 
-    const [got] = await (programType !== "major"
-      ? this.db
-          .select({
-            id: table.id,
-            name: table.name,
-            requirements: table.requirements,
-            header: major.header,
-          })
-          .from(table)
-      : this.db
-          .select({
-            id: major.id,
-            name: major.name,
-            requirements: major.requirements,
-            header: major.header,
-            schoolRequirements: {
-              name: collegeRequirement.name,
-              requirements: collegeRequirement.requirements,
-            },
-          })
-          .from(major)
-          .leftJoin(collegeRequirement, eq(major.collegeRequirement, collegeRequirement.id))
-    )
-      .where(eq(table.id, query.programId))
-      .limit(1);
+    const order = this.catalogYearPriorityExpression(requirementsTable, query.catalogYear);
 
+    const base = this.db
+      .select({
+        id: baseTable.id,
+        name: baseTable.name,
+        catalogYear: requirementsTable.catalogYear,
+        header: requirementsTable.header,
+        requirements: requirementsTable.requirements,
+      })
+      .from(baseTable)
+      .leftJoin(requirementsTable, eq(baseTable.id, requirementsTable.programId))
+      .where(eq(baseTable.id, query.programId));
+
+    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
-    const [got] = await this.db
-      .select({
-        id: schoolRequirement.id,
-        requirements: schoolRequirement.requirements,
-      })
-      .from(schoolRequirement)
-      .where(eq(schoolRequirement.id, query.id))
-      .limit(1);
+    const order = this.catalogYearPriorityExpression(dwSchoolRequirement, query.catalogYear);
 
+    const base = this.db
+      .select({
+        id: dwSchoolRequirement.id,
+        requirements: dwSchoolRequirement.requirements,
+        catalogYear: dwSchoolRequirement.catalogYear,
+      })
+      .from(dwSchoolRequirement)
+      .where(eq(dwSchoolRequirement.id, query.id));
+
+    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
     return orNull(got);
   }
 

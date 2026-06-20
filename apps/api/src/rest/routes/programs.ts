@@ -82,7 +82,7 @@ const majorRequirements = createRoute({
   path: "/major",
   description:
     "Retrieve course requirements for a major in UCI's current catalogue. Note that these are the requirements for the major itself; " +
-    "if this major has specializations, then one is mandatory and its requirements apply as well.",
+    "if this major has specializations and one is taken, its requirements apply as well.",
   request: { query: majorRequirementsQuerySchema },
   responses: {
     200: response200(majorRequirementsResponseSchema),
@@ -173,7 +173,7 @@ programsRouter.openapi(specializationsRoute, async (c) => {
     return c.json(
       {
         ok: false,
-        message: "No data on specializations for a major by that ID",
+        message: "No data on specializations for a major by that ID in that catalog year",
       },
       404,
     );
@@ -190,7 +190,8 @@ programsRouter.openapi(majorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this major; check your ID?",
+          message:
+            "Couldn't find major requirements associated with this major and specialization; check your IDs and catalog year?",
         },
         404,
       );
@@ -205,7 +206,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this minor; check your ID?",
+          message: "Couldn't find this minor; check your ID and catalog year?",
         },
         404,
       );
@@ -220,7 +221,7 @@ programsRouter.openapi(specializationRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this specialization; check your ID?",
+          message: "Couldn't find this specialization; check your ID and catalog year?",
         },
         404,
       );
@@ -235,7 +236,8 @@ programsRouter.openapi(ugradRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this undergraduate requirements block; check your ID?",
+          message:
+            "Couldn't find this undergraduate requirements block; check your ID and catalog year?",
         },
         404,
       );

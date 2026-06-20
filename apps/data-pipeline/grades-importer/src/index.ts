@@ -59,9 +59,10 @@ async function main() {
   const inputData: Map<string, string>[] = readdirSync(INPUT_DIR).flatMap((fileName) => {
     const data: string[][] = xlsx.parse(`${INPUT_DIR}/${fileName}`)[0].data;
     const columns = data[0];
-    return data
-      .slice(1)
-      .filter((x) => x)
+    const rows = data.slice(1);
+    const lastNonEmpty = rows.findLastIndex((x) => x?.some((y) => y));
+    return rows
+      .slice(0, lastNonEmpty + 1)
       .map(
         (row) =>
           new Map(

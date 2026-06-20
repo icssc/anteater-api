@@ -1,17 +1,17 @@
 import { database } from "@packages/db";
-import { doLibraryScrape } from "$lib";
+import { doSpringshareScrape } from "$lib";
 import { doPVScrape } from "./pv";
 
 export default {
   async scheduled(_, env) {
     const db = database(env.DB.connectionString);
-    let libraryError: unknown = null;
+    let springshareError: unknown = null;
     let pvError: unknown = null;
     try {
-      await doLibraryScrape(db);
+      await doSpringshareScrape(db);
     } catch (err) {
-      libraryError = err;
-      console.error("Libraries scrape failed:", err);
+      springshareError = err;
+      console.error("Libraries + ALP scrape failed:", err);
     }
     try {
       await doPVScrape(db);
@@ -20,7 +20,7 @@ export default {
       console.error("PV scrape failed:", err);
     }
     await db.$client.end();
-    if (libraryError || pvError) {
+    if (springshareError || pvError) {
       throw new Error("One or more scrapes failed");
     }
   },

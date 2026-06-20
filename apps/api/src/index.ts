@@ -22,6 +22,12 @@ const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 // OpenAPI and API reference configuration
 
 const ogTitle = "Anteater API | API Reference";
+app.openAPIRegistry.registerComponent("securitySchemes", "ApiKeyAuth", {
+  type: "http",
+  scheme: "bearer",
+  in: "header",
+  name: "Authorization",
+});
 app.doc("/openapi.json", openapiMeta);
 app.use("/reference", referenceOgTagInjector(ogTitle)).get(
   "/reference",

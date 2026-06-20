@@ -4,6 +4,8 @@ import {
   diningEventsQuerySchema,
   restaurantsQuerySchema,
   restaurantTodayQuerySchema,
+  schedulesQuerySchema,
+  schedulesResponseSchema,
 } from "$schema";
 import { DiningService } from "$services";
 
@@ -11,7 +13,7 @@ export const diningResolvers = {
   Query: {
     diningEvents: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
-      return await service.getUpcomingEvents(diningEventsQuerySchema.parse(args.query ?? {}));
+      return await service.getEvents(diningEventsQuerySchema.parse(args.query ?? {}));
     },
     diningDish: async (_: unknown, { id }: { id: string }, { db }: GraphQLContext) => {
       const service = new DiningService(db);
@@ -44,6 +46,12 @@ export const diningResolvers = {
         });
       }
       return data;
+    },
+
+    diningSchedules: async (_: unknown, args: { query: unknown }, { db }: GraphQLContext) => {
+      const service = new DiningService(db);
+      const data = await service.getSchedules(schedulesQuerySchema.parse(args.query ?? {}));
+      return schedulesResponseSchema.parse(data);
     },
   },
 };

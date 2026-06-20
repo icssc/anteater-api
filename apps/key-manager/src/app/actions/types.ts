@@ -7,7 +7,7 @@ export const createKeySchema = z
     name: z.string().min(1).max(30),
     createdAt: z.date(),
     origins: z.array(z.object({ url: z.string() })).optional(),
-    rateLimitOverride: z.number().positive().or(z.nan()).optional(),
+    rateLimitOverride: z.number().positive().optional(),
     resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
   })
   .strict();
@@ -60,7 +60,7 @@ export const createKeyTransform = createKeySchema.transform((data) => {
             data.origins?.map((origin: z.infer<typeof originSchema>) => [origin.url, true]) ?? [],
           ) as Record<string, boolean>)
         : undefined,
-    rateLimitOverride: data.rateLimitOverride ? data.rateLimitOverride : undefined,
+    rateLimitOverride: data.rateLimitOverride,
     createdAt: new Date(),
   } as KeyData;
 });

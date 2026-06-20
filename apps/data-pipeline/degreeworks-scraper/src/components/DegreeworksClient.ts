@@ -1,3 +1,4 @@
+import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
 import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "src/schema";
 import type { z } from "zod";
@@ -30,7 +31,11 @@ export class DegreeworksClient {
      */
     const currentYear = new Date().getUTCFullYear();
     dw.catalogYear = `${currentYear}${currentYear + 1}`;
-    const dataThisYear = await dw.getMajorAudit("BS", "U", "201");
+    const dataThisYear = await dw.getMajorAudit({
+      degreeCode: "BS",
+      schoolCode: "U",
+      majorCode: "201",
+    });
     if (!dataThisYear?.major) {
       dw.catalogYear = `${currentYear - 1}${currentYear}`;
     }
@@ -111,21 +116,17 @@ export class DegreeworksClient {
     };
   }
 
-  /**
-   * @param degree a degree code, e.g. "BS"
-   * @param school this corresponds to the UCI notion of division, e.g. "U" or "G"
-   * @param majorCode a major code
-   * @param college this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
-   */
-  async getMajorAudit(
-    degree: string,
-    school: string,
-    majorCode: string,
-    college?: string,
-  ): Promise<
+  async getMajorAudit({
+    degreeCode,
+    schoolCode,
+    majorCode,
+    specCode,
+    collegeCode,
+  }: ProgramCodes): Promise<
     | {
         college?: Block;
         major?: Block;
+        otherBlock?: Block;
       }
     | undefined
   > {
@@ -133,13 +134,14 @@ export class DegreeworksClient {
       method: "POST",
       body: JSON.stringify({
         catalogYear: this.catalogYear,
-        degree,
-        school,
+        degree: degreeCode,
+        school: schoolCode,
         studentId: this.studentId,
         classes: [],
         goals: [
           { code: "MAJOR", value: majorCode },
-          ...(college ? [{ code: "COLLEGE", value: college }] : []),
+          ...(collegeCode ? [{ code: "COLLEGE", value: collegeCode }] : []),
+          ...(specCode ? [{ code: "SPEC", value: specCode }] : []),
         ],
       }),
       headers: this.headers,
@@ -148,13 +150,18 @@ export class DegreeworksClient {
 
     const json = await this.parseResponse(res, dwAuditOKResponseSchema, "audit");
     if (!json) return undefined;
-
+    const major = json.blockArray.find(
+      (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+    );
+    const firstRule = major?.ruleArray[0];
     return {
       college: json.blockArray.find(
-        (x) => x.requirementType === "COLLEGE" && x.requirementValue === college,
+        (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
       ),
-      major: json.blockArray.find(
-        (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
+      major: major,
+      // some majors (e.g., English-345, History-429) store requirements within the 'OTHER' block; passing it here to extract those values
+      otherBlock: json.blockArray.find(
+        (x) => x.requirementType === "OTHER" && x.title.startsWith("Major in"),
       ),
     };
   }
