@@ -247,7 +247,6 @@ export class Scraper {
     const majorToCollegeCode = new Map(
       validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
     );
-    console.log(validDegrees);
 
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
@@ -313,7 +312,6 @@ export class Scraper {
     }
 
     console.log("Scraping undergraduate and graduate program requirements");
-    console.log(validDegrees);
     this.parsedPrograms = await this.scrapePrograms(validDegrees);
 
     this.parsedSpecializations = new Map();

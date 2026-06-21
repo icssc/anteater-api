@@ -62,10 +62,17 @@ export class DegreeworksClient {
 
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
-      //console.log(parsed.error.cause);
-      // console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
-      return raw;
-      //return undefined;
+      console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      for (const { path } of parsed.error.issues) {
+        console.log(path);
+        const failedField = path.reduce<unknown>((cur, key) => {
+          if (cur == null) return undefined;
+          return (cur as unknown as any)[key];
+        }, raw);
+        console.log(failedField);
+      }
+      //return raw;
+      return undefined;
     }
 
     return parsed.data;

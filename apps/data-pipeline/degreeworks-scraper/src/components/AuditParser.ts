@@ -6,6 +6,7 @@ import type {
   DegreeWorksNonExclusivityQualifier,
   DegreeWorksProgram,
   DegreeWorksProgramId,
+  DegreeWorksProgramType,
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
 } from "@packages/db/schema";
@@ -225,6 +226,18 @@ export class AuditParser {
               blockType = "OTHER";
               code = "LIBL";
             }
+            if (blockType === "ALLBLOCKS") {
+              nonExclusiveQualifier.appliedBlocks.push(
+                ...([
+                  { blockType: "COLLEGE" },
+                  { blockType: "MAJOR" },
+                  { blockType: "SPEC" },
+                  { blockType: "MINOR" },
+                ] as { blockType: DegreeWorksProgramType }[]),
+              );
+              continue;
+            }
+
             const p = programTypeSchema.safeParse(blockType);
             if (p.error) {
               console.log("Error: ", blockType);

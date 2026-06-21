@@ -24,7 +24,7 @@ export const qualifierClauseBaseSchema = z.object({
 
 export const qualifierNonExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("NONEXCLUSIVE"),
-  classes: z.string(),
+  classes: z.string().optional(),
 });
 
 export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
@@ -33,11 +33,9 @@ export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
 
 export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
   name: z.union([
-    z.literal("MINGRADE"),
     z.literal("HIGHPRIORITY"),
     z.literal("LOWPRIORITY"),
     z.literal("LOWESTPRIORITY"),
-    z.literal("MAXPASSFAIL"),
     z.literal("MAXTERM"),
     z.literal("MINPERDISC"),
     z.literal("MAXPERDISC"),
@@ -51,6 +49,7 @@ export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
     z.literal("MAXCREDIT"),
     z.literal("MINCLASS"),
     z.literal("STANDALONEBLOCK"),
+    z.literal("RULETAG"),
   ]),
 });
 
@@ -63,6 +62,7 @@ export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
 export const qualifierClauseSchema = z.discriminatedUnion("name", [
   qualifierNonExclusiveSchema,
   qualifierExclusiveSchema,
+  qualifierDefaultSchema,
 ]);
 
 /**
