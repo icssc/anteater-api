@@ -86,9 +86,11 @@ export type PrerequisiteTree = {
   NOT?: Array<Prerequisite | PrerequisiteTree>;
 };
 
+export type DegreeWorksProgramType = "SCHOOL" | "COLLEGE" | "MAJOR" | "MINOR" | "SPEC" | "OTHER";
+
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
+  programType: DegreeWorksProgramType;
   code: string;
   degreeType?: string;
 };
@@ -209,7 +211,12 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 
 export type DegreeWorksNonExclusivityQualifier = {
   qualifierType: "NonExclusive";
-  appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
+  appliedBlocks: {
+    blockType: DegreeWorksProgramType;
+    code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`, `AHGEO`
+    maxShared?: string;
+  }[];
+  //appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
 };
 
 export type DegreeWorksExclusivityQualifier = {

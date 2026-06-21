@@ -33,10 +33,6 @@ async function main() {
     parsedPrograms,
     parsedMinorPrograms,
   } = scraper.get();
-  const ucRequirementData = parsedUgradRequirements.get("UC");
-  const geRequirementData = parsedUgradRequirements.get("GE");
-  const honorsFourRequirementData = parsedUgradRequirements.get("CHC4");
-  const honorsTwoRequirementData = parsedUgradRequirements.get("CHC2");
 
   const degreeData = degreesAwarded
     .entries()
@@ -73,10 +69,11 @@ async function main() {
 
   const specData = parsedSpecializations
     .values()
-    .map(([majorId, specName, { degreeType, code, requirements }]) => ({
+    .map(([majorId, specName, { degreeType, code, requirements, header }]) => ({
       id: `${degreeType}-${code}`,
       name: specName,
       majorId: `${majorId.degreeType}-${majorId.code}`,
+      header,
       requirements,
     }))
     .toArray();
@@ -96,58 +93,25 @@ async function main() {
       obj.requirementId = requirementId;
     }
 
-    if (ucRequirementData && geRequirementData) {
-      await tx
-        .insert(dwSchoolRequirement)
-        .values([
-          {
-            id: "UC",
-            catalogYear,
-            requirements: ucRequirementData,
-          },
-          {
-            id: "GE",
-            catalogYear,
-            requirements: geRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
-          set: conflictUpdateSetAllCols(dwSchoolRequirement),
-        });
-    }
-
-    if (honorsFourRequirementData) {
-      await tx
-        .insert(dwSchoolRequirement)
-        .values([
-          {
-            id: "CHC4",
-            catalogYear,
-            requirements: honorsFourRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
-          set: conflictUpdateSetAllCols(dwSchoolRequirement),
-        });
-    }
-
-    if (honorsTwoRequirementData) {
-      await tx
-        .insert(dwSchoolRequirement)
-        .values([
-          {
-            id: "CHC2",
-            catalogYear,
-            requirements: honorsTwoRequirementData,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
-          set: conflictUpdateSetAllCols(dwSchoolRequirement),
-        });
-    }
+    await tx
+      .insert(dwSchoolRequirement)
+      .values(
+        parsedUgradRequirements
+          .values()
+          .map((x) => {
+            return {
+              id: x.code,
+              catalogYear,
+              header: x.header,
+              requirements: x.requirements,
+            };
+          })
+          .toArray(),
+      )
+      .onConflictDoUpdate({
+        target: [dwSchoolRequirement.id, dwSchoolRequirement.catalogYear],
+        set: conflictUpdateSetAllCols(dwSchoolRequirement),
+      });
 
     await tx
       .insert(dwDegree)
@@ -179,6 +143,7 @@ async function main() {
             catalogYear,
             specializationRequired: m.specializationRequired,
             collegeRequirementsTitle: m.college?.name,
+            collegeHeader: m.college?.header,
             collegeRequirements: m.college?.requirements,
           })),
       )
@@ -201,6 +166,7 @@ async function main() {
         specData.map((s) => ({
           programId: s.id,
           catalogYear,
+          header: s.header,
           requirements: s.requirements,
         })),
       )
@@ -251,6 +217,7 @@ async function main() {
           .map((m) => ({
             programId: m.code,
             catalogYear,
+            header: m.header,
             requirements: m.requirements,
           }))
           .toArray(),

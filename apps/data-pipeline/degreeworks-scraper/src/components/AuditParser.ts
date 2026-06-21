@@ -10,6 +10,7 @@ import type {
   DegreeWorksRequirementQualifier,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
+import { programTypeSchema } from "src/schema";
 import type { Block, QualifierClause, Rule, WithClause } from "$types";
 import {
   andTrees,
@@ -33,6 +34,8 @@ export class AuditParser {
   constructor(
     private readonly db: ReturnType<typeof database>,
     private readonly catalogYear: string,
+    // private knownMajors: string[],
+    // private knownSpecializations: string[]
   ) {
     console.log("[AuditParser.new] AuditParser initialized");
   }
@@ -44,12 +47,17 @@ export class AuditParser {
   ): Promise<DegreeWorksProgram> => ({
     ...this.parseBlockId(blockId),
     name: block.title,
-    requirements: await this.ruleArrayToRequirements([
+    requirements: await this.ruleArrayToRequirements(this.parseBlockId(blockId), [
       ...(otherBlock?.ruleArray ?? []),
       ...block.ruleArray,
     ]),
     ...(block.header?.qualifierArray
-      ? { header: await this.parseQualifiers(block.header.qualifierArray) }
+      ? {
+          header: await this.parseQualifiers(
+            block.header.qualifierArray,
+            this.parseBlockId(blockId),
+          ),
+        }
       : {}),
     // populate later; we cannot determine specializations on the spot
     specs: [],
@@ -180,11 +188,8 @@ export class AuditParser {
     });
   }
 
-  async parseQualifiers(qualifierArray: QualifierClause[]) {
-    const qualifiers: Map<QualifierClause["name"], DegreeWorksRequirementQualifier> = new Map<
-      QualifierClause["name"],
-      DegreeWorksRequirementQualifier
-    >();
+  async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
+    const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
     for (const qualifier of qualifierArray) {
       switch (qualifier.name) {
         case "NONEXCLUSIVE": {
@@ -202,7 +207,67 @@ export class AuditParser {
           const newBlockIds =
             qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
           for (const blockId of newBlockIds) {
-            nonExclusiveQualifier.appliedBlocks.push(blockId); // still need to count courses
+            let [blockType, code] = blockId.split("=");
+
+            // Preprocessing Steps:
+            // Some header qualifiers try to share '2' classes with itself, which doesn't make sense.
+            // We assume any qualifier that references itself with the same programType and code follows such case and can be skipped
+            if (blockType === programId.programType && code === programId.code) {
+              continue;
+            }
+            // The correct way for a requirement to state that classes can be shared across other requirements in the same program is to use `THISBLOCK`
+            // we replace this correct usage with the same programType and code
+            if (blockType === "THISBLOCK") {
+              blockType = programId.programType;
+              code = programId.code;
+            }
+            if (blockType === "LIBL") {
+              blockType = "OTHER";
+              code = "LIBL";
+            }
+            const p = programTypeSchema.safeParse(blockType);
+            if (p.error) {
+              console.log("Error: ", blockType);
+            }
+            if (p.success) {
+              const parsedBlockType = p.data;
+              //const parsedBlockType = programTypeSchema.parse(blockType)
+              if (!code) {
+                // blockType
+                nonExclusiveQualifier.appliedBlocks.push({
+                  blockType: parsedBlockType,
+                  maxShared: qualifier.classes,
+                });
+              } else {
+                const parsedCodes: string[] = [];
+                switch (parsedBlockType) {
+                  case "MAJOR":
+                  case "SPEC":
+                    // The degree is not given as part of the code and must be inferred
+                    // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
+                    // So we can match the correct degree without ambiguity
+
+                    // If parsing a grad degree, PHD and MS can have the same code
+                    // We assume that the program that is being referred to shares the same degree as this program
+                    break;
+                  case "MINOR":
+                  case "COLLEGE":
+                    // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
+                    parsedCodes.push(code);
+                    break;
+                  case "OTHER":
+                    // code can be "LIBL" | "AHPER" | "AHGEO" | "3450" | "4290"
+                    // LIBL refers to sharing with liberal learning
+                    // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts. It is unkown why they appear here
+                    // It is unkown what "3450" and "4290" are referring to
+                    // In any case, "LIBL" is the only code that has a known meaningful value
+                    if (code === "LIBL") parsedCodes.push("LIBL");
+                    break;
+                }
+              }
+            }
+
+            // nonExclusiveQualifier.appliedBlocks.push(blockId); // still need to count courses
           }
           break;
         }
@@ -217,7 +282,7 @@ export class AuditParser {
     return qualifiers.values().toArray();
   }
 
-  async ruleArrayToRequirements(ruleArray: Rule[]) {
+  async ruleArrayToRequirements(blockId: DegreeWorksProgramId, ruleArray: Rule[]) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
@@ -315,7 +380,7 @@ export class AuditParser {
             .map(([x]) => x);
 
           const qualifiers = rule.requirement.qualifierArray
-            ? await this.parseQualifiers(rule.requirement.qualifierArray)
+            ? await this.parseQualifiers(rule.requirement.qualifierArray, blockId)
             : [];
           const hasQualifiers = qualifiers.length !== 0;
 
@@ -367,7 +432,7 @@ export class AuditParser {
         case "Group": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(blockId, rule.ruleArray);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
@@ -385,7 +450,7 @@ export class AuditParser {
             if (rules.length > 1) {
               const label = "Select 1 of the following";
               const requirementType = "Group";
-              const requirements = await this.ruleArrayToRequirements(rules);
+              const requirements = await this.ruleArrayToRequirements(blockId, rules);
               const contentsSalt = requirements.map((req) => req.requirementId).join("_");
               const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
@@ -396,7 +461,7 @@ export class AuditParser {
                 requirements,
               });
             } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(rules)));
+              ret.push(...(await this.ruleArrayToRequirements(blockId, rules)));
             }
           }
           break;
@@ -417,7 +482,7 @@ export class AuditParser {
         case "Subset": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(blockId, rule.ruleArray);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({

@@ -62,8 +62,10 @@ export class DegreeworksClient {
 
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
-      console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
-      return undefined;
+      //console.log(parsed.error.cause);
+      // console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      return raw;
+      //return undefined;
     }
 
     return parsed.data;
@@ -153,7 +155,6 @@ export class DegreeworksClient {
     const major = json.blockArray.find(
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
-    const firstRule = major?.ruleArray[0];
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,

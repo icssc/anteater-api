@@ -24,20 +24,45 @@ export const qualifierClauseBaseSchema = z.object({
 
 export const qualifierNonExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("NONEXCLUSIVE"),
+  classes: z.string(),
 });
 
 export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("EXCLUSIVE"),
 });
 
+export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
+  name: z.union([
+    z.literal("MINGRADE"),
+    z.literal("HIGHPRIORITY"),
+    z.literal("LOWPRIORITY"),
+    z.literal("LOWESTPRIORITY"),
+    z.literal("MAXPASSFAIL"),
+    z.literal("MAXTERM"),
+    z.literal("MINPERDISC"),
+    z.literal("MAXPERDISC"),
+    z.literal("MINSPREAD"),
+    z.literal("MINCREDIT"),
+    z.literal("MAXPASSFAIL"),
+    z.literal("CLASSESCREDITS"),
+    z.literal("MINGPA"),
+    z.literal("MAXCLASS"),
+    z.literal("MINGRADE"),
+    z.literal("MAXCREDIT"),
+    z.literal("MINCLASS"),
+    z.literal("STANDALONEBLOCK"),
+  ]),
+});
+
 /**
  * TODO: continue to serve other qualifiers here. some qualifiers have extra properties i.e `class` in MAXCLASS
  */
 
-export const qualifierClauseSchema = z.union([
+// export const qualifierClauseSchema = z.union([qualifierNonExclusiveSchema, qualifierExclusiveSchema, qualifierClauseBaseSchema])
+
+export const qualifierClauseSchema = z.discriminatedUnion("name", [
   qualifierNonExclusiveSchema,
   qualifierExclusiveSchema,
-  qualifierClauseBaseSchema, // kept in to prevent zod from screaming when encountering an unknown code
 ]);
 
 /**
@@ -196,11 +221,17 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
+export const programTypeSchema = z.enum(["SCHOOL", "COLLEGE", "MAJOR", "MINOR", "SPEC", "OTHER"]);
+export const qualifierNonExclusiveBlockTypeSchema = z.enum([
+  ...programTypeSchema.options,
+  "THISBLOCK",
+]);
+
 // partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({
   name: z.string(),
   school: z.enum(["U", "G"]),
-  programType: z.enum(["COLLEGE", "MAJOR", "MINOR", "SPEC"]),
+  programType: programTypeSchema,
   code: z.string(),
   degreeType: z.string().optional(),
 });
