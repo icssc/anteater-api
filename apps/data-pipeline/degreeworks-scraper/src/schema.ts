@@ -31,6 +31,7 @@ export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("EXCLUSIVE"),
 });
 
+// Known qualifier types used to keep zod parsing from failing while maintaining discriminated union style
 export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
   name: z.union([
     z.literal("HIGHPRIORITY"),
@@ -50,6 +51,7 @@ export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
     z.literal("MINCLASS"),
     z.literal("STANDALONEBLOCK"),
     z.literal("RULETAG"),
+    z.literal("OPTIONAL"),
   ]),
 });
 
@@ -222,10 +224,6 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
   });
 
 export const programTypeSchema = z.enum(["SCHOOL", "COLLEGE", "MAJOR", "MINOR", "SPEC", "OTHER"]);
-export const qualifierNonExclusiveBlockTypeSchema = z.enum([
-  ...programTypeSchema.options,
-  "THISBLOCK",
-]);
 
 // partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({
