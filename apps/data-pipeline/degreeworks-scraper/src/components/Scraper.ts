@@ -248,6 +248,11 @@ export class Scraper {
       validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
     );
 
+    this.ap.assignPossiblePrograms(
+      validDegrees,
+      (await this.dw.getMapping("specializations")).keys().toArray(),
+    );
+
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
       console.log("Can't get undergrad reqs...");

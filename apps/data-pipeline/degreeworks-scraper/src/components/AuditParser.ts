@@ -9,6 +9,7 @@ import type {
   DegreeWorksProgramType,
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
+  ProgramCodes,
 } from "@packages/db/schema";
 import { course } from "@packages/db/schema";
 import { programTypeSchema } from "src/schema";
@@ -30,15 +31,21 @@ export class AuditParser {
   private static readonly WILDCARD_REGEX = /\w@/;
   private static readonly RANGE_REGEX = /-\w+/;
 
+  private potentialMajors: ProgramCodes[] | undefined;
+  private potentialSpecs: string[] | undefined;
+
   private requirementIdMap = new Map<string, string>();
 
   constructor(
     private readonly db: ReturnType<typeof database>,
     private readonly catalogYear: string,
-    // private knownMajors: string[],
-    // private knownSpecializations: string[]
   ) {
     console.log("[AuditParser.new] AuditParser initialized");
+  }
+
+  assignPossiblePrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
+    this.potentialMajors = potentialMajors;
+    this.potentialSpecs = potentialSpecs;
   }
 
   parseBlock = async (
@@ -190,6 +197,9 @@ export class AuditParser {
   }
 
   async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
+    if (!this.potentialMajors || !this.potentialSpecs) {
+      throw Error("[AuditParser] does not have a reference to possible programs.");
+    }
     const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
     for (const qualifier of qualifierArray) {
       switch (qualifier.name) {
@@ -255,28 +265,78 @@ export class AuditParser {
                 const parsedCodes: string[] = [];
                 switch (parsedBlockType) {
                   case "MAJOR":
-                  case "SPEC":
+                  case "SPEC": {
                     // The degree is not given as part of the code and must be inferred
                     // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
                     // So we can match the correct degree without ambiguity
-
+                    let foundDegree: string | undefined;
+                    if (programId.school === "U" || programId.programType !== "MAJOR") {
+                      foundDegree = this.potentialMajors.find(
+                        ({ majorCode, degreeCode }) =>
+                          code.startsWith(majorCode) && degreeCode.startsWith("B"),
+                      )?.degreeCode;
+                      if (foundDegree === undefined) {
+                        console.warn("No undergrad program found with major code,", code);
+                      }
+                    }
                     // If parsing a grad degree, PHD and MS can have the same code
                     // We assume that the program that is being referred to shares the same degree as this program
+                    else {
+                      foundDegree = this.potentialMajors.find(
+                        ({ majorCode, degreeCode }) =>
+                          code.startsWith(majorCode) && degreeCode === programId.degreeType,
+                      )?.degreeCode;
+                      if (foundDegree === undefined) {
+                        console.warn(
+                          `No ${programId.degreeType} program found with major code, ${code}`,
+                        );
+                      }
+                    }
+
+                    if (!foundDegree) break;
+                    if (parsedBlockType === "MAJOR") {
+                      parsedCodes.push(`${foundDegree}-${code}`);
+                    } else {
+                      // bug: this will not differentiate between same-code majors of different degree types
+                      if (code.endsWith("@")) {
+                        parsedCodes.push(
+                          ...this.potentialSpecs
+                            .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
+                            .map((matchedSpec) => `${foundDegree}-${matchedSpec}`),
+                        );
+                      } else {
+                        parsedCodes.push(`${foundDegree}-${code}`);
+                      }
+                    }
+
                     break;
+                  }
                   case "MINOR":
                   case "COLLEGE":
                     // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
                     parsedCodes.push(code);
                     break;
                   case "OTHER":
-                    // code can be "LIBL" | "AHPER" | "AHGEO" | "3450" | "4290"
+                    // code can be "LIBL" | "AHPER" | "AHGEO" | "3450" | "4290" | "153HON"
                     // LIBL refers to sharing with liberal learning
                     // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts. It is unkown why they appear here
                     // It is unkown what "3450" and "4290" are referring to
                     // In any case, "LIBL" is the only code that has a known meaningful value
+                    if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
+                      console.log("NEW OTHER CODE FOUND:", code);
+                    }
                     if (code === "LIBL") parsedCodes.push("LIBL");
                     break;
                 }
+                nonExclusiveQualifier.appliedBlocks.push(
+                  ...parsedCodes.map((c) => {
+                    return {
+                      blockType: parsedBlockType,
+                      code: c,
+                      maxShared: qualifier.classes,
+                    };
+                  }),
+                );
               }
             }
 
