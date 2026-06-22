@@ -255,8 +255,6 @@ export const reportSchema = z.object({
   }),
   major: z.object({
     majorCode: z.string(),
-    // one-letter term then two-digit year, if present
-    endTermYyyyst: z.string().nullable(),
     // the "active" field is true even on majors whose end term has passed and therefore must be ignored
   }),
   // we don't need the department object because degreeworks does not allow a department to be selected,
@@ -267,6 +265,11 @@ export const reportSchema = z.object({
     // we will ignore these since they are certainly out of scope for degreeworks, but
     // it can happen at this stage
     degreeCode: z.string().nullable(),
+    // one-letter term then two-digit year, if present
+    // note that start and end terms also exist on the `major` object, but are not the same
+    // degreeStartTermYyyyst can only be null for n-ple majors, undeclared, other misc
+    degreeStartTermYyyyst: z.string().nullable(),
+    degreeEndTermYyyyst: z.string().nullable(),
   }),
 });
 

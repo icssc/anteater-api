@@ -67,6 +67,10 @@ export class Scraper {
     return `${degreeCode ? `${degreeCode}-` : ""}${majorCode}${specCode ? `;${specCode}` : ""}`;
   }
 
+  private toFullYear(abbreviatedYear: string) {
+    return parseInt(abbreviatedYear, 10) < 50 ? `20${abbreviatedYear}` : `19${abbreviatedYear}`;
+  }
+
   private findDwNameFor(
     awardTypesMap: Map<string, z.infer<typeof rewardTypeSchema>>,
     catalogueDegree: z.infer<typeof reportSchema>,
@@ -118,6 +122,9 @@ export class Scraper {
         }),
       }).then((r) => r.json()),
     ]);
+    // fs.writeFile("simple_report.json", JSON.stringify(reports
+    //   .filter(({major, degree}) => major.startTermYyyyst !== degree.degreeStartTermYyyyst || major.endTermYyyyst !== degree.degreeEndTermYyyyst)
+    //   .map(({major, degree}) => {return {degree: degree.degreeAwarded, title: major.titleLong, majorStart:major.startTermYyyyst, majorEnd:major.endTermYyyyst, degreeStart:degree.degreeStartTermYyyyst, degreeEnd:degree.degreeEndTermYyyyst}}), null, 2))
 
     const awardTypesMap = new Map(
       rewardTypesResponseSchema.parse(awardTypes).map((ent) => [ent.degreeCode, ent]),
@@ -128,15 +135,11 @@ export class Scraper {
       .filter(
         (ent) =>
           ent.degree.degreeCode != null &&
-          (!ent.major.endTermYyyyst ||
-            // the oldest major in degreeworks as of this commit is applied ecology, invalidated during
-            // academic year 2006-2007, so any major older than this is clearly out of the question
-
-            // note that this parse will break if degrees are ever invalidated during or after calendar year 2050 (even
-            // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
-            // two-digit year 49 is interpreted by new Date as the year 1949
-            new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
-          this.majorPrograms.has(ent.major.majorCode),
+          ent.degree.degreeStartTermYyyyst != null &&
+          this.toFullYear(ent.degree.degreeStartTermYyyyst.slice(1)) <=
+            this.dw.getCatalogYear().slice(0, 4) &&
+          (ent.degree.degreeEndTermYyyyst == null ||
+            this.toFullYear(ent.degree.degreeEndTermYyyyst) > this.dw.getCatalogYear().slice(0, 4)),
       )
       .flatMap((ent) => {
         const withMatchedDegree = this.findDwNameFor(awardTypesMap, ent)
@@ -164,7 +167,7 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramCodes>) {
     const ret = new Map<MajorSpecId, MajorProgram>();
     for (const degree of degrees) {
-      const { collegeCode, majorCode, degreeCode, specCode } = degree;
+      const { schoolCode, majorCode, degreeCode, specCode } = degree;
       const audit = await this.dw.getMajorAudit(degree);
       const majorAudit = audit?.major;
 
@@ -183,12 +186,12 @@ export class Scraper {
       ret.set(this.asMajorSpecId(degreeCode, majorCode, specCode), {
         college: audit?.college
           ? await this.ap.parseBlock(
-              `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
+              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
               audit?.college,
             )
           : undefined,
         major: await this.ap.parseBlock(
-          `${collegeCode}-MAJOR-${majorCode}-${degreeCode}`,
+          `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
           audit.otherBlock,
         ),
@@ -247,6 +250,21 @@ export class Scraper {
     const majorToCollegeCode = new Map(
       validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
     );
+
+    const seenUgradMajorCodes = new Map<string, ProgramCodes>();
+    for (const degree of validDegrees) {
+      if (degree.schoolCode !== "U") continue;
+
+      const previousDegree = seenUgradMajorCodes.get(degree.majorCode);
+      // Check for different degree Codes b/c CSE is offered by ENGR and ICS, which is fine
+      if (previousDegree && previousDegree.degreeCode !== degree.degreeCode) {
+        console.log(
+          `Multiple undergraduate degrees found for major code ${degree.majorCode}: ${previousDegree.degreeCode} and ${degree.degreeCode}`,
+        );
+      }
+
+      seenUgradMajorCodes.set(degree.majorCode, degree);
+    }
 
     this.ap.assignPossiblePrograms(
       validDegrees,

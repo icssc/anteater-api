@@ -276,7 +276,9 @@ export class AuditParser {
                           code.startsWith(majorCode) && degreeCode.startsWith("B"),
                       )?.degreeCode;
                       if (foundDegree === undefined) {
-                        console.warn("No undergrad program found with major code,", code);
+                        console.warn(
+                          `No undergrad program found with ${parsedBlockType} code, ${code}`,
+                        );
                       }
                     }
                     // If parsing a grad degree, PHD and MS can have the same code
@@ -287,8 +289,9 @@ export class AuditParser {
                           code.startsWith(majorCode) && degreeCode === programId.degreeType,
                       )?.degreeCode;
                       if (foundDegree === undefined) {
+                        console.log(programId);
                         console.warn(
-                          `No ${programId.degreeType} program found with major code, ${code}`,
+                          `No ${programId.degreeType} program found with MAJOR code, ${code}`,
                         );
                       }
                     }
@@ -317,10 +320,12 @@ export class AuditParser {
                     parsedCodes.push(code);
                     break;
                   case "OTHER":
-                    // code can be "LIBL" | "AHPER" | "AHGEO" | "3450" | "4290" | "153HON"
+                    // code can be "LIBL" | "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
                     // LIBL refers to sharing with liberal learning
-                    // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts. It is unkown why they appear here
-                    // It is unkown what "3450" and "4290" are referring to
+                    // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts.
+                    // "345O" and "429O" are the "345 (English) OTHER" and "429 (History) OTHER" blocks (pr 386)
+                    // "153HON" likley stands for an outdated honors chemistry program
+
                     // In any case, "LIBL" is the only code that has a known meaningful value
                     if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
                       console.log("NEW OTHER CODE FOUND:", code);
