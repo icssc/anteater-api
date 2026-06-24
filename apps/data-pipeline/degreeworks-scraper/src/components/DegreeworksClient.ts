@@ -67,7 +67,10 @@ export class DegreeworksClient {
         console.log(path);
         const failedField = path.reduce<unknown>((cur, key) => {
           if (cur == null) return undefined;
-          return (cur as unknown as any)[key];
+          if (typeof cur === "object" && cur !== null && Object.hasOwn(cur, key)) {
+            return (cur as Record<string, unknown>)[key as string];
+          }
+          return undefined;
         }, raw);
         console.log(`Failed field:`, failedField);
       }

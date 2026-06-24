@@ -34,6 +34,7 @@ export class AuditParser {
   private potentialSpecs: string[] | undefined;
 
   private requirementIdMap = new Map<string, string>();
+  private ineligiblePrograms = new Set<string>();
 
   constructor(
     private readonly db: ReturnType<typeof database>,
@@ -264,12 +265,17 @@ export class AuditParser {
                 // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
                 // So we can match the correct degree
                 let foundDegree: string | undefined;
+                const ineligibleProgramKey = `${programId.school}:${programId.programType}:${code}`;
                 if (programId.school === "U" || programId.programType !== "MAJOR") {
                   foundDegree = this.potentialMajors.find(
                     ({ majorCode, degreeCode }) =>
                       code.startsWith(majorCode) && degreeCode.startsWith("B"),
                   )?.degreeCode;
-                  if (foundDegree === undefined) {
+                  if (
+                    foundDegree === undefined &&
+                    !this.ineligiblePrograms.has(ineligibleProgramKey)
+                  ) {
+                    this.ineligiblePrograms.add(ineligibleProgramKey);
                     console.warn(
                       `No undergrad program found with ${parsedProgramType} code, ${code}`,
                     );
@@ -282,7 +288,11 @@ export class AuditParser {
                     ({ majorCode, degreeCode }) =>
                       code.startsWith(majorCode) && degreeCode === programId.degreeType,
                   )?.degreeCode;
-                  if (foundDegree === undefined) {
+                  if (
+                    foundDegree === undefined &&
+                    !this.ineligiblePrograms.has(ineligibleProgramKey)
+                  ) {
+                    this.ineligiblePrograms.add(ineligibleProgramKey);
                     console.log(programId);
                     console.warn(
                       `No ${programId.degreeType} program found with MAJOR code, ${code}`,
