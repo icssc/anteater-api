@@ -122,9 +122,6 @@ export class Scraper {
         }),
       }).then((r) => r.json()),
     ]);
-    // fs.writeFile("simple_report.json", JSON.stringify(reports
-    //   .filter(({major, degree}) => major.startTermYyyyst !== degree.degreeStartTermYyyyst || major.endTermYyyyst !== degree.degreeEndTermYyyyst)
-    //   .map(({major, degree}) => {return {degree: degree.degreeAwarded, title: major.titleLong, majorStart:major.startTermYyyyst, majorEnd:major.endTermYyyyst, degreeStart:degree.degreeStartTermYyyyst, degreeEnd:degree.degreeEndTermYyyyst}}), null, 2))
 
     const awardTypesMap = new Map(
       rewardTypesResponseSchema.parse(awardTypes).map((ent) => [ent.degreeCode, ent]),
@@ -136,6 +133,7 @@ export class Scraper {
         (ent) =>
           ent.degree.degreeCode != null &&
           ent.degree.degreeStartTermYyyyst != null &&
+          // note that this parse will break if degrees are ever added/invalidated during or after calendar year 2050
           this.toFullYear(ent.degree.degreeStartTermYyyyst.slice(1)) <=
             this.dw.getCatalogYear().slice(0, 4) &&
           (ent.degree.degreeEndTermYyyyst == null ||
@@ -251,22 +249,22 @@ export class Scraper {
       validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
     );
 
+    // Validate that for major codes for undergrad programs are unambiguous without their degree types
     const seenUgradMajorCodes = new Map<string, ProgramCodes>();
     for (const degree of validDegrees) {
       if (degree.schoolCode !== "U") continue;
-
       const previousDegree = seenUgradMajorCodes.get(degree.majorCode);
-      // Check for different degree Codes b/c CSE is offered by ENGR and ICS, which is fine
+      // Check for different degree type b/c CSE as BS-193 twice (seperate listing by ICS and ENGRE departments)
+      // but are still unambiguous as they are duplicate listings for the identical program
       if (previousDegree && previousDegree.degreeCode !== degree.degreeCode) {
-        console.log(
+        console.warn(
           `Multiple undergraduate degrees found for major code ${degree.majorCode}: ${previousDegree.degreeCode} and ${degree.degreeCode}`,
         );
       }
-
       seenUgradMajorCodes.set(degree.majorCode, degree);
     }
 
-    this.ap.assignPossiblePrograms(
+    this.ap.setPotentialPrograms(
       validDegrees,
       (await this.dw.getMapping("specializations")).keys().toArray(),
     );
@@ -283,29 +281,18 @@ export class Scraper {
       CHC4: honorsFourRequirements,
       CHC2: honorsTwoRequirements,
     } = ugradReqs;
-    // await this.ap.parseBlock( "U-SCHOOL-GE", geRequirements);
-    this.parsedUgradRequirements.set(
-      "UC",
-      await this.ap.parseBlock("U-SCHOOL-UC", ucRequirements),
-      // await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
-    );
-    this.parsedUgradRequirements.set(
-      "GE",
-      await this.ap.parseBlock("U-SCHOOL-GE", geRequirements),
-      // await this.ap.ruleArrayToRequirements(geRequirements.ruleArray),
-    );
+    this.parsedUgradRequirements.set("UC", await this.ap.parseBlock("U-SCHOOL-UC", ucRequirements));
+    this.parsedUgradRequirements.set("GE", await this.ap.parseBlock("U-SCHOOL-GE", geRequirements));
     if (honorsFourRequirements) {
       this.parsedUgradRequirements.set(
         "CHC4",
         await this.ap.parseBlock("U-SCHOOL-CHC4", honorsFourRequirements),
-        // await this.ap.ruleArrayToRequirements(honorsFourRequirements.ruleArray),
       );
       console.log("Saved 4-year CHC requirements.");
     } else if (honorsTwoRequirements) {
       this.parsedUgradRequirements.set(
         "CHC2",
         await this.ap.parseBlock("U-SCHOOL-CHC2", honorsTwoRequirements),
-        // await this.ap.ruleArrayToRequirements(honorsTwoRequirements.ruleArray),
       );
       console.log("Saved 2-year CHC requirements.");
     } else {

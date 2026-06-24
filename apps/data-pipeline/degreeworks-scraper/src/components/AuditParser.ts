@@ -42,7 +42,7 @@ export class AuditParser {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
-  assignPossiblePrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
+  setPotentialPrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
     this.potentialMajors = potentialMajors;
     this.potentialSpecs = potentialSpecs;
   }
@@ -54,10 +54,10 @@ export class AuditParser {
   ): Promise<DegreeWorksProgram> => ({
     ...this.parseBlockId(blockId),
     name: block.title,
-    requirements: await this.ruleArrayToRequirements(this.parseBlockId(blockId), [
-      ...(otherBlock?.ruleArray ?? []),
-      ...block.ruleArray,
-    ]),
+    requirements: await this.ruleArrayToRequirements(
+      [...(otherBlock?.ruleArray ?? []), ...block.ruleArray],
+      this.parseBlockId(blockId),
+    ),
     ...(block.header?.qualifierArray
       ? {
           header: await this.parseQualifiers(
@@ -197,7 +197,7 @@ export class AuditParser {
 
   async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
     if (!this.potentialMajors || !this.potentialSpecs) {
-      throw Error("[AuditParser] does not have a reference to possible programs.");
+      throw Error("[AuditParser] does not have a reference to possible programs");
     }
     const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
     for (const qualifier of qualifierArray) {
@@ -214,9 +214,9 @@ export class AuditParser {
             "NONEXCLUSIVE",
           ) as DegreeWorksNonExclusivityQualifier;
 
-          const newBlockIds =
+          const appliedBlockIds =
             qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
-          for (const blockId of newBlockIds) {
+          for (const blockId of appliedBlockIds) {
             let [programType, code] = blockId.split("=");
 
             // Preprocessing Steps:
@@ -225,7 +225,7 @@ export class AuditParser {
             if (programType === programId.programType && code === programId.code) {
               continue;
             }
-            // The correct way for a requirement to state that classes can be shared across other requirements in the same program is to use `THISBLOCK`
+            // The correct way to state classes can be shared with other requirements in the same program is by using `THISBLOCK`
             // we replace this correct usage with the same programType and code
             if (programType === "THISBLOCK") {
               programType = programId.programType;
@@ -247,102 +247,91 @@ export class AuditParser {
               continue;
             }
 
-            const p = programTypeSchema.safeParse(programType);
-            if (p.error) {
-              console.log("Error: ", programType);
+            const parsedProgramType = programTypeSchema.parse(programType);
+            if (!code) {
+              nonExclusiveQualifier.appliedBlocks.push({
+                programType: parsedProgramType,
+                maxShared: qualifier.classes,
+              });
+              break;
             }
-            if (p.success) {
-              const parsedProgramType = p.data;
-              if (!code) {
-                nonExclusiveQualifier.appliedBlocks.push({
-                  programType: parsedProgramType,
-                  maxShared: qualifier.classes,
-                });
-              } else {
-                const parsedCodes: string[] = [];
-                switch (parsedProgramType) {
-                  case "MAJOR":
-                  case "SPEC": {
-                    // The degree is not given as part of the code and must be inferred
-                    // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
-                    // So we can match the correct degree without ambiguity
-                    let foundDegree: string | undefined;
-                    if (programId.school === "U" || programId.programType !== "MAJOR") {
-                      foundDegree = this.potentialMajors.find(
-                        ({ majorCode, degreeCode }) =>
-                          code.startsWith(majorCode) && degreeCode.startsWith("B"),
-                      )?.degreeCode;
-                      if (foundDegree === undefined) {
-                        console.warn(
-                          `No undergrad program found with ${parsedProgramType} code, ${code}`,
-                        );
-                      }
-                    }
-                    // If parsing a grad degree, PHD and MS can have the same code
-                    // We assume that the program that is being referred to shares the same degree as this program
-                    else {
-                      foundDegree = this.potentialMajors.find(
-                        ({ majorCode, degreeCode }) =>
-                          code.startsWith(majorCode) && degreeCode === programId.degreeType,
-                      )?.degreeCode;
-                      if (foundDegree === undefined) {
-                        console.log(programId);
-                        console.warn(
-                          `No ${programId.degreeType} program found with MAJOR code, ${code}`,
-                        );
-                      }
-                    }
 
-                    if (!foundDegree) break;
-                    if (parsedProgramType === "MAJOR") {
-                      parsedCodes.push(`${foundDegree}-${code}`);
-                    } else {
-                      // bug: this will not differentiate between same-code majors of different degree types
-                      if (code.endsWith("@")) {
-                        parsedCodes.push(
-                          ...this.potentialSpecs
-                            .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
-                            .map((matchedSpec) => `${foundDegree}-${matchedSpec}`),
-                        );
-                      } else {
-                        parsedCodes.push(`${foundDegree}-${code}`);
-                      }
-                    }
-
-                    break;
+            const parsedCodes: string[] = [];
+            switch (parsedProgramType) {
+              case "MAJOR":
+              case "SPEC": {
+                // The degree type is not given as part of the code and must be inferred
+                // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
+                // So we can match the correct degree
+                let foundDegree: string | undefined;
+                if (programId.school === "U" || programId.programType !== "MAJOR") {
+                  foundDegree = this.potentialMajors.find(
+                    ({ majorCode, degreeCode }) =>
+                      code.startsWith(majorCode) && degreeCode.startsWith("B"),
+                  )?.degreeCode;
+                  if (foundDegree === undefined) {
+                    console.warn(
+                      `No undergrad program found with ${parsedProgramType} code, ${code}`,
+                    );
                   }
-                  case "MINOR":
-                  case "COLLEGE":
-                    // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
-                    parsedCodes.push(code);
-                    break;
-                  case "OTHER":
-                    // code can be "LIBL" | "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
-                    // LIBL refers to sharing with liberal learning
-                    // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts.
-                    // "345O" and "429O" are the "345 (English) OTHER" and "429 (History) OTHER" blocks (pr 386)
-                    // "153HON" likley stands for an outdated honors chemistry program
-
-                    // In any case, "LIBL" is the only code that has a known meaningful value
-                    if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
-                      console.log("NEW OTHER CODE FOUND:", code);
-                    }
-                    if (code === "LIBL") parsedCodes.push("LIBL");
-                    break;
                 }
-                nonExclusiveQualifier.appliedBlocks.push(
-                  ...parsedCodes.map((c) => {
-                    return {
-                      programType: parsedProgramType,
-                      code: c,
-                      maxShared: qualifier.classes,
-                    };
-                  }),
-                );
-              }
-            }
+                // If parsing a grad degree, PHD and MS can have the same code
+                // We assume that the program that is being referred to shares the same degree as this program
+                else {
+                  foundDegree = this.potentialMajors.find(
+                    ({ majorCode, degreeCode }) =>
+                      code.startsWith(majorCode) && degreeCode === programId.degreeType,
+                  )?.degreeCode;
+                  if (foundDegree === undefined) {
+                    console.log(programId);
+                    console.warn(
+                      `No ${programId.degreeType} program found with MAJOR code, ${code}`,
+                    );
+                  }
+                }
 
-            // nonExclusiveQualifier.appliedBlocks.push(blockId); // still need to count courses
+                if (!foundDegree) break;
+                if (parsedProgramType === "SPEC" && code.endsWith("@")) {
+                  // The '@' wildcard can be used to denote a sharing with all specializations of a major, i.e `BS-153@`
+                  // note that we filter through potential specialzations, some of which may be outdated
+                  parsedCodes.push(
+                    ...this.potentialSpecs
+                      .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
+                      .map((matchedSpec) => `${foundDegree}-${matchedSpec}`),
+                  );
+                } else {
+                  parsedCodes.push(`${foundDegree}-${code}`);
+                }
+                break;
+              }
+              case "MINOR":
+              case "COLLEGE":
+                // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
+                parsedCodes.push(code);
+                break;
+              case "OTHER":
+                // code can be "LIBL" | "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
+                // LIBL refers to Liberal Learnings
+                // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts.
+                // "345O" and "429O" are the "345 (BA English) OTHER" and "429 (BA History) OTHER" blocks (see pr 386)
+                // "153HON" likley stands for an outdated honors chemistry program
+
+                // In any case, "LIBL" is the only code that has a known meaningful value
+                if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
+                  console.warn("Unkown OTHER block code:", code);
+                }
+                if (code === "LIBL") parsedCodes.push("LIBL");
+                break;
+            }
+            nonExclusiveQualifier.appliedBlocks.push(
+              ...parsedCodes.map((c) => {
+                return {
+                  programType: parsedProgramType,
+                  code: c,
+                  maxShared: qualifier.classes,
+                };
+              }),
+            );
           }
           break;
         }
@@ -357,7 +346,7 @@ export class AuditParser {
     return qualifiers.values().toArray();
   }
 
-  async ruleArrayToRequirements(blockId: DegreeWorksProgramId, ruleArray: Rule[]) {
+  async ruleArrayToRequirements(ruleArray: Rule[], blockId: DegreeWorksProgramId) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
@@ -507,7 +496,7 @@ export class AuditParser {
         case "Group": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(blockId, rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, blockId);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
@@ -525,7 +514,7 @@ export class AuditParser {
             if (rules.length > 1) {
               const label = "Select 1 of the following";
               const requirementType = "Group";
-              const requirements = await this.ruleArrayToRequirements(blockId, rules);
+              const requirements = await this.ruleArrayToRequirements(rules, blockId);
               const contentsSalt = requirements.map((req) => req.requirementId).join("_");
               const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
@@ -536,7 +525,7 @@ export class AuditParser {
                 requirements,
               });
             } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(blockId, rules)));
+              ret.push(...(await this.ruleArrayToRequirements(rules, blockId)));
             }
           }
           break;
@@ -557,7 +546,7 @@ export class AuditParser {
         case "Subset": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(blockId, rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, blockId);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({

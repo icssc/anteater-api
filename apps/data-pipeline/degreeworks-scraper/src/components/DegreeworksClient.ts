@@ -69,9 +69,8 @@ export class DegreeworksClient {
           if (cur == null) return undefined;
           return (cur as unknown as any)[key];
         }, raw);
-        console.log(failedField);
+        console.log(`Failed field:`, failedField);
       }
-      //return raw;
       return undefined;
     }
 

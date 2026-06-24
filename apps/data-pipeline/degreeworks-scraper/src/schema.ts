@@ -1,4 +1,4 @@
-import { WithConstraintCode } from "@packages/db/schema";
+import { DegreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
 import { z } from "zod";
 import type { Rule } from "$types";
 
@@ -56,10 +56,8 @@ export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
 });
 
 /**
- * TODO: continue to serve other qualifiers here. some qualifiers have extra properties i.e `class` in MAXCLASS
+ * TODO: continue to serve other qualifiers here. some qualifiers have extra properties i.e `classes` in MAXCLASS
  */
-
-// export const qualifierClauseSchema = z.union([qualifierNonExclusiveSchema, qualifierExclusiveSchema, qualifierClauseBaseSchema])
 
 export const qualifierClauseSchema = z.discriminatedUnion("name", [
   qualifierNonExclusiveSchema,
@@ -206,8 +204,6 @@ export const blockSchema = z.object({
     })
     .optional(),
   catalogYear: z.string(),
-  //
-  //
 });
 
 // UndergraduateRequirements interface is not made into an equivalent Zod schema since it's made from already parsed Block objects
@@ -223,7 +219,7 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
-export const programTypeSchema = z.enum(["SCHOOL", "COLLEGE", "MAJOR", "MINOR", "SPEC", "OTHER"]);
+export const programTypeSchema = z.enum(DegreeWorksProgramType);
 
 // partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({

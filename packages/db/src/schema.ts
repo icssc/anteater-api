@@ -223,7 +223,6 @@ export type DegreeWorksNonExclusivityQualifier = {
     code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
     maxShared?: string;
   }[];
-  //appliedBlocks: string[]; // {Major|Minor|Spec|College}[=BS-201|120|BS-201A|95] [(Share 2)]
 };
 
 export type DegreeWorksExclusivityQualifier = {

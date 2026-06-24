@@ -98,12 +98,12 @@ async function main() {
       .values(
         parsedUgradRequirements
           .values()
-          .map((x) => {
+          .map((block) => {
             return {
-              id: x.code,
+              id: block.code,
               catalogYear,
-              header: x.header,
-              requirements: x.requirements,
+              header: block.header,
+              requirements: block.requirements,
             };
           })
           .toArray(),
