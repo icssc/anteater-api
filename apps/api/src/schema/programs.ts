@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
-import { type CourseConstraintTree, WithConstraintCode } from "@packages/db/schema";
+import type { CourseConstraintTree } from "@packages/db/schema";
+import { DegreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -90,18 +91,45 @@ export const ugradRequirementsQuerySchema = z.object({
   catalogYear: catalogYearInputSchema,
 });
 
-export const exclusiveQualifierSchema = z.object({
-  qualifierType: z.literal("Exclusive"),
-});
+export const exclusiveQualifierSchema = z
+  .object({
+    qualifierType: z.literal("Exclusive"),
+  })
+  .openapi({
+    description:
+      "A Qualifier in the requirement level that reverts a nonexclusive qualifier on the header level to mark this requirement as unable to share courses with other programs",
+  });
 
-export const nonExclusiveQualifierSchema = z.object({
-  qualifierType: z.literal("NonExclusive"),
-  appliedBlocks: z
-    .array(z.string())
-    .openapi("The ids of blocks that can share courses with this requirement"),
-});
+export const nonExclusiveQualifierSchema = z
+  .object({
+    qualifierType: z.literal("NonExclusive"),
+    appliedBlocks: z.array(
+      z.object({
+        programType: z.enum(DegreeWorksProgramType).openapi({
+          description: "The type of programs this qualifier applies to",
+          examples: ["MAJOR", "MINOR", "SPEC", "COLLEGE", "OTHER"],
+        }),
+        code: z
+          .string()
+          .optional()
+          .openapi({
+            description:
+              "The code of a specific program this qualifier applies to. These are ids for majors, minors, and specializations (i.e. `BS-201`, `120`, `BS-201A`); numerical codes representing colleges for college requirements (i.e 55 for School of Biological Sciences); and misc strings for other blocks (i.e 'LIBL' for Liberal Learning). If no code is specified, this qualifer applies to all programs of the specified `programType`",
+            examples: ["BS-201", "120", "BS-201A", "55", "LIBL"],
+          }),
+      }),
+    ),
+  })
+  .openapi({
+    description:
+      "By default. A course cannot be used to satisfy multiple requirements within or across different programs; however, courses taken for a requirement with the nonexclusive qualifier can also be used in another program that matches the `programType` and `Code`",
+  });
 
-export const qualifierSchema = z.union([exclusiveQualifierSchema, nonExclusiveQualifierSchema]);
+export const qualifierSchema = z
+  .union([exclusiveQualifierSchema, nonExclusiveQualifierSchema])
+  .openapi({
+    description: "Furthur qualifiers for how courses can apply to a program requirement",
+  });
 const catalogYearOutputSchema = z.string().openapi({
   description:
     "The catalog year from which data is actually derived. This will be a catalog closest to the input catalog year; see above.",
@@ -348,7 +376,9 @@ export const programRequirementsResponseSchema = z.object({
     description: "Human name for this program",
   }),
   catalogYear: catalogYearOutputSchema,
-  header: z.array(qualifierSchema).optional(),
+  header: z.array(qualifierSchema).optional().openapi({
+    description: "Qualifiers that apply to all requirements in this block",
+  }),
   requirements: z.array(programRequirementSchema).openapi({
     description:
       "The set of of requirements for this program; a course, unit, or group requirement as follows:",

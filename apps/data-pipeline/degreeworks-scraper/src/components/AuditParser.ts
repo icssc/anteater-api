@@ -6,12 +6,11 @@ import type {
   DegreeWorksNonExclusivityQualifier,
   DegreeWorksProgram,
   DegreeWorksProgramId,
-  DegreeWorksProgramType,
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
   ProgramCodes,
 } from "@packages/db/schema";
-import { course } from "@packages/db/schema";
+import { course, type DegreeWorksProgramType } from "@packages/db/schema";
 import { programTypeSchema } from "src/schema";
 import type { Block, QualifierClause, Rule, WithClause } from "$types";
 import {
@@ -218,52 +217,50 @@ export class AuditParser {
           const newBlockIds =
             qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
           for (const blockId of newBlockIds) {
-            let [blockType, code] = blockId.split("=");
+            let [programType, code] = blockId.split("=");
 
             // Preprocessing Steps:
             // Some header qualifiers try to share '2' classes with itself, which doesn't make sense.
             // We assume any qualifier that references itself with the same programType and code follows such case and can be skipped
-            if (blockType === programId.programType && code === programId.code) {
+            if (programType === programId.programType && code === programId.code) {
               continue;
             }
             // The correct way for a requirement to state that classes can be shared across other requirements in the same program is to use `THISBLOCK`
             // we replace this correct usage with the same programType and code
-            if (blockType === "THISBLOCK") {
-              blockType = programId.programType;
+            if (programType === "THISBLOCK") {
+              programType = programId.programType;
               code = programId.code;
             }
-            if (blockType === "LIBL") {
-              blockType = "OTHER";
+            if (programType === "LIBL") {
+              programType = "OTHER";
               code = "LIBL";
             }
-            if (blockType === "ALLBLOCKS") {
+            if (programType === "ALLBLOCKS") {
               nonExclusiveQualifier.appliedBlocks.push(
                 ...([
-                  { blockType: "COLLEGE" },
-                  { blockType: "MAJOR" },
-                  { blockType: "SPEC" },
-                  { blockType: "MINOR" },
-                ] as { blockType: DegreeWorksProgramType }[]),
+                  { programType: "COLLEGE" },
+                  { programType: "MAJOR" },
+                  { programType: "SPEC" },
+                  { programType: "MINOR" },
+                ] as { programType: (typeof DegreeWorksProgramType)[number] }[]),
               );
               continue;
             }
 
-            const p = programTypeSchema.safeParse(blockType);
+            const p = programTypeSchema.safeParse(programType);
             if (p.error) {
-              console.log("Error: ", blockType);
+              console.log("Error: ", programType);
             }
             if (p.success) {
-              const parsedBlockType = p.data;
-              //const parsedBlockType = programTypeSchema.parse(blockType)
+              const parsedProgramType = p.data;
               if (!code) {
-                // blockType
                 nonExclusiveQualifier.appliedBlocks.push({
-                  blockType: parsedBlockType,
+                  programType: parsedProgramType,
                   maxShared: qualifier.classes,
                 });
               } else {
                 const parsedCodes: string[] = [];
-                switch (parsedBlockType) {
+                switch (parsedProgramType) {
                   case "MAJOR":
                   case "SPEC": {
                     // The degree is not given as part of the code and must be inferred
@@ -277,7 +274,7 @@ export class AuditParser {
                       )?.degreeCode;
                       if (foundDegree === undefined) {
                         console.warn(
-                          `No undergrad program found with ${parsedBlockType} code, ${code}`,
+                          `No undergrad program found with ${parsedProgramType} code, ${code}`,
                         );
                       }
                     }
@@ -297,7 +294,7 @@ export class AuditParser {
                     }
 
                     if (!foundDegree) break;
-                    if (parsedBlockType === "MAJOR") {
+                    if (parsedProgramType === "MAJOR") {
                       parsedCodes.push(`${foundDegree}-${code}`);
                     } else {
                       // bug: this will not differentiate between same-code majors of different degree types
@@ -336,7 +333,7 @@ export class AuditParser {
                 nonExclusiveQualifier.appliedBlocks.push(
                   ...parsedCodes.map((c) => {
                     return {
-                      blockType: parsedBlockType,
+                      programType: parsedProgramType,
                       code: c,
                       maxShared: qualifier.classes,
                     };
