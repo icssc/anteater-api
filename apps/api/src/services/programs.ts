@@ -204,6 +204,7 @@ export class ProgramsService {
           schoolRequirements: {
             name: dwMajorYear.collegeRequirementsTitle,
             requirements: dwMajorYear.collegeRequirements,
+            header: dwMajorYear.collegeHeader,
           },
         })
         .from(dwMajor)
@@ -270,6 +271,7 @@ export class ProgramsService {
     const base = this.db
       .select({
         id: dwSchoolRequirement.id,
+        header: dwSchoolRequirement.header,
         requirements: dwSchoolRequirement.requirements,
         catalogYear: dwSchoolRequirement.catalogYear,
       })

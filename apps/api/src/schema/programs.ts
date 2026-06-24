@@ -126,7 +126,7 @@ export const nonExclusiveQualifierSchema = z
   });
 
 export const qualifierSchema = z
-  .union([exclusiveQualifierSchema, nonExclusiveQualifierSchema])
+  .union([nonExclusiveQualifierSchema, exclusiveQualifierSchema])
   .openapi({
     description: "Furthur qualifiers for how courses can apply to a program requirement",
   });
@@ -377,7 +377,7 @@ export const programRequirementsResponseSchema = z.object({
   }),
   catalogYear: catalogYearOutputSchema,
   header: z.array(qualifierSchema).optional().openapi({
-    description: "Qualifiers that apply to all requirements in this block",
+    description: "Qualifiers that apply to all requirements in this program",
   }),
   requirements: z.array(programRequirementSchema).openapi({
     description:
@@ -393,6 +393,7 @@ export const majorRequirementsResponseSchema = programRequirementsResponseSchema
   schoolRequirements: z
     .object({
       name: z.string().openapi({ description: "Name for this school's requirements" }),
+      header: programRequirementsResponseSchema.shape.header,
       requirements: programRequirementsResponseSchema.shape.requirements,
     })
     .nullable()
@@ -418,6 +419,10 @@ export const specializationRequirementsResponseSchema = programRequirementsRespo
 export const ugradRequirementsResponseSchema = z.object({
   id: z.string().openapi({ description: "ID of the requirements block fetched" }),
   catalogYear: catalogYearOutputSchema,
+  header: z
+    .array(qualifierSchema)
+    .optional()
+    .openapi({ description: "Qualifiers that apply to all requirements in this block" }),
   requirements: z
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),
