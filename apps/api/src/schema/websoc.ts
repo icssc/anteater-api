@@ -130,7 +130,10 @@ export const websocQuerySchema = z.object({
           });
           return z.NEVER;
         }
-        parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
+        parsedNums.push({
+          _type: "ParsedInteger",
+          value: Number.parseInt(code, 10),
+        });
       }
       return parsedNums;
     })
@@ -189,6 +192,27 @@ export const websocQuerySchema = z.object({
         parsedCodes.push(code);
       }
       return parsedCodes;
+    })
+    .openapi({
+      description:
+        "A Code—Prerequisite required\n" +
+        "B Code—Authorization code required\n" +
+        "C Code—Fee required\n" +
+        "D Code—Pass/Not Pass option only\n" +
+        "E Code—Freshmen only\n" +
+        "F Code—Sophomores only\n" +
+        "G Code—Lower-division only\n" +
+        "H Code—Juniors only\n" +
+        "I Code—Seniors only\n" +
+        "J Code—Upper-division only\n" +
+        "K Code—Graduate only\n" +
+        "L Code—Major only\n" +
+        "M Code—Non-major only\n" +
+        "N Code—School major only\n" +
+        "O Code—Non-school major only\n" +
+        "R Code—Biomedical Pass/Fail course (School of Medicine only)\n" +
+        "S Code—Satisfactory/Unsatisfactory only\n" +
+        "X Code—Separate authorization codes required to add, drop, or change enrollment",
     }),
   includeRelatedCourses: z.coerce
     .string()
@@ -255,7 +279,27 @@ export const websocSectionSchema = z.object({
   sectionCode: z.string(),
   sectionType: z.enum(websocSectionTypes),
   numRequested: z.string(),
-  restrictions: z.string(),
+  restrictions: z.string().openapi({
+    description:
+      "A Code—Prerequisite required\n" +
+      "B Code—Authorization code required\n" +
+      "C Code—Fee required\n" +
+      "D Code—Pass/Not Pass option only\n" +
+      "E Code—Freshmen only\n" +
+      "F Code—Sophomores only\n" +
+      "G Code—Lower-division only\n" +
+      "H Code—Juniors only\n" +
+      "I Code—Seniors only\n" +
+      "J Code—Upper-division only\n" +
+      "K Code—Graduate only\n" +
+      "L Code—Major only\n" +
+      "M Code—Non-major only\n" +
+      "N Code—School major only\n" +
+      "O Code—Non-school major only\n" +
+      "R Code—Biomedical Pass/Fail course (School of Medicine only)\n" +
+      "S Code—Satisfactory/Unsatisfactory only\n" +
+      "X Code—Separate authorization codes required to add, drop, or change enrollment",
+  }),
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
   sectionComment: z.string(),
