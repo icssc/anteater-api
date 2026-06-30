@@ -244,6 +244,7 @@ export class AuditParser {
             }
 
             const parsedProgramType = programTypeSchema.parse(programType);
+            // If no code is specified, then the qualifer affects all programs that match the program type i.e. all majors, all minors, etc.
             if (!code) {
               nonExclusiveQualifier.appliedBlocks.push({
                 programType: parsedProgramType,
@@ -257,7 +258,7 @@ export class AuditParser {
               case "MAJOR":
               case "SPEC": {
                 // The degree type is not given as part of the code and must be inferred
-                // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist as BS-201 exists)
+                // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist if BS-201 exists)
                 // So we can match the correct degree
                 let foundDegree: string | undefined;
                 const ineligibleProgramKey = `${programId.school}:${programId.programType}:${code}`;
@@ -298,7 +299,7 @@ export class AuditParser {
                 if (!foundDegree) break;
                 if (parsedProgramType === "SPEC" && code.endsWith("@")) {
                   // The '@' wildcard can be used to denote a sharing with all specializations of a major, i.e `BS-153@`
-                  // note that we filter through potential specialzations, some of which may be outdated
+                  // note that we filter through potential specializations, some of which may be outdated
                   parsedCodes.push(
                     ...this.potentialSpecs
                       .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
