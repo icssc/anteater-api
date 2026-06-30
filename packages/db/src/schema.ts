@@ -92,6 +92,7 @@ export const DegreeWorksProgramType = [
   "MAJOR",
   "MINOR",
   "SPEC",
+  "LIBL",
   "OTHER",
 ] as const;
 

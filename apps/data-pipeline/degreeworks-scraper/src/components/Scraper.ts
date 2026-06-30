@@ -133,7 +133,9 @@ export class Scraper {
         (ent) =>
           ent.degree.degreeCode != null &&
           ent.degree.degreeStartTermYyyyst != null &&
-          // note that this parse will break if degrees are ever added/invalidated during or after calendar year 2050
+          // note that this parse will break if degrees are ever added/invalidated during or after calendar year 2050 (even
+          // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
+          // two-digit year 49 is interpreted as the year 1949
           this.toFullYear(ent.degree.degreeStartTermYyyyst.slice(1)) <=
             this.dw.getCatalogYear().slice(0, 4) &&
           (ent.degree.degreeEndTermYyyyst == null ||
@@ -249,13 +251,14 @@ export class Scraper {
       validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
     );
 
-    // Validate that for major codes for undergrad programs are unambiguous without their degree types
+    // Validate that for major codes for undergrad programs are unambiguous without their degree types.
+    // This is required for inferring the correct program from a major code when parsing qualifiers
     const seenUgradMajorCodes = new Map<string, ProgramCodes>();
     for (const degree of validDegrees) {
       if (degree.schoolCode !== "U") continue;
       const previousDegree = seenUgradMajorCodes.get(degree.majorCode);
-      // Check for different degree type b/c CSE as BS-193 twice (seperate listing by ICS and ENGRE departments)
-      // but are still unambiguous as they are duplicate listings for the identical program
+      // Check for different degree type b/c we are trying to ensure against ugrad programs with the same code but different degree types
+      // i.e. CSE is listed as BS-193 twice (seperate listings from ICS and ENGRE departments) but duplicate listings for the identical major is fine
       if (previousDegree && previousDegree.degreeCode !== degree.degreeCode) {
         console.warn(
           `Multiple undergraduate degrees found for major code ${degree.majorCode}: ${previousDegree.degreeCode} and ${degree.degreeCode}`,

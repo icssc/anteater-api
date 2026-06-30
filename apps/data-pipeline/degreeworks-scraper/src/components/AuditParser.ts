@@ -232,10 +232,6 @@ export class AuditParser {
               programType = programId.programType;
               code = programId.code;
             }
-            if (programType === "LIBL") {
-              programType = "OTHER";
-              code = "LIBL";
-            }
             if (programType === "ALLBLOCKS") {
               nonExclusiveQualifier.appliedBlocks.push(
                 ...([
@@ -316,6 +312,7 @@ export class AuditParser {
               }
               case "MINOR":
               case "COLLEGE":
+              case "LIBL":
                 // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
                 parsedCodes.push(code);
                 break;

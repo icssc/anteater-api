@@ -45,12 +45,6 @@ export class DegreeworksClient {
 
   sleep = (ms: number = this.delay) => new Promise((r) => setTimeout(r, ms));
 
-  static formatQueryParams(params: Record<string, string>) {
-    return Object.entries(params)
-      .map((kv) => kv.map(encodeURIComponent).join("="))
-      .join("&");
-  }
-
   private async parseResponse<T>(
     res: Response,
     schema: z.ZodType<T>,
@@ -81,14 +75,14 @@ export class DegreeworksClient {
   }
 
   async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
-    const params = DegreeworksClient.formatQueryParams({
+    const params = new URLSearchParams({
       studentId: this.studentId,
       // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
       school: "U",
       // there is no difference regardless of which of the four bachelor's degrees we ask for: BA, BFA, BMUS, BS
       degree: "BS",
     });
-    const res = await fetch(`${DegreeworksClient.AUDIT_URL}?${params}`, {
+    const res = await fetch(`${DegreeworksClient.AUDIT_URL}?${params.toString()}`, {
       method: "GET",
       headers: this.headers,
     });
@@ -241,6 +235,10 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
+    if (!res.ok && res.status === 401) {
+      throw Error(`[AuditParser] DW request was unauthorized. Try refreshing auth token?`);
+    }
+
     const json = await res.json();
     const parsed = dwMappingResponseSchema(path).parse(json);
     return new Map(parsed._embedded[path].map((x) => [x.key, x.description]));
