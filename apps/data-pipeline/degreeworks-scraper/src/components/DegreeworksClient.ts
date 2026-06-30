@@ -60,8 +60,8 @@ export class DegreeworksClient {
       for (const { path } of parsed.error.issues) {
         console.log(path);
         const failedField = path.reduce<unknown>((cur, key) => {
-          if (cur == null) return undefined;
-          if (typeof cur === "object" && cur !== null && Object.hasOwn(cur, key)) {
+          if (cur === null) return undefined;
+          if (typeof cur === "object" && Object.hasOwn(cur, key)) {
             return (cur as Record<string, unknown>)[key as string];
           }
           return undefined;
