@@ -284,6 +284,8 @@ export class Scraper {
       CHC4: honorsFourRequirements,
       CHC2: honorsTwoRequirements,
     } = ugradReqs;
+    // note that the blockId string for ugrad requirements ('U-SCHOOL-@@@') are not techinally correct DW-semanitcs-wise
+    // they are reasonable made-up values used to parse the block
     this.parsedUgradRequirements.set("UC", await this.ap.parseBlock("U-SCHOOL-UC", ucRequirements));
     this.parsedUgradRequirements.set("GE", await this.ap.parseBlock("U-SCHOOL-GE", geRequirements));
     if (honorsFourRequirements) {

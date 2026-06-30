@@ -48,29 +48,27 @@ export class AuditParser {
     this.potentialSpecs = potentialSpecs;
   }
 
-  parseBlock = async (
-    blockId: string,
-    block: Block,
-    otherBlock?: Block,
-  ): Promise<DegreeWorksProgram> => ({
-    ...this.parseBlockId(blockId),
-    name: block.title,
-    requirements: await this.ruleArrayToRequirements(
-      [...(otherBlock?.ruleArray ?? []), ...block.ruleArray],
-      this.parseBlockId(blockId),
-    ),
-    ...(block.header?.qualifierArray
+  async parseBlock(blockId: string, block: Block, otherBlock?: Block): Promise<DegreeWorksProgram> {
+    const programId = this.parseBlockId(blockId);
+    const header = block.header?.qualifierArray
       ? {
-          header: await this.parseQualifiers(
-            block.header.qualifierArray,
-            this.parseBlockId(blockId),
-          ),
+          header: await this.parseQualifiers(block.header.qualifierArray, programId),
         }
-      : {}),
-    // populate later; we cannot determine specializations on the spot
-    specs: [],
-    specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
-  });
+      : {};
+
+    return {
+      ...programId,
+      name: block.title,
+      requirements: await this.ruleArrayToRequirements(
+        [...(otherBlock?.ruleArray ?? []), ...block.ruleArray],
+        programId,
+      ),
+      ...header,
+      // populate later; we cannot determine specializations on the spot
+      specs: [],
+      specializationRequired: this.checkSpecializationIsRequired(block.ruleArray),
+    };
+  }
 
   lexOrd = new Intl.Collator().compare;
 
@@ -177,7 +175,7 @@ export class AuditParser {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
 
-  async checkSpecializationIsRequired(ruleArray: Rule[]) {
+  checkSpecializationIsRequired(ruleArray: Rule[]) {
     // We infer whether a major requires a specialization by searching for a
     // conditional rule with text that matches words related to "specialization."
 
@@ -221,13 +219,14 @@ export class AuditParser {
             let [programType, code] = blockId.split("=");
 
             // Preprocessing Steps:
-            // Some header qualifiers try to share '2' classes with itself, which doesn't make sense.
-            // We assume any qualifier that references itself with the same programType and code follows such case and can be skipped
+            // A set of BA programs share the same header, stating that every program in the set can share 2 classes with any other program in the set
+            // This includes a qualifer that tries to share 2 classes with itself
+            // We assume any qualifier that references itself with the same programType and code is meaningless because the correct way to share internally is with `THISBLOCK`
             if (programType === programId.programType && code === programId.code) {
               continue;
             }
             // The correct way to state classes can be shared with other requirements in the same program is by using `THISBLOCK`
-            // we replace this correct usage with the same programType and code
+            // we convert and serve this data as an absolute reference
             if (programType === "THISBLOCK") {
               programType = programId.programType;
               code = programId.code;
@@ -250,7 +249,7 @@ export class AuditParser {
                 programType: parsedProgramType,
                 maxShared: qualifier.classes,
               });
-              break;
+              continue;
             }
 
             const parsedCodes: string[] = [];
