@@ -14,9 +14,9 @@
   "dependencies": {
     "@auth/drizzle-adapter": "1.11.0",
     "@hookform/resolvers": "5.2.2",
-    "@opennextjs/cloudflare": "^1.17.3",
+    "@opennextjs/cloudflare": "^1.20.1",
     "@paralleldrive/cuid2": "3.3.0",
-    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-avatar": "^1.2.1",
     "@radix-ui/react-dialog": "1.1.15",
     "@radix-ui/react-dropdown-menu": "2.1.16",
     "@radix-ui/react-label": "2.1.8",
@@ -40,13 +40,13 @@
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "drizzle-kit": "0.31.10",
     "postcss": "8.5.8",
     "tailwindcss": "3.4.15",
     "typescript": "5.6.3",
-    "wrangler": "4.76.0"
+    "wrangler": "4.106.0"
   }
 }
