@@ -122,7 +122,7 @@ export const nonExclusiveQualifierSchema = z
   })
   .openapi({
     description:
-      "By default. A course cannot be used to satisfy multiple requirements within or across different programs; however, courses taken for a requirement with the nonexclusive qualifier can also be used in another program that matches the `programType` and `Code`",
+      "By default, A course cannot be used to satisfy multiple requirements within or across different programs; however, courses taken for a requirement with the nonexclusive qualifier can also be used in another program that matches the `programType` and `Code`",
   });
 
 export const qualifierSchema = z

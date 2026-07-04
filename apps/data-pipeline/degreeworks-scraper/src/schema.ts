@@ -45,7 +45,7 @@ export const qualifierDefaultSchema = qualifierClauseBaseSchema.extend({
     z.literal("MAXPASSFAIL"),
     z.literal("CLASSESCREDITS"),
     z.literal("MINGPA"),
-    z.literal("MAXCLASS"),
+    // z.literal("MAXCLASS"),
     z.literal("MINGRADE"),
     z.literal("MAXCREDIT"),
     z.literal("MINCLASS"),
