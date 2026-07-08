@@ -15,7 +15,7 @@
     "cross-fetch": "4.1.0",
     "json-diff": "1.0.6",
     "readline-sync": "1.4.10",
-    "sort-keys": "6.0.1"
+    "sort-keys": "6.0.0"
   },
   "devDependencies": {
     "@types/json-diff": "1.0.3",
