@@ -17,6 +17,6 @@
     "cross-fetch": "4.1.0"
   },
   "devDependencies": {
-    "wrangler": "catalog:"
+    "wrangler": "4.0.0"
   }
 }

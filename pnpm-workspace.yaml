@@ -6,11 +6,6 @@ packages:
   - "!packages/public"
   - packages/public/*
 
-catalog:
-  typescript: ^6.0.3
-  wrangler: ^4.106.0
-  zod: 4.4.2
-
 minimumReleaseAge: 1440
 
 onlyBuiltDependencies:
@@ -21,6 +16,3 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - workerd
-
-overrides:
-  "@auth/core": 0.41.2

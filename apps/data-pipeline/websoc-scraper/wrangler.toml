@@ -1,6 +1,6 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "anteater-api_websoc-scraper"
-compatibility_date = "2026-07-02"
+compatibility_date = "2026-02-26"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = false
 main = "src/handler.ts"
