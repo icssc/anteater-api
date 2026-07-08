@@ -26,7 +26,7 @@
     "prettier-plugin-packagejson": "3.0.2",
     "prettier-plugin-toml": "2.0.6",
     "tsx": "4.22.4",
-    "typescript": "6.0.3"
+    "typescript": "catalog:"
   },
   "packageManager": "pnpm@10.26.0",
   "engines": {

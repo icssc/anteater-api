@@ -14,9 +14,9 @@
     "@packages/stdlib": "workspace:*",
     "date-fns": "4.4.0",
     "winston": "3.19.0",
-    "zod": "4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "wrangler": "4.106.0"
+    "wrangler": "catalog:"
   }
 }

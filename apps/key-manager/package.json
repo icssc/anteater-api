@@ -36,7 +36,7 @@
     "react-hook-form": "7.80.0",
     "tailwind-merge": "3.6.0",
     "tailwindcss-animate": "1.0.7",
-    "zod": "4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@packages/key-types": "workspace:*",
@@ -46,7 +46,7 @@
     "drizzle-kit": "0.31.10",
     "postcss": "8.5.16",
     "tailwindcss": "4.3.2",
-    "typescript": "6.0.3",
-    "wrangler": "4.106.0"
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
   }
 }

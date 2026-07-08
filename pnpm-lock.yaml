@@ -4,6 +4,18 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    typescript:
+      specifier: ^6.0.3
+      version: 6.0.3
+    wrangler:
+      specifier: ^4.106.0
+      version: 4.106.0
+    zod:
+      specifier: 4.4.2
+      version: 4.4.2
+
 overrides:
   '@auth/core': 0.41.2
 
@@ -36,7 +48,7 @@ importers:
         specifier: 4.22.4
         version: 4.22.4
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   apps/api:
@@ -55,7 +67,7 @@ importers:
         version: 0.2.2(@cloudflare/workers-types@4.20241230.0)(hono@4.12.27)
       '@hono/zod-openapi':
         specifier: 1.4.0
-        version: 1.4.0(hono@4.12.27)(zod@4.4.3)
+        version: 1.4.0(hono@4.12.27)(zod@4.4.2)
       '@packages/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -78,14 +90,14 @@ importers:
         specifier: 0.5.3
         version: 0.5.3(hono@4.12.27)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
         version: link:../../packages/key-types
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/ap-exams-importer:
@@ -189,8 +201,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
 
   apps/data-pipeline/dining-scraper:
     dependencies:
@@ -207,11 +219,11 @@ importers:
         specifier: 3.19.0
         version: 3.19.0
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/grades-importer:
@@ -288,7 +300,7 @@ importers:
         version: 4.1.0
     devDependencies:
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/library-traffic-scraper:
@@ -303,11 +315,11 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/mview-refresher:
@@ -317,7 +329,7 @@ importers:
         version: link:../../../packages/db
     devDependencies:
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/sample-program-scraper:
@@ -372,14 +384,14 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       domhandler:
         specifier: 6.0.1
         version: 6.0.1
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/data-pipeline/websoc-scraper:
@@ -404,7 +416,7 @@ importers:
         version: 4.1.0
     devDependencies:
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   apps/key-manager:
@@ -482,8 +494,8 @@ importers:
         specifier: 1.0.7
         version: 1.0.7(tailwindcss@4.3.2)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 'catalog:'
+        version: 4.4.2
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -507,10 +519,10 @@ importers:
         specifier: 4.3.2
         version: 4.3.2
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
       wrangler:
-        specifier: 4.106.0
+        specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
   packages/db:
@@ -547,7 +559,7 @@ importers:
         specifier: 8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.16)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/stdlib: {}
@@ -5144,8 +5156,8 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
 
 snapshots:
 
@@ -5318,10 +5330,10 @@ snapshots:
       '@ast-grep/napi-win32-ia32-msvc': 0.40.5
       '@ast-grep/napi-win32-x64-msvc': 0.40.5
 
-  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.3)':
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.2)':
     dependencies:
       openapi3-ts: 4.6.0
-      zod: 4.4.3
+      zod: 4.4.2
 
   '@auth/core@0.41.2':
     dependencies:
@@ -6557,18 +6569,18 @@ snapshots:
       '@cloudflare/workers-types': 4.20241230.0
       hono: 4.12.27
 
-  '@hono/zod-openapi@1.4.0(hono@4.12.27)(zod@4.4.3)':
+  '@hono/zod-openapi@1.4.0(hono@4.12.27)(zod@4.4.2)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.3)
-      '@hono/zod-validator': 0.8.0(hono@4.12.27)(zod@4.4.3)
+      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.2)
+      '@hono/zod-validator': 0.8.0(hono@4.12.27)(zod@4.4.2)
       hono: 4.12.27
       openapi3-ts: 4.6.0
-      zod: 4.4.3
+      zod: 4.4.2
 
-  '@hono/zod-validator@0.8.0(hono@4.12.27)(zod@4.4.3)':
+  '@hono/zod-validator@0.8.0(hono@4.12.27)(zod@4.4.2)':
     dependencies:
       hono: 4.12.27
-      zod: 4.4.3
+      zod: 4.4.2
 
   '@hookform/resolvers@5.4.0(react-hook-form@7.80.0(react@19.2.7))':
     dependencies:
@@ -7340,7 +7352,7 @@ snapshots:
       '@scalar/helpers': 0.9.0
       nanoid: 5.1.16
       type-fest: 5.7.0
-      zod: 4.4.3
+      zod: 4.4.2
 
   '@scalar/validation@0.6.0': {}
 
@@ -9752,4 +9764,4 @@ snapshots:
       cookie: 1.1.1
       youch-core: 0.3.3
 
-  zod@4.4.3: {}
+  zod@4.4.2: {}
