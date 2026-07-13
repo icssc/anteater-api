@@ -49,7 +49,7 @@ export type PrerequisiteTree = {
   NOT?: Array<Prerequisite | PrerequisiteTree>;
 };
 
-export const course = pgTable(
+export const courses = pgTable(
   "course",
   {
     id: varchar("id").primaryKey(),
@@ -57,14 +57,14 @@ export const course = pgTable(
     department: varchar("department").notNull(),
     shortenedDept: varchar("shortened_dept")
       .notNull()
-      .generatedAlwaysAs((): SQL => sql`REPLACE(${course.department}, ' ', '')`),
+      .generatedAlwaysAs((): SQL => sql`REPLACE(${courses.department}, ' ', '')`),
     departmentAlias: varchar("department_alias"),
     courseNumber: varchar("course_number").notNull(),
     courseNumeric: integer("course_numeric")
       .notNull()
       .generatedAlwaysAs(
         (): SQL =>
-          sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
+          sql`CASE REGEXP_REPLACE(${courses.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${courses.courseNumber}, '\\D', '', 'g')::INTEGER END`,
       ),
     school: varchar("school").notNull(),
     title: varchar("title").notNull(),
@@ -132,11 +132,11 @@ export const prerequisite = pgTable(
 
 export const courseView = pgMaterializedView("course_view").as((qb) => {
   const dependency = aliasedTable(prerequisite, "dependency");
-  const prerequisiteCourse = aliasedTable(course, "prerequisite_course");
-  const dependencyCourse = aliasedTable(course, "dependency_course");
+  const prerequisiteCourse = aliasedTable(courses, "prerequisite_course");
+  const dependencyCourse = aliasedTable(courses, "dependency_course");
   return qb
     .select({
-      ...getTableColumns(course),
+      ...getTableColumns(courses),
       prerequisites: sql`
         ARRAY_REMOVE(COALESCE(
           (
@@ -151,8 +151,8 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
               END
             )
             FROM ${prerequisite}
-            LEFT JOIN ${course} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
-            WHERE ${prerequisite.dependencyId} = ${course.id}
+            LEFT JOIN ${courses} ${prerequisiteCourse} ON ${prerequisiteCourse.id} = ${prerequisite.prerequisiteId}
+            WHERE ${prerequisite.dependencyId} = ${courses.id}
           ),
         ARRAY[]::JSONB[]), NULL)
         `.as("prerequisites"),
@@ -170,8 +170,8 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
               END
             )
             FROM ${prerequisite} ${dependency}
-            LEFT JOIN ${course} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
-            WHERE ${dependency.prerequisiteId} = ${course.id}
+            LEFT JOIN ${courses} ${dependencyCourse} ON ${dependencyCourse.id} = ${dependency.dependencyId}
+            WHERE ${dependency.prerequisiteId} = ${courses.id}
           ),
         ARRAY[]::JSONB[]), NULL)
         `.as("dependencies"),
@@ -201,8 +201,8 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
         ), ARRAY[]::JSONB[]), NULL)
         `.as("instructors"),
     })
-    .from(course)
-    .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+    .from(courses)
+    .leftJoin(websocCourse, eq(websocCourse.courseId, courses.id))
     .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
     .leftJoin(websocSectionToInstructor, eq(websocSectionToInstructor.sectionId, websocSection.id))
     .leftJoin(websocInstructor, eq(websocInstructor.name, websocSectionToInstructor.instructorName))
@@ -218,5 +218,5 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
         ne(instructor.ucinetid, "student"),
       ),
     )
-    .groupBy(course.id);
+    .groupBy(courses.id);
 });

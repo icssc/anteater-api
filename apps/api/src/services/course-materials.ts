@@ -2,7 +2,7 @@ import type { database } from "@packages/db";
 import { and, eq, ilike, inArray, isNotNull } from "@packages/db/drizzle";
 import {
   courseMaterial,
-  type Term,
+  type materialTerms,
   websocCourse,
   websocSection,
   websocSectionToInstructor,
@@ -88,13 +88,11 @@ export class CourseMaterialsService {
     return rows
       .reduce((acc, row) => {
         if (!acc.has(row.materialId)) {
-          const displayQuarter = row.quarter.startsWith("Summer")
-            ? "Summer"
-            : (row.quarter as Extract<Term, "Fall" | "Winter" | "Spring" | "Summer">);
+          const displayQuarter = row.quarter.startsWith("Summer") ? "Summer" : row.quarter;
 
           acc.set(row.materialId, {
             ...row,
-            quarter: displayQuarter,
+            quarter: displayQuarter as (typeof materialTerms)[number],
             sectionCode: row.sectionCode.toString(10).padStart(5, "0"),
           });
         }

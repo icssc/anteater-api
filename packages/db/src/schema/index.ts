@@ -6,17 +6,15 @@ import {
   integer,
   json,
   jsonb,
-  pgEnum,
   pgMaterializedView,
   pgTable,
   real,
-  text,
   timestamp,
   uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { course } from "./course.ts";
+import { courses } from "./courses.ts";
 import {
   term,
   websocCourse,
@@ -25,7 +23,8 @@ import {
   websocSectionToInstructor,
 } from "./websoc.ts";
 
-export * from "./course.ts";
+export * from "./course-materials.ts";
+export * from "./courses.ts";
 export * from "./degreeworks.ts";
 export * from "./dining.ts";
 export * from "./websoc.ts";
@@ -246,35 +245,6 @@ export const libraryTrafficHistory = pgTable(
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
 
-export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
-
-export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
-export const textbookFormat = pgEnum("textbook_format", textbookFormats);
-export type TextbookFormat = (typeof textbookFormats)[number];
-
-export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
-export const materialRequirement = pgEnum("material_requirement", materialRequirements);
-export type MaterialRequirement = (typeof materialRequirements)[number];
-
-export const courseMaterial = pgTable(
-  "course_material",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    sectionId: uuid("section_id")
-      .references(() => websocSection.id)
-      .notNull(),
-    isbn: varchar("isbn"),
-    author: varchar("author"),
-    title: varchar("title").notNull(),
-    edition: varchar("edition"),
-    format: textbookFormat("format").notNull(),
-    requirement: materialRequirement("requirement"),
-    mmsId: varchar("mms_id"),
-    link: text("link"),
-  },
-  (table) => [index().on(table.sectionId)],
-);
-
 export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
   const shortenedNamesCte = qb.$with("shortened_names_cte").as(
     qb
@@ -290,7 +260,7 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
   const termsCte = qb.$with("terms_cte").as(
     qb
       .select({
-        courseId: course.id,
+        courseId: courses.id,
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
         terms: sql`
           ARRAY_REMOVE(ARRAY_AGG(DISTINCT
@@ -299,8 +269,8 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
             END
           ), NULL)`.as("terms"),
       })
-      .from(course)
-      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
+      .from(courses)
+      .leftJoin(websocCourse, eq(websocCourse.courseId, courses.id))
       .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
       .leftJoin(
         websocSectionToInstructor,
@@ -314,30 +284,30 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
         instructorToWebsocInstructor,
         eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
       )
-      .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
+      .groupBy(courses.id, instructorToWebsocInstructor.instructorUcinetid),
   );
   const coursesCte = qb.$with("courses_cte").as(
     qb
       .with(termsCte)
       .select({
         instructorUcinetid: termsCte.instructorUcinetid,
-        courseId: course.id,
+        courseId: courses.id,
         courseInfo: sql`
-          CASE WHEN ${course.id} IS NULL
+          CASE WHEN ${courses.id} IS NULL
           THEN NULL
           ELSE JSONB_BUILD_OBJECT(
-               'id', ${course.id},
-               'title', ${course.title},
-               'department', ${course.department},
-               'courseNumber', ${course.courseNumber},
+               'id', ${courses.id},
+               'title', ${courses.title},
+               'department', ${courses.department},
+               'courseNumber', ${courses.courseNumber},
                'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
           )
           END
           `.as("course_info"),
       })
-      .from(course)
-      .leftJoin(termsCte, eq(termsCte.courseId, course.id))
-      .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
+      .from(courses)
+      .leftJoin(termsCte, eq(termsCte.courseId, courses.id))
+      .groupBy(courses.id, termsCte.instructorUcinetid, termsCte.terms),
   );
   return qb
     .with(shortenedNamesCte, coursesCte)
