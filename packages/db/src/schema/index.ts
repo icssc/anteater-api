@@ -67,14 +67,11 @@ export type APCoursesGrantedTree =
       OR: (APCoursesGrantedTree | string)[];
     };
 
-// Sample Programs Enum
 export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 export type StandingYearType = (typeof StandingYear)[number];
 
-// Course Validation Entry Types
 export type CourseEntry = { type: "courseId"; value: string } | { type: "unknown"; value: string };
 
-// Sample Program Types
 export type SampleProgramEntry = {
   year: StandingYearType;
   fall: CourseEntry[];
@@ -82,7 +79,6 @@ export type SampleProgramEntry = {
   spring: CourseEntry[];
 };
 
-// Sample Programs Tables
 export const catalogProgram = pgTable("catalogue_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
@@ -98,8 +94,6 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
   variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
-// Misc. enums
-
 export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
 
 export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
@@ -109,12 +103,6 @@ export type TextbookFormat = (typeof textbookFormats)[number];
 export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
 export const materialRequirement = pgEnum("material_requirement", materialRequirements);
 export type MaterialRequirement = (typeof materialRequirements)[number];
-
-// WebSoc enums
-
-// Primary WebSoc tables
-
-// WebSoc-adjacent data tables
 
 export const larcSection = pgTable(
   "larc_section",
@@ -259,10 +247,6 @@ export const instructorToWebsocInstructor = pgTable(
     uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
   ],
 );
-
-// DegreeWorks data tables
-
-// Misc. tables
 
 export const calendarTerm = pgTable("calendar_term", {
   id: varchar("id")
