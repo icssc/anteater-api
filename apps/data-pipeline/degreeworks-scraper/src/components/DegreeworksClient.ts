@@ -179,7 +179,7 @@ export class DegreeworksClient {
     const major = json.blockArray.find(
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
-    const firstRule = major?.ruleArray[0];
+    const _firstRule = major?.ruleArray[0];
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
