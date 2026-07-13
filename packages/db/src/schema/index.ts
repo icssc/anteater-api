@@ -3,7 +3,6 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
-  decimal,
   index,
   integer,
   json,
@@ -17,47 +16,13 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { courseLevel, term, websocCourse, websocInstructor, websocSection } from "./websoc.ts";
+import { term, websocCourse, websocInstructor, websocSection } from "./websoc.ts";
 
+export * from "./course.ts";
 export * from "./degreeworks.ts";
 export * from "./dining.ts";
 export * from "./mview.ts";
 export * from "./websoc.ts";
-
-export type CoursePrerequisite = {
-  prereqType: "course";
-  coreq: false;
-  courseId: string;
-  minGrade?: string;
-};
-
-export type CourseCorequisite = {
-  prereqType: "course";
-  coreq: true;
-  courseId: string;
-};
-
-export type ExamPrerequisite = {
-  prereqType: "exam";
-  examName: string;
-  minGrade?: string;
-};
-
-export type Prerequisite = CoursePrerequisite | CourseCorequisite | ExamPrerequisite;
-
-export type PrerequisiteTree = {
-  AND?: Array<Prerequisite | PrerequisiteTree>;
-  OR?: Array<Prerequisite | PrerequisiteTree>;
-  NOT?: Array<Prerequisite | PrerequisiteTree>;
-};
-
-export type APCoursesGrantedTree =
-  | {
-      AND: (APCoursesGrantedTree | string)[];
-    }
-  | {
-      OR: (APCoursesGrantedTree | string)[];
-    };
 
 export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 export type StandingYearType = (typeof StandingYear)[number];
@@ -86,16 +51,6 @@ export const sampleProgramVariation = pgTable("sample_program_variation", {
   variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
-export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
-
-export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
-export const textbookFormat = pgEnum("textbook_format", textbookFormats);
-export type TextbookFormat = (typeof textbookFormats)[number];
-
-export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
-export const materialRequirement = pgEnum("material_requirement", materialRequirements);
-export type MaterialRequirement = (typeof materialRequirements)[number];
-
 export const larcSection = pgTable(
   "larc_section",
   {
@@ -120,73 +75,6 @@ export const larcSection = pgTable(
   (table) => [index().on(table.courseId)],
 );
 
-// Course/Instructor tables
-
-export const course = pgTable(
-  "course",
-  {
-    id: varchar("id").primaryKey(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-    department: varchar("department").notNull(),
-    shortenedDept: varchar("shortened_dept")
-      .notNull()
-      .generatedAlwaysAs((): SQL => sql`REPLACE(${course.department}, ' ', '')`),
-    departmentAlias: varchar("department_alias"),
-    courseNumber: varchar("course_number").notNull(),
-    courseNumeric: integer("course_numeric")
-      .notNull()
-      .generatedAlwaysAs(
-        (): SQL =>
-          sql`CASE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g') WHEN '' THEN 0 ELSE REGEXP_REPLACE(${course.courseNumber}, '\\D', '', 'g')::INTEGER END`,
-      ),
-    school: varchar("school").notNull(),
-    title: varchar("title").notNull(),
-    courseLevel: courseLevel("course_level").notNull(),
-    minUnits: decimal("min_units", { precision: 4, scale: 2 }).notNull(),
-    maxUnits: decimal("max_units", { precision: 4, scale: 2 }).notNull(),
-    description: text("description").notNull(),
-    departmentName: varchar("department_name").notNull(),
-    prerequisiteTree: json("prerequisite_tree").$type<PrerequisiteTree>().notNull(),
-    prerequisiteText: text("prerequisite_text").notNull(),
-    repeatability: varchar("repeatability").notNull(),
-    repeatabilityTimes: integer("repeatability_times"),
-    repeatabilityType: varchar("repeatability_type"),
-    gradingOption: varchar("grading_option").notNull(),
-    concurrent: varchar("concurrent").notNull(),
-    sameAs: varchar("same_as").notNull(),
-    restriction: text("restriction").notNull(),
-    overlap: text("overlap").notNull(),
-    corequisites: text("corequisites").notNull(),
-    isGE1A: boolean("is_ge_1a").notNull(),
-    isGE1B: boolean("is_ge_1b").notNull(),
-    isGE2: boolean("is_ge_2").notNull(),
-    isGE3: boolean("is_ge_3").notNull(),
-    isGE4: boolean("is_ge_4").notNull(),
-    isGE5A: boolean("is_ge_5a").notNull(),
-    isGE5B: boolean("is_ge_5b").notNull(),
-    isGE6: boolean("is_ge_6").notNull(),
-    isGE7: boolean("is_ge_7").notNull(),
-    isGE8: boolean("is_ge_8").notNull(),
-    geText: varchar("ge_text").notNull(),
-  },
-  (table) => [
-    index("course_search_index").using(
-      "gin",
-      sql`(
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.id}, '')), 'A') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.department}, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.departmentAlias}, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.shortenedDept}, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumber}, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.courseNumeric}::TEXT, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'C') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.description}, '')), 'D')
-)`,
-    ),
-    index("shortened_dept").on(table.shortenedDept),
-  ],
-);
-
 export const instructor = pgTable(
   "instructor",
   {
@@ -205,22 +93,6 @@ export const instructor = pgTable(
  SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'B')
 )`,
     ),
-  ],
-);
-
-export const prerequisite = pgTable(
-  "prerequisite",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    dependencyDept: varchar("dep_dept").notNull(),
-    prerequisiteId: varchar("prerequisite_id").notNull(),
-    dependencyId: varchar("dependency_id").notNull(),
-  },
-  (table) => [
-    index().on(table.dependencyDept),
-    index().on(table.prerequisiteId),
-    index().on(table.dependencyId),
-    uniqueIndex().on(table.prerequisiteId, table.dependencyId),
   ],
 );
 
@@ -296,6 +168,14 @@ export const studyRoomSlot = pgTable(
   ],
 );
 
+export type APCoursesGrantedTree =
+  | {
+      AND: (APCoursesGrantedTree | string)[];
+    }
+  | {
+      OR: (APCoursesGrantedTree | string)[];
+    };
+
 export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),
   catalogueName: varchar("catalogue_name"),
@@ -359,6 +239,16 @@ export const libraryTrafficHistory = pgTable(
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
+
+export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
+
+export const textbookFormats = ["Physical", "Electronic", "Both", "OER"] as const;
+export const textbookFormat = pgEnum("textbook_format", textbookFormats);
+export type TextbookFormat = (typeof textbookFormats)[number];
+
+export const materialRequirements = ["Required", "Recommended", "GoToClassFirst"] as const;
+export const materialRequirement = pgEnum("material_requirement", materialRequirements);
+export type MaterialRequirement = (typeof materialRequirements)[number];
 
 export const courseMaterial = pgTable(
   "course_material",
