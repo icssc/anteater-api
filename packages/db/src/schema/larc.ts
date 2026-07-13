@@ -1,5 +1,5 @@
 import { boolean, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { websocCourse } from ".";
+import { websocCourse } from "./websoc.ts";
 
 export const larcSection = pgTable(
   "larc_section",

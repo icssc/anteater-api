@@ -1,5 +1,5 @@
 import { index, pgEnum, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
-import { websocSection } from ".";
+import { websocSection } from "./websoc.ts";
 
 export const materialTerms = ["Fall", "Winter", "Spring", "Summer"] as const;
 

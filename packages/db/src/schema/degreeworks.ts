@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
-import { division } from ".";
+import { division } from "./websoc.ts";
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";

@@ -1,6 +1,6 @@
 import { type SQL, sql } from "drizzle-orm";
 import { date, pgTable, varchar } from "drizzle-orm/pg-core";
-import { term } from ".";
+import { term } from "./websoc.ts";
 
 export const calendarTerm = pgTable("calendar_term", {
   id: varchar("id")
