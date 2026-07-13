@@ -50,27 +50,19 @@ export type WebsocSectionFinalExam =
 export type FinalExamStatus = WebsocSectionFinalExam["examStatus"];
 
 export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
-
 export const term = pgEnum("term", terms);
-
 export type Term = (typeof terms)[number];
 
 export const courseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
-
 export const courseLevel = pgEnum("course_level", courseLevels);
-
 export type CourseLevel = (typeof courseLevels)[number];
 
 export const divisions = ["Undergraduate", "Graduate"] as const;
-
 export const division = pgEnum("division", divisions);
-
 export type Division = (typeof divisions)[number];
 
 export const websocStatuses = ["OPEN", "Waitl", "FULL", "NewOnly"] as const;
-
 export const websocStatus = pgEnum("websoc_status", websocStatuses);
-
 export type WebsocStatus = (typeof websocStatuses)[number];
 
 export const websocSectionTypes = [
@@ -87,9 +79,7 @@ export const websocSectionTypes = [
   "Tap",
   "Tut",
 ] as const;
-
 export const websocSectionType = pgEnum("websoc_section_type", websocSectionTypes);
-
 export type SectionType = (typeof websocSectionTypes)[number];
 
 export const websocMeta = pgTable("websoc_meta", {
