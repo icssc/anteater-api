@@ -273,7 +273,7 @@ export class AuditParser {
                   ) {
                     this.ineligiblePrograms.add(ineligibleProgramKey);
                     console.warn(
-                      `No undergrad program found with ${parsedProgramType} code, ${code}`,
+                      `No undergrad program found with ${parsedProgramType} code ${code}`,
                     );
                   }
                 }
