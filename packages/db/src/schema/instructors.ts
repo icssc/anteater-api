@@ -7,7 +7,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { courses } from "./courses";
+import { course } from "./courses";
 import { websocCourse, websocInstructor, websocSection, websocSectionToInstructor } from "./websoc";
 
 export const instructor = pgTable(
@@ -62,7 +62,7 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
   const termsCte = qb.$with("terms_cte").as(
     qb
       .select({
-        courseId: courses.id,
+        courseId: course.id,
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
         terms: sql`
           ARRAY_REMOVE(ARRAY_AGG(DISTINCT
@@ -71,8 +71,8 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
             END
           ), NULL)`.as("terms"),
       })
-      .from(courses)
-      .leftJoin(websocCourse, eq(websocCourse.courseId, courses.id))
+      .from(course)
+      .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
       .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
       .leftJoin(
         websocSectionToInstructor,
@@ -86,30 +86,30 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
         instructorToWebsocInstructor,
         eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
       )
-      .groupBy(courses.id, instructorToWebsocInstructor.instructorUcinetid),
+      .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
   );
   const coursesCte = qb.$with("courses_cte").as(
     qb
       .with(termsCte)
       .select({
         instructorUcinetid: termsCte.instructorUcinetid,
-        courseId: courses.id,
+        courseId: course.id,
         courseInfo: sql`
-          CASE WHEN ${courses.id} IS NULL
+          CASE WHEN ${course.id} IS NULL
           THEN NULL
           ELSE JSONB_BUILD_OBJECT(
-               'id', ${courses.id},
-               'title', ${courses.title},
-               'department', ${courses.department},
-               'courseNumber', ${courses.courseNumber},
+               'id', ${course.id},
+               'title', ${course.title},
+               'department', ${course.department},
+               'courseNumber', ${course.courseNumber},
                'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
           )
           END
           `.as("course_info"),
       })
-      .from(courses)
-      .leftJoin(termsCte, eq(termsCte.courseId, courses.id))
-      .groupBy(courses.id, termsCte.instructorUcinetid, termsCte.terms),
+      .from(course)
+      .leftJoin(termsCte, eq(termsCte.courseId, course.id))
+      .groupBy(course.id, termsCte.instructorUcinetid, termsCte.terms),
   );
   return qb
     .with(shortenedNamesCte, coursesCte)
