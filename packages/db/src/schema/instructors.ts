@@ -7,8 +7,13 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { course } from "./courses";
-import { websocCourse, websocInstructor, websocSection, websocSectionToInstructor } from "./websoc";
+import {
+  course,
+  websocCourse,
+  websocInstructor,
+  websocSection,
+  websocSectionToInstructor,
+} from ".";
 
 export const instructor = pgTable(
   "instructor",

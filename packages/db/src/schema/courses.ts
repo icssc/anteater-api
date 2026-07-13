@@ -13,14 +13,15 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { instructor, instructorToWebsocInstructor } from "./index.ts";
 import {
   courseLevel,
+  instructor,
+  instructorToWebsocInstructor,
   websocCourse,
   websocInstructor,
   websocSection,
   websocSectionToInstructor,
-} from "./websoc.ts";
+} from ".";
 
 export type CoursePrerequisite = {
   prereqType: "course";

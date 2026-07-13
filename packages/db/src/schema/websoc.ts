@@ -1,5 +1,3 @@
-// Types
-
 import { type SQL, sql } from "drizzle-orm";
 import {
   boolean,
