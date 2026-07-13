@@ -1,12 +1,10 @@
-import { eq, getTableColumns, ne, type SQL, sql } from "drizzle-orm";
+import { type SQL, sql } from "drizzle-orm";
 import {
   boolean,
   date,
   index,
   integer,
-  json,
   jsonb,
-  pgMaterializedView,
   pgTable,
   real,
   timestamp,
@@ -14,19 +12,14 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { courses } from "./courses.ts";
-import {
-  term,
-  websocCourse,
-  websocInstructor,
-  websocSection,
-  websocSectionToInstructor,
-} from "./websoc.ts";
+import { term, websocCourse } from "./websoc.ts";
 
+export * from "./ap-exams.ts";
 export * from "./course-materials.ts";
 export * from "./courses.ts";
 export * from "./degreeworks.ts";
 export * from "./dining.ts";
+export * from "./instructors.ts";
 export * from "./websoc.ts";
 
 export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
@@ -78,43 +71,6 @@ export const larcSection = pgTable(
     meetsSunday: boolean("meets_sunday").notNull().default(false),
   },
   (table) => [index().on(table.courseId)],
-);
-
-export const instructor = pgTable(
-  "instructor",
-  {
-    ucinetid: varchar("ucinetid").primaryKey(),
-    name: varchar("name").notNull(),
-    title: varchar("title").notNull(),
-    email: varchar("email").notNull(),
-    department: varchar("department").notNull(),
-  },
-  (table) => [
-    index("instructor_search_index").using(
-      "gin",
-      sql`(
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.ucinetid}, '')), 'A') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.name}, '')), 'B') ||
- SETWEIGHT(TO_TSVECTOR('english', COALESCE(${table.title}, '')), 'B')
-)`,
-    ),
-  ],
-);
-
-export const instructorToWebsocInstructor = pgTable(
-  "instructor_to_websoc_instructor",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    instructorUcinetid: varchar("instructor_ucinetid").references(() => instructor.ucinetid),
-    websocInstructorName: varchar("websoc_instructor_name")
-      .notNull()
-      .references(() => websocInstructor.name),
-  },
-  (table) => [
-    index().on(table.instructorUcinetid),
-    index().on(table.websocInstructorName),
-    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
-  ],
 );
 
 export const calendarTerm = pgTable("calendar_term", {
@@ -173,51 +129,6 @@ export const studyRoomSlot = pgTable(
   ],
 );
 
-export type APCoursesGrantedTree =
-  | {
-      AND: (APCoursesGrantedTree | string)[];
-    }
-  | {
-      OR: (APCoursesGrantedTree | string)[];
-    };
-
-export const apExam = pgTable("ap_exam", {
-  id: varchar("id").primaryKey(),
-  catalogueName: varchar("catalogue_name"),
-});
-
-export const apExamToReward = pgTable(
-  "ap_exam_to_reward",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    examId: varchar("exam_id")
-      .notNull()
-      .references(() => apExam.id, { onDelete: "cascade" }),
-    score: integer("score").notNull(),
-    reward: uuid("reward")
-      .notNull()
-      .references(() => apExamReward.id, { onDelete: "cascade" }),
-  },
-  (table) => [uniqueIndex().on(table.examId, table.score)],
-);
-
-export const apExamReward = pgTable("ap_exam_reward", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  unitsGranted: integer("units_granted").notNull(),
-  electiveUnitsGranted: integer("elective_units_granted").notNull(),
-  ge1aCoursesGranted: integer("ge_1a_courses_granted").notNull().default(0),
-  ge1bCoursesGranted: integer("ge_1b_courses_granted").notNull().default(0),
-  ge2CoursesGranted: integer("ge_2_courses_granted").notNull().default(0),
-  ge3CoursesGranted: integer("ge_3_courses_granted").notNull().default(0),
-  ge4CoursesGranted: integer("ge_4_courses_granted").notNull().default(0),
-  ge5aCoursesGranted: integer("ge_5a_courses_granted").notNull().default(0),
-  ge5bCoursesGranted: integer("ge_5b_courses_granted").notNull().default(0),
-  ge6CoursesGranted: integer("ge_6_courses_granted").notNull().default(0),
-  ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
-  ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
-  coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
-});
-
 export const libraryTraffic = pgTable(
   "library_traffic",
   {
@@ -244,85 +155,3 @@ export const libraryTrafficHistory = pgTable(
   },
   (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
 );
-
-export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
-  const shortenedNamesCte = qb.$with("shortened_names_cte").as(
-    qb
-      .select({
-        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
-          "shortened_names",
-        ),
-      })
-      .from(instructorToWebsocInstructor)
-      .groupBy(instructorToWebsocInstructor.instructorUcinetid),
-  );
-  const termsCte = qb.$with("terms_cte").as(
-    qb
-      .select({
-        courseId: courses.id,
-        instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        terms: sql`
-          ARRAY_REMOVE(ARRAY_AGG(DISTINCT
-            CASE WHEN ${websocCourse.year} IS NULL THEN NULL
-            ELSE CONCAT(${websocCourse.year}, ' ', ${websocCourse.quarter})
-            END
-          ), NULL)`.as("terms"),
-      })
-      .from(courses)
-      .leftJoin(websocCourse, eq(websocCourse.courseId, courses.id))
-      .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
-      .leftJoin(
-        websocSectionToInstructor,
-        eq(websocSectionToInstructor.sectionId, websocSection.id),
-      )
-      .leftJoin(
-        websocInstructor,
-        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
-      )
-      .leftJoin(
-        instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
-      )
-      .groupBy(courses.id, instructorToWebsocInstructor.instructorUcinetid),
-  );
-  const coursesCte = qb.$with("courses_cte").as(
-    qb
-      .with(termsCte)
-      .select({
-        instructorUcinetid: termsCte.instructorUcinetid,
-        courseId: courses.id,
-        courseInfo: sql`
-          CASE WHEN ${courses.id} IS NULL
-          THEN NULL
-          ELSE JSONB_BUILD_OBJECT(
-               'id', ${courses.id},
-               'title', ${courses.title},
-               'department', ${courses.department},
-               'courseNumber', ${courses.courseNumber},
-               'terms', COALESCE(${termsCte.terms}, ARRAY[]::TEXT[])
-          )
-          END
-          `.as("course_info"),
-      })
-      .from(courses)
-      .leftJoin(termsCte, eq(termsCte.courseId, courses.id))
-      .groupBy(courses.id, termsCte.instructorUcinetid, termsCte.terms),
-  );
-  return qb
-    .with(shortenedNamesCte, coursesCte)
-    .select({
-      ...getTableColumns(instructor),
-      shortenedNames: sql<
-        string[]
-      >`COALESCE(${shortenedNamesCte.shortenedNames}, ARRAY[]::TEXT[])`.as("shortened_names"),
-      courses: sql`
-          ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${coursesCte.courseInfo}), NULL)
-        `.as("courses"),
-    })
-    .from(instructor)
-    .leftJoin(shortenedNamesCte, eq(shortenedNamesCte.instructorUcinetid, instructor.ucinetid))
-    .leftJoin(coursesCte, eq(coursesCte.instructorUcinetid, instructor.ucinetid))
-    .where(ne(instructor.ucinetid, "student"))
-    .groupBy(instructor.ucinetid, shortenedNamesCte.shortenedNames);
-});
