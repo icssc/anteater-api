@@ -122,7 +122,7 @@ export const nonExclusiveQualifierSchema = z
   })
   .openapi({
     description:
-      "By default, A course cannot be used to satisfy multiple requirements within or across different programs; however, courses taken for a requirement with the nonexclusive qualifier can also be used in another program that matches the `programType` and `Code`",
+      "By default, a course cannot be used to satisfy two different requirements, unless the 'NonExclusive' qualifier allows re-use in another requirement with matching `programType` and `code`",
   });
 
 export const qualifierSchema = z
@@ -130,6 +130,11 @@ export const qualifierSchema = z
   .openapi({
     description: "Furthur qualifiers for how courses can apply to a program requirement",
   });
+
+const qualifierArraySchema = z.array(qualifierSchema).optional().openapi({
+  description: "Qualifiers for this requirement",
+});
+
 const catalogYearOutputSchema = z.string().openapi({
   description:
     "The catalog year from which data is actually derived. This will be a catalog closest to the input catalog year; see above.",
@@ -180,9 +185,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courseCount: z.number().int().nonnegative().openapi({
       description: "The number of courses from this set demanded by this requirement.",
     }),
-    qualifiers: z.array(qualifierSchema).optional().openapi({
-      description: "Qualifiers for this requirement",
-    }),
+    qualifiers: qualifierArraySchema,
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
@@ -208,9 +211,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       .int()
       .nonnegative()
       .openapi({ description: "The number of units needed for this requirement." }),
-    qualifiers: z.array(qualifierSchema).optional().openapi({
-      description: "Qualifiers for this requirement",
-    }),
+    qualifiers: qualifierArraySchema,
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
@@ -376,7 +377,7 @@ export const programRequirementsResponseSchema = z.object({
     description: "Human name for this program",
   }),
   catalogYear: catalogYearOutputSchema,
-  header: z.array(qualifierSchema).optional().openapi({
+  qualifiers: qualifierArraySchema.openapi({
     description: "Qualifiers that apply to all requirements in this program",
   }),
   requirements: z.array(programRequirementSchema).openapi({
@@ -393,7 +394,7 @@ export const majorRequirementsResponseSchema = programRequirementsResponseSchema
   schoolRequirements: z
     .object({
       name: z.string().openapi({ description: "Name for this school's requirements" }),
-      header: programRequirementsResponseSchema.shape.header,
+      qualifiers: programRequirementsResponseSchema.shape.qualifiers,
       requirements: programRequirementsResponseSchema.shape.requirements,
     })
     .nullable()
@@ -419,10 +420,9 @@ export const specializationRequirementsResponseSchema = programRequirementsRespo
 export const ugradRequirementsResponseSchema = z.object({
   id: z.string().openapi({ description: "ID of the requirements block fetched" }),
   catalogYear: catalogYearOutputSchema,
-  header: z
-    .array(qualifierSchema)
-    .optional()
-    .openapi({ description: "Qualifiers that apply to all requirements in this block" }),
+  qualifiers: qualifierArraySchema.openapi({
+    description: "Qualifiers that apply to all requirements in this block",
+  }),
   requirements: z
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),
