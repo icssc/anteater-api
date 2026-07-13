@@ -23,7 +23,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { aliasedTable } from "./drizzle.ts";
+import { aliasedTable } from "../drizzle.ts";
 
 // Types
 export type HourMinute = { hour: number; minute: number };
@@ -101,32 +101,6 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
    */
   specs: string[];
   specializationRequired: boolean;
-};
-
-/**
- * Information nessessary to find complete major requirements
- * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
- * @param degreeCode a degree code, e.g. "BS"
- * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
- * @param majorCode a major code
- * @param specCode a specialization code
- */
-export type ProgramCodes = {
-  schoolCode: string;
-  degreeCode: string;
-  collegeCode?: string;
-  majorCode: string;
-  specCode?: string;
-};
-
-/**
- * college requirements can vary by major and major requirements can vary by specialization
- * eventually, we may want degree type; e.g. MFA provides some requirements
- */
-export type MajorProgram = {
-  college?: DegreeWorksProgram;
-  major: DegreeWorksProgram;
-  specCode?: string;
 };
 
 /**
