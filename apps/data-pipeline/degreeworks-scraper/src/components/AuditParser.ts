@@ -31,10 +31,15 @@ export class AuditParser {
   private static readonly WILDCARD_REGEX = /\w@/;
   private static readonly RANGE_REGEX = /-\w+/;
 
+  // Set of potential majors and specializations are used to parse references to other programs in a qualifier
+  // 'potential', as outdated programs are not filtered out
   private potentialMajors: ProgramCodes[] | undefined;
   private potentialSpecs: string[] | undefined;
 
   private requirementIdMap = new Map<string, string>();
+
+  // The set of programs that are referenced by a degreeworks qualifer, but not valid during the given catalog year
+  // We maintain a set in order to only log a warning the first time this illegible program is referenced (as to not clutter the output)
   private ineligiblePrograms = new Set<string>();
 
   constructor(
