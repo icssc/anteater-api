@@ -4,7 +4,6 @@ import {
   date,
   index,
   integer,
-  jsonb,
   pgTable,
   real,
   timestamp,
@@ -20,34 +19,9 @@ export * from "./courses.ts";
 export * from "./degreeworks.ts";
 export * from "./dining.ts";
 export * from "./instructors.ts";
+export * from "./sample-programs.ts";
+export * from "./study-rooms.ts";
 export * from "./websoc.ts";
-
-export const StandingYear = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
-export type StandingYearType = (typeof StandingYear)[number];
-
-export type CourseEntry = { type: "courseId"; value: string } | { type: "unknown"; value: string };
-
-export type SampleProgramEntry = {
-  year: StandingYearType;
-  fall: CourseEntry[];
-  winter: CourseEntry[];
-  spring: CourseEntry[];
-};
-
-export const catalogProgram = pgTable("catalogue_program", {
-  id: varchar("id").primaryKey(),
-  programName: varchar("program_name").notNull(),
-});
-
-export const sampleProgramVariation = pgTable("sample_program_variation", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  programId: varchar("program_id")
-    .notNull()
-    .references(() => catalogProgram.id, { onDelete: "cascade" }),
-  label: varchar("label"),
-  sampleProgram: jsonb("sample_program").$type<SampleProgramEntry[]>().notNull(),
-  variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
-});
 
 export const larcSection = pgTable(
   "larc_section",
@@ -88,46 +62,6 @@ export const calendarTerm = pgTable("calendar_term", {
   finalsEnd: date("finals_end", { mode: "date" }).notNull(),
   socAvailable: date("soc_available", { mode: "date" }).notNull(),
 });
-
-export const studyLocation = pgTable("study_location", {
-  id: varchar("id").primaryKey(),
-  name: varchar("name").notNull(),
-});
-
-export const studyRoom = pgTable(
-  "study_room",
-  {
-    id: varchar("id").primaryKey(),
-    name: varchar("name").notNull(),
-    capacity: integer("capacity"),
-    location: varchar("location").notNull(),
-    description: varchar("description").notNull(),
-    directions: varchar("directions").notNull(),
-    techEnhanced: boolean("tech_enhanced"),
-    url: varchar("url"),
-    studyLocationId: varchar("study_location_id")
-      .references(() => studyLocation.id)
-      .notNull(),
-  },
-  (table) => [index().on(table.studyLocationId)],
-);
-
-export const studyRoomSlot = pgTable(
-  "study_room_slot",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    studyRoomId: varchar("study_room_id")
-      .references(() => studyRoom.id)
-      .notNull(),
-    start: timestamp("start", { mode: "date" }).notNull(),
-    end: timestamp("end", { mode: "date" }).notNull(),
-    isAvailable: boolean("is_available").notNull(),
-  },
-  (table) => [
-    index().on(table.studyRoomId),
-    uniqueIndex().on(table.studyRoomId, table.start, table.end),
-  ],
-);
 
 export const libraryTraffic = pgTable(
   "library_traffic",
