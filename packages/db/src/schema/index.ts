@@ -1,5 +1,4 @@
-import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, getTableColumns, ne, type SQL, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +7,7 @@ import {
   json,
   jsonb,
   pgEnum,
+  pgMaterializedView,
   pgTable,
   real,
   text,
@@ -16,7 +16,14 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { term, websocCourse, websocInstructor, websocSection } from "./websoc.ts";
+import { course } from "./course.ts";
+import {
+  term,
+  websocCourse,
+  websocInstructor,
+  websocSection,
+  websocSectionToInstructor,
+} from "./websoc.ts";
 
 export * from "./course.ts";
 export * from "./degreeworks.ts";
