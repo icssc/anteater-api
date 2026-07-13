@@ -38,8 +38,6 @@ export type ConfirmedWebsocSectionMeeting = {
   endTime: HourMinute;
 };
 
-export type FinalExamStatus = "SCHEDULED_FINAL" | "TBA_FINAL" | "NO_FINAL";
-
 export type WebsocSectionMeeting = TBAWebsocSectionMeeting | ConfirmedWebsocSectionMeeting;
 
 export type NoneOrTBAWebsocSectionFinalExam = {
