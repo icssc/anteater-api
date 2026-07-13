@@ -4,8 +4,6 @@ import type {
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
-  MajorProgram,
-  ProgramCodes,
 } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
@@ -18,6 +16,7 @@ import {
   type rewardTypeSchema,
   rewardTypesResponseSchema,
 } from "../schema.ts";
+import type { MajorProgram, ProgramCodes } from "./DegreeworksClient.ts";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
