@@ -11,6 +11,7 @@ import type {
   ProgramCodes,
 } from "@packages/db/schema";
 import { course, type DegreeWorksProgramType } from "@packages/db/schema";
+import { getFromMapOrThrow } from "@packages/stdlib";
 import { programTypeSchema } from "src/schema";
 import type { Block, QualifierClause, Rule, WithClause } from "$types";
 import {
@@ -209,7 +210,8 @@ export class AuditParser {
             });
           }
 
-          const nonExclusiveQualifier = qualifiers.get(
+          const nonExclusiveQualifier = getFromMapOrThrow(
+            qualifiers,
             "NONEXCLUSIVE",
           ) as DegreeWorksNonExclusivityQualifier;
 
