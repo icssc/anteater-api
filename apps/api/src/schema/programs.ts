@@ -97,7 +97,7 @@ export const exclusiveQualifierSchema = z
   })
   .openapi({
     description:
-      "A Qualifier in the requirement level that reverts a nonexclusive qualifier on the header level to mark this requirement as unable to share courses with other programs",
+      "When present on a requirement, reverts a `NonExclusive` qualifier on a parent block, preventing courses fulfilling part of this requirement from being used in other requirements",
   });
 
 export const nonExclusiveQualifierSchema = z
