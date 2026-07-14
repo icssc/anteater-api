@@ -12,7 +12,7 @@ import type {
 } from "@packages/db/schema";
 import { course, type DegreeWorksProgramType } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
-import { programTypeSchema } from "src/schema";
+import { programTypeSchema } from "src/schema.ts";
 import type { Block, QualifierClause, Rule, WithClause } from "$types";
 import {
   andTrees,
