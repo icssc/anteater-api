@@ -57,10 +57,8 @@ export class AuditParser {
   async parseBlock(blockId: string, block: Block, otherBlock?: Block): Promise<DegreeWorksProgram> {
     const programId = this.parseBlockId(blockId);
     const header = block.header?.qualifierArray
-      ? {
-          header: await this.parseQualifiers(block.header.qualifierArray, programId),
-        }
-      : {};
+      ? await this.parseQualifiers(block.header.qualifierArray, programId)
+      : [];
 
     return {
       ...programId,
@@ -69,7 +67,7 @@ export class AuditParser {
         [...(otherBlock?.ruleArray ?? []), ...block.ruleArray],
         programId,
       ),
-      ...header,
+      ...(header.length && { header }),
       // populate later; we cannot determine specializations on the spot
       specs: [],
       specializationRequired: this.checkSpecializationIsRequired(block.ruleArray),
