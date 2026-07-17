@@ -220,7 +220,7 @@ export type StandingYearType = (typeof StandingYear)[number];
 export type CourseEntry = { type: "courseId"; value: string } | { type: "unknown"; value: string };
 
 // Sample Program Types
-export type SampleProgramEntry = {
+export type CatalogProgramEntry = {
   year: StandingYearType;
   fall: CourseEntry[];
   winter: CourseEntry[];
@@ -239,7 +239,7 @@ export const catalogueProgramVariation = pgTable("catalogue_program_variation", 
     .notNull()
     .references(() => catalogProgram.id, { onDelete: "cascade" }),
   label: varchar("label"),
-  catalogueProgram: jsonb("catalogue_program").$type<SampleProgramEntry[]>().notNull(),
+  catalogueProgram: jsonb("catalogue_program").$type<CatalogProgramEntry[]>().notNull(),
   variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
