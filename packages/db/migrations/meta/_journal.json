@@ -246,6 +246,13 @@
       "when": 1781820145349,
       "tag": "0034_dining_event_null_start",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1784267718964,
+      "tag": "0035_rename_sample_program_to_catalogue_program",
+      "breakpoints": true
     }
   ]
 }
