@@ -1,8 +1,8 @@
 import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
 import type { z } from "zod";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "$schema";
 import type { Block, UndergraduateRequirements } from "$types";
-import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "../schema";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";

@@ -10,13 +10,13 @@ import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 import type { z } from "zod";
 import { AuditParser, DegreeworksClient } from "$components";
-import type { Block, SpecializationCache } from "$types";
 import {
   type reportSchema,
   reportsResponseSchema,
   type rewardTypeSchema,
   rewardTypesResponseSchema,
-} from "../schema.ts";
+} from "$schema";
+import type { Block, SpecializationCache } from "$types";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
