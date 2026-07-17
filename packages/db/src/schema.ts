@@ -86,9 +86,19 @@ export type PrerequisiteTree = {
   NOT?: Array<Prerequisite | PrerequisiteTree>;
 };
 
+export const DegreeWorksProgramType = [
+  "SCHOOL",
+  "COLLEGE",
+  "MAJOR",
+  "MINOR",
+  "SPEC",
+  "LIBL",
+  "OTHER",
+] as const;
+
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
+  programType: (typeof DegreeWorksProgramType)[number];
   code: string;
   degreeType?: string;
 };
@@ -96,6 +106,7 @@ export type DegreeWorksProgramId = {
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
   requirements: DegreeWorksRequirement[];
+  header?: DegreeWorksRequirementQualifier[];
   /**
    * The set of specializations (if any) that this program has.
    */
@@ -171,6 +182,7 @@ export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
   courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
@@ -178,6 +190,7 @@ export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
   courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
@@ -203,6 +216,23 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksGroupRequirement
     | DegreeWorksMarkerRequirement
   );
+
+export type DegreeWorksNonExclusivityQualifier = {
+  qualifierType: "NonExclusive";
+  appliedBlocks: {
+    programType: (typeof DegreeWorksProgramType)[number];
+    code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
+    maxShared?: string;
+  }[];
+};
+
+export type DegreeWorksExclusivityQualifier = {
+  qualifierType: "Exclusive";
+};
+
+export type DegreeWorksRequirementQualifier =
+  | DegreeWorksNonExclusivityQualifier
+  | DegreeWorksExclusivityQualifier;
 
 export type APCoursesGrantedTree =
   | {
@@ -733,6 +763,7 @@ export const dwSchoolRequirement = pgTable(
   {
     id: varchar("id").notNull(),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.id, table.catalogYear)],
@@ -773,6 +804,7 @@ export const dwMajorRequirement = pgTable("dw_major_requirement", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+  header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
@@ -785,6 +817,7 @@ export const dwMajorYear = pgTable(
     catalogYear: varchar("catalog_year").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirementsTitle: varchar("college_requirements_title"),
+    collegeHeader: jsonb("college_header").$type<DegreeWorksRequirementQualifier[]>(),
     collegeRequirements: jsonb("college_requirements").$type<DegreeWorksRequirement[]>(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
@@ -802,6 +835,7 @@ export const dwMinorRequirement = pgTable(
       .notNull()
       .references(() => dwMinor.id, { onDelete: "cascade" }),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
@@ -826,6 +860,7 @@ export const dwSpecializationRequirement = pgTable(
       .notNull()
       .references(() => dwSpecialization.id),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
