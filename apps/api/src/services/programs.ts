@@ -2,6 +2,7 @@ import type { database } from "@packages/db";
 import { and, eq, inArray, isNull, max, type SQL, sql } from "@packages/db/drizzle";
 import {
   catalogProgram,
+  catalogueProgramVariation,
   dwDegree,
   dwMajor,
   dwMajorRequirement,
@@ -12,7 +13,6 @@ import {
   dwSchoolRequirement,
   dwSpecialization,
   dwSpecializationRequirement,
-  sampleProgramVariation,
 } from "@packages/db/schema";
 import { orNull } from "@packages/stdlib";
 import type { z } from "zod";
@@ -287,18 +287,21 @@ export class ProgramsService {
           COALESCE(
             JSONB_AGG(
               JSONB_BUILD_OBJECT(
-                'label', ${sampleProgramVariation.label},
-                'courses', ${sampleProgramVariation.sampleProgram},
-                'notes', ${sampleProgramVariation.variationNotes}
+                'label', ${catalogueProgramVariation.label},
+                'courses', ${catalogueProgramVariation.catalogueProgram},
+                'notes', ${catalogueProgramVariation.variationNotes}
               )
-              ORDER BY ${sampleProgramVariation.id}
-            ) FILTER (WHERE ${sampleProgramVariation.id} IS NOT NULL),
+              ORDER BY ${catalogueProgramVariation.id}
+            ) FILTER (WHERE ${catalogueProgramVariation.id} IS NOT NULL),
             '[]'::jsonb
           )
         `.as("variations"),
       })
       .from(catalogProgram)
-      .leftJoin(sampleProgramVariation, eq(catalogProgram.id, sampleProgramVariation.programId))
+      .leftJoin(
+        catalogueProgramVariation,
+        eq(catalogProgram.id, catalogueProgramVariation.programId),
+      )
       .where(query.id ? eq(catalogProgram.id, query.id) : undefined)
       .groupBy(catalogProgram.id);
   }

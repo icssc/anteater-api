@@ -233,13 +233,13 @@ export const catalogProgram = pgTable("catalogue_program", {
   programName: varchar("program_name").notNull(),
 });
 
-export const sampleProgramVariation = pgTable("sample_program_variation", {
+export const catalogueProgramVariation = pgTable("catalogue_program_variation", {
   id: uuid("id").primaryKey().defaultRandom(),
   programId: varchar("program_id")
     .notNull()
     .references(() => catalogProgram.id, { onDelete: "cascade" }),
   label: varchar("label"),
-  sampleProgram: jsonb("sample_program").$type<SampleProgramEntry[]>().notNull(),
+  catalogueProgram: jsonb("catalogue_program").$type<SampleProgramEntry[]>().notNull(),
   variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
