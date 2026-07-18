@@ -23,16 +23,16 @@ type YearPlan @cacheControl(maxAge: 86400) {
     spring: [CourseEntry!]!
 }
 
-type SampleProgramVariation @cacheControl(maxAge: 86400) {
+type CatalogProgramVariation @cacheControl(maxAge: 86400) {
     label: String
     courses: [YearPlan!]!
     notes: [String!]!
 }
 
-type SampleProgram @cacheControl(maxAge: 86400) {
+type CatalogProgram @cacheControl(maxAge: 86400) {
     id: String!
     programName: String!
-    variations: [SampleProgramVariation!]!
+    variations: [CatalogProgramVariation!]!
 }
 
 input SampleProgramsQuery {
@@ -40,6 +40,6 @@ input SampleProgramsQuery {
 }
 
 extend type Query {
-    samplePrograms(query: SampleProgramsQuery): [SampleProgram!]!
+    samplePrograms(query: SampleProgramsQuery): [CatalogProgram!]!
 }
 `;
