@@ -228,18 +228,18 @@ export type CatalogProgramEntry = {
 };
 
 // Sample Programs Tables
-export const catalogProgram = pgTable("catalogue_program", {
+export const catalogProgram = pgTable("catalog_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
 });
 
-export const catalogueProgramVariation = pgTable("catalogue_program_variation", {
+export const catalogProgramVariation = pgTable("catalog_program_variation", {
   id: uuid("id").primaryKey().defaultRandom(),
   programId: varchar("program_id")
     .notNull()
     .references(() => catalogProgram.id, { onDelete: "cascade" }),
   label: varchar("label"),
-  catalogueProgram: jsonb("catalogue_program").$type<CatalogProgramEntry[]>().notNull(),
+  catalogProgram: jsonb("catalog_program").$type<CatalogProgramEntry[]>().notNull(),
   variationNotes: varchar("variation_notes").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
 });
 
