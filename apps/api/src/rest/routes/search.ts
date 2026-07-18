@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
-import { accessController, productionCache } from "$middleware";
+import { productionCache } from "$middleware";
 import {
   response200,
   response422,
@@ -29,7 +29,7 @@ const searchRoute = createRoute({
   },
 });
 
-searchRouter.use("*", accessController("FUZZY_SEARCH"));
+//searchRouter.use("*", accessController("FUZZY_SEARCH"));
 searchRouter.get(
   "*",
   productionCache({ cacheName: "anteater-api", cacheControl: "max-age=86400" }),
