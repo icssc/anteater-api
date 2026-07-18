@@ -253,13 +253,6 @@
       "when": 1784267718964,
       "tag": "0035_rename_sample_program_to_catalogue_program",
       "breakpoints": true
-    },
-    {
-      "idx": 36,
-      "version": "7",
-      "when": 1784357491113,
-      "tag": "0036_rename_catalogue_to_catalog",
-      "breakpoints": true
     }
   ]
 }

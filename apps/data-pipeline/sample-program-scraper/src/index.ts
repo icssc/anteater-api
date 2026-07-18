@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { and, eq, inArray } from "@packages/db/drizzle";
 import {
-  type CatalogProgramEntry,
   catalogProgram,
-  catalogProgramVariation,
   course,
+  type SampleProgramEntry,
   type StandingYearType,
+  sampleProgramVariation,
 } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
@@ -51,7 +51,7 @@ type CourseValidationResult =
 // Represents a single variation within a program (before validation)
 type ScrapedProgramVariation = {
   label?: string;
-  catalogProgram: UnvalidatedSampleProgramEntry[];
+  sampleProgram: UnvalidatedSampleProgramEntry[];
   variationNotes: string[];
 };
 
@@ -66,7 +66,7 @@ type ScrapedProgram = {
 // Represents a single variation within a program (after validation)
 type ProgramVariation = {
   label?: string;
-  catalogProgram: CatalogProgramEntry[];
+  sampleProgram: SampleProgramEntry[];
   variationNotes: string[];
 };
 
@@ -262,9 +262,9 @@ async function transformCourseCodesToIds(
     const transformedVariations: ProgramVariation[] = [];
 
     for (const variation of program.variations) {
-      const transformedSampleProgram: CatalogProgramEntry[] = [];
+      const transformedSampleProgram: SampleProgramEntry[] = [];
 
-      for (const year of variation.catalogProgram) {
+      for (const year of variation.sampleProgram) {
         // Transform each term's courses in parallel
         const [fall, winter, spring] = await Promise.all([
           Promise.all(year.fall.map((code) => interpretCourseString(db, code))),
@@ -277,7 +277,7 @@ async function transformCourseCodesToIds(
 
       transformedVariations.push({
         label: variation.label,
-        catalogProgram: transformedSampleProgram,
+        sampleProgram: transformedSampleProgram,
         variationNotes: variation.variationNotes,
       });
     }
@@ -315,7 +315,7 @@ async function storeSampleProgramsInDB(
     program.variations.map((variation) => ({
       programId: program.majorId,
       label: orNull(variation.label),
-      catalogProgram: variation.catalogProgram,
+      sampleProgram: variation.sampleProgram,
       variationNotes: variation.variationNotes,
     })),
   );
@@ -329,8 +329,8 @@ async function storeSampleProgramsInDB(
 
   const existingVariations = await db
     .select()
-    .from(catalogProgramVariation)
-    .where(inArray(catalogProgramVariation.programId, programIds));
+    .from(sampleProgramVariation)
+    .where(inArray(sampleProgramVariation.programId, programIds));
 
   const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
   const scrapedData = { catalogPrograms: catalogueRows, variations: variationRows };
@@ -371,7 +371,7 @@ async function storeSampleProgramsInDB(
 
     await tx.insert(catalogProgram).values(catalogueRows);
 
-    await tx.insert(catalogProgramVariation).values(variationRows);
+    await tx.insert(sampleProgramVariation).values(variationRows);
   });
 
   logger.info(`Successfully stored ${catalogueRows.length} sample programs`);
@@ -566,7 +566,7 @@ async function scrapeSamplePrograms(programPath: string) {
       logger.info(`Found ${variationNotes.length} notes for single variation`);
 
       variations.push({
-        catalogProgram: sampleProgram,
+        sampleProgram: sampleProgram,
         variationNotes,
       });
     } else {
@@ -654,7 +654,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
         variations.push({
           label: label || undefined,
-          catalogProgram: sampleProgram,
+          sampleProgram,
           variationNotes,
         });
       } else {
