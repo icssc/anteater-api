@@ -1,5 +1,5 @@
 {
-  "id": "90212aff-4c15-44e6-a8f3-66170f4f4051",
+  "id": "e28f4e08-163e-4481-9edb-8128fed00607",
   "prevId": "4a9b8111-52ec-415b-a9f5-9f86dde73e7f",
   "version": "7",
   "dialect": "postgresql",
@@ -307,8 +307,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.catalogue_program_variation": {
-      "name": "catalogue_program_variation",
+    "public.catalog_program_variation": {
+      "name": "catalog_program_variation",
       "schema": "",
       "columns": {
         "id": {
@@ -330,8 +330,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "catalogue_program": {
-          "name": "catalogue_program",
+        "catalog_program": {
+          "name": "catalog_program",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
@@ -346,9 +346,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "catalogue_program_variation_program_id_catalogue_program_id_fk": {
-          "name": "catalogue_program_variation_program_id_catalogue_program_id_fk",
-          "tableFrom": "catalogue_program_variation",
+        "catalog_program_variation_program_id_catalogue_program_id_fk": {
+          "name": "catalog_program_variation_program_id_catalogue_program_id_fk",
+          "tableFrom": "catalog_program_variation",
           "tableTo": "catalogue_program",
           "columnsFrom": ["program_id"],
           "columnsTo": ["id"],
