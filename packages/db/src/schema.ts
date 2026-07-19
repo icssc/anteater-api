@@ -227,8 +227,8 @@ export type CatalogProgramEntry = {
   spring: CourseEntry[];
 };
 
-// Sample Programs Tables
-export const catalogProgram = pgTable("catalog_program", {
+// Catalogue Program Tables Tables
+export const catalogProgram = pgTable("catalogue_program", {
   id: varchar("id").primaryKey(),
   programName: varchar("program_name").notNull(),
 });
