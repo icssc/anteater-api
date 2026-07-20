@@ -8,7 +8,7 @@
     ".": "./src/index.ts",
     "./drizzle": "./src/drizzle.ts",
     "./drizzle-pg": "./src/drizzle-pg.ts",
-    "./schema": "./src/schema.ts",
+    "./schema": "./src/schema/index.ts",
     "./utils": "./src/utils.ts"
   },
   "main": "src/index.ts",
