@@ -236,7 +236,10 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/AND/).map((prereq) => prereq.trim());
+  /*if (/[A-Za-z]AND(?=[^A-Za-z]|$)|(?:^|[^A-Za-z])AND[A-Za-z]/.test(prereqList)) {
+    logger.warn(`Glued AND still present after HTML-tag fix: "${prereqList}"`);
+  }*/
+  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = prereq
@@ -274,6 +277,10 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
 async function scrapePrerequisitePage(deptCode: string, url: string) {
   logger.info(`Scraping prerequisites for ${deptCode}...`);
   const prereqPageText = await fetchWithDelay(url);
+  writeFileSync(
+    `${__dirname}/../raw_html_dump/${deptCode.replace(/[^A-Za-z0-9]/g, "_")}.html`,
+    prereqPageText,
+  );
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();
   $("table tbody tr").each(function () {
@@ -281,8 +288,8 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
     if ($(entry).length === 3) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
-      const prereqList = $(entry[prereqFieldLabels.Prerequisite])
-        .text()
+      const prereqList = ($(entry[prereqFieldLabels.Prerequisite]).html() ?? "")
+        .replace(/<[^>]+>/g, " ")
         .replace(/\s+/g, " ")
         .trim();
       if (!courseId || !courseTitle || !prereqList) return;
@@ -411,6 +418,7 @@ function parseRepeatability(repeatText: string): {
     };
   } else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
+    //logger.warn(`Unrecognized repeatability text: ${repeatText}`);
   }
 
   return {
