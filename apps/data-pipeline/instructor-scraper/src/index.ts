@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { eq, isNull, or } from "@packages/db/drizzle";
 import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
-import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { chunkUpsertData, conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
 import fetch from "cross-fetch";
 import he from "he";
@@ -271,27 +271,42 @@ async function main() {
     }
   }
   await db.transaction(async (tx) => {
-    await tx
-      .insert(instructor)
-      .values(ucinetidToInstructorObject.values().toArray())
-      .onConflictDoUpdate({
-        target: instructor.ucinetid,
-        set: conflictUpdateSetAllCols(instructor),
-      });
-    await tx
-      .insert(instructorToWebsocInstructor)
-      .values(
-        Array.from(shortNamesToUcinetids).flatMap(([websocInstructorName, ucinetIds]) =>
-          ucinetIds.map((instructorUcinetid) => ({ instructorUcinetid, websocInstructorName })),
-        ),
-      )
-      .onConflictDoUpdate({
-        target: [
-          instructorToWebsocInstructor.instructorUcinetid,
-          instructorToWebsocInstructor.websocInstructorName,
-        ],
-        set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
-      });
+    const instructorUpsertChunk = chunkUpsertData(
+      instructor,
+      ucinetidToInstructorObject.values().toArray(),
+    );
+    console.log(`split instructor data into ${instructorUpsertChunk.length} chunk(s)`);
+    for (const chunk of instructorUpsertChunk) {
+      await tx
+        .insert(instructor)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: instructor.ucinetid,
+          set: conflictUpdateSetAllCols(instructor),
+        });
+    }
+
+    const instructorToWebsocInstructorUpsertChunks = chunkUpsertData(
+      instructorToWebsocInstructor,
+      Array.from(shortNamesToUcinetids).flatMap(([websocInstructorName, ucinetIds]) =>
+        ucinetIds.map((instructorUcinetid) => ({ instructorUcinetid, websocInstructorName })),
+      ),
+    );
+    console.log(
+      `split instructorToWebsocInstructor data into ${instructorToWebsocInstructorUpsertChunks.length} chunk(s)`,
+    );
+    for (const chunk of instructorToWebsocInstructorUpsertChunks) {
+      await tx
+        .insert(instructorToWebsocInstructor)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: [
+            instructorToWebsocInstructor.instructorUcinetid,
+            instructorToWebsocInstructor.websocInstructorName,
+          ],
+          set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
+        });
+    }
   });
   exit(0);
 }

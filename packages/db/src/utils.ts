@@ -1,8 +1,21 @@
-import type { ColumnBaseConfig, SQL } from "drizzle-orm";
+import type { ColumnBaseConfig, InferInsertModel, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import type { Term, terms } from "./schema";
+
+const MAX_PG_PARAM_INSERT_COUNT = 65_000;
+
+export function chunkUpsertData<T extends PgTable>(table: T, array: InferInsertModel<T>[]) {
+  const columnCount = Object.keys(getTableColumns(table)).length;
+  const rowCount = Math.floor(MAX_PG_PARAM_INSERT_COUNT / columnCount);
+  const chunks = [];
+
+  for (let i = 0; i < array.length; i += rowCount) {
+    chunks.push(array.slice(i, i + rowCount));
+  }
+  return chunks;
+}
 
 export const isTrue = <T extends ColumnBaseConfig<"boolean", string>>(col: PgColumn<T>): SQL =>
   eq(col, true);
