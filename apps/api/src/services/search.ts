@@ -2,7 +2,7 @@ import type { z } from "@hono/zod-openapi";
 import type { database } from "@packages/db";
 import { and, asc, desc, inArray, notLike, or, type SQL, sql } from "@packages/db/drizzle";
 import { unionAll } from "@packages/db/drizzle-pg";
-import { course, instructor, websocDepartment } from "@packages/db/schema";
+import { course, instructor, websocCourse, websocDepartment } from "@packages/db/schema";
 import { DEPT_TO_ALIAS, type DeptCode, getFromMapOrThrow } from "@packages/stdlib";
 import type {
   courseSchema,
@@ -88,6 +88,19 @@ export class SearchService {
 
     if (input.department) {
       courseConditions.push(inArray(course.department, input.department));
+    }
+    if (input.terms && input.terms.length > 0) {
+      courseConditions.push(
+        or(
+          ...input.terms.map(
+            (term) => sql`EXISTS (
+              SELECT 1 FROM ${websocCourse}
+              WHERE ${websocCourse.courseId} = ${course.id}
+              AND ${websocCourse.quarter} = ${term}
+            )`,
+          ),
+        ),
+      );
     }
     return and(...courseConditions);
   }
