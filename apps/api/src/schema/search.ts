@@ -43,6 +43,16 @@ export const searchQuerySchema = z.object({
         "If searching for courses, they must fulfill at least one of these comma-separated GE categories",
       example: "GE-1A,GE-4",
     }),
+  terms: z.coerce
+    .string()
+    .transform((l) => l.split(",").map((t) => t.trim()))
+    .pipe(z.enum(["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"]).array())
+    .optional()
+    .openapi({
+      description:
+        "If searching for courses, they must have been offered in at least one of these comma-separated terms",
+      example: "Fall,Spring",
+    }),
 });
 
 export const searchResultSchema = z.discriminatedUnion("type", [
