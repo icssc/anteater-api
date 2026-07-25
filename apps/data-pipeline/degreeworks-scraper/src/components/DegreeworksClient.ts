@@ -1,7 +1,6 @@
-import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
 import type { z } from "zod";
-import type { Block, UndergraduateRequirements } from "$types";
+import type { Block, ProgramCodes, UndergraduateRequirements } from "$types";
 import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "../schema";
 
 export class DegreeworksClient {
@@ -153,7 +152,7 @@ export class DegreeworksClient {
     const major = json.blockArray.find(
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
-    const firstRule = major?.ruleArray[0];
+
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
