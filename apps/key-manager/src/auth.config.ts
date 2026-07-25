@@ -11,6 +11,9 @@ export default {
       issuer: "http://localhost:8787",
       wellKnown: "http://localhost:8787/.well-known/openid-configuration",
       idToken: true,
+      client: {
+        token_endpoint_auth_method: "none",
+      },
       authorization: { params: { scope: "openid email profile" } },
       checks: ["pkce", "state"],
       // :)
