@@ -8,8 +8,8 @@ export default {
       type: "oidc",
       clientId:
         process.env.CF_ENV === "prod" ? "anteater-api-key-manager" : "anteater-api-key-manager-dev",
-      issuer: "http://localhost:8787",
-      wellKnown: "http://localhost:8787/.well-known/openid-configuration",
+      issuer: "https://auth.icssc.club",
+      wellKnown: "https://auth.icssc.club/.well-known/openid-configuration",
       idToken: true,
       client: {
         token_endpoint_auth_method: "none",

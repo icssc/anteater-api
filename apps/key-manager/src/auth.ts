@@ -19,7 +19,6 @@ declare module "next-auth" {
 export const { handlers, signIn, signOut, auth } = NextAuth(async (_req) => {
   const cf = getCloudflareContext();
   const db = database(cf.env.USERS_DB.connectionString);
-  console.log(_req);
   return {
     adapter: DrizzleAdapter(db),
     callbacks: {
