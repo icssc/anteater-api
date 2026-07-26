@@ -8,12 +8,11 @@ import type {
   DegreeWorksProgramId,
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
-  ProgramCodes,
 } from "@packages/db/schema";
 import { course, type DegreeWorksProgramType } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import { programTypeSchema } from "$schema";
-import type { Block, QualifierClause, Rule, WithClause } from "$types";
+import type { Block, ProgramCodes, QualifierClause, Rule, WithClause } from "$types";
 import {
   andTrees,
   classifyTree,
