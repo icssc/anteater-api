@@ -1,11 +1,6 @@
 import * as fs from "node:fs/promises";
 import type { database } from "@packages/db";
-import type {
-  DegreeWorksProgram,
-  DegreeWorksProgramId,
-  MajorProgram,
-  ProgramCodes,
-} from "@packages/db/schema";
+import type { DegreeWorksProgram, DegreeWorksProgramId } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 import type { z } from "zod";
@@ -16,7 +11,7 @@ import {
   type rewardTypeSchema,
   rewardTypesResponseSchema,
 } from "$schema";
-import type { Block, SpecializationCache } from "$types";
+import type { Block, MajorProgram, ProgramCodes, SpecializationCache } from "$types";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 

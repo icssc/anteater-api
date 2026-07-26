@@ -236,7 +236,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
+  const prereqs = prereqList.split(/AND/).map((prereq) => prereq.trim());
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = prereq

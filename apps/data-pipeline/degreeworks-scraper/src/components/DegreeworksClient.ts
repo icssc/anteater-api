@@ -1,9 +1,7 @@
-import type { ProgramCodes } from "@packages/db/schema";
 import fetch from "cross-fetch";
 import type { z } from "zod";
-import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "$schema";
-import type { Block, UndergraduateRequirements } from "$types";
-
+import type { Block, ProgramCodes, UndergraduateRequirements } from "$types";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "../schema";
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
   private static readonly AUDIT_URL = `${DegreeworksClient.API_URL}/audit`;
@@ -157,6 +155,7 @@ export class DegreeworksClient {
     const major = json.blockArray.find(
       (x) => x.requirementType === "MAJOR" && x.requirementValue === majorCode,
     );
+
     return {
       college: json.blockArray.find(
         (x) => x.requirementType === "COLLEGE" && x.requirementValue === collegeCode,
