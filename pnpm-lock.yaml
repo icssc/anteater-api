@@ -106,6 +106,19 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/db
 
+  apps/data-pipeline/biological-sciences-course-offerings-scraper:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      cheerio:
+        specifier: 1.2.0
+        version: 1.2.0
+    devDependencies:
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
+
   apps/data-pipeline/calendar-scraper:
     dependencies:
       '@packages/db':
