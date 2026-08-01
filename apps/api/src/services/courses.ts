@@ -15,11 +15,13 @@ import type {
   outputCourseLevels,
 } from "$schema";
 import { outputGECategories } from "$schema";
+import { enrichCoursesWithTentativeOfferings } from "./tentative-course-offerings.ts";
 import { buildUnitBoundsQuery } from "./util.ts";
 
 type CoursesServiceInput = z.infer<typeof coursesQuerySchema>;
 
 type CoursesServiceOutput = z.infer<typeof courseSchema>;
+type CourseWithoutTentativeOfferings = Omit<CoursesServiceOutput, "tentativeOfferings">;
 
 type CoursesByCursorServiceInput = z.infer<typeof coursesByCursorQuerySchema>;
 
@@ -60,7 +62,7 @@ const transformCourse = ({
   dependencies,
   instructors,
   ...course
-}: RawCourse): CoursesServiceOutput => ({
+}: RawCourse): CourseWithoutTentativeOfferings => ({
   ...course,
   prerequisites: prerequisites as z.infer<typeof coursePreviewSchema>[],
   dependencies: dependencies as z.infer<typeof coursePreviewSchema>[],
@@ -150,13 +152,14 @@ export class CoursesService {
     cursor?: string;
   }): Promise<CoursesServiceOutput[]> {
     const { where, offset, limit, cursor } = input;
-    return this.db
+    const courses = await this.db
       .select()
       .from(courseView)
       .where(cursor ? and(where, gte(courseView.id, cursor)) : where)
       .limit(limit ?? 1)
       .offset(offset ?? 0)
       .then((courses) => courses.map(transformCourse));
+    return enrichCoursesWithTentativeOfferings(this.db, courses);
   }
 
   async batchGetCourses(ids: string[]): Promise<CoursesServiceOutput[]> {

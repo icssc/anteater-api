@@ -15,7 +15,8 @@
     "db:studio": "dotenv -- pnpm --filter '@packages/db' studio",
     "deploy": "dotenv -- pnpm -r run deploy",
     "dev": "dotenv -- pnpm --filter '@apps/api' dev",
-    "postinstall": "lefthook install"
+    "postinstall": "lefthook install",
+    "test": "pnpm -r --if-present test"
   },
   "dependencies": {
     "@biomejs/biome": "2.5.2",

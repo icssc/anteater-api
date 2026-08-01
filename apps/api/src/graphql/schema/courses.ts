@@ -6,6 +6,28 @@ type CoursePreview @cacheControl(maxAge: 86400) {
     courseNumber: String!
 }
 
+enum TentativeInstructorStatus {
+    assigned
+    tbd
+}
+
+enum TentativeCourseOfferingSource {
+    ICS_COURSE_OFFERINGS
+}
+
+type TentativeInstructor {
+    status: TentativeInstructorStatus!
+    name: String!
+    ucinetid: String
+}
+
+type TentativeCourseOffering {
+    term: String!
+    instructors: [TentativeInstructor!]!
+    source: TentativeCourseOfferingSource!
+    updatedAt: String!
+}
+
 type Course @cacheControl(maxAge: 86400) {
     id: String!
     department: String!
@@ -35,6 +57,7 @@ type Course @cacheControl(maxAge: 86400) {
     geList: [String!]!
     geText: String!
     terms: [String!]!
+    tentativeOfferings: [TentativeCourseOffering!] @cacheControl(maxAge: 300)
 }
 
 type CoursesByCursor {

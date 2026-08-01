@@ -20,6 +20,7 @@ export * from "./larc.ts";
 export * from "./library-traffic.ts";
 export * from "./sample-programs.ts";
 export * from "./study-rooms.ts";
+export * from "./tentative-course-offerings.ts";
 export * from "./websoc.ts";
 
 // must be defined after dependencies!
