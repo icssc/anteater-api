@@ -4,35 +4,35 @@ import { calendarTerm, tentativeCourseOffering, websocSchool } from "@packages/d
 import type { z } from "zod";
 import type { courseSchema } from "$schema";
 
-const SUPPORTED_DEPARTMENTS = new Set(["COMPSCI", "CSE", "I&C SCI", "IN4MATX", "STATS"]);
 const INCLUDED_QUARTERS = new Set(["Fall", "Winter", "Spring"]);
 
 type CourseOutput = z.infer<typeof courseSchema>;
 type CourseWithoutTentativeOfferings = Omit<CourseOutput, "tentativeOfferings">;
-type TentativeOfferingOutput = NonNullable<CourseOutput["tentativeOfferings"]>[number];
+type TentativeOfferingOutput = CourseOutput["tentativeOfferings"][number];
 
-export type TentativeOfferingEligibilityRow = {
+export type TentativeCourseOfferingRow = {
   courseId: string;
   source: TentativeOfferingOutput["source"];
+  sourceUrl: string;
   academicYear: string;
   year: string;
   quarter: string;
   instructors: TentativeOfferingOutput["instructors"];
-  updatedAt: Date;
+  lastUpdated: Date | null;
   instructionStart: Date;
   isPublished: boolean;
 };
 
-function isWithinAcademicYear(row: TentativeOfferingEligibilityRow): boolean {
+function isWithinAcademicYear(row: TentativeCourseOfferingRow): boolean {
   const match = row.academicYear.match(/^(\d{4})-(\d{4})$/);
   if (!match) return false;
   const expectedYear = row.quarter === "Fall" ? match[1] : match[2];
   return row.year === expectedYear;
 }
 
-export function attachTentativeOfferings(
+export function attachTentativeCourseOfferings(
   courses: CourseWithoutTentativeOfferings[],
-  rows: TentativeOfferingEligibilityRow[],
+  rows: TentativeCourseOfferingRow[],
   now: Date,
 ): CourseOutput[] {
   const byCourseId = rows
@@ -53,7 +53,10 @@ export function attachTentativeOfferings(
         term: `${row.year} ${row.quarter}`,
         instructors: row.instructors,
         source: row.source,
-        updatedAt: row.updatedAt.toISOString(),
+        sourceUrl: row.sourceUrl,
+        academicYear: row.academicYear,
+        lastUpdated: row.lastUpdated?.toISOString() ?? null,
+        updatedAt: row.lastUpdated?.toISOString() ?? null,
       };
       acc.set(row.courseId, [...(acc.get(row.courseId) ?? []), offering]);
       return acc;
@@ -61,9 +64,7 @@ export function attachTentativeOfferings(
 
   return courses.map((course) => ({
     ...course,
-    tentativeOfferings: SUPPORTED_DEPARTMENTS.has(course.department)
-      ? (byCourseId.get(course.id) ?? [])
-      : null,
+    tentativeOfferings: byCourseId.get(course.id) ?? [],
   }));
 }
 
@@ -74,15 +75,17 @@ export async function enrichCoursesWithTentativeOfferings(
 ): Promise<CourseOutput[]> {
   if (courses.length === 0) return [];
 
+  const canonicalCourseIds = courses.map(({ id }) => id);
   const rows = await db
     .select({
       courseId: tentativeCourseOffering.courseId,
       source: tentativeCourseOffering.source,
+      sourceUrl: tentativeCourseOffering.sourceUrl,
       academicYear: tentativeCourseOffering.academicYear,
       year: tentativeCourseOffering.year,
       quarter: tentativeCourseOffering.quarter,
       instructors: tentativeCourseOffering.instructors,
-      updatedAt: tentativeCourseOffering.updatedAt,
+      lastUpdated: tentativeCourseOffering.lastUpdated,
       instructionStart: calendarTerm.instructionStart,
       isPublished: sql<boolean>`EXISTS (
         SELECT 1
@@ -99,12 +102,7 @@ export async function enrichCoursesWithTentativeOfferings(
         eq(calendarTerm.quarter, tentativeCourseOffering.quarter),
       ),
     )
-    .where(
-      inArray(
-        tentativeCourseOffering.courseId,
-        courses.map(({ id }) => id),
-      ),
-    );
+    .where(inArray(tentativeCourseOffering.courseId, canonicalCourseIds));
 
-  return attachTentativeOfferings(courses, rows, now);
+  return attachTentativeCourseOfferings(courses, rows, now);
 }

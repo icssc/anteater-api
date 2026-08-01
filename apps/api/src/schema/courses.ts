@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { type PrerequisiteTree, tentativeCourseOfferingSources } from "@packages/db/schema";
+import type { PrerequisiteTree } from "@packages/db/schema";
 import { cursorBaseSchema, skipBaseSchema, takeBaseSchema } from "./base";
 import { instructorPreviewSchema } from "./instructors";
 import { geCategories } from "./lib";
@@ -224,8 +224,14 @@ export const tentativeInstructorSchema = z.discriminatedUnion("status", [
 export const tentativeCourseOfferingSchema = z.object({
   term: z.string().openapi({ example: "2027 Winter" }),
   instructors: tentativeInstructorSchema.array(),
-  source: z.enum(tentativeCourseOfferingSources).openapi({ example: "ICS_COURSE_OFFERINGS" }),
-  updatedAt: z.iso.datetime({ offset: true }),
+  source: z.string().min(1).openapi({ example: "UCI_TENTATIVE_COURSE_OFFERINGS" }),
+  sourceUrl: z.url().openapi({ example: "https://example.uci.edu/course-offerings" }),
+  academicYear: z.string().openapi({ example: "2026-2027" }),
+  lastUpdated: z.iso.datetime({ offset: true }).nullable(),
+  updatedAt: z.iso.datetime({ offset: true }).nullable().openapi({
+    deprecated: true,
+    description: "Deprecated compatibility alias for lastUpdated.",
+  }),
 });
 
 export const courseSchema = z.object({
@@ -264,5 +270,5 @@ export const courseSchema = z.object({
   geList: z.enum(outputGECategories).array(),
   geText: z.string(),
   terms: z.string().array(),
-  tentativeOfferings: tentativeCourseOfferingSchema.array().nullable(),
+  tentativeOfferings: tentativeCourseOfferingSchema.array(),
 });

@@ -260,6 +260,13 @@
       "when": 1785609349873,
       "tag": "0036_tentative_course_offerings",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1785612809996,
+      "tag": "0037_generalize_tentative_course_offerings",
+      "breakpoints": true
     }
   ]
 }

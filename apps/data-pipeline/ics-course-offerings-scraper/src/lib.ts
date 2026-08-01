@@ -1,19 +1,14 @@
 import type { database } from "@packages/db";
 import { and, eq, inArray, ne } from "@packages/db/drizzle";
 import type { TentativeInstructor, Term } from "@packages/db/schema";
-import {
-  course,
-  instructor,
-  type TentativeCourseOfferingSource,
-  tentativeCourseOffering,
-} from "@packages/db/schema";
+import { course, instructor, tentativeCourseOffering } from "@packages/db/schema";
 import { type Cheerio, type CheerioAPI, load } from "cheerio";
 import type { Element } from "domhandler";
 
-export const ICS_COURSE_OFFERINGS_SOURCE =
-  "ICS_COURSE_OFFERINGS" satisfies TentativeCourseOfferingSource;
+export const ICS_COURSE_OFFERINGS_SOURCE = "ICS_COURSE_OFFERINGS";
 
 const ICS_COURSE_OFFERINGS_URL = "https://courselisting.ics.uci.edu/ugrad_courses/";
+const ICS_COURSE_OFFERINGS_SOURCE_URL = "https://courselisting.ics.uci.edu/";
 const INCLUDED_QUARTERS = ["Fall", "Winter", "Spring"] as const;
 type IncludedQuarter = (typeof INCLUDED_QUARTERS)[number];
 
@@ -277,7 +272,7 @@ export async function doScrape(
   db: ReturnType<typeof database>,
   fetcher: typeof fetch = fetch,
 ): Promise<void> {
-  const updatedAt = new Date();
+  const lastUpdated = new Date();
   const landingHtml = await fetchHtml(fetcher, ICS_COURSE_OFFERINGS_URL);
   const academicYearStart = parseCurrentAcademicYear(landingHtml);
   const listingUrl = new URL("listing-course.php", ICS_COURSE_OFFERINGS_URL);
@@ -305,12 +300,13 @@ export async function doScrape(
     .filter(({ courseId }) => knownCourseIds.has(courseId))
     .map((offering) => ({
       source: ICS_COURSE_OFFERINGS_SOURCE,
+      sourceUrl: ICS_COURSE_OFFERINGS_SOURCE_URL,
       academicYear: offering.academicYear,
       courseId: offering.courseId,
       year: offering.year,
       quarter: offering.quarter as Term,
       instructors: resolveIcsInstructors(offering.instructors, knownInstructors),
-      updatedAt,
+      lastUpdated,
     }));
 
   if (values.length === 0) {

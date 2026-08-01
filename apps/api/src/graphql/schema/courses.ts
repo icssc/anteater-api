@@ -11,10 +11,6 @@ enum TentativeInstructorStatus {
     tbd
 }
 
-enum TentativeCourseOfferingSource {
-    ICS_COURSE_OFFERINGS
-}
-
 type TentativeInstructor {
     status: TentativeInstructorStatus!
     name: String!
@@ -24,8 +20,11 @@ type TentativeInstructor {
 type TentativeCourseOffering {
     term: String!
     instructors: [TentativeInstructor!]!
-    source: TentativeCourseOfferingSource!
-    updatedAt: String!
+    source: String!
+    sourceUrl: String!
+    academicYear: String!
+    lastUpdated: String
+    updatedAt: String @deprecated(reason: "Use lastUpdated")
 }
 
 type Course @cacheControl(maxAge: 86400) {
@@ -57,7 +56,7 @@ type Course @cacheControl(maxAge: 86400) {
     geList: [String!]!
     geText: String!
     terms: [String!]!
-    tentativeOfferings: [TentativeCourseOffering!] @cacheControl(maxAge: 300)
+    tentativeOfferings: [TentativeCourseOffering!]! @cacheControl(maxAge: 300)
 }
 
 type CoursesByCursor {
