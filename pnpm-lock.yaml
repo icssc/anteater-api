@@ -100,6 +100,22 @@ importers:
         specifier: 'catalog:'
         version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
 
+  apps/data-pipeline/anthropology-course-offerings-scraper:
+    dependencies:
+      '@packages/db':
+        specifier: workspace:*
+        version: link:../../../packages/db
+      cheerio:
+        specifier: 1.2.0
+        version: 1.2.0
+      domhandler:
+        specifier: 6.0.1
+        version: 6.0.1
+    devDependencies:
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.106.0(@cloudflare/workers-types@4.20241230.0)
+
   apps/data-pipeline/ap-exams-importer:
     dependencies:
       '@packages/db':
