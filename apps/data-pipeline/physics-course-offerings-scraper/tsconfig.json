@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["./worker-configuration.d.ts", "node"],
+    "paths": {
+      "$lib": ["./src/lib.ts"]
+    }
+  }
+}
