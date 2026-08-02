@@ -1,0 +1,21 @@
+{
+  "name": "@apps/cognitive-sciences-course-offerings-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scraper for tentative Cognitive Sciences course offerings",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "deploy": "wrangler deploy",
+    "postinstall": "wrangler types",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "test": "tsx --test src/lib.test.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "cheerio": "1.2.0"
+  },
+  "devDependencies": {
+    "wrangler": "catalog:"
+  }
+}
