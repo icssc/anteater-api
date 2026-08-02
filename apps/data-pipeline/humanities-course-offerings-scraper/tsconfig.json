@@ -1,0 +1,7 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": { "$lib": ["./src/lib.ts"] }
+  },
+  "include": ["src/**/*.ts", "worker-configuration.d.ts"]
+}
