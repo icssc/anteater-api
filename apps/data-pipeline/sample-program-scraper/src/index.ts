@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { and, eq, inArray } from "@packages/db/drizzle";
 import {
+  type CatalogProgramEntry,
   catalogProgram,
+  catalogProgramVariation,
   course,
-  type SampleProgramEntry,
   type StandingYearType,
-  sampleProgramVariation,
 } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
@@ -51,7 +51,7 @@ type CourseValidationResult =
 // Represents a single variation within a program (before validation)
 type ScrapedProgramVariation = {
   label?: string;
-  sampleProgram: UnvalidatedSampleProgramEntry[];
+  catalogProgram: UnvalidatedCatalogProgramEntry[];
   variationNotes: string[];
 };
 
@@ -66,7 +66,7 @@ type ScrapedProgram = {
 // Represents a single variation within a program (after validation)
 type ProgramVariation = {
   label?: string;
-  sampleProgram: SampleProgramEntry[];
+  catalogProgram: CatalogProgramEntry[];
   variationNotes: string[];
 };
 
@@ -86,7 +86,7 @@ type ScrapedSampleYear = {
 };
 
 // Intermediate type - after structure transform but before course validation
-type UnvalidatedSampleProgramEntry = {
+type UnvalidatedCatalogProgramEntry = {
   year: StandingYearType;
   fall: string[];
   winter: string[];
@@ -164,8 +164,8 @@ function generateProgramId(url: string): string {
 */
 function transformToTermStructure(
   sampleYears: ScrapedSampleYear[],
-): UnvalidatedSampleProgramEntry[] {
-  const transformedProgram: UnvalidatedSampleProgramEntry[] = [];
+): UnvalidatedCatalogProgramEntry[] {
+  const transformedProgram: UnvalidatedCatalogProgramEntry[] = [];
 
   for (const yearData of sampleYears) {
     const fall: string[] = [];
@@ -262,9 +262,9 @@ async function transformCourseCodesToIds(
     const transformedVariations: ProgramVariation[] = [];
 
     for (const variation of program.variations) {
-      const transformedSampleProgram: SampleProgramEntry[] = [];
+      const transformedSampleProgram: CatalogProgramEntry[] = [];
 
-      for (const year of variation.sampleProgram) {
+      for (const year of variation.catalogProgram) {
         // Transform each term's courses in parallel
         const [fall, winter, spring] = await Promise.all([
           Promise.all(year.fall.map((code) => interpretCourseString(db, code))),
@@ -277,7 +277,7 @@ async function transformCourseCodesToIds(
 
       transformedVariations.push({
         label: variation.label,
-        sampleProgram: transformedSampleProgram,
+        catalogProgram: transformedSampleProgram,
         variationNotes: variation.variationNotes,
       });
     }
@@ -315,7 +315,7 @@ async function storeSampleProgramsInDB(
     program.variations.map((variation) => ({
       programId: program.majorId,
       label: orNull(variation.label),
-      sampleProgram: variation.sampleProgram,
+      catalogProgram: variation.catalogProgram,
       variationNotes: variation.variationNotes,
     })),
   );
@@ -329,8 +329,8 @@ async function storeSampleProgramsInDB(
 
   const existingVariations = await db
     .select()
-    .from(sampleProgramVariation)
-    .where(inArray(sampleProgramVariation.programId, programIds));
+    .from(catalogProgramVariation)
+    .where(inArray(catalogProgramVariation.programId, programIds));
 
   const dbData = { catalogPrograms: existingCatalogPrograms, variations: existingVariations };
   const scrapedData = { catalogPrograms: catalogueRows, variations: variationRows };
@@ -371,7 +371,7 @@ async function storeSampleProgramsInDB(
 
     await tx.insert(catalogProgram).values(catalogueRows);
 
-    await tx.insert(sampleProgramVariation).values(variationRows);
+    await tx.insert(catalogProgramVariation).values(variationRows);
   });
 
   logger.info(`Successfully stored ${catalogueRows.length} sample programs`);
@@ -510,7 +510,7 @@ async function scrapeSamplePrograms(programPath: string) {
     const sampleYears = parseTable($, $table);
 
     if (sampleYears.length > 0) {
-      const sampleProgram = transformToTermStructure(sampleYears);
+      const catalogProgram = transformToTermStructure(sampleYears);
       // For single-table programs, use comprehensive note parsing
       const variationNotes: string[] = [];
 
@@ -566,7 +566,7 @@ async function scrapeSamplePrograms(programPath: string) {
       logger.info(`Found ${variationNotes.length} notes for single variation`);
 
       variations.push({
-        sampleProgram: sampleProgram,
+        catalogProgram: catalogProgram,
         variationNotes,
       });
     } else {
@@ -635,7 +635,7 @@ async function scrapeSamplePrograms(programPath: string) {
       const sampleYears = parseTable($, $table);
 
       if (sampleYears.length > 0) {
-        const sampleProgram = transformToTermStructure(sampleYears);
+        const catalogProgram = transformToTermStructure(sampleYears);
 
         // Parse notes immediately after this table
         const variationNotes: string[] = [];
@@ -654,7 +654,7 @@ async function scrapeSamplePrograms(programPath: string) {
 
         variations.push({
           label: label || undefined,
-          sampleProgram,
+          catalogProgram,
           variationNotes,
         });
       } else {

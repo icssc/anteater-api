@@ -11,6 +11,9 @@ export default {
       issuer: "https://auth.icssc.club",
       wellKnown: "https://auth.icssc.club/.well-known/openid-configuration",
       idToken: true,
+      client: {
+        token_endpoint_auth_method: "none",
+      },
       authorization: { params: { scope: "openid email profile" } },
       checks: ["pkce", "state"],
       // :)

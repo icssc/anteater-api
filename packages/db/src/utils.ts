@@ -2,7 +2,7 @@ import type { ColumnBaseConfig, InferInsertModel, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import type { Term, terms } from "./schema";
+import type { Term, terms } from "./schema/websoc.ts";
 
 const MAX_PG_PARAM_INSERT_COUNT = 65_000;
 
