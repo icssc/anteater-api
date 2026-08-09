@@ -263,10 +263,9 @@ export class Scraper {
       seenUgradMajorCodes.set(degree.majorCode, degree);
     }
 
-    this.ap.setPotentialPrograms(
-      validDegrees,
-      (await this.dw.getMapping("specializations")).keys().toArray(),
-    );
+    this.knownSpecializations = await this.dw.getMapping("specializations");
+
+    this.ap.setPotentialPrograms(validDegrees, this.knownSpecializations.keys().toArray());
 
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
@@ -280,7 +279,7 @@ export class Scraper {
       CHC4: honorsFourRequirements,
       CHC2: honorsTwoRequirements,
     } = ugradReqs;
-    // note that the blockId string for ugrad requirements ('U-SCHOOL-@@@') are not techinally correct DW-semanitcs-wise
+    // note that the blockId string for ugrad requirements ('U-SCHOOL-@@@') are not technically correct DW semantics
     // they are reasonable made-up values used to parse the block
     this.parsedUgradRequirements.set("UC", await this.ap.parseBlock("U-SCHOOL-UC", ucRequirements));
     this.parsedUgradRequirements.set("GE", await this.ap.parseBlock("U-SCHOOL-GE", geRequirements));
@@ -337,7 +336,6 @@ export class Scraper {
       .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
     console.log(`loading ${this.specializationCache.size} cached specializations`);
 
-    this.knownSpecializations = await this.dw.getMapping("specializations");
     const foundMajorSpecPairs: ProgramCodes[] = [];
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {

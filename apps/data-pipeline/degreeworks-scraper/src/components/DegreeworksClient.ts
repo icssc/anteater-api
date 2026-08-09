@@ -58,7 +58,6 @@ export class DegreeworksClient {
       console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
       for (const { path } of parsed.error.issues) {
         const failedField = path.reduce<unknown>((cur, key) => {
-          if (cur === null) return undefined;
           return (cur as Record<string, unknown>)?.[key as string];
         }, raw);
         console.log(`Failed field at path [${path}]:`, failedField);
@@ -231,8 +230,9 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
+
     if (res.status === 401) {
-      throw Error(`[AuditParser] DW request was unauthorized. Try refreshing auth token?`);
+      throw Error(`[DegreeWorksClient] Request was unauthorized. Try refreshing auth token?`);
     }
 
     const json = await res.json();

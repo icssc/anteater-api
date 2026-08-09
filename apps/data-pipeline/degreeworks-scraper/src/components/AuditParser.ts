@@ -37,7 +37,7 @@ export class AuditParser {
 
   private requirementIdMap = new Map<string, string>();
 
-  // The set of programs that are referenced by a degreeworks qualifer, but not valid during the given catalog year
+  // The set of programs that are referenced by a degreeworks qualifier, but not valid during the given catalog year
   // We maintain a set in order to only log a warning the first time this ineligible program is referenced (as to not clutter the output)
   private ineligiblePrograms = new Set<string>();
 
@@ -224,7 +224,7 @@ export class AuditParser {
 
             // Preprocessing Steps:
             // A set of BA programs share the same header, stating that every program in the set can share 2 classes with any other program in the set
-            // This includes a qualifer that tries to share 2 classes with itself
+            // This includes a qualifier that tries to share 2 classes with itself
             // We assume any qualifier that references itself with the same programType and code is meaningless because the correct way to share internally is with `THISBLOCK`
             if (programType === programId.programType && code === programId.code) {
               continue;
@@ -248,7 +248,7 @@ export class AuditParser {
             }
 
             const parsedProgramType = programTypeSchema.parse(programType);
-            // If no code is specified, then the qualifer affects all programs that match the program type i.e. all majors, all minors, etc.
+            // If no code is specified, then the qualifier affects all programs that match the program type i.e. all majors, all minors, etc.
             if (!code) {
               nonExclusiveQualifier.appliedBlocks.push({
                 programType: parsedProgramType,
@@ -323,13 +323,13 @@ export class AuditParser {
               case "OTHER":
                 // code can be "LIBL" | "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
                 // LIBL refers to Liberal Learnings
-                // "AHPER" and "AHGEO" refers to the Art History Specialzations, which are special cases that are excepted in Scraper.ts.
+                // "AHPER" and "AHGEO" refers to the Art History Specializations, which are special cases that are excepted in Scraper.ts.
                 // "345O" and "429O" are the "345 (BA English) OTHER" and "429 (BA History) OTHER" blocks (see pr 386)
-                // "153HON" likley stands for an outdated honors chemistry program
+                // "153HON" likely stands for an outdated honors chemistry program
 
                 // In any case, "LIBL" is the only code that has a known meaningful value
                 if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
-                  console.warn("Unkown OTHER block code:", code);
+                  console.warn("Unknown OTHER block code:", code);
                 }
                 if (code === "LIBL") parsedCodes.push("LIBL");
                 break;
