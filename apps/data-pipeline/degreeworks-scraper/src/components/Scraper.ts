@@ -253,7 +253,7 @@ export class Scraper {
       if (degree.schoolCode !== "U") continue;
       const previousDegree = seenUgradMajorCodes.get(degree.majorCode);
       // Check for different degree type b/c we are trying to prevent different ugrad programs with the same code but different degree types
-      // i.e. CSE is listed as BS-193 twice (as ICS-affiliated and engineering-affiliated) but duplicate listings for this are fine sinse
+      // i.e. CSE is listed as BS-193 twice (as ICS-affiliated and engineering-affiliated) but duplicate listings for this are fine since
       // they are identical programs sharing the same degree type (B.S.)
       if (previousDegree && previousDegree.degreeCode !== degree.degreeCode) {
         console.warn(
