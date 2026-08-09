@@ -7,9 +7,7 @@ import type { Term, terms } from "./schema/websoc.ts";
 const MAX_PG_PARAM_INSERT_COUNT = 65_000;
 
 export function chunkUpsertData<T extends PgTable>(table: T, array: InferInsertModel<T>[]) {
-  const columnCount = Object.values(getTableColumns(table)).filter(
-    (col) => !col.generated && !col.default,
-  ).length;
+  const columnCount = Object.values(getTableColumns(table)).filter((col) => !col.generated).length;
   const rowCount = Math.floor(MAX_PG_PARAM_INSERT_COUNT / columnCount);
   const chunks = [];
 
