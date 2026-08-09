@@ -1,4 +1,4 @@
-import { DegreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
+import { degreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
 import { z } from "zod";
 import type { Rule } from "$types";
 
@@ -219,7 +219,7 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
-export const programTypeSchema = z.enum(DegreeWorksProgramType);
+export const programTypeSchema = z.enum(degreeWorksProgramType);
 
 // partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({

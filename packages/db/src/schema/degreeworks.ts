@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { division } from "./websoc.ts";
 
-export const DegreeWorksProgramType = [
+export const degreeWorksProgramType = [
   "SCHOOL",
   "COLLEGE",
   "MAJOR",
@@ -23,7 +23,7 @@ export const DegreeWorksProgramType = [
 
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: (typeof DegreeWorksProgramType)[number];
+  programType: (typeof degreeWorksProgramType)[number];
   code: string;
   degreeType?: string;
 };
@@ -119,7 +119,7 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 export type DegreeWorksNonExclusivityQualifier = {
   qualifierType: "NonExclusive";
   appliedBlocks: {
-    programType: (typeof DegreeWorksProgramType)[number];
+    programType: (typeof degreeWorksProgramType)[number];
     code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
     maxShared?: string;
   }[];

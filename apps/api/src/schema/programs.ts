@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import type { CourseConstraintTree } from "@packages/db/schema";
-import { DegreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
+import { degreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
@@ -105,7 +105,7 @@ export const nonExclusiveQualifierSchema = z
     qualifierType: z.literal("NonExclusive"),
     appliedBlocks: z.array(
       z.object({
-        programType: z.enum(DegreeWorksProgramType).openapi({
+        programType: z.enum(degreeWorksProgramType).openapi({
           description: "The type of programs this qualifier applies to",
           examples: ["MAJOR", "MINOR", "SPEC", "COLLEGE", "OTHER"],
         }),
@@ -128,7 +128,7 @@ export const nonExclusiveQualifierSchema = z
 export const qualifierSchema = z
   .union([nonExclusiveQualifierSchema, exclusiveQualifierSchema])
   .openapi({
-    description: "Furthur qualifiers for how courses can apply to a program requirement",
+    description: "Further qualifiers for how courses can apply to a program requirement",
   });
 
 const qualifierArraySchema = z.array(qualifierSchema).optional().openapi({

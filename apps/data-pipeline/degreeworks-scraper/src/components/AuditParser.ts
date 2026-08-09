@@ -9,7 +9,7 @@ import type {
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
 } from "@packages/db/schema";
-import { course, type DegreeWorksProgramType } from "@packages/db/schema";
+import { course, type degreeWorksProgramType } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import { programTypeSchema } from "$schema";
 import type { Block, ProgramCodes, QualifierClause, Rule, WithClause } from "$types";
@@ -242,7 +242,7 @@ export class AuditParser {
                   { programType: "MAJOR" },
                   { programType: "SPEC" },
                   { programType: "MINOR" },
-                ] as { programType: (typeof DegreeWorksProgramType)[number] }[]),
+                ] as { programType: (typeof degreeWorksProgramType)[number] }[]),
               );
               continue;
             }

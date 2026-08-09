@@ -2,6 +2,7 @@ import fetch from "cross-fetch";
 import type { z } from "zod";
 import type { Block, ProgramCodes, UndergraduateRequirements } from "$types";
 import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "../schema";
+
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
   private static readonly AUDIT_URL = `${DegreeworksClient.API_URL}/audit`;
@@ -58,10 +59,7 @@ export class DegreeworksClient {
       for (const { path } of parsed.error.issues) {
         const failedField = path.reduce<unknown>((cur, key) => {
           if (cur === null) return undefined;
-          if (key in (cur as Record<string, unknown>)) {
-            return (cur as Record<string, unknown>)[key as string];
-          }
-          return undefined;
+          return (cur as Record<string, unknown>)?.[key as string];
         }, raw);
         console.log(`Failed field at path [${path}]:`, failedField);
       }
