@@ -4,6 +4,9 @@
   "private": true,
   "description": "Shared PDF importer for UCI School of Humanities planned course schedules",
   "type": "module",
+  "exports": {
+    ".": "./src/lib.ts"
+  },
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
@@ -13,9 +16,7 @@
   },
   "dependencies": {
     "@packages/db": "workspace:*",
-    "pdfjs-dist": "4.10.38",
-    "pureimage": "0.4.20",
-    "tesseract-wasm": "0.11.0"
+    "pdfjs-dist": "4.10.38"
   },
   "devDependencies": {
     "wrangler": "catalog:"

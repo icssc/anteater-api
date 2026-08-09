@@ -21,6 +21,7 @@ import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
 import winston from "winston";
+import { parseRepeatability } from "./repeatability.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -382,44 +383,6 @@ function generateGEs(rawCourse: string[]) {
     res.geText = maybeGEText;
   }
   return res;
-}
-
-function parseRepeatability(repeatText: string): {
-  repeatabilityTimes: number | null;
-  unit: "credit_hours" | "times" | null;
-} {
-  const timesMatch1 = /May be taken for credit (\d+) time(s)?/.exec(repeatText);
-  const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
-  const unitsMatch = /May be taken for credit for (\d+) units/.exec(repeatText);
-
-  if (timesMatch1) {
-    return {
-      repeatabilityTimes: Number.parseInt(timesMatch1[1], 10),
-      unit: "times",
-    };
-  } else if (timesMatch2) {
-    return {
-      repeatabilityTimes: Number.parseInt(timesMatch2[1], 10),
-      unit: "times",
-    };
-  } else if (unitsMatch) {
-    return {
-      repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
-      unit: "credit_hours",
-    };
-  } else if (repeatText.toLowerCase().includes("unlimited")) {
-    return {
-      repeatabilityTimes: null,
-      unit: null,
-    };
-  } else if (repeatText.trim() !== "") {
-    throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
-
-  return {
-    repeatabilityTimes: 0,
-    unit: "times",
-  };
 }
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;

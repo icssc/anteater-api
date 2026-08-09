@@ -4,20 +4,74 @@ import { dirname, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  type HumanitiesOcrBox,
+  fetchEnglishCanvaHtml,
   type HumanitiesPdfSource,
+  isExpectedEnglishCanvaUrl,
+  loadHumanitiesSourceSafely,
   normalizeHumanitiesCourseId,
-  parseComparativeLiteratureOcrBoxes,
   parseEnglishCanvaHtml,
+  parseGlobalLanguagesCulturesPages,
   parseHumanitiesPdf,
   resolveHumanitiesInstructors,
 } from "./lib.ts";
+import { runStandaloneScrape } from "./standalone.ts";
 
 const fixtureDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "../test/fixtures");
 const fixture = async (name: string) =>
   new Uint8Array(await readFile(resolve(fixtureDirectory, `${name}.pdf`)));
 const htmlFixture = async (name: string) =>
   readFile(resolve(fixtureDirectory, `${name}.html`), "utf8");
+
+test("the standalone importer always closes its database client", async () => {
+  const events: string[] = [];
+  const db = {
+    $client: {
+      end: async ({ timeout }: { timeout: number }) => {
+        assert.equal(timeout, 5);
+        events.push("close");
+      },
+    },
+  } as unknown as Parameters<typeof runStandaloneScrape>[0];
+
+  await assert.rejects(
+    runStandaloneScrape(db, async () => {
+      events.push("scrape");
+      throw new Error("controlled source failure");
+    }),
+    /controlled source failure/,
+  );
+  assert.deepEqual(events, ["scrape", "close"]);
+});
+
+test("parses current Global Languages & Cultures language tables", async () => {
+  const parsed = parseGlobalLanguagesCulturesPages([
+    { department: "ARABIC", html: await htmlFixture("GLC-ARABIC-2026") },
+    { department: "PERSIAN", html: await htmlFixture("GLC-PERSIAN-2026") },
+    { department: "VIETMSE", html: await htmlFixture("GLC-VIETMSE-2026") },
+  ]);
+  assert.equal(parsed.source, "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS");
+  assert.equal(parsed.academicYear, "2026-2027");
+  assert.deepEqual(parsed.terms, [
+    { year: "2026", quarter: "Fall" },
+    { year: "2027", quarter: "Winter" },
+    { year: "2027", quarter: "Spring" },
+  ]);
+  assert.ok(parsed.offerings.some((o) => o.courseId === "ARABIC1A" && o.quarter === "Fall"));
+  assert.ok(parsed.offerings.some((o) => o.courseId === "PERSIAN1A" && o.quarter === "Fall"));
+  assert.ok(parsed.offerings.some((o) => o.courseId === "VIETMSE1C" && o.quarter === "Spring"));
+  assert.ok(
+    parsed.offerings
+      .find((o) => o.courseId === "PERSIAN1A")
+      ?.instructors.includes("SAHRANAVARD, N."),
+  );
+  assert.ok(parsed.offerings.find((o) => o.courseId === "ARABIC1A")?.instructors.length === 0);
+  assert.ok(
+    parsed.offerings.find((o) => o.courseId === "VIETMSE1A")?.instructors.includes("TRAN, T."),
+  );
+  assert.equal(parsed.duplicateRowsCollapsed, 1);
+  assert.equal(parsed.parsingErrors.length, 0);
+  assert.equal(parsed.lastUpdated, null);
+});
 
 test("normalizes Humanities department labels to catalogue identifiers", () => {
   assert.equal(normalizeHumanitiesCourseId("Art His", "42E"), "ARTHIS42E");
@@ -143,85 +197,70 @@ test("parses the English Canva schedule, explicit departments, terms, and update
   assert.equal(parsed.parsingErrors.length, 0);
 });
 
-function ocrBox(text: string, left: number, top: number, confidence = 0.99): HumanitiesOcrBox {
-  return {
-    text,
-    left,
-    top,
-    right: left + text.length * 12,
-    bottom: top + 20,
-    confidence,
-  };
-}
-
-test("parses Comparative Literature OCR rows, skips cross-lists/placeholders, and deduplicates", () => {
-  const boxes: HumanitiesOcrBox[] = [
-    ocrBox("Run Date: 2026-05-22", 20, 20),
-    ocrBox("FALL QUARTER", 20, 100),
-    ocrBox("COM", 20, 180),
-    ocrBox("LIT", 75, 180),
-    ocrBox("10", 130, 180),
-    ocrBox("Smith, Jane", 1120, 180),
-    ocrBox("COM", 20, 220),
-    ocrBox("LIT", 75, 220),
-    ocrBox("10", 130, 220),
-    ocrBox("TBD", 1120, 220),
-    ocrBox("HUMAN", 20, 260),
-    ocrBox("260A", 95, 260),
-    ocrBox("WINTER QUARTER", 20, 340),
-    ocrBox("COM", 20, 420),
-    ocrBox("LIT", 75, 420),
-    ocrBox("60B", 130, 420),
-    ocrBox("SPRING QUARTER", 20, 500),
-    ocrBox("COM", 20, 580),
-    ocrBox("LIT", 75, 580),
-    ocrBox("150", 130, 580),
-    ocrBox("COM", 20, 640),
-    ocrBox("LIT", 75, 640),
-    ocrBox("1XX", 130, 640),
-  ];
-  const parsed = parseComparativeLiteratureOcrBoxes(boxes);
-  assert.equal(parsed.lastUpdated?.toISOString(), "2026-05-22T00:00:00.000Z");
-  assert.deepEqual(parsed.terms, [
-    { year: "2026", quarter: "Fall" },
-    { year: "2027", quarter: "Winter" },
-    { year: "2027", quarter: "Spring" },
-  ]);
-  assert.equal(parsed.offerings.filter((o) => o.courseId === "COMLIT10").length, 1);
-  assert.equal(parsed.offerings.filter((o) => o.courseId === "COMLIT150").length, 1);
-  assert.equal(
-    parsed.offerings.find((o) => o.courseId === "COMLIT10")?.instructors[0],
-    "Smith, Jane",
-  );
-  assert.ok(
-    parsed.offerings.some((o) => o.courseId === "COMLIT10" && o.instructors.includes("TBD")),
-  );
-  assert.ok(!parsed.offerings.some((o) => o.courseId.startsWith("HUMAN")));
-  assert.equal(parsed.parsingErrors.length, 0);
-  assert.equal(parsed.duplicateRowsCollapsed, 1);
+test("fetches the current public Canva viewer with a compatible user agent", async () => {
+  const html = await htmlFixture("ENGLISH-2026");
+  let userAgent = "";
+  const fetched = await fetchEnglishCanvaHtml(async (_url, init) => {
+    userAgent = String(new Headers(init?.headers).get("user-agent"));
+    const response = new Response(html, { status: 200 });
+    Object.defineProperty(response, "url", {
+      value: "https://www.canva.com/design/DAHGGfFVuNM/V4mRsOzuq-U3Cez0TYdIyg/view",
+    });
+    return response;
+  });
+  assert.equal(fetched, html);
+  assert.match(userAgent, /Mozilla\/5\.0/);
 });
 
-test("rejects ambiguous Comparative Literature OCR identifiers instead of guessing", () => {
-  const boxes: HumanitiesOcrBox[] = [
-    ocrBox("FALL   QUARTER", 20, 100),
-    ocrBox("COM", 20, 180),
-    ocrBox("LIT", 75, 180),
-    ocrBox("9", 130, 180),
-    ocrBox("WINTER QUARTER", 20, 300),
-    ocrBox("COM", 20, 380),
-    ocrBox("LIT", 75, 380),
-    ocrBox("10", 130, 380, 0.61),
-    ocrBox("SPRING QUARTER", 20, 500),
-    ocrBox("COM", 20, 580),
-    ocrBox("LIT", 75, 580),
-    ocrBox("60C", 130, 580),
-  ];
-  const parsed = parseComparativeLiteratureOcrBoxes(boxes);
-  assert.ok(parsed.parsingErrors.some((error) => error.includes("Low-confidence")));
-  assert.ok(!parsed.offerings.some((o) => o.courseId === "COMLIT10"));
-  assert.deepEqual(parsed.terms, [
-    { year: "2026", quarter: "Fall" },
-    { year: "2027", quarter: "Winter" },
-    { year: "2027", quarter: "Spring" },
+test("rejects a controlled truncated embedded-text PDF", async () => {
+  const truncated = (await fixture("AFAM-2026")).slice(0, 128);
+  await assert.rejects(
+    parseHumanitiesPdf("AFRICAN_AMERICAN_STUDIES_COURSE_OFFERINGS", truncated),
+    /Invalid PDF|PDF structure|InvalidPDFException/i,
+  );
+});
+
+test("a failed Humanities source reports its exact error and does not stop a later source", async () => {
+  const warnings: string[] = [];
+  const mutations: string[] = [];
+  const failed = await loadHumanitiesSourceSafely(
+    "COMPARATIVE_LITERATURE_COURSE_OFFERINGS",
+    async () => {
+      throw new Error("controlled OCR ambiguity");
+    },
+    (message) => warnings.push(message),
+  );
+  const later = await loadHumanitiesSourceSafely(
+    "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS",
+    async () => {
+      mutations.push("later source only");
+      return "parsed";
+    },
+    (message) => warnings.push(message),
+  );
+
+  assert.equal(failed, null);
+  assert.equal(later, "parsed");
+  assert.deepEqual(mutations, ["later source only"]);
+  assert.deepEqual(warnings, [
+    "Skipping Humanities source COMPARATIVE_LITERATURE_COURSE_OFFERINGS: controlled OCR ambiguity",
   ]);
+});
+
+test("a changed English Canva bootstrap fails before cleanup", () => {
+  assert.throws(
+    () => parseEnglishCanvaHtml("<html><body>changed Canva document</body></html>"),
+    /Canva bootstrap JSON was not found/,
+  );
+});
+
+test("validates the English Canva design before extraction", () => {
+  assert.equal(
+    isExpectedEnglishCanvaUrl(
+      "https://www.canva.com/design/DAHGGfFVuNM/V4mRsOzuq-U3Cez0TYdIyg/view",
+    ),
+    true,
+  );
+  assert.equal(isExpectedEnglishCanvaUrl("https://www.canva.com/design/DIFFERENT/view"), false);
+  assert.equal(isExpectedEnglishCanvaUrl("not a URL"), false);
 });

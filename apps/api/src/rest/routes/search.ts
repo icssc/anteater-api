@@ -30,7 +30,10 @@ const searchRoute = createRoute({
 });
 
 searchRouter.use("*", accessController("FUZZY_SEARCH"));
-searchRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }));
+searchRouter.get(
+  "*",
+  productionCache({ cacheName: "anteater-api-search-v2", cacheControl: "max-age=300" }),
+);
 
 searchRouter.openapi(searchRoute, async (c) => {
   const query = c.req.valid("query");

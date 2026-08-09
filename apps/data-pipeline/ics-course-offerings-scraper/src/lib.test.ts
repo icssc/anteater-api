@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
+  buildIcsCleanupScopes,
   normalizeIcsCourseId,
   parseCurrentAcademicYear,
   parseIcsCourseOfferings,
   resolveIcsInstructors,
 } from "./lib.ts";
+
+test("the standalone importer uses the system CA store for the official ICS certificate chain", async () => {
+  const packageJson = JSON.parse(
+    await readFile(fileURLToPath(new URL("../package.json", import.meta.url).href), "utf8"),
+  ) as { scripts: { start: string } };
+  assert.match(packageJson.scripts.start, /NODE_OPTIONS=--use-system-ca/);
+});
 
 const listingHtml = `
   <table id="listing">
@@ -153,4 +163,19 @@ test("rejects term headers outside the selected academic-year boundary", () => {
     () => parseIcsCourseOfferings(listingHtml.replace("Winter 2026", "Winter 2025"), 2025),
     /expected Winter 2026/,
   );
+});
+
+test("scopes cleanup to exact parsed terms and protects every current source ID", () => {
+  const offerings = parseIcsCourseOfferings(listingHtml, 2025);
+  const scopes = buildIcsCleanupScopes(offerings);
+
+  assert.deepEqual(
+    scopes.map(({ academicYear, year, quarter }) => ({ academicYear, year, quarter })),
+    [
+      { academicYear: "2025-2026", year: "2025", quarter: "Fall" },
+      { academicYear: "2025-2026", year: "2026", quarter: "Winter" },
+      { academicYear: "2025-2026", year: "2026", quarter: "Spring" },
+    ],
+  );
+  assert.deepEqual(scopes[1].sourceCourseIds, ["COMPSCI122C", "I&CSCI31"]);
 });

@@ -8,6 +8,7 @@ import {
   parseBioCourseOfferings,
   parseBioTermHeader,
   selectImportableBioOfferings,
+  shouldCleanupBioSource,
 } from "./lib.ts";
 
 const fixture = await readFile(
@@ -171,4 +172,15 @@ test("deduplicates repeated special-topics rows by canonical course and term", (
       .map(({ year, quarter }) => `${year} ${quarter}`),
     ["2026 Fall", "2027 Winter"],
   );
+});
+
+test("a controlled malformed HTML marker disables cleanup", () => {
+  const malformed = fixture.replace(
+    '<td class="column-3"></td>',
+    '<td class="column-3">unexpected marker</td>',
+  );
+  const parsed = parseBioCourseOfferings(malformed);
+
+  assert.ok(parsed.parsingErrors.some((error) => error.includes("unexpected marker")));
+  assert.equal(shouldCleanupBioSource(parsed), false);
 });

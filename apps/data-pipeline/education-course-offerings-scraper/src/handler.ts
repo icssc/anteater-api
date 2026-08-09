@@ -1,9 +1,9 @@
 import { database } from "@packages/db";
-import { doScrape } from "$lib";
+import { doAllEducationScrapes } from "$lib";
 
 export default {
   async scheduled(_, env) {
     const db = database(env.DB.connectionString);
-    await doScrape(db);
+    await doAllEducationScrapes(db);
   },
 } satisfies ExportedHandler<Env>;

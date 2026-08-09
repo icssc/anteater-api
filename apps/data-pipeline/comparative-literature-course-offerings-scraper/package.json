@@ -1,0 +1,19 @@
+{
+  "name": "@apps/comparative-literature-course-offerings-scraper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Higher-memory Node importer for UCI Comparative Literature OCR course offerings",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "test": "tsx --test src/lib.test.ts"
+  },
+  "dependencies": {
+    "@apps/humanities-course-offerings-scraper": "workspace:*",
+    "@packages/db": "workspace:*",
+    "pdfjs-dist": "4.10.38",
+    "pureimage": "0.4.20",
+    "tesseract-wasm": "0.11.0"
+  }
+}

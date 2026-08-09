@@ -12,6 +12,7 @@ import {
   parseEducationAcademicYear,
   parseEducationCourseOfferings,
   parseEducationDisplayedLastUpdated,
+  parseEducationPhdCourseOfferings,
   parseEducationTermHeader,
   selectImportableEducationOfferings,
 } from "./lib.ts";
@@ -20,9 +21,15 @@ const fixture = await readFile(
   join(dirname(fileURLToPath(import.meta.url)), "../test/fixtures/tentative-course-schedule.html"),
   "utf8",
 );
+const phdFixture = await readFile(
+  join(dirname(fileURLToPath(import.meta.url)), "../test/fixtures/phd-2026-2027.csv"),
+  "utf8",
+);
 
 test("normalizes Education course IDs and Unicode formatting artifacts", () => {
   assert.equal(normalizeEducationCourseId("EDUC 10"), "EDUC10");
+  assert.equal(normalizeEducationCourseId("Ed 217T"), "EDUC217T");
+  assert.equal(normalizeEducationCourseId("ED238D"), "EDUC238D");
   assert.equal(normalizeEducationCourseId("EDUC 104D"), "EDUC104D");
   assert.equal(normalizeEducationCourseId("EDUC 120A"), "EDUC120A");
   assert.equal(normalizeEducationCourseId("EDUC 179W"), "EDUC179W");
@@ -54,7 +61,11 @@ test("discovers the live-style table and parses all three quarter columns", () =
   const parsed = parseEducationCourseOfferings(fixture);
 
   assert.equal(parsed.sourceTableRows, 10);
-  assert.deepEqual(parsed.courseEntriesByQuarter, { Fall: 7, Winter: 8, Spring: 10 });
+  assert.deepEqual(parsed.courseEntriesByQuarter, {
+    Fall: 7,
+    Winter: 8,
+    Spring: 10,
+  });
   assert.equal(parsed.normalizedCourseEntries, 25);
   assert.equal(parsed.offerings.length, 24);
   assert.equal(parsed.courseIds.length, 11);
@@ -198,6 +209,42 @@ test("keeps an imprecise or absent update date nullable and reports malformed di
   const parsedMalformed = parseEducationCourseOfferings(malformed);
   assert.equal(parsedMalformed.displayedSourceUpdateValue, null);
   assert.ok(parsedMalformed.parsingErrors.some((error) => error.includes("last updated")));
+});
+
+test("parses the public Education Ph.D. Google Sheet export by explicit term headers", () => {
+  const parsed = parseEducationPhdCourseOfferings(phdFixture);
+  assert.equal(parsed.academicYear, "2026-2027");
+  assert.deepEqual(
+    parsed.terms.map(({ year, quarter }) => `${year} ${quarter}`),
+    ["2026 Fall", "2027 Winter", "2027 Spring"],
+  );
+  assert.equal(parsed.lastUpdated?.toISOString(), "2026-05-28T00:00:00.000Z");
+  assert.ok(parsed.courseIds.includes("EDUC222"));
+  assert.ok(parsed.courseIds.includes("EDUC296A"));
+  assert.ok(parsed.courseIds.includes("EDUC217T"));
+  assert.ok(parsed.courseIds.includes("EDUC238D"));
+  assert.ok(
+    parsed.offerings.some(
+      ({ courseId, quarter }) => courseId === "EDUC399" && quarter === "Spring",
+    ),
+  );
+  assert.deepEqual(parsed.parsingErrors, []);
+  assert.ok(parsed.offerings.every(({ instructors }) => Array.isArray(instructors)));
+});
+
+test("deduplicates repeated Ph.D. course-term rows and rejects malformed presentation IDs", () => {
+  const parsed = parseEducationPhdCourseOfferings(
+    phdFixture.replace(
+      "EDUC 399 Proseminar Richland",
+      "EDUC 399 Proseminar Richland\nEDUC 399 Proseminar Richland",
+    ),
+  );
+  assert.equal(
+    parsed.offerings.filter(({ courseId, quarter }) => courseId === "EDUC399" && quarter === "Fall")
+      .length,
+    1,
+  );
+  assert.equal(parsed.courseIds.includes("EDUC238D"), true);
 });
 
 test("selects only exact future terms using calendar metadata", () => {

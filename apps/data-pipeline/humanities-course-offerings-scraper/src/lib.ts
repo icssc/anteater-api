@@ -4,8 +4,6 @@ import type { TentativeInstructor, Term } from "@packages/db/schema";
 import { calendarTerm, course, instructor, tentativeCourseOffering } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { make as makeBitmap } from "pureimage";
-import { createOCREngine } from "tesseract-wasm";
 
 export const HUMANITIES_SOURCE_URL = "https://www.humanities.uci.edu/undergrad/academics/planned";
 export const HUMANITIES_ACADEMIC_YEAR = "2026-2027";
@@ -25,10 +23,12 @@ export const HUMANITIES_PDF_SOURCE_IDS = [
 ] as const;
 export const HUMANITIES_SOURCE_IDS = [
   ...HUMANITIES_PDF_SOURCE_IDS,
-  "COMPARATIVE_LITERATURE_COURSE_OFFERINGS",
   "ENGLISH_COURSE_OFFERINGS",
+  "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS",
 ] as const;
-export type HumanitiesSource = (typeof HUMANITIES_SOURCE_IDS)[number];
+export type HumanitiesSource =
+  | (typeof HUMANITIES_SOURCE_IDS)[number]
+  | "COMPARATIVE_LITERATURE_COURSE_OFFERINGS";
 export type HumanitiesPdfSource = (typeof HUMANITIES_PDF_SOURCE_IDS)[number];
 
 type Quarter = "Fall" | "Winter" | "Spring";
@@ -78,7 +78,18 @@ export const HUMANITIES_SOURCE_URLS: Record<HumanitiesSource, string> = {
   COMPARATIVE_LITERATURE_COURSE_OFFERINGS:
     "https://sites.uci.edu/humsched/files/2026/05/COM-LIT-2026.pdf",
   ENGLISH_COURSE_OFFERINGS: "https://canva.link/qttxux0qiyh3p3k",
+  GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS:
+    "https://www.humanities.uci.edu/glc/language-programs-overview",
 };
+
+export const GLOBAL_LANGUAGES_CULTURES_PAGE_URLS = {
+  ARABIC:
+    "https://www.humanities.uci.edu/glc/language-programs-overview/arabic-course-descriptions",
+  PERSIAN:
+    "https://www.humanities.uci.edu/glc/language-programs-overview/persian-course-descriptions",
+  VIETMSE:
+    "https://www.humanities.uci.edu/glc/language-programs-overview/vietnamese-course-descriptions",
+} as const;
 
 const canonicalDepartments: Record<string, string> = {
   AFAM: "AFAM",
@@ -102,6 +113,9 @@ const canonicalDepartments: Record<string, string> = {
   ENGLISH: "ENGLISH",
   "LIT JRN": "LITJRN",
   WR: "WRITING",
+  ARABIC: "ARABIC",
+  PERSIAN: "PERSIAN",
+  VIETMSE: "VIETMSE",
 };
 
 const normalize = (value: string) =>
@@ -179,6 +193,119 @@ function plainTermFromText(text: string): { quarter: Quarter; year: string } | n
   const quarter = `${match[1][0]}${match[1].slice(1).toLowerCase()}` as Quarter;
   const year = match[2] ?? (quarter === "Fall" ? "2026" : "2027");
   return { quarter, year };
+}
+
+function decodeHtmlCell(value: string): string {
+  return normalize(
+    value
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+        String.fromCodePoint(Number.parseInt(code, 16)),
+      )
+      .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number.parseInt(code, 10))),
+  );
+}
+
+type GlobalLanguagesCulturesPage = { department: string; html: string };
+
+/**
+ * Parse the three public GLC language tables. The pages are labelled "Course
+ * Descriptions", but their AY heading and F26/W27/S27 rows are explicit
+ * planned offerings. STAFF and other non-person placeholders intentionally
+ * produce an empty instructor list.
+ */
+export function parseGlobalLanguagesCulturesPages(
+  pages: GlobalLanguagesCulturesPage[],
+): ParsedHumanitiesSource {
+  const source: HumanitiesSource = "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS";
+  const offeringsByKey = new Map<string, ParsedHumanitiesOffering>();
+  const parsingErrors: string[] = [];
+  const terms = new Map<string, { year: string; quarter: Quarter }>();
+  let rowsParsed = 0;
+  let duplicateRowsCollapsed = 0;
+  const academicYears = new Set<string>();
+
+  for (const page of pages) {
+    const pageText = decodeHtmlCell(page.html.replace(/<script[\s\S]*?<\/script>/gi, " "));
+    const yearMatch = pageText.match(/\bAY:\s*(20\d{2})\s*[-–—]\s*(20\d{2})\b/i);
+    if (yearMatch) academicYears.add(`${yearMatch[1]}-${yearMatch[2]}`);
+    const rows = Array.from(page.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi));
+    for (const rowMatch of rows) {
+      const cells = Array.from(rowMatch[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)).map(
+        (match) => decodeHtmlCell(match[1]),
+      );
+      if (cells.length < 2) continue;
+      const termMatch = cells[0].match(/^([A-Z]+)\s*\(\s*([FWS])\s*((?:20\d{2}|\d{2}))\s*\)$/i);
+      if (!termMatch) continue;
+      const department = termMatch[1].toUpperCase();
+      if (!(department in canonicalDepartments)) {
+        parsingErrors.push(`GLC row has unsupported department '${department}'`);
+        continue;
+      }
+      const quarter = ({ F: "Fall", W: "Winter", S: "Spring" } as const)[
+        termMatch[2].toUpperCase() as "F" | "W" | "S"
+      ];
+      const rawYear = termMatch[3];
+      const year = rawYear.length === 2 ? `20${rawYear}` : rawYear;
+      terms.set(`${year}|${quarter}`, { year, quarter });
+      rowsParsed += 1;
+      const numberMatch = cells[1].match(/^(H?\d+[A-Z]*)\b/i);
+      const number = courseNumberFromToken(numberMatch?.[1] ?? "");
+      if (!number) {
+        parsingErrors.push(`GLC ${department} ${cells[1]} has malformed course number`);
+        continue;
+      }
+      const courseId = normalizeHumanitiesCourseId(department, number);
+      if (!courseId) {
+        parsingErrors.push(`GLC ${department} ${number} could not be normalized`);
+        continue;
+      }
+      const instructors = likelyInstructor(cells.at(-1) ?? "");
+      const key = `${courseId}|${year}|${quarter}`;
+      const existing = offeringsByKey.get(key);
+      if (existing) {
+        existing.instructors = Array.from(new Set([...existing.instructors, ...instructors]));
+        duplicateRowsCollapsed += 1;
+      } else {
+        offeringsByKey.set(key, {
+          source,
+          sourceUrl: HUMANITIES_SOURCE_URLS[source],
+          academicYear: HUMANITIES_ACADEMIC_YEAR,
+          courseId,
+          year,
+          quarter,
+          instructors,
+        });
+      }
+    }
+  }
+  if (academicYears.size !== 1 || !academicYears.has(HUMANITIES_ACADEMIC_YEAR))
+    parsingErrors.push("GLC pages did not consistently identify academic year 2026-2027");
+  for (const [quarter, expectedYear] of [
+    ["Fall", "2026"],
+    ["Winter", "2027"],
+    ["Spring", "2027"],
+  ] as const) {
+    if (!terms.has(`${expectedYear}|${quarter}`))
+      parsingErrors.push(`GLC pages are missing required ${quarter} ${expectedYear} term`);
+  }
+  if (pages.length !== 3) parsingErrors.push("GLC source did not provide all three language pages");
+  return {
+    source,
+    sourceUrl: HUMANITIES_SOURCE_URLS[source],
+    academicYear: HUMANITIES_ACADEMIC_YEAR,
+    lastUpdated: null,
+    terms: Array.from(terms.values()),
+    offerings: Array.from(offeringsByKey.values()),
+    rowsParsed,
+    duplicateRowsCollapsed,
+    parsingErrors,
+  };
 }
 
 function academicYear(lines: PdfLine[]): string {
@@ -501,272 +628,16 @@ export async function parseHumanitiesPdf(
   source: HumanitiesSource,
   bytes: Uint8Array,
 ): Promise<ParsedHumanitiesSource> {
+  if (source === "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS")
+    throw new Error("GLC schedules are HTML pages, not a PDF source");
   if (source === "COMPARATIVE_LITERATURE_COURSE_OFFERINGS")
-    return parseComparativeLiteraturePdf(bytes);
+    throw new Error("Comparative Literature OCR is handled by the higher-memory Node importer");
   if (source === "ENGLISH_COURSE_OFFERINGS")
     return parseEnglishCanvaHtml(new TextDecoder().decode(bytes));
   return parseHumanitiesPdfLines(source, await extractHumanitiesPdfLines(bytes));
 }
 
-type OcrRect = { left: number; top: number; right: number; bottom: number };
-export type HumanitiesOcrBox = OcrRect & { confidence: number; text: string };
-
-const OCR_WASM_URL = "https://cdn.jsdelivr.net/npm/tesseract-wasm@0.11.0/dist/tesseract-core.wasm";
-const OCR_MODEL_URL =
-  "https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_fast@4.1.0/eng.traineddata";
-let ocrAssetsPromise: Promise<{ wasm: Uint8Array; model: Uint8Array }> | null = null;
-
-async function ocrAssets(fetcher: typeof fetch = fetch) {
-  ocrAssetsPromise ??= Promise.all([fetcher(OCR_WASM_URL), fetcher(OCR_MODEL_URL)]).then(
-    async ([wasmResponse, modelResponse]) => {
-      if (!wasmResponse.ok || !modelResponse.ok)
-        throw new Error("Unable to fetch pinned OCR engine assets");
-      return {
-        wasm: new Uint8Array(await wasmResponse.arrayBuffer()),
-        model: new Uint8Array(await modelResponse.arrayBuffer()),
-      };
-    },
-  );
-  return ocrAssetsPromise;
-}
-
-function patchPureImageTransform(context: Record<string, unknown>) {
-  type Transform = Record<string, number> & { invertSelf?: () => Transform };
-  const original = (context.getTransform as () => Transform).bind(context);
-  context.getTransform = () => {
-    const matrix = original();
-    matrix.invertSelf = () => {
-      const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
-      const a = matrix.a;
-      const b = matrix.b;
-      const c = matrix.c;
-      const d = matrix.d;
-      const e = matrix.e;
-      const f = matrix.f;
-      matrix.a = d / determinant;
-      matrix.b = -b / determinant;
-      matrix.c = -c / determinant;
-      matrix.d = a / determinant;
-      matrix.e = (c * f - d * e) / determinant;
-      matrix.f = (b * e - a * f) / determinant;
-      return matrix;
-    };
-    return matrix;
-  };
-}
-
-/**
- * Render the official Comparative Literature PDF with PDF.js and pureimage.
- * The source has no text layer; this keeps rasterization deterministic and
- * deployable in the Worker rather than depending on a local GUI or OCR CLI.
- */
-async function renderPdfPage(
-  bytes: Uint8Array,
-): Promise<{ data: Uint8Array; width: number; height: number }> {
-  const document = await getDocument({
-    data: bytes,
-    disableWorker: true,
-    isEvalSupported: false,
-  } as never).promise;
-  try {
-    const page = await document.getPage(1);
-    const viewport = page.getViewport({ scale: 4 });
-    const canvas = makeBitmap(viewport.width, viewport.height);
-    const context = canvas.getContext("2d") as unknown as Record<string, unknown>;
-    patchPureImageTransform(context);
-    (context.beginPath as () => void)();
-    await page.render({
-      canvasContext: context,
-      viewport,
-      canvasFactory: {
-        create(width: number, height: number) {
-          const child = makeBitmap(width, height);
-          const childContext = child.getContext("2d") as unknown as Record<string, unknown>;
-          patchPureImageTransform(childContext);
-          (childContext.beginPath as () => void)();
-          return { canvas: child, context: childContext };
-        },
-        reset() {},
-        destroy() {},
-      },
-    } as never).promise;
-    return { data: canvas.data, width: canvas.width, height: canvas.height };
-  } finally {
-    await document.cleanup();
-    await document.destroy();
-  }
-}
-
-export async function extractHumanitiesOcrBoxes(
-  bytes: Uint8Array,
-  fetcher: typeof fetch = fetch,
-): Promise<HumanitiesOcrBox[]> {
-  const image = await renderPdfPage(bytes);
-  const assets = await ocrAssets(fetcher);
-  const engine = await createOCREngine({ wasmBinary: assets.wasm });
-  try {
-    engine.loadModel(assets.model);
-    engine.loadImage(image);
-    return engine.getTextBoxes("word").map((box) => ({
-      ...box.rect,
-      confidence: box.confidence,
-      text: normalize(box.text),
-    }));
-  } finally {
-    engine.destroy();
-  }
-}
-
-type OcrLine = { top: number; items: HumanitiesOcrBox[]; text: string };
-
-function ocrLines(boxes: HumanitiesOcrBox[]): OcrLine[] {
-  const lines: OcrLine[] = [];
-  for (const box of [...boxes].sort((a, b) => a.top - b.top || a.left - b.left)) {
-    const line = lines.at(-1);
-    if (!line || Math.abs(line.top - box.top) > 18) {
-      lines.push({ top: box.top, items: [box], text: box.text });
-    } else {
-      line.items.push(box);
-      line.text = line.items
-        .sort((a, b) => a.left - b.left)
-        .map((item) => item.text)
-        .join(" ");
-    }
-  }
-  return lines;
-}
-
-function ocrInstructor(items: HumanitiesOcrBox[]): string[] {
-  const words = items
-    .filter((item) => item.left >= 1_100 && item.left < 1_590)
-    .sort((a, b) => a.top - b.top || a.left - b.left)
-    .map((item) => item.text)
-    .filter((word) => !/^(?:Instructor|Host|Dept\.?)$/i.test(word))
-    .filter(Boolean);
-  if (words.length === 0) return [];
-  const value = words.join(" ");
-  if (/^(?:TBA|TBD|STAFF|EMERITI|LECTURER|TEACHING\s+ASSOCIATE)(?:\s|$)/i.test(value))
-    return value.startsWith("TBD") ? ["TBD"] : [];
-  return likelyInstructor(value);
-}
-
-function comparativeCourseNumber(line: OcrLine): { number: string; confidence: number } | null {
-  const items = line.items.filter((item) => item.left < 380);
-  const comIndex = items.findIndex((item) => /^COM$/i.test(item.text));
-  const litIndex = items.findIndex((item, index) => index > comIndex && /^LIT$/i.test(item.text));
-  if (comIndex < 0 || litIndex < 0) return null;
-  const course = items.find((item, index) => index > litIndex && /^\d+[A-Z]*$/i.test(item.text));
-  if (!course || /X{2,}/i.test(course.text)) return null;
-  return { number: course.text.toUpperCase(), confidence: course.confidence };
-}
-
-export function parseComparativeLiteratureOcrBoxes(
-  boxes: HumanitiesOcrBox[],
-): ParsedHumanitiesSource {
-  const source: HumanitiesSource = "COMPARATIVE_LITERATURE_COURSE_OFFERINGS";
-  const lines = ocrLines(boxes);
-  const offerings: ParsedHumanitiesOffering[] = [];
-  const parsingErrors: string[] = [];
-  let quarter: Quarter | null = null;
-  const rows: Array<{
-    line: OcrLine;
-    term: { year: string; quarter: Quarter };
-    number: string;
-    confidence: number;
-  }> = [];
-  const update = lines.find((line) => /run\s+date/i.test(line.text));
-  const dateMatch = update?.text.match(/(20\d{2})[-/](\d{1,2})[-/](\d{1,2})/);
-  const lastUpdated = dateMatch
-    ? new Date(
-        `${dateMatch[1]}-${dateMatch[2].padStart(2, "0")}-${dateMatch[3].padStart(2, "0")}T00:00:00.000Z`,
-      )
-    : null;
-  for (const line of lines) {
-    const header = line.text.match(/\b(FALL|WINTER|SPRING)\s+QUARTER\b/i);
-    if (header) {
-      quarter = (header[1][0].toUpperCase() + header[1].slice(1).toLowerCase()) as Quarter;
-      continue;
-    }
-    if (!quarter) continue;
-    const course = comparativeCourseNumber(line);
-    if (!course) continue;
-    rows.push({
-      line,
-      term: termForQuarter(quarter),
-      number: course.number,
-      confidence: course.confidence,
-    });
-  }
-  const courseLineTops = lines
-    .filter((line) =>
-      line.items.some(
-        (item) => item.left < 380 && /^(?:COM|HUMAN|FLM&MDA|SPANISH)$/i.test(item.text),
-      ),
-    )
-    .map((line) => line.top)
-    .sort((a, b) => a - b);
-  const terms = Array.from(
-    new Map(rows.map((row) => [`${row.term.year}|${row.term.quarter}`, row.term])).values(),
-  );
-  for (let index = 0; index < rows.length; index += 1) {
-    const row = rows[index];
-    if (row.confidence < 0.8) {
-      parsingErrors.push(`Low-confidence Comparative Literature course identifier ${row.number}`);
-      continue;
-    }
-    const courseId = normalizeHumanitiesCourseId("COM LIT", row.number);
-    if (!courseId) {
-      parsingErrors.push(`Unable to normalize Comparative Literature course ${row.number}`);
-      continue;
-    }
-    const lineIndex = courseLineTops.indexOf(row.line.top);
-    const previousTop = lineIndex > 0 ? courseLineTops[lineIndex - 1] : row.line.top - 24;
-    const nextTop = courseLineTops[lineIndex + 1] ?? row.line.top + 48;
-    const lowerBound = (previousTop + row.line.top) / 2;
-    const upperBound = (row.line.top + nextTop) / 2;
-    const associated = boxes.filter((box) => box.top >= lowerBound && box.top < upperBound);
-    const instructors = ocrInstructor(associated);
-    const existing = offerings.find(
-      (offering) =>
-        offering.courseId === courseId &&
-        offering.year === row.term.year &&
-        offering.quarter === row.term.quarter,
-    );
-    if (existing)
-      existing.instructors = Array.from(new Set([...existing.instructors, ...instructors]));
-    else
-      offerings.push({
-        source,
-        sourceUrl: HUMANITIES_SOURCE_URLS[source],
-        academicYear: HUMANITIES_ACADEMIC_YEAR,
-        courseId,
-        year: row.term.year,
-        quarter: row.term.quarter,
-        instructors,
-      });
-  }
-  return {
-    source,
-    sourceUrl: HUMANITIES_SOURCE_URLS[source],
-    academicYear: HUMANITIES_ACADEMIC_YEAR,
-    lastUpdated: lastUpdated && !Number.isNaN(lastUpdated.getTime()) ? lastUpdated : null,
-    terms,
-    offerings,
-    rowsParsed: rows.length,
-    duplicateRowsCollapsed: rows.length - offerings.length,
-    parsingErrors:
-      terms.length < 3
-        ? ["Comparative Literature did not expose all three quarters", ...parsingErrors]
-        : parsingErrors,
-  };
-}
-
-export async function parseComparativeLiteraturePdf(
-  bytes: Uint8Array,
-  fetcher: typeof fetch = fetch,
-): Promise<ParsedHumanitiesSource> {
-  return parseComparativeLiteratureOcrBoxes(await extractHumanitiesOcrBoxes(bytes, fetcher));
-}
+const ENGLISH_CANVA_DESIGN_ID = "DAHGGfFVuNM";
 
 function decodeJavaScriptString(value: string): string {
   let output = "";
@@ -977,12 +848,55 @@ function offeringKey(value: {
 }
 
 async function fetchSource(source: HumanitiesSource, fetcher: typeof fetch): Promise<Uint8Array> {
+  const headers: Record<string, string> =
+    source === "ENGLISH_COURSE_OFFERINGS"
+      ? {
+          // Canva serves an intentionally reduced "Unsupported client" document to
+          // generic bot user agents. This remains a public viewer response and
+          // contains the structured design data used by parseEnglishCanvaHtml.
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+        }
+      : { "User-Agent": "Anteater API Humanities scraper" };
   const response = await fetcher(HUMANITIES_SOURCE_URLS[source], {
-    headers: { "User-Agent": "Anteater API Humanities scraper" },
+    headers,
   });
   if (!response.ok)
     throw new Error(`Failed to fetch ${HUMANITIES_SOURCE_URLS[source]}: HTTP ${response.status}`);
+  if (source === "ENGLISH_COURSE_OFFERINGS" && !isExpectedEnglishCanvaUrl(response.url))
+    throw new Error(`English Canva link resolved to an unexpected design: ${response.url}`);
   return new Uint8Array(await response.arrayBuffer());
+}
+
+/** Fetch the public Canva viewer representation used by the English parser. */
+export async function fetchEnglishCanvaHtml(fetcher: typeof fetch = fetch): Promise<string> {
+  return new TextDecoder().decode(await fetchSource("ENGLISH_COURSE_OFFERINGS", fetcher));
+}
+
+export function isExpectedEnglishCanvaUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.hostname === "www.canva.com" &&
+      parsed.pathname.split("/").includes(ENGLISH_CANVA_DESIGN_ID)
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function loadHumanitiesSourceSafely<T>(
+  source: HumanitiesSource,
+  loadSource: () => Promise<T>,
+  warn: (message: string) => void = console.warn,
+): Promise<T | null> {
+  try {
+    return await loadSource();
+  } catch (error) {
+    warn(`Skipping Humanities source ${source}: ${(error as Error).message}`);
+    return null;
+  }
 }
 
 export type HumanitiesScrapeSummary = {
@@ -1005,18 +919,26 @@ export async function doScrape(
 ): Promise<HumanitiesScrapeSummary> {
   const results: HumanitiesScrapeSummary["sources"] = [];
   for (const source of HUMANITIES_SOURCE_IDS) {
-    let parsed: ParsedHumanitiesSource;
-    try {
-      const bytes = await fetchSource(source, fetcher);
-      if (source === "COMPARATIVE_LITERATURE_COURSE_OFFERINGS")
-        parsed = await parseComparativeLiteraturePdf(bytes, fetcher);
-      else if (source === "ENGLISH_COURSE_OFFERINGS")
-        parsed = parseEnglishCanvaHtml(new TextDecoder().decode(bytes));
-      else parsed = await parseHumanitiesPdf(source, bytes);
-    } catch (error) {
-      console.warn(`Skipping Humanities source ${source}: ${(error as Error).message}`);
-      continue;
-    }
+    const parsed = await loadHumanitiesSourceSafely(source, async () => {
+      if (source === "GLOBAL_LANGUAGES_CULTURES_COURSE_OFFERINGS") {
+        const pages = await Promise.all(
+          Object.entries(GLOBAL_LANGUAGES_CULTURES_PAGE_URLS).map(async ([department, url]) => {
+            const response = await fetcher(url, {
+              headers: { "User-Agent": "Anteater API Humanities scraper" },
+            });
+            if (!response.ok) throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
+            return { department, html: await response.text() };
+          }),
+        );
+        return parseGlobalLanguagesCulturesPages(pages);
+      } else {
+        if (source === "ENGLISH_COURSE_OFFERINGS")
+          return parseEnglishCanvaHtml(await fetchEnglishCanvaHtml(fetcher));
+        const bytes = await fetchSource(source, fetcher);
+        return await parseHumanitiesPdf(source, bytes);
+      }
+    });
+    if (!parsed) continue;
     const allIds = Array.from(new Set(parsed.offerings.map((offering) => offering.courseId)));
     const [knownCourses, knownInstructors, calendarTerms] = await Promise.all([
       db.select({ id: course.id }).from(course).where(inArray(course.id, allIds)),
@@ -1139,7 +1061,8 @@ export async function doScrape(
       rowsUpdated,
       rowsDeactivated,
       resolvedInstructorAssignments: values.reduce(
-        (sum, value) => sum + value.instructors.length,
+        (sum, value) =>
+          sum + value.instructors.filter((instructor) => instructor.status === "assigned").length,
         0,
       ),
     });

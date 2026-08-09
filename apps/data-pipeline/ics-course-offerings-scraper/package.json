@@ -8,7 +8,7 @@
     "check:types": "tsc -p ./tsconfig.json -noEmit",
     "deploy": "wrangler deploy",
     "postinstall": "wrangler types",
-    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "start": "dotenv -e ../../../.env -v NODE_OPTIONS=--use-system-ca -- tsx src/index.ts",
     "test": "tsx --test src/lib.test.ts"
   },
   "dependencies": {

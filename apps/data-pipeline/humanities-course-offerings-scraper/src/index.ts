@@ -1,4 +1,4 @@
 import { database } from "@packages/db";
-import { doScrape } from "$lib";
+import { runStandaloneScrape } from "./standalone.js";
 
-await doScrape(database(process.env.DB_URL ?? ""));
+await runStandaloneScrape(database(process.env.DB_URL ?? ""));

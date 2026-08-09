@@ -1,0 +1,37 @@
+# OCR is intentionally scheduled in GitHub's Node runner rather than a
+# Cloudflare Worker. The official scanned PDF requires substantially more
+# memory than the Worker limit permits.
+name: Import Comparative Literature tentative offerings
+
+on:
+  schedule:
+    - cron: "35 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: comparative-literature-course-offerings
+  cancel-in-progress: false
+
+env:
+  DB_URL: ${{ secrets.DB_URL }}
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-and-pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Import Comparative Literature offerings
+        run: pnpm --filter @apps/comparative-literature-course-offerings-scraper start

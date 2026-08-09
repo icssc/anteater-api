@@ -1,7 +1,8 @@
 import type { database } from "@packages/db";
-import { and, eq, inArray, ne } from "@packages/db/drizzle";
+import { and, eq, inArray, ne, notInArray } from "@packages/db/drizzle";
 import type { TentativeInstructor, Term } from "@packages/db/schema";
 import { course, instructor, tentativeCourseOffering } from "@packages/db/schema";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { type Cheerio, type CheerioAPI, load } from "cheerio";
 import type { Element } from "domhandler";
 
@@ -44,6 +45,54 @@ type TermColumn = {
   year: string;
   quarter: IncludedQuarter;
 };
+
+type IcsOfferingIdentity = {
+  academicYear: string;
+  courseId: string;
+  year: string;
+  quarter: string;
+};
+
+const offeringKey = (offering: IcsOfferingIdentity) =>
+  `${offering.academicYear}|${offering.courseId}|${offering.year}|${offering.quarter}`;
+const scopeKey = (offering: Pick<IcsOfferingIdentity, "academicYear" | "year" | "quarter">) =>
+  `${offering.academicYear}|${offering.year}|${offering.quarter}`;
+
+export function buildIcsCleanupScopes(
+  offerings: Array<
+    Pick<ParsedTentativeCourseOffering, "academicYear" | "courseId" | "year" | "quarter">
+  >,
+): Array<{
+  academicYear: string;
+  year: string;
+  quarter: IncludedQuarter;
+  sourceCourseIds: string[];
+}> {
+  const scopes = new Map<
+    string,
+    {
+      academicYear: string;
+      year: string;
+      quarter: IncludedQuarter;
+      sourceCourseIds: Set<string>;
+    }
+  >();
+  for (const offering of offerings) {
+    const key = scopeKey(offering);
+    const scope = scopes.get(key) ?? {
+      academicYear: offering.academicYear,
+      year: offering.year,
+      quarter: offering.quarter,
+      sourceCourseIds: new Set<string>(),
+    };
+    scope.sourceCourseIds.add(offering.courseId);
+    scopes.set(key, scope);
+  }
+  return Array.from(scopes.values()).map((scope) => ({
+    ...scope,
+    sourceCourseIds: Array.from(scope.sourceCourseIds).sort(),
+  }));
+}
 
 const normalizeWhitespace = (value: string) => value.replaceAll(/\s+/g, " ").trim();
 
@@ -271,7 +320,16 @@ async function fetchHtml(fetcher: typeof fetch, url: string): Promise<string> {
 export async function doScrape(
   db: ReturnType<typeof database>,
   fetcher: typeof fetch = fetch,
-): Promise<void> {
+): Promise<{
+  parsedOfferings: number;
+  matchedCourseIds: string[];
+  unmatchedCourseIds: string[];
+  rowsInserted: number;
+  rowsUpdated: number;
+  rowsDeactivated: number;
+  parsingErrors: string[];
+  cleanupScopes: Array<{ academicYear: string; year: string; quarter: IncludedQuarter }>;
+}> {
   const lastUpdated = new Date();
   const landingHtml = await fetchHtml(fetcher, ICS_COURSE_OFFERINGS_URL);
   const academicYearStart = parseCurrentAcademicYear(landingHtml);
@@ -295,6 +353,8 @@ export async function doScrape(
       .where(ne(instructor.ucinetid, "student")),
   ]);
   const knownCourseIds = new Set(knownCourses.map(({ id }) => id));
+  const matchedCourseIds = courseIds.filter((id) => knownCourseIds.has(id)).sort();
+  const unmatchedCourseIds = courseIds.filter((id) => !knownCourseIds.has(id)).sort();
   const academicYear = academicYearLabel(academicYearStart);
   const values: Array<typeof tentativeCourseOffering.$inferInsert> = parsedOfferings
     .filter(({ courseId }) => knownCourseIds.has(courseId))
@@ -313,19 +373,77 @@ export async function doScrape(
     throw new Error("ICS listing did not contain offerings for any known Anteater API courses");
   }
 
+  const cleanupScopes = buildIcsCleanupScopes(parsedOfferings);
+  const scopeKeys = new Set(cleanupScopes.map(scopeKey));
+  const existing = await db
+    .select({
+      academicYear: tentativeCourseOffering.academicYear,
+      courseId: tentativeCourseOffering.courseId,
+      year: tentativeCourseOffering.year,
+      quarter: tentativeCourseOffering.quarter,
+    })
+    .from(tentativeCourseOffering)
+    .where(
+      and(
+        eq(tentativeCourseOffering.source, ICS_COURSE_OFFERINGS_SOURCE),
+        eq(tentativeCourseOffering.academicYear, academicYear),
+      ),
+    );
+  const relevantExisting = existing.filter((row) => scopeKeys.has(scopeKey(row)));
+  const existingKeys = new Set(relevantExisting.map(offeringKey));
+  const currentKeys = new Set(values.map(offeringKey));
+  const rowsInserted = Array.from(currentKeys).filter((key) => !existingKeys.has(key)).length;
+  const rowsUpdated = Array.from(currentKeys).filter((key) => existingKeys.has(key)).length;
+  const sourceKeys = new Set(parsedOfferings.map(offeringKey));
+  const rowsDeactivated = relevantExisting.filter(
+    (row) => !sourceKeys.has(offeringKey(row)),
+  ).length;
+
   await db.transaction(async (tx) => {
-    await tx
-      .delete(tentativeCourseOffering)
-      .where(
-        and(
-          eq(tentativeCourseOffering.source, ICS_COURSE_OFFERINGS_SOURCE),
-          eq(tentativeCourseOffering.academicYear, academicYear),
-        ),
+    for (const scope of cleanupScopes) {
+      const condition = and(
+        eq(tentativeCourseOffering.source, ICS_COURSE_OFFERINGS_SOURCE),
+        eq(tentativeCourseOffering.academicYear, scope.academicYear),
+        eq(tentativeCourseOffering.year, scope.year),
+        eq(tentativeCourseOffering.quarter, scope.quarter),
       );
-    await tx.insert(tentativeCourseOffering).values(values);
+      await tx
+        .delete(tentativeCourseOffering)
+        .where(
+          scope.sourceCourseIds.length > 0
+            ? and(condition, notInArray(tentativeCourseOffering.courseId, scope.sourceCourseIds))
+            : condition,
+        );
+    }
+    await tx
+      .insert(tentativeCourseOffering)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [
+          tentativeCourseOffering.source,
+          tentativeCourseOffering.academicYear,
+          tentativeCourseOffering.courseId,
+          tentativeCourseOffering.year,
+          tentativeCourseOffering.quarter,
+        ],
+        set: conflictUpdateSetAllCols(tentativeCourseOffering),
+      });
   });
 
-  console.log(
-    `Imported ${values.length} ICS tentative offerings for academic year ${academicYear}`,
-  );
+  const summary = {
+    parsedOfferings: parsedOfferings.length,
+    matchedCourseIds,
+    unmatchedCourseIds,
+    rowsInserted,
+    rowsUpdated,
+    rowsDeactivated,
+    parsingErrors: [],
+    cleanupScopes: cleanupScopes.map(({ academicYear, year, quarter }) => ({
+      academicYear,
+      year,
+      quarter,
+    })),
+  };
+  console.log(JSON.stringify(summary));
+  return summary;
 }

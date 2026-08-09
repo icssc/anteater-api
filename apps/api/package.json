@@ -22,7 +22,7 @@
     "@scalar/hono-api-reference": "0.11.7",
     "graphql": "16.14.2",
     "graphql-yoga": "5.21.2",
-    "hono": "4.12.27",
+    "hono": "4.12.34",
     "hono-rate-limiter": "0.5.3",
     "zod": "catalog:"
   },

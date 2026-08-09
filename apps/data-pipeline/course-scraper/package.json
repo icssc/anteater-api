@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
-    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "test": "tsx --test src/repeatability.test.ts"
   },
   "dependencies": {
     "@packages/db": "workspace:*",

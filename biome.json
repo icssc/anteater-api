@@ -17,6 +17,7 @@
       "!**/.next/",
       "!**/.sst/",
       "!**/dist/",
+      "!**/test/fixtures",
       "!**/worker-configuration.d.ts",
       "!**/cloudflare-env.d.ts",
       "!**/.open-next/"

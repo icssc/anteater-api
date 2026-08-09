@@ -297,6 +297,10 @@ export function selectImportableBioOfferings(
   };
 }
 
+export function shouldCleanupBioSource(parsed: ParsedBioCourseOfferingsPage): boolean {
+  return parsed.parsingErrors.length === 0;
+}
+
 async function fetchHtml(fetcher: typeof fetch): Promise<string> {
   const response = await fetcher(BIOLOGICAL_SCIENCES_COURSE_OFFERINGS_URL, {
     headers: { "User-Agent": "Anteater API tentative course offerings scraper" },
@@ -406,7 +410,7 @@ export async function doScrape(
   const sourceCurrentKeys = new Set(importable.offerings.map(offeringKey));
   // A partially parsed page is not a successful source snapshot, so it may upsert recovered rows
   // but must not remove prior data. This table has no active flag; scoped deletion is deactivation.
-  const cleanupEnabled = parsed.parsingErrors.length === 0;
+  const cleanupEnabled = shouldCleanupBioSource(parsed);
   const rowsDeactivated = cleanupEnabled
     ? Array.from(existingKeys).filter((key) => !sourceCurrentKeys.has(key)).length
     : 0;

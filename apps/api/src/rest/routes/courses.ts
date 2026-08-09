@@ -84,7 +84,10 @@ const coursesByCursorRoute = createRoute({
   },
 });
 
-coursesRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl: "max-age=300" }));
+coursesRouter.get(
+  "*",
+  productionCache({ cacheName: "anteater-api-courses-v2", cacheControl: "max-age=300" }),
+);
 
 coursesRouter.openapi(batchCoursesRoute, async (c) => {
   const { ids } = c.req.valid("query");
