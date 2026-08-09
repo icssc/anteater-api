@@ -51,7 +51,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
     unitCount: Int!
     courses: [String!]!
     courseConstraints: JSON
-    qualifier: JSON
+    qualifiers: JSON
 }
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -73,7 +73,7 @@ union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | P
 interface Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    header: JSON
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
@@ -85,7 +85,7 @@ type SchoolRequirements @cacheControl(maxAge: 86400) {
 type Major implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    header: JSON
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
     schoolRequirements: SchoolRequirements
 }
@@ -93,14 +93,14 @@ type Major implements Program @cacheControl(maxAge: 86400) {
 type Minor implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    header: JSON
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
 type Specialization implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
-    header: JSON
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
@@ -111,7 +111,7 @@ enum UgradRequirementsBlockId {
 
 type UgradRequirements @cacheControl(maxAge: 86400) {
     id: UgradRequirementsBlockId!,
-    header: JSON
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!,
 }
 
