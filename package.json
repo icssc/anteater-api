@@ -4,7 +4,7 @@
   "private": true,
   "description": "The official Anteater API monorepo",
   "homepage": "https://docs.icssc.club/docs/about/anteaterapi",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "check:biome": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off",
