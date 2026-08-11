@@ -66,9 +66,7 @@ export const keyStorageCodec = z.codec(
     encode: (data) => ({
       ...data,
       origins:
-        data._type === "publishable"
-          ? Object.entries(data.origins ?? []).map(([url]) => ({ url }))
-          : [],
+        data._type === "publishable" ? Object.entries(data.origins).map(([url]) => ({ url })) : [],
     }),
   },
 );
