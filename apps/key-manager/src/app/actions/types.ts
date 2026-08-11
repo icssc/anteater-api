@@ -16,20 +16,20 @@ export const keyFormSchema = z.discriminatedUnion("_type", [
     origins: z
       .array(formOriginSchema)
       .min(1, "At least one origin is required for publishable keys")
-      .superRefine((origins, ctx) => {
+      .refine((origins) => {
         const urlsSet = new Set();
-        origins.forEach((origin, index) => {
+        for (const [i, origin] of origins.entries()) {
           if (urlsSet.has(origin.url)) {
-            ctx.issues.push({
+            return {
               input: origin.url,
               code: "custom",
               message: "Duplicate origins are not allowed",
-              path: ["origins", index, "url"],
-            });
+              path: [i, "url"],
+            };
           } else {
             urlsSet.add(origin.url);
           }
-        });
+        }
       }),
   }),
   keyFormBaseSchema.extend({ _type: z.literal("secret") }),
