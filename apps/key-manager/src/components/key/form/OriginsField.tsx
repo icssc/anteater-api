@@ -35,7 +35,7 @@ const OriginsField: React.FC<Props> = ({ form }) => {
                       className={"w-11/12"}
                       onChange={(e) => {
                         fieldInput.onChange(e);
-                        form.trigger("origins");
+                        const _ = form.trigger("origins");
                       }}
                     />
                     {index !== 0 && (
