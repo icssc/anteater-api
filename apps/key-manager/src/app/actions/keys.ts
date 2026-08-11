@@ -7,6 +7,7 @@ import { createId } from "@paralleldrive/cuid2";
 import {
   type CreateKeyFormValues,
   createKeyTransform,
+  editKeyTransform,
   unprivilegedKeySchema,
 } from "@/app/actions/types";
 import { auth } from "@/auth";
@@ -80,8 +81,7 @@ export async function getUserApiKeys() {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getUserKeysHelper(session.user.id);
-  return keys;
+  return await getUserKeysHelper(session.user.id);
 }
 
 export type CreateUserApiKeyResult =
@@ -142,13 +142,7 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
 
   await getCloudflareContext().env.API_KEYS.put(
     key,
-    JSON.stringify({
-      ...keyData,
-      origins:
-        keyData.origins !== undefined
-          ? Object.fromEntries(keyData.origins.map(({ url }) => [url, true]))
-          : undefined,
-    }),
+    JSON.stringify(editKeyTransform.parse(keyData)),
     {
       metadata: "{}",
     },
