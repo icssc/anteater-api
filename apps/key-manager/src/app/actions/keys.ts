@@ -4,12 +4,7 @@ import { createHash } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
-import {
-  type CreateKeyFormValues,
-  createKeyFormSchema,
-  editKeyTransform,
-  keyStorageCodec,
-} from "@/app/actions/types";
+import { type CreateKeyFormValues, keyFormSchema, keyStorageCodec } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 
@@ -18,7 +13,7 @@ const getUserPrefix = (userId: string) => createHash("sha256").update(userId).di
 export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyData> => {
   const session = await auth();
 
-  const parsed = createKeyFormSchema.parse(input);
+  const parsed = keyFormSchema.parse(input);
 
   if (!session?.user?.isAdmin) {
     parsed.resources = parsed.rateLimitOverride = undefined;
@@ -104,7 +99,6 @@ export async function createUserApiKey(
   keyData: CreateKeyFormValues,
 ): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
-  validatedKeyData.createdAt = new Date();
 
   const session = await auth();
   if (!session?.user?.id || !session.user?.email) {
@@ -136,20 +130,17 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
   }
 
   const validatedKeyData = await validateKeyInput(keyData);
+  const keyDataInPlace = await getUserApiKeyData(key);
 
-  const keys = await getUserKeysNames(session.user.id);
-
-  if (!keys.includes(key)) {
-    throw new Error("API key does not exist on user");
+  if (!keyDataInPlace) {
+    throw new Error("API keyDataInPlace does not exist on user");
   }
 
-  await getCloudflareContext().env.API_KEYS.put(
-    key,
-    JSON.stringify(editKeyTransform.parse(keyData)),
-    {
-      metadata: "{}",
-    },
-  );
+  validatedKeyData.createdAt = keyDataInPlace.createdAt;
+
+  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData), {
+    metadata: "{}",
+  });
 
   return validatedKeyData;
 }

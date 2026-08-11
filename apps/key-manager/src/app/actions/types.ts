@@ -1,18 +1,17 @@
-import { accessControlledResources, type KeyData } from "@packages/key-types";
+import { accessControlledResources } from "@packages/key-types";
 import { z } from "zod";
 
 export const originSchema = z.httpUrl();
 export const formOriginSchema = z.object({ url: originSchema });
 
-const keyBaseSchema = z.object({
+const keyFormBaseSchema = z.object({
   name: z.string().min(1).max(30),
-  createdAt: z.date(),
   rateLimitOverride: z.number().positive().optional(),
   resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
 });
 
-export const createKeyFormSchema = z.discriminatedUnion("_type", [
-  keyBaseSchema.extend({
+export const keyFormSchema = z.discriminatedUnion("_type", [
+  keyFormBaseSchema.extend({
     _type: z.literal("publishable"),
     origins: z
       .array(formOriginSchema)
@@ -33,26 +32,31 @@ export const createKeyFormSchema = z.discriminatedUnion("_type", [
         });
       }),
   }),
-  keyBaseSchema.extend({ _type: z.literal("secret") }),
+  keyFormBaseSchema.extend({ _type: z.literal("secret") }),
 ]);
 
+export const keyStorageBaseSchema = keyFormBaseSchema.extend({
+  createdAt: z.date(),
+});
+
 export const keyStorageCodec = z.codec(
-  createKeyFormSchema,
+  keyFormSchema,
   z.discriminatedUnion("_type", [
-    keyBaseSchema.extend({
+    keyStorageBaseSchema.extend({
       _type: z.literal("publishable"),
       origins: z.record(originSchema, z.boolean()),
     }),
-    keyBaseSchema.extend({ _type: z.literal("secret") }),
+    keyStorageBaseSchema.extend({ _type: z.literal("secret") }),
   ]),
   {
     decode: (data) => {
       switch (data._type) {
         case "secret":
-          return data;
+          return { ...data, createdAt: new Date() };
         case "publishable":
           return {
             ...data,
+            createdAt: new Date(),
             origins: Object.fromEntries(
               data.origins.map((origin: z.infer<typeof formOriginSchema>) => [origin.url, true]),
             ) as Record<string, boolean>,
@@ -69,18 +73,4 @@ export const keyStorageCodec = z.codec(
   },
 );
 
-export const editKeyTransform = createKeyFormSchema.transform(
-  (data) =>
-    ({
-      ...data,
-      origins:
-        data._type === "publishable"
-          ? (Object.fromEntries(
-              data.origins?.map((origin: z.infer<typeof formOriginSchema>) => [origin, true]) ?? [],
-            ) as Record<string, boolean>)
-          : undefined,
-      rateLimitOverride: data.rateLimitOverride,
-    }) as KeyData,
-);
-
-export type CreateKeyFormValues = z.infer<typeof createKeyFormSchema>;
+export type CreateKeyFormValues = z.infer<typeof keyFormSchema>;
