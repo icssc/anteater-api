@@ -26,13 +26,13 @@ const createKeyInner = async (userId: string, key: KeyData) => {
   const prefix = getUserPrefix(userId);
   const uniqueId = createId();
   const type = key._type === "publishable" ? "pk" : "sk";
-  const completeKey = `${prefix}.${type}.${uniqueId}`;
+  const keyId = `${prefix}.${type}.${uniqueId}`;
 
-  await getCloudflareContext().env.API_KEYS.put(completeKey, JSON.stringify(key), {
+  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key), {
     metadata: "{}",
   });
 
-  return completeKey;
+  return keyId;
 };
 
 export const getKeyNamesOwnedBy = async (id: string) => {
@@ -93,9 +93,9 @@ export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUse
     return { ok: false, error: "Unauthorized" };
   }
 
-  if (session.user.email.split("@")[1] !== "uci.edu") {
-    return { ok: false, error: "User must have an @uci.edu email address" };
-  }
+  // if (session.user.email.split("@")[1] !== "uci.edu") {
+  //   return { ok: false, error: "User must have an @uci.edu email address" };
+  // }
 
   const userKeys = await getKeyNamesOwnedBy(session.user.id);
 
