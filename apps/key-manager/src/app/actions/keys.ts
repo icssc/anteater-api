@@ -120,7 +120,7 @@ export async function editKey(key: string, keyData: CreateKeyFormValues) {
   const keyDataInPlace = await getKeyById(key);
 
   if (!keyDataInPlace) {
-    throw new Error("API keyDataInPlace does not exist on user");
+    throw new Error("key does not exist on user");
   }
 
   validatedKeyData.createdAt = keyDataInPlace.createdAt;
