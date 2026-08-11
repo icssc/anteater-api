@@ -6,9 +6,9 @@ import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
 import {
   type CreateKeyFormValues,
-  createKeyTransform,
+  createKeyFormSchema,
   editKeyTransform,
-  unprivilegedKeySchema,
+  keyStorageCodec,
 } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
@@ -18,11 +18,13 @@ const getUserPrefix = (userId: string) => createHash("sha256").update(userId).di
 export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyData> => {
   const session = await auth();
 
+  const parsed = createKeyFormSchema.parse(input);
+
   if (!session?.user?.isAdmin) {
-    unprivilegedKeySchema.parse(input);
+    parsed.resources = parsed.rateLimitOverride = undefined;
   }
 
-  return createKeyTransform.parse(input);
+  return keyStorageCodec.decode(parsed);
 };
 
 const createUserKeyHelper = async (userId: string, key: KeyData) => {
@@ -102,6 +104,7 @@ export async function createUserApiKey(
   keyData: CreateKeyFormValues,
 ): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
+  validatedKeyData.createdAt = new Date();
 
   const session = await auth();
   if (!session?.user?.id || !session.user?.email) {

@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { createUserApiKey } from "@/app/actions/keys";
-import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import { type CreateKeyFormValues, createKeyFormSchema } from "@/app/actions/types";
 import NameField from "@/components/key/form/NameField";
 import OriginsField from "@/components/key/form/OriginsField";
 import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
@@ -33,7 +33,7 @@ const CreateKey = () => {
   }, [session, router]);
 
   const formProps = {
-    resolver: zodResolver(createRefinedKeySchema),
+    resolver: zodResolver(createKeyFormSchema),
     defaultValues: {
       _type: "" as CreateKeyFormValues["_type"],
       name: "",

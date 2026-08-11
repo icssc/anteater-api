@@ -8,7 +8,11 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { editUserApiKey, getUserApiKeyData, getUserKeysNames } from "@/app/actions/keys";
-import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import {
+  type CreateKeyFormValues,
+  createKeyFormSchema,
+  keyStorageCodec,
+} from "@/app/actions/types";
 
 import DeleteKey from "@/components/key/DeleteKey";
 import NameField from "@/components/key/form/NameField";
@@ -45,7 +49,7 @@ const EditKey = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const form = useForm<CreateKeyFormValues>({
-    resolver: zodResolver(createRefinedKeySchema),
+    resolver: zodResolver(createKeyFormSchema),
   });
 
   useEffect(() => {
@@ -69,20 +73,10 @@ const EditKey = () => {
           return;
         }
 
-        const formattedData = {
-          ...data,
-          origins:
-            data._type === "publishable"
-              ? Object.entries(data.origins).map(([url]) => ({
-                  url,
-                }))
-              : [],
-          createdAt: new Date(data.createdAt),
-        };
+        const encoded = keyStorageCodec.encode(data);
+        form.reset(encoded);
 
-        form.reset(formattedData);
-
-        setKeyData(formattedData);
+        setKeyData(encoded);
         setLoading(false);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "An error occurred while fetching key data.");
