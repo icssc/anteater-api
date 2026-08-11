@@ -50,9 +50,6 @@ export const getKeyById = async (key: string) => {
   return text ? (JSON.parse(text) as KeyData) : undefined;
 };
 
-/**
- * Return the authed user's API key
- */
 export async function getKeysOwned() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -82,9 +79,6 @@ export type CreateUserApiKeyResult =
       keyData: KeyData;
     };
 
-/**
- * Create the authed user's API key
- */
 export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
 
@@ -107,9 +101,6 @@ export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUse
   return { ok: true, key, keyData: validatedKeyData };
 }
 
-/**
- * Edit the authed user's API key
- */
 export async function editKey(key: string, keyData: CreateKeyFormValues) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -132,9 +123,6 @@ export async function editKey(key: string, keyData: CreateKeyFormValues) {
   return validatedKeyData;
 }
 
-/**
- * Delete the authed user's API key
- */
 export async function deleteKeyById(key: string) {
   const session = await auth();
   if (!session?.user?.id) {
