@@ -73,4 +73,3 @@ export const unprivilegedKeySchema = createKeySchema
   .strict();
 
 export type CreateKeyFormValues = z.infer<typeof createKeySchema>;
-export type CreateKeyValues = z.infer<typeof createKeyTransform>;
