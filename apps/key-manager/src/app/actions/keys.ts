@@ -93,9 +93,9 @@ export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUse
     return { ok: false, error: "Unauthorized" };
   }
 
-  // if (session.user.email.split("@")[1] !== "uci.edu") {
-  //   return { ok: false, error: "User must have an @uci.edu email address" };
-  // }
+  if (session.user.email.split("@")[1] !== "uci.edu") {
+    return { ok: false, error: "User must have an @uci.edu email address" };
+  }
 
   const userKeys = await getKeyNamesOwnedBy(session.user.id);
 
