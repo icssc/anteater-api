@@ -22,7 +22,7 @@ export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyD
   return keyStorageCodec.decode(parsed);
 };
 
-const createUserKeyHelper = async (userId: string, key: KeyData) => {
+const createKeyInner = async (userId: string, key: KeyData) => {
   const prefix = getUserPrefix(userId);
   const uniqueId = createId();
   const type = key._type === "publishable" ? "pk" : "sk";
@@ -35,7 +35,7 @@ const createUserKeyHelper = async (userId: string, key: KeyData) => {
   return completeKey;
 };
 
-export const getUserKeysNames = async (id: string) => {
+export const getKeyNamesOwnedBy = async (id: string) => {
   const prefix = getUserPrefix(id);
   const listResult = await getCloudflareContext().env.API_KEYS.list({
     prefix,
@@ -45,40 +45,30 @@ export const getUserKeysNames = async (id: string) => {
   return listResult.keys.map((key) => key.name);
 };
 
-export const getUserApiKeyData = async (key: string) => {
+export const getKeyById = async (key: string) => {
   const text = await getCloudflareContext().env.API_KEYS.get(key);
   return text ? (JSON.parse(text) as KeyData) : undefined;
 };
 
 /**
- * Returns the user's API key
- *
- * @param id user's id
- * @return the user's api key if it exists, otherwise null
- */
-const getUserKeysHelper = async (id: string): Promise<Record<string, KeyData>> => {
-  const keys = await getUserKeysNames(id);
-
-  const keysDataEntries = await Promise.all(
-    keys.map(async (key) => {
-      const data = await getUserApiKeyData(key);
-      return data ? [key, data] : null;
-    }),
-  );
-
-  return Object.fromEntries(keysDataEntries.filter((entry) => entry !== null));
-};
-
-/**
  * Return the authed user's API key
  */
-export async function getUserApiKeys() {
+export async function getKeysOwned() {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
-  return await getUserKeysHelper(session.user.id);
+  const keys = await getKeyNamesOwnedBy(session.user.id);
+
+  const keysDataEntries = await Promise.all(
+    keys.map(async (key) => {
+      const data = await getKeyById(key);
+      return data ? [key, data] : null;
+    }),
+  );
+
+  return Object.fromEntries(keysDataEntries.filter((entry) => entry !== null));
 }
 
 export type CreateUserApiKeyResult =
@@ -95,9 +85,7 @@ export type CreateUserApiKeyResult =
 /**
  * Create the authed user's API key
  */
-export async function createUserApiKey(
-  keyData: CreateKeyFormValues,
-): Promise<CreateUserApiKeyResult> {
+export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUserApiKeyResult> {
   const validatedKeyData = await validateKeyInput(keyData);
 
   const session = await auth();
@@ -109,28 +97,27 @@ export async function createUserApiKey(
     return { ok: false, error: "User must have an @uci.edu email address" };
   }
 
-  const userKeys = await getUserKeysNames(session.user.id);
+  const userKeys = await getKeyNamesOwnedBy(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
     return { ok: false, error: "User at max API key limit" };
   }
 
-  const key = await createUserKeyHelper(session.user.id, validatedKeyData);
-
+  const key = await createKeyInner(session.user.id, validatedKeyData);
   return { ok: true, key, keyData: validatedKeyData };
 }
 
 /**
  * Edit the authed user's API key
  */
-export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) {
+export async function editKey(key: string, keyData: CreateKeyFormValues) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
   const validatedKeyData = await validateKeyInput(keyData);
-  const keyDataInPlace = await getUserApiKeyData(key);
+  const keyDataInPlace = await getKeyById(key);
 
   if (!keyDataInPlace) {
     throw new Error("API keyDataInPlace does not exist on user");
@@ -148,13 +135,13 @@ export async function editUserApiKey(key: string, keyData: CreateKeyFormValues) 
 /**
  * Delete the authed user's API key
  */
-export async function deleteUserApiKey(key: string) {
+export async function deleteKeyById(key: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getUserKeysNames(session.user.id);
+  const keys = await getKeyNamesOwnedBy(session.user.id);
 
   if (!keys.includes(key)) {
     throw new Error("API key does not exist on user");

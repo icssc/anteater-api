@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { createUserApiKey } from "@/app/actions/keys";
+import { createKey } from "@/app/actions/keys";
 import { type CreateKeyFormValues, keyFormSchema } from "@/app/actions/types";
 import NameField from "@/components/key/form/NameField";
 import OriginsField from "@/components/key/form/OriginsField";
@@ -53,7 +53,7 @@ const CreateKey = () => {
 
   async function onSubmit(values: CreateKeyFormValues) {
     setIsCreating(true);
-    const result = await createUserApiKey(values);
+    const result = await createKey(values);
     if (result.ok) {
       setKey(result.key);
       setIsDialogOpen(true);
