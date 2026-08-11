@@ -64,7 +64,7 @@ const KeyManager = () => {
             <Link href="/create">
               <PlusIcon />
               <p>
-                Create Key ({Object.keys(apiKeys).length}/{MAX_API_KEYS})
+                Create key ({Object.keys(apiKeys).length}/{MAX_API_KEYS})
               </p>
             </Link>
           </Button>
