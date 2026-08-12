@@ -38,7 +38,7 @@ const keyInStorageSpecs = buildRegistry({
         z.object({
           name: z.string(),
           createdAt: z.coerce.date(),
-          rateLimitOverride: z.int().positive().optional(),
+          rateLimitOverride: z.int().nonnegative().optional(),
           resources: z.record(z.literal("FUZZY_SEARCH"), z.boolean()).optional(),
         }),
         z.discriminatedUnion("_type", [
