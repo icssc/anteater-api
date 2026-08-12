@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { editKey, getKeyById, getKeyNamesOwnedBy } from "@/app/actions/keys";
-import { type CreateKeyFormValues, keyFormSchema, keyStorageCodec } from "@/app/actions/types";
+import { type CreateKeyFormValues, keyFormCodec, keyFormSchema } from "@/app/actions/types";
 
 import DeleteKey from "@/components/key/DeleteKey";
 import NameField from "@/components/key/form/NameField";
@@ -69,7 +69,7 @@ const EditKey = () => {
           return;
         }
 
-        const encoded = keyStorageCodec.encode(data);
+        const encoded = keyFormCodec.encode(data);
         form.reset(encoded);
 
         setKeyData(encoded);

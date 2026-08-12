@@ -39,7 +39,7 @@ export const keyStorageBaseSchema = keyFormBaseSchema.extend({
   createdAt: z.coerce.date(),
 });
 
-export const keyStorageCodec = z.codec(
+export const keyFormCodec = z.codec(
   keyFormSchema,
   z.discriminatedUnion("_type", [
     keyStorageBaseSchema.extend({

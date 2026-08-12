@@ -3,9 +3,10 @@
 import { createHash } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
+import { type KeyInStorage, keyToMemory, keyToStorage } from "@packages/key-types/src/versions.ts";
 import { createId } from "@paralleldrive/cuid2";
 import type { Session } from "next-auth";
-import { type CreateKeyFormValues, keyFormSchema, keyStorageCodec } from "@/app/actions/types";
+import { type CreateKeyFormValues, keyFormCodec, keyFormSchema } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 
@@ -13,35 +14,41 @@ function getUserPrefix(userId: string) {
   return createHash("sha256").update(userId).digest("base64url");
 }
 
-export async function makeKeyForStorage(
-  session: Session | null,
+export async function keyFromFormToStorage(
+  session: Session & { user: { id: string } },
   key: string | undefined,
   input: CreateKeyFormValues,
-): Promise<KeyData> {
+): Promise<KeyInStorage> {
   const keyInPlace = key ? await getKeyById(key) : undefined;
-  const asStorage = keyStorageCodec.decode(keyFormSchema.parse(input));
+  const newDataAsStorage = keyToStorage(
+    session.user.id,
+    key,
+    keyFormCodec.decode(keyFormSchema.parse(input)),
+  );
 
   if (keyInPlace) {
     // if we are editing, do not allow update to createdAt
-    asStorage.createdAt = keyInPlace.createdAt;
+    newDataAsStorage.value.createdAt = keyInPlace.createdAt;
   }
 
   if (!session?.user.isAdmin) {
     // non-admin users may not modify these fields
-    asStorage.rateLimitOverride = keyInPlace?.rateLimitOverride;
-    asStorage.resources = keyInPlace?.resources;
+    newDataAsStorage.value.rateLimitOverride = keyInPlace?.rateLimitOverride;
+    newDataAsStorage.value.resources = keyInPlace?.resources;
   }
 
-  return asStorage;
+  return newDataAsStorage;
 }
 
-async function createKeyInner(userId: string, key: KeyData) {
+async function createKeyInner(userId: string, key: KeyInStorage) {
   const prefix = getUserPrefix(userId);
   const uniqueId = createId();
-  const type = key._type === "publishable" ? "pk" : "sk";
+  const type = key.value._type === "publishable" ? "pk" : "sk";
   const keyId = `${prefix}.${type}.${uniqueId}`;
 
-  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key));
+  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key.value), {
+    metadata: key.metadata,
+  });
 
   return keyId;
 }
@@ -56,9 +63,16 @@ export async function getKeyNamesOwnedBy(id: string) {
   return listResult.keys.map((key) => key.name);
 }
 
-export async function getKeyById(key: string) {
-  const text = await getCloudflareContext().env.API_KEYS.get(key);
-  return text ? (JSON.parse(text) as KeyData) : undefined;
+export async function getKeyById(keyId: string) {
+  const got = await getCloudflareContext().env.API_KEYS.getWithMetadata<
+    KeyInStorage["value"],
+    KeyInStorage["metadata"]
+  >(keyId, { type: "json" });
+
+  return keyToMemory(
+    // remove nullable
+    got as KeyInStorage,
+  );
 }
 
 export async function getKeysOwned() {
@@ -90,10 +104,8 @@ export type CreateUserApiKeyResult =
       keyData: KeyData;
     };
 
-export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUserApiKeyResult> {
+export async function createKey(formData: CreateKeyFormValues): Promise<CreateUserApiKeyResult> {
   const session = await auth();
-
-  const validatedKeyData = await makeKeyForStorage(session, undefined, keyData);
 
   if (!session?.user?.id || !session.user?.email) {
     return { ok: false, error: "Unauthorized" };
@@ -103,33 +115,54 @@ export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUse
     return { ok: false, error: "User must have an @uci.edu email address" };
   }
 
+  // due to guard above, id is present
+  const asStorage = await keyFromFormToStorage(
+    session as Session & { user: { id: string } },
+    undefined,
+    formData,
+  );
   const userKeys = await getKeyNamesOwnedBy(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
     return { ok: false, error: "User at max API key limit" };
   }
 
-  const key = await createKeyInner(session.user.id, validatedKeyData);
-  return { ok: true, key, keyData: validatedKeyData };
+  const key = await createKeyInner(session.user.id, asStorage);
+
+  // no need to redact fields here
+  return { ok: true, key, keyData: keyToMemory(asStorage) };
 }
 
-export async function editKey(key: string, keyData: CreateKeyFormValues) {
+export async function editKey(keyId: string, keyData: CreateKeyFormValues) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
-  if ((await getCloudflareContext().env.API_KEYS.get(key)) === null) {
+  if ((await getCloudflareContext().env.API_KEYS.get(keyId)) === null) {
     throw new Error("key does not exist on user");
   }
 
-  const validatedKeyData = await makeKeyForStorage(session, key, keyData);
-  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData));
+  // due to guard above, id is present
+  const asStorage = await keyFromFormToStorage(
+    session as Session & { user: { id: string } },
+    keyId,
+    keyData,
+  );
 
-  return validatedKeyData;
+  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(asStorage.value), {
+    metadata: asStorage.metadata,
+  });
+
+  const asMemory = keyToMemory(asStorage);
+  if (!session.user.isAdmin) {
+    // user may not see these
+    asMemory.resources = asMemory.rateLimitOverride = undefined;
+  }
+  return asMemory;
 }
 
-export async function deleteKeyById(key: string) {
+export async function deleteKeyById(keyId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -137,9 +170,9 @@ export async function deleteKeyById(key: string) {
 
   const keys = await getKeyNamesOwnedBy(session.user.id);
 
-  if (!keys.includes(key)) {
+  if (!keys.includes(keyId)) {
     throw new Error("API key does not exist on user");
   }
 
-  await getCloudflareContext().env.API_KEYS.delete(key);
+  await getCloudflareContext().env.API_KEYS.delete(keyId);
 }

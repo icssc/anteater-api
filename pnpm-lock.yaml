@@ -541,7 +541,11 @@ importers:
         specifier: 0.31.10
         version: 0.31.10
 
-  packages/key-types: {}
+  packages/key-types:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.2
 
   packages/public/libwebsoc-next:
     dependencies:
