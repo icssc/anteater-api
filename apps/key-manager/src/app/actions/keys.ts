@@ -28,9 +28,7 @@ const createKeyInner = async (userId: string, key: KeyData) => {
   const type = key._type === "publishable" ? "pk" : "sk";
   const keyId = `${prefix}.${type}.${uniqueId}`;
 
-  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key), {
-    metadata: "{}",
-  });
+  await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key));
 
   return keyId;
 };
@@ -116,9 +114,7 @@ export async function editKey(key: string, keyData: CreateKeyFormValues) {
 
   validatedKeyData.createdAt = keyDataInPlace.createdAt;
 
-  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData), {
-    metadata: "{}",
-  });
+  await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData));
 
   return validatedKeyData;
 }
