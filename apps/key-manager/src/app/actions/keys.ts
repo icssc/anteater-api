@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
-import { type KeyInStorage, keyToMemory, keyToStorage } from "@packages/key-types/src/versions.ts";
+import { type KeyInStorage, keyToMemory, keyToStorage } from "@packages/key-types/src/storage.ts";
 import { createId } from "@paralleldrive/cuid2";
 import type { Session } from "next-auth";
 import { type CreateKeyFormValues, keyFormCodec, keyFormSchema } from "@/app/actions/types";
