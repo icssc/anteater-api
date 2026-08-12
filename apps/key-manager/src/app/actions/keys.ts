@@ -53,9 +53,9 @@ async function createKeyInner(userId: string, key: KeyInStorage) {
   return keyId;
 }
 
-export async function getKeyNamesOwnedBy(id: string) {
+export async function getKeyIdsOwnedBy(id: string) {
   const prefix = getUserPrefix(id);
-  const listResult = await getCloudflareContext().env.API_KEYS.list({
+  const listResult = await getCloudflareContext().env.API_KEYS.list<KeyInStorage["metadata"]>({
     prefix,
     limit: MAX_API_KEYS,
   });
@@ -81,7 +81,7 @@ export async function getKeysOwned() {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getKeyNamesOwnedBy(session.user.id);
+  const keys = await getKeyIdsOwnedBy(session.user.id);
 
   const keysDataEntries = await Promise.all(
     keys.map(async (key) => {
@@ -100,7 +100,7 @@ export type CreateUserApiKeyResult =
     }
   | {
       ok: true;
-      key: string;
+      keyId: string;
       keyData: KeyData;
     };
 
@@ -121,7 +121,7 @@ export async function createKey(formData: CreateKeyFormValues): Promise<CreateUs
     undefined,
     formData,
   );
-  const userKeys = await getKeyNamesOwnedBy(session.user.id);
+  const userKeys = await getKeyIdsOwnedBy(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
     return { ok: false, error: "User at max API key limit" };
@@ -130,7 +130,7 @@ export async function createKey(formData: CreateKeyFormValues): Promise<CreateUs
   const key = await createKeyInner(session.user.id, asStorage);
 
   // no need to redact fields here
-  return { ok: true, key, keyData: keyToMemory(asStorage) };
+  return { ok: true, keyId: key, keyData: keyToMemory(asStorage) };
 }
 
 export async function editKey(keyId: string, keyData: CreateKeyFormValues) {
@@ -168,7 +168,7 @@ export async function deleteKeyById(keyId: string) {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getKeyNamesOwnedBy(session.user.id);
+  const keys = await getKeyIdsOwnedBy(session.user.id);
 
   if (!keys.includes(keyId)) {
     throw new Error("API key does not exist on user");

@@ -47,7 +47,7 @@ const CreateKey = () => {
   const form = useForm<CreateKeyFormValues>(formProps);
 
   const [error, setError] = useState<string | null>(null);
-  const [key, setKey] = useState<string | null>(null);
+  const [key, setkeyId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
@@ -55,7 +55,7 @@ const CreateKey = () => {
     setIsCreating(true);
     const result = await createKey(values);
     if (result.ok) {
-      setKey(result.key);
+      setkeyId(result.keyId);
       setIsDialogOpen(true);
     } else {
       setError(result.error);

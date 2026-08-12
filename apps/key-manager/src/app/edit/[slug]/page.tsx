@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { editKey, getKeyById, getKeyNamesOwnedBy } from "@/app/actions/keys";
+import { editKey, getKeyById, getKeyIdsOwnedBy } from "@/app/actions/keys";
 import { type CreateKeyFormValues, keyFormCodec, keyFormSchema } from "@/app/actions/types";
 
 import DeleteKey from "@/components/key/DeleteKey";
@@ -56,7 +56,7 @@ const EditKey = () => {
         return router.push("/");
       }
 
-      const validKeys = await getKeyNamesOwnedBy(session.user.id);
+      const validKeys = await getKeyIdsOwnedBy(session.user.id);
       if (!validKeys.includes(key)) {
         return router.push("/");
       }
