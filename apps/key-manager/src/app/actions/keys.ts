@@ -85,7 +85,7 @@ export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUse
     return { ok: false, error: "Unauthorized" };
   }
 
-  if (session.user.email.split("@")[1] !== "uci.edu") {
+  if (session.user.email.split("@")[1] !== "uci.edu" && !session.user.isAdmin) {
     return { ok: false, error: "User must have an @uci.edu email address" };
   }
 
