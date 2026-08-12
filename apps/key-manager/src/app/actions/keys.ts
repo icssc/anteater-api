@@ -53,7 +53,7 @@ async function createKeyInner(userId: string, key: KeyInStorage) {
   return keyId;
 }
 
-export async function getKeyIdsOwnedBy(id: string) {
+export async function getKeysOwnedBy(id: string) {
   const prefix = getUserPrefix(id);
   const listResult = await getCloudflareContext().env.API_KEYS.list<KeyInStorage["metadata"]>({
     prefix,
@@ -81,7 +81,7 @@ export async function getKeysOwned() {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getKeyIdsOwnedBy(session.user.id);
+  const keys = await getKeysOwnedBy(session.user.id);
 
   const keysDataEntries = await Promise.all(
     keys.map(async (key) => {
@@ -121,7 +121,7 @@ export async function createKey(formData: CreateKeyFormValues): Promise<CreateUs
     undefined,
     formData,
   );
-  const userKeys = await getKeyIdsOwnedBy(session.user.id);
+  const userKeys = await getKeysOwnedBy(session.user.id);
 
   if (userKeys.length >= MAX_API_KEYS) {
     return { ok: false, error: "User at max API key limit" };
@@ -168,7 +168,7 @@ export async function deleteKeyById(keyId: string) {
     throw new Error("Unauthorized");
   }
 
-  const keys = await getKeyIdsOwnedBy(session.user.id);
+  const keys = await getKeysOwnedBy(session.user.id);
 
   if (!keys.includes(keyId)) {
     throw new Error("API key does not exist on user");

@@ -47,7 +47,7 @@ const CreateKey = () => {
   const form = useForm<CreateKeyFormValues>(formProps);
 
   const [error, setError] = useState<string | null>(null);
-  const [key, setkeyId] = useState<string | null>(null);
+  const [key, setKey] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
@@ -55,7 +55,7 @@ const CreateKey = () => {
     setIsCreating(true);
     const result = await createKey(values);
     if (result.ok) {
-      setkeyId(result.keyId);
+      setKey(result.keyId);
       setIsDialogOpen(true);
     } else {
       setError(result.error);
@@ -63,11 +63,11 @@ const CreateKey = () => {
     setIsCreating(false);
   }
 
-  const handleDialogClose = (isOpen: boolean) => {
+  function handleDialogClose(isOpen: boolean) {
     if (!isOpen && key) {
       router.push(`/edit/${key}`);
     }
-  };
+  }
 
   return (
     <div className={"content"}>
@@ -120,13 +120,7 @@ const CreateKey = () => {
 
             <DisplayKey keyText={key} background />
             <DialogFooter>
-              <Button
-                onClick={() => {
-                  handleDialogClose(false);
-                }}
-              >
-                Close
-              </Button>
+              <Button onClick={handleDialogClose.bind(undefined, false)}>Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
