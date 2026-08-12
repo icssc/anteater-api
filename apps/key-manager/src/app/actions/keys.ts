@@ -4,22 +4,33 @@ import { createHash } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
+import type { Session } from "next-auth";
 import { type CreateKeyFormValues, keyFormSchema, keyStorageCodec } from "@/app/actions/types";
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 
 const getUserPrefix = (userId: string) => createHash("sha256").update(userId).digest("base64url");
 
-export const validateKeyInput = async (input: CreateKeyFormValues): Promise<KeyData> => {
-  const session = await auth();
+export const makeKeyForStorage = async (
+  session: Session | null,
+  key: string | undefined,
+  input: CreateKeyFormValues,
+): Promise<KeyData> => {
+  const keyInPlace = key ? await getKeyById(key) : undefined;
+  const asStorage = keyStorageCodec.decode(keyFormSchema.parse(input));
 
-  const parsed = keyFormSchema.parse(input);
-
-  if (!session?.user?.isAdmin) {
-    parsed.resources = parsed.rateLimitOverride = undefined;
+  if (keyInPlace) {
+    // if we are editing, do not allow update to createdAt
+    asStorage.createdAt = keyInPlace.createdAt;
   }
 
-  return keyStorageCodec.decode(parsed);
+  if (!session?.user.isAdmin) {
+    // non-admin users may not modify these fields
+    asStorage.rateLimitOverride = keyInPlace?.rateLimitOverride;
+    asStorage.resources = keyInPlace?.resources;
+  }
+
+  return asStorage;
 };
 
 const createKeyInner = async (userId: string, key: KeyData) => {
@@ -78,9 +89,10 @@ export type CreateUserApiKeyResult =
     };
 
 export async function createKey(keyData: CreateKeyFormValues): Promise<CreateUserApiKeyResult> {
-  const validatedKeyData = await validateKeyInput(keyData);
-
   const session = await auth();
+
+  const validatedKeyData = await makeKeyForStorage(session, undefined, keyData);
+
   if (!session?.user?.id || !session.user?.email) {
     return { ok: false, error: "Unauthorized" };
   }
@@ -105,15 +117,11 @@ export async function editKey(key: string, keyData: CreateKeyFormValues) {
     throw new Error("Unauthorized");
   }
 
-  const validatedKeyData = await validateKeyInput(keyData);
-  const keyDataInPlace = await getKeyById(key);
-
-  if (!keyDataInPlace) {
+  if ((await getCloudflareContext().env.API_KEYS.get(key)) === null) {
     throw new Error("key does not exist on user");
   }
 
-  validatedKeyData.createdAt = keyDataInPlace.createdAt;
-
+  const validatedKeyData = await makeKeyForStorage(session, key, keyData);
   await getCloudflareContext().env.API_KEYS.put(key, JSON.stringify(keyData));
 
   return validatedKeyData;
