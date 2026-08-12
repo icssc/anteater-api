@@ -1,6 +1,6 @@
 "use server";
 
-import { hash } from "node:crypto";
+import { createHash } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { KeyData } from "@packages/key-types";
 import { createId } from "@paralleldrive/cuid2";
@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 
 function getUserPrefix(userId: string) {
-  return hash("sha256", userId, { outputEncoding: "base64url" });
+  return createHash("sha256").update(userId).digest("base64url");
 }
 
 export async function makeKeyForStorage(
