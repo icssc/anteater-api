@@ -77,7 +77,7 @@ const CreateKey = () => {
             <ChevronLeft />
           </Link>
         </Button>
-        <HeadingText>Create Key</HeadingText>
+        <HeadingText>Create key</HeadingText>
       </div>
 
       <Form {...form}>

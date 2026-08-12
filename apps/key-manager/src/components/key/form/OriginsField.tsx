@@ -18,7 +18,7 @@ const OriginsField: React.FC<Props> = ({ form }) => {
 
   return (
     <FormItem>
-      <FormLabel>Authorized Origins</FormLabel>
+      <FormLabel>Authorized origins</FormLabel>
       <FormControl>
         <div className="space-y-2">
           {fields.map((field, index) => (
@@ -29,7 +29,6 @@ const OriginsField: React.FC<Props> = ({ form }) => {
               render={({ field: fieldInput }) => (
                 <FormItem>
                   <div className="flex flex-row space-x-2 items-center justify-between">
-                    <FormLabel className={"text-nowrap"}>Origin {index + 1}</FormLabel>
                     <Input
                       {...fieldInput}
                       placeholder={"https://exact-match.example.com"}
@@ -52,7 +51,7 @@ const OriginsField: React.FC<Props> = ({ form }) => {
 
           <Button variant="link" className="px-0" onClick={() => append({ url: "" })} type="button">
             <PlusIcon />
-            <div>Add Origin</div>
+            <div>Add origin</div>
           </Button>
         </div>
       </FormControl>

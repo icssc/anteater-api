@@ -100,7 +100,7 @@ const EditKey = () => {
             <ChevronLeft />
           </Link>
         </Button>
-        <HeadingText>Edit Key</HeadingText>
+        <HeadingText>Edit key</HeadingText>
       </div>
 
       {loading ? (
