@@ -26,7 +26,7 @@ function buildRegistry<
   return registry;
 }
 
-export const keyInStorageSpecs = buildRegistry({
+const keyInStorageSpecs = buildRegistry({
   v1: defineEntry({
     schema: z.object({
       metadata: z.object({
