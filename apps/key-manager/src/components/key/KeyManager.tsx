@@ -12,7 +12,7 @@ import Placeholder from "@/components/ui/placeholder";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MAX_API_KEYS } from "@/lib/utils";
 
-const KeyManager = () => {
+function KeyManager() {
   const [loading, setLoading] = useState<boolean>(true);
   const [apiKeys, setApiKeys] = useState<Record<string, KeyData>>({});
 
@@ -72,6 +72,6 @@ const KeyManager = () => {
       )}
     </div>
   );
-};
+}
 
 export default KeyManager;

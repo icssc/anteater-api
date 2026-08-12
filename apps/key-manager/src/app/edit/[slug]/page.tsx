@@ -24,7 +24,7 @@ import ButtonSpinner from "@/components/ui/button-spinner";
 import { Form } from "@/components/ui/form";
 import Placeholder from "@/components/ui/placeholder";
 
-const EditKey = () => {
+function EditKey() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -153,6 +153,6 @@ const EditKey = () => {
       )}
     </div>
   );
-};
+}
 
 export default EditKey;

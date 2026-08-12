@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Header = async () => {
+async function Header() {
   const session = await auth();
 
   return (
@@ -39,6 +39,6 @@ const Header = async () => {
       )}
     </header>
   );
-};
+}
 
 export default Header;

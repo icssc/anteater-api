@@ -26,7 +26,7 @@ interface Props {
 const DeleteKey: React.FC<Props> = ({ apiKey, apiKeyName, apiKeys, setApiKeys, afterDelete }) => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const handleDeleteKey = (key: string) => {
+  function handleDeleteKey(key: string) {
     setIsDeleting(true);
 
     startTransition(async () => {
@@ -45,7 +45,7 @@ const DeleteKey: React.FC<Props> = ({ apiKey, apiKeyName, apiKeys, setApiKeys, a
 
       setIsDeleting(false);
     });
-  };
+  }
 
   const abbreviatedKey = `...${apiKey.substring(apiKey.indexOf(".") + 1)}`;
 

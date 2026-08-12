@@ -22,7 +22,7 @@ import ButtonSpinner from "@/components/ui/button-spinner";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 
-const CreateKey = () => {
+function CreateKey() {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -127,6 +127,6 @@ const CreateKey = () => {
       )}
     </div>
   );
-};
+}
 
 export default CreateKey;
