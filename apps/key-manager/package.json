@@ -33,7 +33,7 @@
     "next-auth": "5.0.0-beta.32",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-hook-form": "7.80.0",
+    "react-hook-form": "7.85.0",
     "tailwind-merge": "3.6.0",
     "tailwindcss-animate": "1.0.7",
     "zod": "catalog:"
