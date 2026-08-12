@@ -28,11 +28,11 @@ const OriginsField: React.FC<Props> = ({ form }) => {
               name={`origins.${index}.url`}
               render={({ field: fieldInput }) => (
                 <FormItem>
-                  <FormLabel>Origin {index + 1}</FormLabel>
-                  <div className="flex space-x-2 items-center justify-between">
+                  <div className="flex flex-row space-x-2 items-center justify-between">
+                    <FormLabel className={"text-nowrap"}>Origin {index + 1}</FormLabel>
                     <Input
                       {...fieldInput}
-                      className={"w-11/12"}
+                      placeholder={"https://exact-match.example.com"}
                       onChange={(e) => {
                         fieldInput.onChange(e);
                         const _ = form.trigger("origins");
