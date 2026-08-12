@@ -9,13 +9,15 @@ import { type CreateKeyFormValues, keyFormSchema, keyStorageCodec } from "@/app/
 import { auth } from "@/auth";
 import { MAX_API_KEYS } from "@/lib/utils";
 
-const getUserPrefix = (userId: string) => createHash("sha256").update(userId).digest("base64url");
+function getUserPrefix(userId: string) {
+  return createHash("sha256").update(userId).digest("base64url");
+}
 
-export const makeKeyForStorage = async (
+export async function makeKeyForStorage(
   session: Session | null,
   key: string | undefined,
   input: CreateKeyFormValues,
-): Promise<KeyData> => {
+): Promise<KeyData> {
   const keyInPlace = key ? await getKeyById(key) : undefined;
   const asStorage = keyStorageCodec.decode(keyFormSchema.parse(input));
 
@@ -31,9 +33,9 @@ export const makeKeyForStorage = async (
   }
 
   return asStorage;
-};
+}
 
-const createKeyInner = async (userId: string, key: KeyData) => {
+async function createKeyInner(userId: string, key: KeyData) {
   const prefix = getUserPrefix(userId);
   const uniqueId = createId();
   const type = key._type === "publishable" ? "pk" : "sk";
@@ -42,9 +44,9 @@ const createKeyInner = async (userId: string, key: KeyData) => {
   await getCloudflareContext().env.API_KEYS.put(keyId, JSON.stringify(key));
 
   return keyId;
-};
+}
 
-export const getKeyNamesOwnedBy = async (id: string) => {
+export async function getKeyNamesOwnedBy(id: string) {
   const prefix = getUserPrefix(id);
   const listResult = await getCloudflareContext().env.API_KEYS.list({
     prefix,
@@ -52,12 +54,12 @@ export const getKeyNamesOwnedBy = async (id: string) => {
   });
 
   return listResult.keys.map((key) => key.name);
-};
+}
 
-export const getKeyById = async (key: string) => {
+export async function getKeyById(key: string) {
   const text = await getCloudflareContext().env.API_KEYS.get(key);
   return text ? (JSON.parse(text) as KeyData) : undefined;
-};
+}
 
 export async function getKeysOwned() {
   const session = await auth();
