@@ -1,15 +1,23 @@
 import { z } from "zod";
 import type { KeyData } from "./index.ts";
 
+type Exact<S, AllowedKeys extends PropertyKey> = S & Record<Exclude<keyof S, AllowedKeys>, never>;
 type KeyInStorageSpec<T> = { schema: T; toMemory: (inStorage: z.infer<T>) => KeyData };
 
 function defineEntry<
-  K extends string,
-  T extends z.ZodObject<
-    { metadata: z.ZodObject<{ v: z.ZodLiteral<K> } & z.ZodRawShape> } & z.ZodRawShape
-  >,
->(entry: KeyInStorageSpec<T>): KeyInStorageSpec<T> {
-  return entry;
+  Version extends string,
+  Repr extends {
+    metadata: z.ZodObject<{ v: z.ZodLiteral<Version> } & z.ZodRawShape>;
+    value: z.ZodTypeAny;
+  },
+>(entry: {
+  // there are to be no other keys (because we could not possibly store them)
+  schema: Exact<Repr, "metadata" | "value">;
+  toMemory: (inStorage: z.infer<z.ZodObject<Repr>>) => KeyData;
+}): KeyInStorageSpec<z.ZodObject<Repr>> {
+  return { schema: z.object(entry.schema), toMemory: entry.toMemory } as KeyInStorageSpec<
+    z.ZodObject<Repr>
+  >;
 }
 
 function buildRegistry<
@@ -28,7 +36,7 @@ function buildRegistry<
 
 const keyInStorageSpecs = buildRegistry({
   v1: defineEntry({
-    schema: z.object({
+    schema: {
       metadata: z.object({
         // flimsy type inference; do NOT upcast "v1"!
         v: z.literal("v1"),
@@ -51,7 +59,7 @@ const keyInStorageSpecs = buildRegistry({
           }),
         ]),
       ),
-    }),
+    },
     toMemory(inStorage) {
       // this value is identical to the repr we currently expect
       // in the future, another value can be converted trivially,
@@ -59,7 +67,7 @@ const keyInStorageSpecs = buildRegistry({
       return inStorage.value;
     },
   }),
-  // to add new spec: define version tag, define toMemory conversion
+  // to add new spec: define shape with version tag, define toMemory conversion
 });
 
 export type KeyInStorage = z.infer<
