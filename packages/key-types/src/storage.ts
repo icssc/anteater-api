@@ -1,14 +1,14 @@
 import { z } from "zod";
 import type { KeyData } from "./index.ts";
 
-type KeyStorageSpec<T> = { schema: T; toMemory: (inStorage: z.infer<T>) => KeyData };
+type KeyInStorageSpec<T> = { schema: T; toMemory: (inStorage: z.infer<T>) => KeyData };
 
 function defineEntry<
   K extends string,
   T extends z.ZodObject<
     { metadata: z.ZodObject<{ v: z.ZodLiteral<K> } & z.ZodRawShape> } & z.ZodRawShape
   >,
->(entry: KeyStorageSpec<T>): KeyStorageSpec<T> {
+>(entry: KeyInStorageSpec<T>): KeyInStorageSpec<T> {
   return entry;
 }
 
