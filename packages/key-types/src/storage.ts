@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { KeyData } from "./index.ts";
 
-type Exact<S, AllowedKeys extends PropertyKey> = S & Record<Exclude<keyof S, AllowedKeys>, never>;
+type Exact<T, Allowed extends PropertyKey> = T & Record<Exclude<keyof T, Allowed>, never>;
 type KeyInStorageSpec<T> = { schema: T; toMemory: (inStorage: z.infer<T>) => KeyData };
 
 function defineEntry<
@@ -21,10 +21,10 @@ function defineEntry<
 }
 
 function buildRegistry<
-  R extends {
-    [K in string]: ReturnType<typeof defineEntry>;
+  Registry extends {
+    [Tag in string]: ReturnType<typeof defineEntry>;
   },
->(registry: R) {
+>(registry: Registry) {
   for (const key in registry) {
     const v = registry[key].schema.shape.metadata.shape.v.value;
     if (v !== key) {
