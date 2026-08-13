@@ -28,7 +28,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys 
     hour12: false,
   });
 
-  const keyTypeToIcon = (keyType: string) => {
+  function keyTypeToIcon(keyType: string) {
     const className = "size-4";
 
     let icon: React.JSX.Element | null;
@@ -54,7 +54,7 @@ const KeyTableRow: React.FC<Props> = ({ apiKey, apiKeyData, apiKeys, setApiKeys 
         </Tooltip>
       </TooltipProvider>
     );
-  };
+  }
 
   return (
     <TableRow>
