@@ -8,7 +8,7 @@ function defineEntry<
   T extends z.ZodObject<
     { metadata: z.ZodObject<{ v: z.ZodLiteral<K> } & z.ZodRawShape> } & z.ZodRawShape
   >,
->(entry: { schema: T; toMemory: (inStorage: z.infer<T>) => KeyData }): KeyStorageSpec<T> {
+>(entry: KeyStorageSpec<T>): KeyStorageSpec<T> {
   return entry;
 }
 
