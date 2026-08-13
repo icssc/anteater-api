@@ -20,11 +20,11 @@ export async function keyFromFormToStorage(
   input: CreateKeyFormValues,
 ): Promise<KeyInStorage> {
   const keyInPlace = key ? await getKeyById(key) : undefined;
-  const newDataAsStorage = keyToStorage(
-    session.user.id,
-    key,
-    keyFormCodec.decode(keyFormSchema.parse(input)),
-  );
+
+  const newDataAsStorage = keyToStorage(key, {
+    ...keyFormCodec.decode(keyFormSchema.parse(input)),
+    owner: session.user.id,
+  });
 
   if (keyInPlace) {
     // if we are editing, do not allow update to createdAt

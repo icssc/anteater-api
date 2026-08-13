@@ -32,7 +32,6 @@ const keyInStorageSpecs = buildRegistry({
       metadata: z.object({
         // flimsy type inference; do NOT upcast "v1"!
         v: z.literal("v1"),
-        owner: z.uuidv4(),
       }),
       value: z.intersection(
         z.object({
@@ -40,6 +39,7 @@ const keyInStorageSpecs = buildRegistry({
           createdAt: z.coerce.date(),
           rateLimitOverride: z.int().nonnegative().optional(),
           resources: z.record(z.literal("FUZZY_SEARCH"), z.boolean()).optional(),
+          owner: z.string(),
         }),
         z.discriminatedUnion("_type", [
           z.object({
@@ -67,16 +67,11 @@ export type KeyInStorage = z.infer<
 >;
 
 // the conversion from data in memory to storage format
-export function keyToStorage(
-  owner: string,
-  _keyId: string | undefined,
-  key: KeyData,
-): KeyInStorage {
+export function keyToStorage(_keyId: string | undefined, key: KeyData): KeyInStorage {
   // any supported format could be used, but the latest format is probably most expressive
   return {
     metadata: {
       v: "v1",
-      owner,
     },
     value: key,
   };

@@ -6,7 +6,7 @@ export const formOriginSchema = z.object({ url: originSchema });
 
 const keyFormBaseSchema = z.object({
   name: z.string().min(1).max(30),
-  rateLimitOverride: z.number().positive().optional(),
+  rateLimitOverride: z.number().nonnegative().optional(),
   resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
 });
 
