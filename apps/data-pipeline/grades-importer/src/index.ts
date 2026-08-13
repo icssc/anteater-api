@@ -45,7 +45,6 @@ const gradesSectionMapper = (
 ];
 
 async function main() {
-  console.log("i started");
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
   const db = database(url);
