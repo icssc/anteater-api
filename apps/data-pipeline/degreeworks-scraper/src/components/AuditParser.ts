@@ -9,7 +9,7 @@ import type {
   DegreeWorksRequirement,
   DegreeWorksRequirementQualifier,
 } from "@packages/db/schema";
-import { course, type degreeWorksProgramType } from "@packages/db/schema";
+import { course, type DegreeWorksProgramType } from "@packages/db/schema";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import { programTypeSchema } from "$schema";
 import type { Block, ProgramCodes, QualifierClause, Rule, WithClause } from "$types";
@@ -208,7 +208,7 @@ export class AuditParser {
           if (!qualifiers.has("NONEXCLUSIVE")) {
             qualifiers.set("NONEXCLUSIVE", {
               qualifierType: "NonExclusive",
-              appliedBlocks: [],
+              appliesToBlocks: [],
             });
           }
 
@@ -236,13 +236,13 @@ export class AuditParser {
               code = programId.code;
             }
             if (programType === "ALLBLOCKS") {
-              nonExclusiveQualifier.appliedBlocks.push(
+              nonExclusiveQualifier.appliesToBlocks.push(
                 ...([
                   { programType: "COLLEGE" },
                   { programType: "MAJOR" },
                   { programType: "SPEC" },
                   { programType: "MINOR" },
-                ] as { programType: (typeof degreeWorksProgramType)[number] }[]),
+                ] as { programType: DegreeWorksProgramType }[]),
               );
               continue;
             }
@@ -250,7 +250,7 @@ export class AuditParser {
             const parsedProgramType = programTypeSchema.parse(programType);
             // If no code is specified, then the qualifier affects all programs that match the program type i.e. all majors, all minors, etc.
             if (!code) {
-              nonExclusiveQualifier.appliedBlocks.push({
+              nonExclusiveQualifier.appliesToBlocks.push({
                 programType: parsedProgramType,
                 maxShared: qualifier.classes,
               });
@@ -334,7 +334,7 @@ export class AuditParser {
                 if (code === "LIBL") parsedCodes.push("LIBL");
                 break;
             }
-            nonExclusiveQualifier.appliedBlocks.push(
+            nonExclusiveQualifier.appliesToBlocks.push(
               ...parsedCodes.map((c) => {
                 return {
                   programType: parsedProgramType,
@@ -347,11 +347,9 @@ export class AuditParser {
           break;
         }
         case "EXCLUSIVE":
-          if (!qualifiers.has("EXCLUSIVE")) {
-            qualifiers.set("EXCLUSIVE", {
-              qualifierType: "Exclusive",
-            });
-          }
+          qualifiers.set("EXCLUSIVE", {
+            qualifierType: "Exclusive",
+          });
       }
     }
     return qualifiers.values().toArray();

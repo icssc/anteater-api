@@ -62,8 +62,14 @@ export class Scraper {
     return `${degreeCode ? `${degreeCode}-` : ""}${majorCode}${specCode ? `;${specCode}` : ""}`;
   }
 
+  /**
+   * Note that this parse will break if catalog year passes 2050 (even though
+   * years before UCI's founding in 1965 are theoretically unambiguous) because the two-digit year 49 is interpreted as the year 1949
+   */
   private toFullYear(abbreviatedYear: string) {
-    return parseInt(abbreviatedYear, 10) < 50 ? `20${abbreviatedYear}` : `19${abbreviatedYear}`;
+    return Number.parseInt(abbreviatedYear, 10) < 50
+      ? `20${abbreviatedYear}`
+      : `19${abbreviatedYear}`;
   }
 
   private findDwNameFor(
@@ -127,9 +133,6 @@ export class Scraper {
         (ent) =>
           ent.degree.degreeCode != null &&
           ent.degree.degreeStartTermYyyyst != null &&
-          // note that this parse will break if degrees are ever added/invalidated during or after calendar year 2050 (even
-          // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
-          // two-digit year 49 is interpreted as the year 1949
           this.toFullYear(ent.degree.degreeStartTermYyyyst.slice(1)) <=
             this.dw.getCatalogYear().slice(0, 4) &&
           (ent.degree.degreeEndTermYyyyst == null ||
@@ -246,7 +249,7 @@ export class Scraper {
     );
 
     // Validate that for major codes for undergrad programs are unambiguous without their degree types.
-    // This is required for inferring the correct program from a major code when parsing qualifiers
+    // This is required for inferring the correct program when a qualifier references it by code
     const seenUgradMajorCodes = new Map<string, ProgramCodes>();
     for (const degree of validDegrees) {
       if (degree.schoolCode !== "U") continue;

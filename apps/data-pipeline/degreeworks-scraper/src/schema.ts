@@ -1,4 +1,4 @@
-import { degreeWorksProgramType, WithConstraintCode } from "@packages/db/schema";
+import { degreeWorksProgramTypes, withConstraintCodes } from "@packages/db/schema";
 import { z } from "zod";
 import type { Rule } from "$types";
 
@@ -6,7 +6,7 @@ import type { Rule } from "$types";
  * a specification for course range for unit req, etc.
  */
 export const withClauseSchema = z.object({
-  code: z.enum(WithConstraintCode),
+  code: z.enum(withConstraintCodes),
   connector: z.enum(["", "AND", "OR"]),
   operator: z.enum(["<", "<=", "=", ">", ">=", "<>"]),
   valueList: z.array(z.string()),
@@ -219,7 +219,7 @@ export const dwMappingResponseSchema = <T extends string>(key: T) =>
     }),
   });
 
-export const programTypeSchema = z.enum(degreeWorksProgramType);
+export const programTypeSchema = z.enum(degreeWorksProgramTypes);
 
 // partial schema to serve the purposes of the Scraper and avoid verbose creation of schemas representing DW types
 export const degreeWorksProgramSchema = z.object({

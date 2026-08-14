@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { division } from "./websoc.ts";
 
-export const degreeWorksProgramType = [
+export const degreeWorksProgramTypes = [
   "SCHOOL",
   "COLLEGE",
   "MAJOR",
@@ -21,9 +21,11 @@ export const degreeWorksProgramType = [
   "OTHER",
 ] as const;
 
+export type DegreeWorksProgramType = (typeof degreeWorksProgramTypes)[number];
+
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: (typeof degreeWorksProgramType)[number];
+  programType: DegreeWorksProgramType;
   code: string;
   degreeType?: string;
 };
@@ -43,7 +45,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
  * constraint codes we've found in withArray constraints
  * We use a runtime value so zod schema can consume it
  */
-export const WithConstraintCode = [
+export const withConstraintCodes = [
   "DWCREDIT",
   "DWCREDITS",
   "DWTERM",
@@ -53,7 +55,7 @@ export const WithConstraintCode = [
   "DWPASSFAIL",
 ] as const;
 
-export type WithConstraintCode = (typeof WithConstraintCode)[number];
+export type WithConstraintCode = (typeof withConstraintCodes)[number];
 
 /**
  * Boolean expression tree for per-course constraints (withArray clauses)
@@ -118,8 +120,8 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
 
 export type DegreeWorksNonExclusivityQualifier = {
   qualifierType: "NonExclusive";
-  appliedBlocks: {
-    programType: (typeof degreeWorksProgramType)[number];
+  appliesToBlocks: {
+    programType: DegreeWorksProgramType;
     code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
     maxShared?: string;
   }[];
