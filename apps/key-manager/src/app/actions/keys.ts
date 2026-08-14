@@ -40,7 +40,7 @@ export async function keyFromFormToStorage(
   return newDataAsStorage;
 }
 
-async function createKeyInner(userId: string, key: KeyInStorage) {
+async function storeNewKey(userId: string, key: KeyInStorage) {
   const prefix = getUserPrefix(userId);
   const uniqueId = createId();
   const type = key.value._type === "publishable" ? "pk" : "sk";
@@ -127,7 +127,7 @@ export async function createKey(formData: CreateKeyFormValues): Promise<CreateUs
     return { ok: false, error: "User at max API key limit" };
   }
 
-  const key = await createKeyInner(session.user.id, asStorage);
+  const key = await storeNewKey(session.user.id, asStorage);
 
   // no need to redact fields here
   return { ok: true, keyId: key, keyData: keyToMemory(asStorage) };
