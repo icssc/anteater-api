@@ -30,16 +30,16 @@ export class AuditParser {
   private static readonly WILDCARD_REGEX = /\w@/;
   private static readonly RANGE_REGEX = /-\w+/;
 
-  // Set of potential majors and specializations are used to parse references to other programs in a qualifier
-  // 'potential', as outdated programs are not filtered out
-  private potentialMajors: ProgramCodes[] | undefined;
-  private potentialSpecs: string[] | undefined;
+  // Set of majors and specializations are used to parse out non-existent references to other programs in a qualifier
+  // being a referenceable program doesn't guarantee that it is a valid program in the given catalog year
+  private referenceableMajors: ProgramCodes[] | undefined;
+  private referenceableSpecs: string[] | undefined;
 
   private requirementIdMap = new Map<string, string>();
 
-  // The set of programs that are referenced by a degreeworks qualifier, but not valid during the given catalog year
-  // We maintain a set in order to only log a warning the first time this ineligible program is referenced (as to not clutter the output)
-  private ineligiblePrograms = new Set<string>();
+  // Set of referenceable programs found in degreeworks qualifiers, but not valid during the given catalog year
+  // We maintain a set in order to only log a warning the first time this  program is referenced (as to not clutter the output)
+  private unknownPrograms = new Set<string>();
 
   constructor(
     private readonly db: ReturnType<typeof database>,
@@ -48,9 +48,9 @@ export class AuditParser {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
-  setPotentialPrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
-    this.potentialMajors = potentialMajors;
-    this.potentialSpecs = potentialSpecs;
+  setReferenceablePrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
+    this.referenceableMajors = potentialMajors;
+    this.referenceableSpecs = potentialSpecs;
   }
 
   async parseBlock(blockId: string, block: Block, otherBlock?: Block): Promise<DegreeWorksProgram> {
@@ -198,7 +198,7 @@ export class AuditParser {
   }
 
   async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
-    if (!this.potentialMajors || !this.potentialSpecs) {
+    if (!this.referenceableMajors || !this.referenceableSpecs) {
       throw Error("[AuditParser] does not have a reference to possible programs");
     }
     const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
@@ -267,15 +267,15 @@ export class AuditParser {
                 let foundDegree: string | undefined;
                 const ineligibleProgramKey = `${programId.school}:${programId.programType}:${code}`;
                 if (programId.school === "U" || programId.programType !== "MAJOR") {
-                  foundDegree = this.potentialMajors.find(
+                  foundDegree = this.referenceableMajors.find(
                     ({ majorCode, degreeCode }) =>
                       code.startsWith(majorCode) && degreeCode.startsWith("B"),
                   )?.degreeCode;
                   if (
                     foundDegree === undefined &&
-                    !this.ineligiblePrograms.has(ineligibleProgramKey)
+                    !this.unknownPrograms.has(ineligibleProgramKey)
                   ) {
-                    this.ineligiblePrograms.add(ineligibleProgramKey);
+                    this.unknownPrograms.add(ineligibleProgramKey);
                     console.warn(
                       `No undergrad program found with ${parsedProgramType} code ${code}`,
                     );
@@ -284,15 +284,15 @@ export class AuditParser {
                 // If parsing a grad degree, PHD and MS can have the same code
                 // We assume that the program that is being referred to shares the same degree as this program
                 else {
-                  foundDegree = this.potentialMajors.find(
+                  foundDegree = this.referenceableMajors.find(
                     ({ majorCode, degreeCode }) =>
                       code.startsWith(majorCode) && degreeCode === programId.degreeType,
                   )?.degreeCode;
                   if (
                     foundDegree === undefined &&
-                    !this.ineligiblePrograms.has(ineligibleProgramKey)
+                    !this.unknownPrograms.has(ineligibleProgramKey)
                   ) {
-                    this.ineligiblePrograms.add(ineligibleProgramKey);
+                    this.unknownPrograms.add(ineligibleProgramKey);
                     console.log(programId);
                     console.warn(
                       `No ${programId.degreeType} program found with MAJOR code, ${code}`,
@@ -305,7 +305,7 @@ export class AuditParser {
                   // The '@' wildcard can be used to denote a sharing with all specializations of a major, i.e `BS-153@`
                   // note that we filter through potential specializations, some of which may be outdated
                   parsedCodes.push(
-                    ...this.potentialSpecs
+                    ...this.referenceableSpecs
                       .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
                       .map((matchedSpec) => `${foundDegree}-${matchedSpec}`),
                   );
@@ -317,21 +317,19 @@ export class AuditParser {
               case "MINOR":
               case "COLLEGE":
               case "LIBL":
-                // code is given in the numerical representation of a college, i.e "55" for School of Biological Science
+                // code is given in the numerical representation for "COLLEGE" types, i.e "55" for School of Biological Science
+                // LIBL refers to Liberal Learnings
                 parsedCodes.push(code);
                 break;
               case "OTHER":
-                // code can be "LIBL" | "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
-                // LIBL refers to Liberal Learnings
+                // code can be "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
                 // "AHPER" and "AHGEO" refers to the Art History Specializations, which are special cases that are excepted in Scraper.ts.
                 // "345O" and "429O" are the "345 (BA English) OTHER" and "429 (BA History) OTHER" blocks (see pr 386)
                 // "153HON" likely stands for an outdated honors chemistry program
 
-                // In any case, "LIBL" is the only code that has a known meaningful value
-                if (!["LIBL", "AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
+                if (!["AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
                   console.warn("Unknown OTHER block code:", code);
                 }
-                if (code === "LIBL") parsedCodes.push("LIBL");
                 break;
             }
             nonExclusiveQualifier.appliesToBlocks.push(

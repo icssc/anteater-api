@@ -267,7 +267,7 @@ export class Scraper {
 
     this.knownSpecializations = await this.dw.getMapping("specializations");
 
-    this.ap.setPotentialPrograms(validDegrees, this.knownSpecializations.keys().toArray());
+    this.ap.setReferenceablePrograms(validDegrees, this.knownSpecializations.keys().toArray());
 
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
