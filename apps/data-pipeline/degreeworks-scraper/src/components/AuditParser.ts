@@ -199,7 +199,7 @@ export class AuditParser {
 
   async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
     if (!this.referenceableMajors || !this.referenceableSpecs) {
-      throw Error("[AuditParser] does not have a reference to possible programs");
+      throw Error("AuditParser is missing lists of referenceable programs");
     }
     const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
     for (const qualifier of qualifierArray) {
