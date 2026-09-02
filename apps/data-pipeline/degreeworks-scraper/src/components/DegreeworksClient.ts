@@ -44,12 +44,6 @@ export class DegreeworksClient {
 
   sleep = (ms: number = this.delay) => new Promise((r) => setTimeout(r, ms));
 
-  static formatQueryParams(params: Record<string, string>) {
-    return Object.entries(params)
-      .map((kv) => kv.map(encodeURIComponent).join("="))
-      .join("&");
-  }
-
   private async parseResponse<T>(
     res: Response,
     schema: z.ZodType<T>,
@@ -62,6 +56,12 @@ export class DegreeworksClient {
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       console.error(`[DegreeworksClient] Unexpected ${label} response shape:`, parsed.error.issues);
+      for (const { path } of parsed.error.issues) {
+        const failedField = path.reduce<unknown>((cur, key) => {
+          return (cur as Record<string, unknown>)?.[key as string];
+        }, raw);
+        console.log(`Failed field at path [${path}]:`, failedField);
+      }
       return undefined;
     }
 
@@ -69,14 +69,14 @@ export class DegreeworksClient {
   }
 
   async getUgradRequirements(): Promise<UndergraduateRequirements | undefined> {
-    const params = DegreeworksClient.formatQueryParams({
+    const params = new URLSearchParams({
       studentId: this.studentId,
       // more schools are possible, see this.getMapping("schools"), but we want undergrad requirements
       school: "U",
       // there is no difference regardless of which of the four bachelor's degrees we ask for: BA, BFA, BMUS, BS
       degree: "BS",
     });
-    const res = await fetch(`${DegreeworksClient.AUDIT_URL}?${params}`, {
+    const res = await fetch(`${DegreeworksClient.AUDIT_URL}?${params.toString()}`, {
       method: "GET",
       headers: this.headers,
     });
@@ -230,6 +230,11 @@ export class DegreeworksClient {
       headers: this.headers,
     });
     await this.sleep();
+
+    if (res.status === 401) {
+      throw Error(`[DegreeWorksClient] Request was unauthorized. Try refreshing auth token?`);
+    }
+
     const json = await res.json();
     const parsed = dwMappingResponseSchema(path).parse(json);
     return new Map(parsed._embedded[path].map((x) => [x.key, x.description]));

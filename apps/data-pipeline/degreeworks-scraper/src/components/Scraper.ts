@@ -1,21 +1,17 @@
 import * as fs from "node:fs/promises";
 import type { database } from "@packages/db";
-import type {
-  DegreeWorksProgram,
-  DegreeWorksProgramId,
-  DegreeWorksRequirement,
-} from "@packages/db/schema";
+import type { DegreeWorksProgram, DegreeWorksProgramId } from "@packages/db/schema";
 import type { JwtPayload } from "jwt-decode";
 import { jwtDecode } from "jwt-decode";
 import type { z } from "zod";
 import { AuditParser, DegreeworksClient } from "$components";
-import type { Block, MajorProgram, ProgramCodes, SpecializationCache } from "$types";
 import {
   type reportSchema,
   reportsResponseSchema,
   type rewardTypeSchema,
   rewardTypesResponseSchema,
-} from "../schema.ts";
+} from "$schema";
+import type { Block, MajorProgram, ProgramCodes, SpecializationCache } from "$types";
 
 const JWT_HEADER_PREFIX_LENGTH = 7;
 
@@ -33,7 +29,7 @@ export class Scraper {
   private specializationCache = new Map<string, SpecializationCache | null>();
 
   private done = false;
-  private parsedUgradRequirements = new Map<string, DegreeWorksRequirement[]>();
+  private parsedUgradRequirements = new Map<string, DegreeWorksProgram>();
   private parsedMinorPrograms = new Map<string, DegreeWorksProgram>();
   private parsedPrograms = new Map<MajorSpecId, MajorProgram>();
   // (parent major, name, program object)
@@ -66,6 +62,16 @@ export class Scraper {
     return `${degreeCode ? `${degreeCode}-` : ""}${majorCode}${specCode ? `;${specCode}` : ""}`;
   }
 
+  /**
+   * Note that this parse will break if catalog year passes 2050 (even though
+   * years before UCI's founding in 1965 are theoretically unambiguous) because the two-digit year 49 is interpreted as the year 1949
+   */
+  private toFullYear(abbreviatedYear: string) {
+    return Number.parseInt(abbreviatedYear, 10) < 50
+      ? `20${abbreviatedYear}`
+      : `19${abbreviatedYear}`;
+  }
+
   private findDwNameFor(
     awardTypesMap: Map<string, z.infer<typeof rewardTypeSchema>>,
     catalogueDegree: z.infer<typeof reportSchema>,
@@ -86,9 +92,8 @@ export class Scraper {
    * * The combination of school and major is not unique; Computer Science and Engineering is affiliated with two
    * schools simultaneously.
    * * It is not guaranteed that every triplet is valid; e.g. the Doctor of Pharmacy is mapped to two different objects
-   * on DegreeWorks, meaning one is not valid. We also include all triples valid in 2006 and later, where triples which
-   * were never valid while DegreeWorks was in use will most likely not be valid there.
-   * * However, we operate under the assumption that every valid triplet is among the ones returned by this method.
+   * on DegreeWorks, meaning one is not valid. We include all triples valid during the given catalog year
+   * * We operate under the assumption that every valid triplet is among the ones returned by this method.
    * @private
    */
   private async discoverValidDegrees(): Promise<ProgramCodes[]> {
@@ -127,15 +132,11 @@ export class Scraper {
       .filter(
         (ent) =>
           ent.degree.degreeCode != null &&
-          (!ent.major.endTermYyyyst ||
-            // the oldest major in degreeworks as of this commit is applied ecology, invalidated during
-            // academic year 2006-2007, so any major older than this is clearly out of the question
-
-            // note that this parse will break if degrees are ever invalidated during or after calendar year 2050 (even
-            // though degrees invalidated before UCI's founding in 1965 are theoretically unambiguous) because the
-            // two-digit year 49 is interpreted by new Date as the year 1949
-            new Date(`${ent.major.endTermYyyyst.slice(1)}-01-01`).getUTCFullYear() >= 2006) &&
-          this.majorPrograms.has(ent.major.majorCode),
+          ent.degree.degreeStartTermYyyyst != null &&
+          this.toFullYear(ent.degree.degreeStartTermYyyyst.slice(1)) <=
+            this.dw.getCatalogYear().slice(0, 4) &&
+          (ent.degree.degreeEndTermYyyyst == null ||
+            this.toFullYear(ent.degree.degreeEndTermYyyyst) > this.dw.getCatalogYear().slice(0, 4)),
       )
       .flatMap((ent) => {
         const withMatchedDegree = this.findDwNameFor(awardTypesMap, ent)
@@ -163,7 +164,7 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramCodes>) {
     const ret = new Map<MajorSpecId, MajorProgram>();
     for (const degree of degrees) {
-      const { collegeCode, majorCode, degreeCode, specCode } = degree;
+      const { schoolCode, majorCode, degreeCode, specCode } = degree;
       const audit = await this.dw.getMajorAudit(degree);
       const majorAudit = audit?.major;
 
@@ -182,12 +183,12 @@ export class Scraper {
       ret.set(this.asMajorSpecId(degreeCode, majorCode, specCode), {
         college: audit?.college
           ? await this.ap.parseBlock(
-              `${collegeCode}-COLLEGE-${majorCode}-${degreeCode}`,
+              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
               audit?.college,
             )
           : undefined,
         major: await this.ap.parseBlock(
-          `${collegeCode}-MAJOR-${majorCode}-${degreeCode}`,
+          `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
           majorAudit,
           audit.otherBlock,
         ),
@@ -236,6 +237,38 @@ export class Scraper {
     if (this.done) throw new Error("This scraper instance has already finished its run.");
     console.log("[Scraper] degreeworks-scraper starting");
 
+    this.degrees = await this.dw.getMapping("degrees");
+    console.log(`Fetched ${this.degrees.size} degrees`);
+    this.majorPrograms = new Set((await this.dw.getMapping("majors")).keys());
+    console.log(`Fetched ${this.majorPrograms.size} major programs`);
+
+    console.log("[Scraper] discovering valid degrees");
+    const validDegrees = await this.discoverValidDegrees();
+    const majorToCollegeCode = new Map(
+      validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
+    );
+
+    // Validate that for major codes for undergrad programs are unambiguous without their degree types.
+    // This is required for inferring the correct program when a qualifier references it by code
+    const seenUgradMajorCodes = new Map<string, ProgramCodes>();
+    for (const degree of validDegrees) {
+      if (degree.schoolCode !== "U") continue;
+      const previousDegree = seenUgradMajorCodes.get(degree.majorCode);
+      // Check for different degree type b/c we are trying to prevent different ugrad programs with the same code but different degree types
+      // i.e. CSE is listed as BS-193 twice (as ICS-affiliated and engineering-affiliated) but duplicate listings for this are fine since
+      // they are identical programs sharing the same degree type (B.S.)
+      if (previousDegree && previousDegree.degreeCode !== degree.degreeCode) {
+        console.warn(
+          `Multiple undergraduate degrees found for major code ${degree.majorCode}: ${previousDegree.degreeCode} and ${degree.degreeCode}`,
+        );
+      }
+      seenUgradMajorCodes.set(degree.majorCode, degree);
+    }
+
+    this.knownSpecializations = await this.dw.getMapping("specializations");
+
+    this.ap.setReferenceablePrograms(validDegrees, this.knownSpecializations.keys().toArray());
+
     const ugradReqs = await this.dw.getUgradRequirements();
     if (!ugradReqs) {
       console.log("Can't get undergrad reqs...");
@@ -248,24 +281,20 @@ export class Scraper {
       CHC4: honorsFourRequirements,
       CHC2: honorsTwoRequirements,
     } = ugradReqs;
-    this.parsedUgradRequirements.set(
-      "UC",
-      await this.ap.ruleArrayToRequirements(ucRequirements.ruleArray),
-    );
-    this.parsedUgradRequirements.set(
-      "GE",
-      await this.ap.ruleArrayToRequirements(geRequirements.ruleArray),
-    );
+    // note that the blockId string for ugrad requirements ('U-SCHOOL-@@@') are not technically correct DW semantics
+    // they are reasonable made-up values used to parse the block
+    this.parsedUgradRequirements.set("UC", await this.ap.parseBlock("U-SCHOOL-UC", ucRequirements));
+    this.parsedUgradRequirements.set("GE", await this.ap.parseBlock("U-SCHOOL-GE", geRequirements));
     if (honorsFourRequirements) {
       this.parsedUgradRequirements.set(
         "CHC4",
-        await this.ap.ruleArrayToRequirements(honorsFourRequirements.ruleArray),
+        await this.ap.parseBlock("U-SCHOOL-CHC4", honorsFourRequirements),
       );
       console.log("Saved 4-year CHC requirements.");
     } else if (honorsTwoRequirements) {
       this.parsedUgradRequirements.set(
         "CHC2",
-        await this.ap.ruleArrayToRequirements(honorsTwoRequirements.ruleArray),
+        await this.ap.parseBlock("U-SCHOOL-CHC2", honorsTwoRequirements),
       );
       console.log("Saved 2-year CHC requirements.");
     } else {
@@ -274,17 +303,6 @@ export class Scraper {
       );
     }
     console.log("Fetched university, GE, and attempted to fetch honors requirements (see above)");
-
-    this.degrees = await this.dw.getMapping("degrees");
-    console.log(`Fetched ${this.degrees.size} degrees`);
-    this.majorPrograms = new Set((await this.dw.getMapping("majors")).keys());
-    console.log(`Fetched ${this.majorPrograms.size} major programs`);
-
-    console.log("[Scraper] discovering valid degrees");
-    const validDegrees = await this.discoverValidDegrees();
-    const majorToCollegeCode = new Map(
-      validDegrees.map(({ majorCode, collegeCode }) => [majorCode, collegeCode]),
-    );
 
     this.minorPrograms = new Set((await this.dw.getMapping("minors")).keys());
     console.log(`Fetched ${this.minorPrograms.size} minor programs`);
@@ -320,7 +338,6 @@ export class Scraper {
       .then((s) => new Map(Object.entries(JSON.parse(s === "" ? "{}" : s))));
     console.log(`loading ${this.specializationCache.size} cached specializations`);
 
-    this.knownSpecializations = await this.dw.getMapping("specializations");
     const foundMajorSpecPairs: ProgramCodes[] = [];
 
     for (const [specCode, specName] of this.knownSpecializations.entries()) {

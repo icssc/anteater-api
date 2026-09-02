@@ -11,9 +11,21 @@ import {
 } from "drizzle-orm/pg-core";
 import { division } from "./websoc.ts";
 
+export const degreeWorksProgramTypes = [
+  "SCHOOL",
+  "COLLEGE",
+  "MAJOR",
+  "MINOR",
+  "SPEC",
+  "LIBL",
+  "OTHER",
+] as const;
+
+export type DegreeWorksProgramType = (typeof degreeWorksProgramTypes)[number];
+
 export type DegreeWorksProgramId = {
   school: "U" | "G";
-  programType: "COLLEGE" | "MAJOR" | "MINOR" | "SPEC";
+  programType: DegreeWorksProgramType;
   code: string;
   degreeType?: string;
 };
@@ -21,6 +33,7 @@ export type DegreeWorksProgramId = {
 export type DegreeWorksProgram = DegreeWorksProgramId & {
   name: string;
   requirements: DegreeWorksRequirement[];
+  header?: DegreeWorksRequirementQualifier[];
   /**
    * The set of specializations (if any) that this program has.
    */
@@ -32,7 +45,7 @@ export type DegreeWorksProgram = DegreeWorksProgramId & {
  * constraint codes we've found in withArray constraints
  * We use a runtime value so zod schema can consume it
  */
-export const WithConstraintCode = [
+export const withConstraintCodes = [
   "DWCREDIT",
   "DWCREDITS",
   "DWTERM",
@@ -42,7 +55,7 @@ export const WithConstraintCode = [
   "DWPASSFAIL",
 ] as const;
 
-export type WithConstraintCode = (typeof WithConstraintCode)[number];
+export type WithConstraintCode = (typeof withConstraintCodes)[number];
 
 /**
  * Boolean expression tree for per-course constraints (withArray clauses)
@@ -70,6 +83,7 @@ export type DegreeWorksCourseRequirement = {
   requirementType: "Course";
   courseCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
   courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
@@ -77,6 +91,7 @@ export type DegreeWorksUnitRequirement = {
   requirementType: "Unit";
   unitCount: number;
   courses: string[];
+  qualifiers?: DegreeWorksRequirementQualifier[];
   courseConstraints?: Record<string, CourseConstraintTree>;
 };
 
@@ -103,6 +118,23 @@ export type DegreeWorksRequirement = DegreeWorksRequirementBase &
     | DegreeWorksMarkerRequirement
   );
 
+export type DegreeWorksNonExclusivityQualifier = {
+  qualifierType: "NonExclusive";
+  appliesToBlocks: {
+    programType: DegreeWorksProgramType;
+    code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
+    maxShared?: string;
+  }[];
+};
+
+export type DegreeWorksExclusivityQualifier = {
+  qualifierType: "Exclusive";
+};
+
+export type DegreeWorksRequirementQualifier =
+  | DegreeWorksNonExclusivityQualifier
+  | DegreeWorksExclusivityQualifier;
+
 export const dwDegree = pgTable("dw_degree", {
   id: varchar("id").primaryKey(),
   name: varchar("name").notNull(),
@@ -114,6 +146,7 @@ export const dwSchoolRequirement = pgTable(
   {
     id: varchar("id").notNull(),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.id, table.catalogYear)],
@@ -154,6 +187,7 @@ export const dwMajorRequirement = pgTable("dw_major_requirement", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedAlwaysAs(sql`jsonb_hash_extended(requirements, 0)`),
+  header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
   requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
 });
 
@@ -166,6 +200,7 @@ export const dwMajorYear = pgTable(
     catalogYear: varchar("catalog_year").notNull(),
     specializationRequired: boolean("specialization_required").notNull(),
     collegeRequirementsTitle: varchar("college_requirements_title"),
+    collegeHeader: jsonb("college_header").$type<DegreeWorksRequirementQualifier[]>(),
     collegeRequirements: jsonb("college_requirements").$type<DegreeWorksRequirement[]>(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
@@ -183,6 +218,7 @@ export const dwMinorRequirement = pgTable(
       .notNull()
       .references(() => dwMinor.id, { onDelete: "cascade" }),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
@@ -207,6 +243,7 @@ export const dwSpecializationRequirement = pgTable(
       .notNull()
       .references(() => dwSpecialization.id),
     catalogYear: varchar("catalog_year").notNull(),
+    header: jsonb("header").$type<DegreeWorksRequirementQualifier[]>(),
     requirements: jsonb("requirements").$type<DegreeWorksRequirement[]>().notNull(),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],

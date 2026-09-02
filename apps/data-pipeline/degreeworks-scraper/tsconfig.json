@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "$components": ["./src/components/index.ts"],
-      "$types": ["./src/types.ts"]
+      "$types": ["./src/types.ts"],
+      "$schema": ["./src/schema.ts"]
     }
   }
 }
