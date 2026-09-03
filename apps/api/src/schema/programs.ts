@@ -103,7 +103,7 @@ export const exclusiveQualifierSchema = z
 export const nonExclusiveQualifierSchema = z
   .object({
     qualifierType: z.literal("NonExclusive"),
-    appliedBlocks: z.array(
+    appliesToBlocks: z.array(
       z.object({
         programType: z.enum(degreeWorksProgramTypes).openapi({
           description: "The type of programs this qualifier applies to",
