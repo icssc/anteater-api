@@ -199,12 +199,12 @@ export class ProgramsService {
           id: dwMajor.id,
           name: dwMajor.name,
           catalogYear: dwMajorYear.catalogYear,
-          header: dwMajorRequirement.header,
+          qualifiers: dwMajorRequirement.header,
           requirements: dwMajorRequirement.requirements,
           schoolRequirements: {
             name: dwMajorYear.collegeRequirementsTitle,
             requirements: dwMajorYear.collegeRequirements,
-            header: dwMajorYear.collegeHeader,
+            qualifiers: dwMajorYear.collegeHeader,
           },
         })
         .from(dwMajor)
@@ -254,7 +254,7 @@ export class ProgramsService {
         id: baseTable.id,
         name: baseTable.name,
         catalogYear: requirementsTable.catalogYear,
-        header: requirementsTable.header,
+        qualifiers: requirementsTable.header,
         requirements: requirementsTable.requirements,
       })
       .from(baseTable)
@@ -271,7 +271,7 @@ export class ProgramsService {
     const base = this.db
       .select({
         id: dwSchoolRequirement.id,
-        header: dwSchoolRequirement.header,
+        qualifiers: dwSchoolRequirement.header,
         requirements: dwSchoolRequirement.requirements,
         catalogYear: dwSchoolRequirement.catalogYear,
       })
