@@ -131,7 +131,7 @@ export const qualifierSchema = z
     description: "Further qualifiers for how courses can apply to a program requirement",
   });
 
-const qualifierArraySchema = z.array(qualifierSchema).optional().openapi({
+const qualifierArraySchema = z.array(qualifierSchema).optional().nullable().openapi({
   description: "Qualifiers for this requirement",
 });
 
