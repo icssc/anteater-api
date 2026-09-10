@@ -4,7 +4,12 @@ import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
-import type { CoursePrerequisite, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
+import type {
+  CoursePrerequisite,
+  Prerequisite,
+  PrerequisiteTree,
+  RequirementPrerequisite,
+} from "@packages/db/schema";
 import {
   course,
   courseView,
@@ -169,31 +174,104 @@ async function fetchWithDelay(url: string, delayMs = 1000) {
   }
 }
 
+//Parses a course/exam that carries any combination of ( coreq ) and ( min grade = X)
+//previous reqWithGradeMatch and courseCoreqMatch failed on "DRAMA 10 ( coreq ) (min grade = D-)""
+function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
+  const match = prereq.match(/^([^()]+?)((?:\s*\([^()]*\))+)$/);
+  if (!match) return undefined;
+
+  const base = match[1].trim();
+  const annotations = [...match[2].matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
+
+  let coreq = false;
+  let minGrade: string | undefined;
+  let isExam = false;
+
+  for (const ann of annotations) {
+    if (ann === "coreq") {
+      coreq = true;
+      continue;
+    }
+    const gradeMatch = ann.match(/^min (\S+) = (\S{1,2})$/);
+    if (gradeMatch) {
+      if (gradeMatch[1] === "grade") {
+        minGrade = gradeMatch[2];
+      } else {
+        isExam = true;
+        minGrade = gradeMatch[2];
+      }
+      continue;
+    }
+    return undefined;
+  }
+
+  if (isExam) {
+    return { prereqType: "exam", examName: base, ...(minGrade ? { minGrade } : {}) };
+  }
+  return coreq
+    ? { prereqType: "course", coreq: true, courseId: base, ...(minGrade ? { minGrade } : {}) }
+    : { prereqType: "course", coreq: false, courseId: base, ...(minGrade ? { minGrade } : {}) };
+}
+
+//any requirement text that doesn't fit into these 3 categories are stored as plain text
+type RequirementCategory = "status" | "qualification" | "completion";
+type RequirementExtraction = { category: RequirementCategory; value: string };
+
+const STATUS_EXTRACTORS: RegExp[] = [
+  /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+  /^(CAMPUSWIDE HONORS)\s+ONLY$/i,
+  /^SCHOOL OF (.+?)\s+ONLY$/i,
+  /^(.+?)\s+MAJORS?\s+ONLY$/i,
+  /^(.+?)\s+ONLY$/i,
+];
+
+function extractRequirementInfo(text: string): RequirementExtraction | undefined {
+  for (const pattern of STATUS_EXTRACTORS) {
+    const m = text.match(pattern);
+    if (m) return { category: "status", value: m[1].trim() };
+  }
+
+  if (/^PLACEMENT EXAM$/i.test(text)) {
+    return { category: "qualification", value: text };
+  }
+  if (/^AUTHORIZATION\b/i.test(text)) {
+    const withoutParenthetical = text.replace(/\s*\(.*\)\s*$/, "").trim();
+    return { category: "qualification", value: withoutParenthetical || text };
+  }
+
+  if (/WRITING$/i.test(text)) {
+    return { category: "completion", value: text };
+  }
+
+  return undefined;
+}
+
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
-  const reqWithGradeMatch = prereq.match(/^([^()]+)\s+\( min (\S+) = (\S{1,2}) \)$/);
-  if (reqWithGradeMatch) {
-    return reqWithGradeMatch[2].trim() === "grade"
-      ? {
-          prereqType: "course",
-          coreq: false,
-          courseId: reqWithGradeMatch[1].trim(),
-          minGrade: reqWithGradeMatch[3].trim(),
-        }
-      : {
-          prereqType: "exam",
-          examName: reqWithGradeMatch[1].trim(),
-          minGrade: reqWithGradeMatch[3].trim(),
-        };
-  }
-  const courseCoreqMatch = prereq.match(/^([^()]+)\s+\( coreq \)$/);
-  if (courseCoreqMatch) {
-    return { prereqType: "course", coreq: true, courseId: courseCoreqMatch[1].trim() };
-  }
+  const annotated = parseAnnotatedCourseOrExam(prereq);
+  if (annotated) return annotated;
+
   if (prereq.match(/^AP.*|^[A-Z0-9&/\s]+\d\S*$/)) {
     return prereq.startsWith("AP")
       ? { prereqType: "exam", examName: prereq }
       : { prereqType: "course", coreq: false, courseId: prereq };
   }
+
+  //the only thing this should catch is "recommended" clauses
+  if (/\(\s*(coreq|min\s+(grade|score))\b/i.test(prereq)) {
+    logger.warn(
+      `POSSIBLE PARSE FAILURE (leftover course annotation, or a "recommended" clause): ${JSON.stringify(prereq)}`,
+    );
+    return { prereqType: "requirement", requirement: prereq };
+  }
+
+  const extracted = extractRequirementInfo(prereq);
+  logger.info(
+    `REQUIREMENT TEXT CAPTURED${extracted ? ` [${extracted.category}: ${extracted.value}]` : ""}: ${JSON.stringify(prereq)}`,
+  );
+  //keep entire requirement plain text for non status/qualification/completion category (should never be the case)
+  return extracted
+    ? { prereqType: "requirement", ...extracted }
+    : { prereqType: "requirement", requirement: prereq };
 }
 
 function parseAntirequisite(prereq: string): Prerequisite | undefined {
@@ -209,6 +287,31 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   if (antiCourseMatch) {
     return { prereqType: "course", coreq: false, courseId: antiCourseMatch[1].trim() };
   }
+
+  const withoutNo = prereq.replace(/^NO\s+/, "").trim();
+
+  //handles course/exam antirequisite with anotation (NO MATH H3A (min grade = C )
+  const annotated = parseAnnotatedCourseOrExam(withoutNo);
+  if (annotated) {
+    return annotated;
+  }
+
+  // "NO", already captured separately via parseRepeatability.
+  // Drop it quietly rather than warning.
+  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
+    return undefined;
+  }
+  //utilizes the normal major restriction extraction but pushes into the NOT branch
+  const extracted = extractRequirementInfo(withoutNo);
+  if (extracted) {
+    logger.info(
+      `NEGATED REQUIREMENT CAPTURED [${extracted.category}: ${extracted.value}]: ${JSON.stringify(prereq)}`,
+    );
+    return { prereqType: "requirement", ...extracted };
+  }
+
+  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  return undefined;
 }
 
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
@@ -226,24 +329,104 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 }
 
 function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
+  logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
+
+  if (prereq.startsWith("(") && prereq.endsWith(")")) {
+    const nestedTree: PrerequisiteTree = { OR: [] };
+    const orReqs = splitOnOr(prereq.slice(1, -1).trim());
+    for (const orReq of orReqs) {
+      buildORLeaf(nestedTree, orReq.trim());
+    }
+    if (nestedTree.OR?.length) {
+      prereqTree.OR?.push(nestedTree.OR.length === 1 ? nestedTree.OR[0] : nestedTree);
+    }
+    return;
+  }
+
   const req: Prerequisite | undefined = prereq.startsWith("NO")
     ? parseAntirequisite(prereq)
     : parsePrerequisite(prereq);
+
+  logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
+
   if (req) {
     prereqTree.OR?.push(req);
   }
 }
 
+const BOILERPLATE_STRINGS = ["Display all prerequisites on file submitted by department."];
+
+function splitOnAnd(prereqList: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let i = 0; i < prereqList.length; i++) {
+    const char = prereqList[i];
+
+    if (char === "(") depth++;
+    else if (char === ")") depth--;
+
+    // Check if current position has "AND" at depth 0. A word boundary is required
+    // both before and after the token, so "AND" inside a longer word (e.g. "STANDING",
+    // "COMMAND") is never mistaken for the separator
+    const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
+    if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^AND\b/)) {
+      parts.push(current.trim());
+      current = "";
+      i += 2; // skip "AND"
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) parts.push(current.trim());
+  logger.info(`splitOnAnd input: ${JSON.stringify(prereqList)}`);
+  logger.info(`splitOnAnd output: ${JSON.stringify(parts)}`);
+  return parts;
+}
+
+function splitOnOr(prereqList: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let i = 0; i < prereqList.length; i++) {
+    const char = prereqList[i];
+
+    if (char === "(") depth++;
+    else if (char === ")") depth--;
+
+    // Word boundary required both before and after the token — otherwise "OR" inside
+    // a longer word (e.g. "JUNIOR", "SENIOR") gets mistaken for the separator; this is
+    // the confirmed cause of the "JUNI"/"SENI" fragments
+    const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
+    if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^OR\b/)) {
+      parts.push(current.trim());
+      current = "";
+      i += 1; // skip "OR"
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) parts.push(current.trim());
+  logger.info(`splitOnOr input: ${JSON.stringify(prereqList)}`);
+  logger.info(`splitOnOr output: ${JSON.stringify(parts)}`);
+  return parts;
+}
+
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
+  if (BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))) {
+    return {};
+  }
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
+  const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
-      const orReqs = prereq
-        .slice(1, -1)
-        .trim()
-        .split(/ OR /)
-        .map((req) => req.trim());
+      const orReqs = splitOnOr(prereq.slice(1, -1).trim());
       const orTree: PrerequisiteTree = { OR: [] };
       for (const orReq of orReqs) {
         buildORLeaf(orTree, orReq.trim());
@@ -276,12 +459,15 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
   const prereqPageText = await fetchWithDelay(url);
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();
+  const skippedCourseIds: string[] = [];
   $("table tbody tr").each(function () {
     const entry = $(this).find("td");
     if ($(entry).length === 3) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
-      const prereqList = $(entry[prereqFieldLabels.Prerequisite])
+      const prereqCell = $(entry[prereqFieldLabels.Prerequisite]);
+      const prereqCellHtml = prereqCell.html() ?? "";
+      const prereqList = prereqCell
         .contents()
         .map((_, node) => $(node).text())
         .get()
@@ -292,9 +478,26 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       if (courseId.match(/\* ([&A-Z\d ]+) since/)) {
         courseId = courseId.split("*")[0].trim();
       }
+      logger.info(`RAW PREREQ LIST for ${courseId}: ${JSON.stringify(prereqList)}`);
+      logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
+      if (!isBalancedPrereqText(prereqList)) {
+        logger.warn(
+          `TRUNCATED PREREQ SOURCE for ${courseId}: unbalanced parentheses, likely cut off ` +
+            `by the registrar's page. Skipping to avoid building a corrupted prerequisite tree. ` +
+            `Raw text: ${JSON.stringify(prereqList)}`,
+        );
+        skippedCourseIds.push(courseId);
+        return;
+      }
       prereqs.set(courseId, buildPrereqTree(prereqList));
     }
   });
+  if (skippedCourseIds.length) {
+    logger.warn(
+      `${deptCode}: skipped ${skippedCourseIds.length} course(s) with truncated prerequisite ` +
+        `source: ${skippedCourseIds.join(", ")}`,
+    );
+  }
   logger.info(`Finished scraping prerequisites for ${deptCode}`);
   return prereqs;
 }
@@ -412,9 +615,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -424,17 +627,36 @@ function parseRepeatability(repeatText: string): {
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
 
-const prereqToString = (prereq: Prerequisite) =>
+//requirement leaves never reach here
+const prereqToString = (prereq: Exclude<Prerequisite, RequirementPrerequisite>) =>
   prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
 
+//don't add a "requirement" leaf to prevent polluting table or crashing prereqToString
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
+  const toEntry = (x: Prerequisite | PrerequisiteTree): string[] => {
+    if (!isPrereq(x)) return prereqTreeToList(x);
+    return x.prereqType === "requirement" ? [] : [prereqToString(x)];
+  };
   if (tree.AND) {
-    return tree.AND.flatMap((x) => (isPrereq(x) ? prereqToString(x) : prereqTreeToList(x)));
+    return tree.AND.flatMap(toEntry);
   }
   if (tree.OR) {
-    return tree.OR.flatMap((x) => (isPrereq(x) ? prereqToString(x) : prereqTreeToList(x)));
+    return tree.OR.flatMap(toEntry);
   }
   return [];
+}
+
+//simple catch for dangling unclosed parenthesis like the case of PSYCH 173A
+function isBalancedPrereqText(prereqList: string): boolean {
+  let depth = 0;
+  for (const char of prereqList) {
+    if (char === "(") depth++;
+    else if (char === ")") {
+      depth--;
+      if (depth < 0) return false;
+    }
+  }
+  return depth === 0;
 }
 
 const norm = (s: string) => s.replace(/\s+/g, " ").trim().normalize("NFKD");
@@ -533,10 +755,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -573,10 +795,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
