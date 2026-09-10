@@ -304,6 +304,11 @@ function extractRequirementInfo(text: string): RequirementExtraction | undefined
 }
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
+  if (/\(\s*recommended\s*\)/i.test(prereq)) {
+    logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
+    return undefined;
+  }
+
   const annotated = parseAnnotatedCourseOrExam(prereq);
   if (annotated) return annotated;
 
