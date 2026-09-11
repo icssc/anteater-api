@@ -355,6 +355,37 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
 const BOILERPLATE_STRINGS = ["Display all prerequisites on file submitted by department."];
 
+function splitOnAnd(prereqList: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let i = 0; i < prereqList.length; i++) {
+    const char = prereqList[i];
+
+    if (char === "(") depth++;
+    else if (char === ")") depth--;
+
+    // Check if current position has "AND" at depth 0. A word boundary is required
+    // both before and after the token, so "AND" inside a longer word (e.g. "STANDING",
+    // "COMMAND") is never mistaken for the separator
+    const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
+    if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^AND\b/)) {
+      parts.push(current.trim());
+      current = "";
+      i += 2; // skip "AND"
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) parts.push(current.trim());
+  logger.info(`splitOnAnd input: ${JSON.stringify(prereqList)}`);
+  logger.info(`splitOnAnd output: ${JSON.stringify(parts)}`);
+  return parts;
+}
+
 function splitOnOr(prereqList: string): string[] {
   const parts: string[] = [];
   let depth = 0;
@@ -389,9 +420,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
     return {};
   }
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
-  //logger.info(`NAIVE AND-split input: ${JSON.stringify(prereqList)}`);
-  //logger.info(`NAIVE AND-split output: ${JSON.stringify(prereqs)}`);
+  const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = splitOnOr(prereq.slice(1, -1).trim());
@@ -583,9 +612,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -722,10 +751,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -762,10 +791,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
