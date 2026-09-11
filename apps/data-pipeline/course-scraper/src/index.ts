@@ -227,13 +227,18 @@ const STATUS_EXTRACTORS: RegExp[] = [
 
 function extractRequirementInfo(text: string): RequirementExtraction | undefined {
   for (const pattern of STATUS_EXTRACTORS) {
-    const m = text.match(pattern);
-    if (m) return { category: "status", value: m[1].trim() };
+    if (pattern.test(text)) {
+      return {
+        category: "status",
+        value: text.replace(/\s+ONLY$/i, "").trim(),
+      };
+    }
   }
 
   if (/^PLACEMENT EXAM$/i.test(text)) {
     return { category: "qualification", value: text };
   }
+
   if (/^AUTHORIZATION\b/i.test(text)) {
     const withoutParenthetical = text.replace(/\s*\(.*\)\s*$/, "").trim();
     return { category: "qualification", value: withoutParenthetical || text };
