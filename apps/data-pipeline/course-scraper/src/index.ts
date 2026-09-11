@@ -235,6 +235,13 @@ function extractRequirementInfo(text: string): RequirementExtraction | undefined
     }
   }
 
+  if (/^(SAT|ACT)\s+.+?\s*(?:>=|<=|=)\s*\d+$/i.test(text)) {
+    return {
+      category: "qualification",
+      value: text,
+    };
+  }
+
   if (/^PLACEMENT EXAM$/i.test(text)) {
     return { category: "qualification", value: text };
   }
