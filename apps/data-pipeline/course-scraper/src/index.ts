@@ -174,17 +174,8 @@ async function fetchWithDelay(url: string, delayMs = 1000) {
   }
 }
 
-/**
- * Parses a course/exam reference that may carry any combination of "( coreq )" and
- * "( min grade = X )" / "( min score = X )" annotations, in either order — e.g.
- * "BIO SCI D104 ( coreq ) ( min grade = D- )" or the reverse ordering. Previously,
- * two separate fixed-order regexes each matched only one annotation on its own, so a
- * course with both annotations together (confirmed in real data: DRAMA 10, BIO SCI
- * D103/D104, and several French/German/Chemistry/Physics corequisite sequences)
- * matched neither and was silently dropped. Returns undefined — so the caller can
- * fall through to other parsing strategies — if the base isn't followed by at least
- * one recognized annotation, or if any annotation present isn't recognized (e.g.
- * "( recommended )"); we don't guess at partial data.
+/*
+replaces old reqWithGradeMatch and courseCoreqMatch with this one function that can handle courses with both such as DRAMA 10 ( coreq ) ( minGrade )
  */
 function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   const match = prereq.match(/^([^()]+?)((?:\s*\([^()]*\))+)$/);
@@ -212,7 +203,6 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
       }
       continue;
     }
-    // An annotation we don't recognize — bail out entirely rather than guessing.
     return undefined;
   }
 
@@ -224,57 +214,14 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
     : { prereqType: "course", coreq: false, courseId: base, ...(minGrade ? { minGrade } : {}) };
 }
 
-/**
- * Sub-classifies genuine `requirement` text (see issue #438) into one of three groups,
- * based on *how* the requirement is attained rather than just its surface wording —
- * and extracts the substantive value out of the fixed template wrapping it:
- *
- * - "status" — a fixed fact about the student (standing, major, school), verified
- *   directly off existing enrollment records; nothing to demonstrate or substitute.
- *   e.g. "UPPER DIVISION STANDING ONLY" -> value "UPPER DIVISION".
- * - "qualification" — competency an authority must confirm, via whichever method
- *   they accept (a placement exam is just the standardized default; "authorization"
- *   covers any other accepted method, e.g. demonstrated home use of a language).
- *   The method name itself is kept as the value (never trimmed away entirely) since
- *   "PLACEMENT EXAM" and "AUTHORIZATION" are two different accepted methods, not
- *   interchangeable synonyms — collapsing both to the same generic value would erase
- *   that distinction.
- * - "completion" — something already satisfied and verified elsewhere (e.g. the
- *   lower-division writing requirement), closer in spirit to this file's existing
- *   GE flags than to an enrollment-time gate. No fixed template to strip here — the
- *   whole phrase is the content, so value is the text unchanged.
- *
- * Returns undefined for text that doesn't match any of the three — that's expected
- * and fine; not every requirement clause needs to fit one of these groups, and an
- * unmatched clause still gets stored as plain requirement text either way.
- */
 type RequirementCategory = "status" | "qualification" | "completion";
 type RequirementExtraction = { category: RequirementCategory; value: string };
 
-// Order matters: standing is checked before the major pattern so a standing clause
-// can never be mistaken for a (nonexistent) "STANDING" major. CAMPUSWIDE HONORS is
-// pulled out into its own named entry now that it's a confirmed real case (the
-// catch-all at the end already extracted it correctly, but naming it explicitly here
-// means anything that still falls through to the catch-all going forward is
-// guaranteed genuinely novel, not something already confirmed).
 const STATUS_EXTRACTORS: RegExp[] = [
-  // standing: "UPPER DIVISION STANDING ONLY" -> "UPPER DIVISION"
   /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
-  // confirmed program/cohort case: "CAMPUSWIDE HONORS ONLY" -> "CAMPUSWIDE HONORS"
   /^(CAMPUSWIDE HONORS)\s+ONLY$/i,
-  // school: "SCHOOL OF I&C SCI ONLY" -> "I&C SCI"
   /^SCHOOL OF (.+?)\s+ONLY$/i,
-  // major: "COMPUTER SCI & ENGR MAJORS ONLY" -> "COMPUTER SCI & ENGR". Non-greedy up
-  // to the fixed " MAJOR(S) ONLY" suffix, so this is safe even when the major name
-  // itself contains "AND" (e.g. "ENVIRON SCI AND POL MAJORS ONLY" -> "ENVIRON SCI AND
-  // POL") — we're extracting from an already-atomic string, not splitting on that
-  // word the way splitOnOr's word-boundary check does (see issue #439).
   /^(.+?)\s+MAJORS?\s+ONLY$/i,
-  // catch-all: any other fixed program/cohort-membership clause ending in "ONLY" that
-  // doesn't fit any named template above. Same underlying shape as major/school (a
-  // fixed fact verified off existing enrollment records, nothing to demonstrate),
-  // just not yet a confirmed, named case. Checked last so it never preempts a more
-  // precise match above.
   /^(.+?)\s+ONLY$/i,
 ];
 
@@ -288,10 +235,6 @@ function extractRequirementInfo(text: string): RequirementExtraction | undefined
     return { category: "qualification", value: text };
   }
   if (/^AUTHORIZATION\b/i.test(text)) {
-    // Strip a trailing explanatory parenthetical if present, but keep "AUTHORIZATION"
-    // itself — trimming it away entirely would make this indistinguishable from
-    // "PLACEMENT EXAM" once only the value is looked at, erasing which of the two
-    // accepted methods this actually is.
     const withoutParenthetical = text.replace(/\s*\(.*\)\s*$/, "").trim();
     return { category: "qualification", value: withoutParenthetical || text };
   }
@@ -305,7 +248,7 @@ function extractRequirementInfo(text: string): RequirementExtraction | undefined
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
   if (/\(\s*recommended\s*\)/i.test(prereq)) {
-    logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
+    //logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
     return undefined;
   }
 
@@ -318,45 +261,10 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
       : { prereqType: "course", coreq: false, courseId: prereq };
   }
 
-  // Not a course or exam reference in the shapes handled above. Before treating this
-  // as genuine registrar prose (see issue #438), check whether it still contains a
-  // leftover course-annotation fragment — e.g. "( coreq )" or "( min grade" — which
-  // means this was meant to be a course reference with an annotation
-  // parseAnnotatedCourseOrExam didn't recognize (e.g. "( recommended ) ( coreq )").
-  // Real requirement text observed so far (standing/major/writing/exam clauses) never
-  // contains these tokens, so their presence is a strong signal of a remaining parser
-  // gap, not free text. Flag it distinctly so it doesn't blend in with genuine
-  // captures and get mistaken for working as intended. Deliberately not run through
-  // extractRequirementInfo — this isn't trusted as genuine requirement text, so it
-  // shouldn't be tagged as though it were.
-  if (/\(\s*(coreq|min\s+(grade|score))\b/i.test(prereq)) {
-    logger.warn(
-      `POSSIBLE PARSE FAILURE (leftover course annotation, likely not genuine requirement text): ${JSON.stringify(prereq)}`,
-    );
-    return { prereqType: "requirement", requirement: prereq };
-  }
-
-  // Genuine registrar prose describing a non-course requirement (major/standing
-  // restriction, writing requirement, placement exam, etc). Capture it verbatim
-  // instead of silently dropping it — see issue #438. A very short fragment is more
-  // likely a leftover parser bug than genuine registrar text, so flag those distinctly
-  // for investigation rather than treating them as clean requirement text — and don't
-  // run the (likely-garbage) fragment through extractRequirementInfo either.
-  if (prereq.length < 3) {
-    logger.warn(
-      `SUSPICIOUS SHORT REQUIREMENT TEXT (possible parser bug): ${JSON.stringify(prereq)}`,
-    );
-    return { prereqType: "requirement", requirement: prereq };
-  }
-
   const extracted = extractRequirementInfo(prereq);
-  logger.info(
+  /*logger.info(
     `REQUIREMENT TEXT CAPTURED${extracted ? ` [${extracted.category}: ${extracted.value}]` : ""}: ${JSON.stringify(prereq)}`,
-  );
-  // requirement is dropped once category+value are known — they're sufficient on
-  // their own. Kept only when extraction fails (e.g. "CAMPUSWIDE HONORS ONLY"), since
-  // otherwise that leaf would carry no information at all — the exact silent data
-  // loss issue #438 was written to fix, just one layer deeper.
+  );*/
   return extracted
     ? { prereqType: "requirement", ...extracted }
     : { prereqType: "requirement", requirement: prereq };
@@ -378,77 +286,49 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
 
   const withoutNo = prereq.replace(/^NO\s+/, "").trim();
 
-  // A course/exam antirequisite carrying an annotation, e.g. "NO MATH H2D ( min grade
-  // = C )" — antiCourseMatch above can't handle parentheses at all. Same shape of gap
-  // as the original DRAMA 10 / BIO SCI D103-D104 issue, just on the "NO"-prefixed side
-  // — reuse the same parser rather than duplicating its logic.
+  //call parseAnnotatedCourseOrExam to handle ( coreq ) and ( min grade = C ) annotations
   const annotated = parseAnnotatedCourseOrExam(withoutNo);
   if (annotated) {
     return annotated;
   }
 
-  // "NO REPEATS ALLOWED ..." isn't a real antirequisite (it says nothing about a
-  // different course you must not have taken) — it's a repeatability note that
-  // happens to start with "NO", already captured separately (and more usefully, as
-  // structured data) via parseRepeatability -> repeatability/repeatabilityTimes/
-  // repeatabilityType. Drop it quietly rather than warning or duplicating it here.
+  //already handled by parseRepeatability
   if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
     return undefined;
   }
 
-  // A negated status restriction, e.g. "NO PSYCHOLOGY MAJORS ONLY" — this doesn't mean
-  // "don't take this course," it means "don't be this major." Structurally this is
-  // exactly the negation of ordinary requirement text: "PSYCHOLOGY MAJORS ONLY" alone
-  // would extract cleanly to { category: "status", value: "PSYCHOLOGY" } via
-  // extractRequirementInfo. Reusing that here (on the "NO "-stripped text) gives the
-  // correctly-shaped leaf to push into the NOT branch, representing "must not be a
-  // Psychology major" rather than treating it as an unparseable course reference.
+  //ex: NO PSYCHOLOGY MAJORS ONLY
   const extracted = extractRequirementInfo(withoutNo);
   if (extracted) {
-    logger.info(
+    /*logger.info(
       `NEGATED REQUIREMENT CAPTURED [${extracted.category}: ${extracted.value}]: ${JSON.stringify(prereq)}`,
-    );
+    );*/
     return { prereqType: "requirement", ...extracted };
   }
 
-  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  //logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
-// EXPERIMENT: reverted to doc10's simple, non-recursive shape (no nested-paren
-// handling) to test the hypothesis that splitOnOr's word-boundary fix is the only
-// change actually needed — see issue #439 discussion. Logging added so real runs can
-// be compared directly: this leaf never recurses, so if a "(" appears in a string
-// passed to buildORLeaf below, it will fail to parse as a course/exam/requirement in
-// the shape you'd expect, and the log will show exactly that instead of a silent
-// structural difference.
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
-  logger.info(`AND LEAF INPUT: ${JSON.stringify(prereq)}`);
+  //logger.info(`AND LEAF INPUT: ${JSON.stringify(prereq)}`);
   if (prereq.startsWith("NO")) {
     const req = parseAntirequisite(prereq);
-    logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
+    //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
     }
   } else {
     const req = parsePrerequisite(prereq);
-    logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
+    //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
     }
   }
 }
-
-// EXPERIMENT: reverted to doc10's simple shape — no recursive nested-OR handling.
-// If real data ever hands this a string like "( B OR C )" (a parenthesized group
-// nested inside an outer OR-list), this version will NOT recurse into it the way the
-// pre-session code did; it'll be passed straight to parseAntirequisite/
-// parsePrerequisite, which will most likely fail to produce a clean match (parens
-// aren't expected there) and fall through to the requirement-text/parse-failure
-// paths. The logging below is specifically so that outcome is visible if it happens,
-// rather than silently different.
+//uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
 function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
-  logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
+  //logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
 
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree: PrerequisiteTree = { OR: [] };
@@ -466,7 +346,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     ? parseAntirequisite(prereq)
     : parsePrerequisite(prereq);
 
-  logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
+  //logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
 
   if (req) {
     prereqTree.OR?.push(req);
@@ -486,11 +366,7 @@ function splitOnOr(prereqList: string): string[] {
     if (char === "(") depth++;
     else if (char === ")") depth--;
 
-    // Word boundary required both before and after the token — otherwise "OR" inside
-    // a longer word (e.g. "JUNIOR", "SENIOR") gets mistaken for the separator; this is
-    // the confirmed cause of the "JUNI"/"SENI" fragments — see issue #439. This is the
-    // one fix in this experiment kept exactly as before, since it's the only one with
-    // direct before/after log evidence proving it's necessary.
+    //word boundary check so words like "JUNIOR" and "SENIOR" don't get split on accident
     const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
     if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^OR\b/)) {
       parts.push(current.trim());
@@ -503,8 +379,8 @@ function splitOnOr(prereqList: string): string[] {
   }
 
   if (current.trim()) parts.push(current.trim());
-  logger.info(`splitOnOr input: ${JSON.stringify(prereqList)}`);
-  logger.info(`splitOnOr output: ${JSON.stringify(parts)}`);
+  //logger.info(`splitOnOr input: ${JSON.stringify(prereqList)}`);
+  //logger.info(`splitOnOr output: ${JSON.stringify(parts)}`);
   return parts;
 }
 
@@ -513,14 +389,9 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
     return {};
   }
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  // EXPERIMENT: reverted to doc10's naive split — no depth tracking, no word-boundary
-  // check. This means a word containing "AND" next to a non-letter (e.g. "STANDARD",
-  // "COMMAND") WOULD be vulnerable to the same corruption #439 fixed for "OR", if such
-  // a word ever appears in real prereqList text — logged here so that's visible if it
-  // happens during testing, rather than silently corrupting data unnoticed.
   const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
-  logger.info(`NAIVE AND-split input: ${JSON.stringify(prereqList)}`);
-  logger.info(`NAIVE AND-split output: ${JSON.stringify(prereqs)}`);
+  //logger.info(`NAIVE AND-split input: ${JSON.stringify(prereqList)}`);
+  //logger.info(`NAIVE AND-split output: ${JSON.stringify(prereqs)}`);
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = splitOnOr(prereq.slice(1, -1).trim());
@@ -552,7 +423,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
-  logger.info(`Scraping prerequisites for ${deptCode}...`);
+  //ogger.info(`Scraping prerequisites for ${deptCode}...`);
   const prereqPageText = await fetchWithDelay(url);
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();
@@ -575,8 +446,8 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       if (courseId.match(/\* ([&A-Z\d ]+) since/)) {
         courseId = courseId.split("*")[0].trim();
       }
-      logger.info(`RAW PREREQ LIST for ${courseId}: ${JSON.stringify(prereqList)}`);
-      logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
+      //logger.info(`RAW PREREQ LIST for ${courseId}: ${JSON.stringify(prereqList)}`);
+      //logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
       if (!isBalancedPrereqText(prereqList)) {
         logger.warn(
           `TRUNCATED PREREQ SOURCE for ${courseId}: unbalanced parentheses, likely cut off ` +
@@ -712,9 +583,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } /*else if (repeatText.trim() !== "") {
+  } else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }*/
+  }
 
   return {
     repeatabilityTimes: 0,
@@ -724,16 +595,10 @@ function parseRepeatability(repeatText: string): {
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
 
-// Only course/exam prereqs ever reach here — a `requirement` leaf is filtered out by the
-// caller before this is invoked, since it has no courseId/examName to contribute to the
-// junction table.
+//requirement leaves never reach here
 const prereqToString = (prereq: Exclude<Prerequisite, RequirementPrerequisite>) =>
   prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
 
-// A "requirement" leaf (free-text non-course clause, e.g. "UPPER DIVISION STANDING ONLY")
-// has no courseId/examName and isn't a dependency edge — it belongs in prerequisiteTree
-// for display, but must be excluded here so it doesn't pollute the prerequisite junction
-// table or crash prereqToString.
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
   const toEntry = (x: Prerequisite | PrerequisiteTree): string[] => {
     if (!isPrereq(x)) return prereqTreeToList(x);
@@ -748,13 +613,7 @@ function prereqTreeToList(tree: PrerequisiteTree): string[] {
   return [];
 }
 
-/**
- * Detects prerequisite source text that was cut off mid-clause (e.g. by a server-side
- * truncation bug on the registrar's page, as observed for PSYCH 173A). A well-formed
- * prereqList should have balanced parentheses and should never dip below zero depth.
- * This is a cheap sanity check, not a full grammar validator — it won't catch every
- * possible corruption, but it reliably catches dangling/truncated clauses.
- */
+//check for cliff-hanging source text like for PSYCH 173A
 function isBalancedPrereqText(prereqList: string): boolean {
   let depth = 0;
   for (const char of prereqList) {
@@ -863,10 +722,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
+    if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }*/
+    }
   }
 
   const prereqRows = deepSortArray(
@@ -903,10 +762,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
+    if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }*/
+    }
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
