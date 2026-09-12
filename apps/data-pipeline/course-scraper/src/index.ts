@@ -538,7 +538,7 @@ async function scrapePrerequisites() {
   }
   return deptsToPrereqs;
 }
-
+//test
 const deepSortArray = <T extends unknown[]>(array: T): T => sortKeys(array, { deep: true });
 
 function generateGEs(rawCourse: string[]) {
