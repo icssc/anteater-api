@@ -318,7 +318,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "requirement", ...extracted };
   }
 
-  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  //logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
@@ -329,17 +329,17 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
-    } else {
+    } /*else {
       logger.warn(`DROPPED AND-LEAF (antirequisite): ${JSON.stringify(prereq)}`);
-    }
+    }*/
   } else {
     const req = parsePrerequisite(prereq);
     //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
-    } else {
+    } /*else {
       logger.warn(`DROPPED AND-LEAF: ${JSON.stringify(prereq)}`);
-    }
+    }*/
   }
 }
 //uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
@@ -366,9 +366,9 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
   if (req) {
     prereqTree.OR?.push(req);
-  } else {
+  } /*else {
     logger.warn(`Undefined prerequisite parsed in buildORLeaf: ${JSON.stringify(prereq)}`);
-  }
+  }*/
 }
 
 const BOILERPLATE_STRINGS = ["Display all prerequisites on file submitted by department."];
@@ -448,9 +448,9 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       }
       if (orTree.OR?.length) {
         prereqTree.AND?.push(orTree);
-      } else {
+      } /*else {
         logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
-      }
+      }*/
     } else {
       buildANDLeaf(prereqTree, prereq);
     }
@@ -464,19 +464,11 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       prereqTree.NOT = undefined;
     }
   }
-  const result = {
+  return {
     ...(prereqTree.AND?.length && { AND: prereqTree.AND }),
     ...(prereqTree.OR?.length && { OR: prereqTree.OR }),
     ...(prereqTree.NOT?.length && { NOT: prereqTree.NOT }),
   };
-  if (
-    !Object.keys(result).length &&
-    prereqList.trim() &&
-    !BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))
-  ) {
-    logger.warn(`ENTIRE PREREQ TEXT PRODUCED EMPTY TREE: ${JSON.stringify(prereqList)}`);
-  }
-  return result;
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
@@ -507,8 +499,8 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       //logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
       if (!isBalancedPrereqText(prereqList)) {
         logger.warn(
-          `TRUNCATED PREREQ SOURCE for ${courseId}: unbalanced parentheses, likely cut off ` +
-            `by the registrar's page. Skipping to avoid building a corrupted prerequisite tree. ` +
+          `Truncated prereq source for ${courseId}: unbalanced parentheses, likely cut off ` +
+            `by the registrar's page. Skipping. ` +
             `Raw text: ${JSON.stringify(prereqList)}`,
         );
         skippedCourseIds.push(courseId);
@@ -640,9 +632,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } /*else if (repeatText.trim() !== "") {
+  } else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }*/
+  }
 
   return {
     repeatabilityTimes: 0,
@@ -779,10 +771,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
+    if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }*/
+    }
   }
 
   const prereqRows = deepSortArray(
@@ -819,10 +811,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
+    if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }*/
+    }
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
