@@ -318,7 +318,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "requirement", ...extracted };
   }
 
-  //logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
@@ -329,12 +329,16 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
+    } else {
+      logger.warn(`DROPPED AND-LEAF (antirequisite): ${JSON.stringify(prereq)}`);
     }
   } else {
     const req = parsePrerequisite(prereq);
     //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
+    } else {
+      logger.warn(`DROPPED AND-LEAF: ${JSON.stringify(prereq)}`);
     }
   }
 }
@@ -362,6 +366,8 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
   if (req) {
     prereqTree.OR?.push(req);
+  } else {
+    logger.warn(`Undefined prerequisite parsed in buildORLeaf: ${JSON.stringify(prereq)}`);
   }
 }
 
@@ -393,8 +399,8 @@ function splitOnAnd(prereqList: string): string[] {
   }
 
   if (current.trim()) parts.push(current.trim());
-  logger.info(`splitOnAnd input: ${JSON.stringify(prereqList)}`);
-  logger.info(`splitOnAnd output: ${JSON.stringify(parts)}`);
+  //logger.info(`splitOnAnd input: ${JSON.stringify(prereqList)}`);
+  //logger.info(`splitOnAnd output: ${JSON.stringify(parts)}`);
   return parts;
 }
 
@@ -442,6 +448,8 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       }
       if (orTree.OR?.length) {
         prereqTree.AND?.push(orTree);
+      } else {
+        logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
       }
     } else {
       buildANDLeaf(prereqTree, prereq);
@@ -456,15 +464,23 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       prereqTree.NOT = undefined;
     }
   }
-  return {
+  const result = {
     ...(prereqTree.AND?.length && { AND: prereqTree.AND }),
     ...(prereqTree.OR?.length && { OR: prereqTree.OR }),
     ...(prereqTree.NOT?.length && { NOT: prereqTree.NOT }),
   };
+  if (
+    !Object.keys(result).length &&
+    prereqList.trim() &&
+    !BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))
+  ) {
+    logger.warn(`ENTIRE PREREQ TEXT PRODUCED EMPTY TREE: ${JSON.stringify(prereqList)}`);
+  }
+  return result;
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
-  //ogger.info(`Scraping prerequisites for ${deptCode}...`);
+  //logger.info(`Scraping prerequisites for ${deptCode}...`);
   const prereqPageText = await fetchWithDelay(url);
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();

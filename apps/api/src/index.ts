@@ -9,7 +9,6 @@ import {
   globalRateLimiter,
   headerInjector,
   ipBasedRateLimiter,
-  keyVerifier,
   openapiMeta,
   redirectBrowserToDocs,
   referenceOgTagInjector,
@@ -60,7 +59,7 @@ app.notFound((c) =>
 
 app.use("/", redirectBrowserToDocs);
 app.use("/v2/*", headerInjector);
-app.use("/v2/*", keyVerifier);
+//app.use("/v2/*", keyVerifier);
 app.use("/v2/*", globalRateLimiter);
 app.use("/v2/*", ipBasedRateLimiter);
 app.use("/v2/*", cors());
