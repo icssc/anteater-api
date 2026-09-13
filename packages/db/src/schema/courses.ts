@@ -25,6 +25,7 @@ export type CourseCorequisite = {
   prereqType: "course";
   coreq: true;
   courseId: string;
+  minGrade?: string;
 };
 
 export type ExamPrerequisite = {
@@ -33,7 +34,19 @@ export type ExamPrerequisite = {
   minGrade?: string;
 };
 
-export type Prerequisite = CoursePrerequisite | CourseCorequisite | ExamPrerequisite;
+export type RequirementPrerequisite = {
+  prereqType: "requirement";
+  requirement?: string;
+  category?: "standing" | "affiliation";
+  value?: string;
+  source?: "registrar" | "catalogue";
+};
+
+export type Prerequisite =
+  | CoursePrerequisite
+  | CourseCorequisite
+  | ExamPrerequisite
+  | RequirementPrerequisite;
 
 export type PrerequisiteTree = {
   AND?: Array<Prerequisite | PrerequisiteTree>;

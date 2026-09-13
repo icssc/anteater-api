@@ -157,6 +157,12 @@ export const prerequisiteSchema = z.union([
     examName: z.string(),
     minGrade: z.string().optional(),
   }),
+  z.object({
+    prereqType: z.literal("requirement"),
+    requirement: z.string().optional(),
+    category: z.enum(["standing", "affiliation"]).optional(),
+    value: z.string().optional(),
+  }),
 ]);
 
 export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({
