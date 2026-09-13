@@ -219,6 +219,7 @@ type RequirementExtraction = { category: RequirementCategory; value: string };
 
 const STANDING_EXTRACTORS: RegExp[] = [
   /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+  /^(NEW TRANSFERS)\s+ONLY$/i,
 ];
 
 const AFFILIATION_EXTRACTORS: RegExp[] = [
