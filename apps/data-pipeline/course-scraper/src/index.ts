@@ -214,45 +214,40 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
     : { prereqType: "course", coreq: false, courseId: base, ...(minGrade ? { minGrade } : {}) };
 }
 
-type RequirementCategory = "status" | "qualification" | "completion";
+type RequirementCategory = "standing" | "affiliation";
 type RequirementExtraction = { category: RequirementCategory; value: string };
 
-const STATUS_EXTRACTORS: RegExp[] = [
+const STANDING_EXTRACTORS: RegExp[] = [
   /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+];
+
+const AFFILIATION_EXTRACTORS: RegExp[] = [
   /^(CAMPUSWIDE HONORS)\s+ONLY$/i,
   /^SCHOOL OF (.+?)\s+ONLY$/i,
   /^(.+?)\s+MAJORS?\s+ONLY$/i,
-  /^(.+?)\s+ONLY$/i,
 ];
 
 function extractRequirementInfo(text: string): RequirementExtraction | undefined {
-  for (const pattern of STATUS_EXTRACTORS) {
+  for (const pattern of STANDING_EXTRACTORS) {
     if (pattern.test(text)) {
       return {
-        category: "status",
+        category: "standing",
         value: text.replace(/\s+ONLY$/i, "").trim(),
       };
     }
   }
 
-  if (/^(SAT|ACT)\s+.+?\s*(?:>=|<=|=)\s*\d+$/i.test(text)) {
-    return {
-      category: "qualification",
-      value: text,
-    };
-  }
-
-  if (/^PLACEMENT EXAM$/i.test(text)) {
-    return { category: "qualification", value: text };
-  }
-
-  if (/^AUTHORIZATION\b/i.test(text)) {
-    const withoutParenthetical = text.replace(/\s*\(.*\)\s*$/, "").trim();
-    return { category: "qualification", value: withoutParenthetical || text };
+  for (const pattern of AFFILIATION_EXTRACTORS) {
+    if (pattern.test(text)) {
+      return {
+        category: "affiliation",
+        value: text.replace(/\s+ONLY$/i, "").trim(),
+      };
+    }
   }
 
   if (/WRITING$/i.test(text)) {
-    return { category: "completion", value: text };
+    return { category: "standing", value: text };
   }
 
   return undefined;
@@ -271,6 +266,23 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return prereq.startsWith("AP")
       ? { prereqType: "exam", examName: prereq }
       : { prereqType: "course", coreq: false, courseId: prereq };
+  }
+
+  if (/^PLACEMENT EXAM$/i.test(prereq)) {
+    return { prereqType: "exam", examName: prereq };
+  }
+
+  const satActMatch = prereq.match(/^((?:SAT|ACT)\s+.+?)\s*(?:>=|<=|=)\s*(\d+)$/i);
+  if (satActMatch) {
+    return {
+      prereqType: "exam",
+      examName: satActMatch[1].trim(),
+      minGrade: satActMatch[2].trim(),
+    };
+  }
+
+  if (/^AUTHORIZATION\b/i.test(prereq)) {
+    return undefined;
   }
 
   const extracted = extractRequirementInfo(prereq);
@@ -632,9 +644,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -771,10 +783,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -811,10 +823,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {

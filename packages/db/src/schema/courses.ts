@@ -37,7 +37,7 @@ export type ExamPrerequisite = {
 export type RequirementPrerequisite = {
   prereqType: "requirement";
   requirement?: string;
-  category?: "status" | "qualification" | "completion";
+  category?: "standing" | "affiliation";
   value?: string;
   source?: "registrar" | "catalogue";
 };

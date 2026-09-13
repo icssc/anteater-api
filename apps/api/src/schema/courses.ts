@@ -160,7 +160,7 @@ export const prerequisiteSchema = z.union([
   z.object({
     prereqType: z.literal("requirement"),
     requirement: z.string().optional(),
-    category: z.enum(["status", "qualification", "completion"]).optional(),
+    category: z.enum(["standing", "affiliation"]).optional(),
     value: z.string().optional(),
   }),
 ]);
