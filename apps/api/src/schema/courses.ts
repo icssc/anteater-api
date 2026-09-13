@@ -159,9 +159,19 @@ export const prerequisiteSchema = z.union([
   }),
   z.object({
     prereqType: z.literal("requirement"),
-    requirement: z.string().optional(),
-    category: z.enum(["standing", "affiliation"]).optional(),
-    value: z.string().optional(),
+    requirement: z.string().optional().openapi({
+      description:
+        "Raw, plain text that couldn't be classified into a 'category'/'value' pair below",
+      example: "Bio 199 Packet must be submitted to Bio Sci Student Affairs prior to enrollment.",
+    }),
+    category: z.enum(["standing", "affiliation"]).optional().openapi({
+      description:
+        "'standing' covers class standing, new transfers, and writing requirements; 'affiliation' covers major, school, and campuswide honors",
+    }),
+    value: z.string().optional().openapi({
+      description: "The specific standing/affiliation.",
+      example: "SCHOOL OF I&C SCI",
+    }),
   }),
 ]);
 
