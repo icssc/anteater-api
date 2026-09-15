@@ -205,13 +205,10 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
     }
     return undefined;
   }
-
   if (isExam) {
     return { prereqType: "exam", examName: base, ...(minGrade ? { minGrade } : {}) };
   }
-  return coreq
-    ? { prereqType: "course", coreq: true, courseId: base, ...(minGrade ? { minGrade } : {}) }
-    : { prereqType: "course", coreq: false, courseId: base, ...(minGrade ? { minGrade } : {}) };
+  return { prereqType: "course", coreq, courseId: base, ...(minGrade ? { minGrade } : {}) };
 }
 
 type RequirementCategory = "standing" | "affiliation";
