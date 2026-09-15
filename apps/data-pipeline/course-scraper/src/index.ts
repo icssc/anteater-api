@@ -273,7 +273,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "exam", examName: prereq };
   }
 
-  const satActMatch = prereq.match(/^((?:SAT|ACT)\s+.+?)\s*(?:>=|<=|=)\s*(\d+)$/i);
+  const satActMatch = prereq.match(/^((?:SAT|ACT)\s+.+?)\s*>=\s*(\d+)$/i);
   if (satActMatch) {
     return {
       prereqType: "exam",
@@ -331,7 +331,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "requirement", ...extracted };
   }
 
-  //logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
