@@ -400,8 +400,8 @@ function splitOnAnd(prereqList: string): string[] {
     // Check if current position has "AND" at depth 0. A word boundary is required
     // both before and after the token, so "AND" inside a longer word (e.g. "STANDING",
     // "COMMAND") is never mistaken for the separator
-    const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
-    if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^AND\b/)) {
+    const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
+    if (depth === 0 && !precededByWhiteSpace && prereqList.slice(i).match(/^AND\b/)) {
       parts.push(current.trim());
       current = "";
       i += 2; // skip "AND"
@@ -429,8 +429,8 @@ function splitOnOr(prereqList: string): string[] {
     else if (char === ")") depth--;
 
     //word boundary check so words like "JUNIOR" and "SENIOR" don't get split on accident
-    const precededByLetter = i > 0 && /[A-Za-z]/.test(prereqList[i - 1]);
-    if (depth === 0 && !precededByLetter && prereqList.slice(i).match(/^OR\b/)) {
+    const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
+    if (depth === 0 && !precededByWhiteSpace && prereqList.slice(i).match(/^OR\b/)) {
       parts.push(current.trim());
       current = "";
       i += 1; // skip "OR"
