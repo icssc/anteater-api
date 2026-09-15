@@ -447,9 +447,6 @@ function splitOnOr(prereqList: string): string[] {
 }
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
-  if (BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))) {
-    return {};
-  }
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
   const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
@@ -485,7 +482,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
-  //logger.info(`Scraping prerequisites for ${deptCode}...`);
+  logger.info(`Scraping prerequisites for ${deptCode}...`);
   const prereqPageText = await fetchWithDelay(url);
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();
@@ -508,6 +505,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       if (courseId.match(/\* ([&A-Z\d ]+) since/)) {
         courseId = courseId.split("*")[0].trim();
       }
+      if (BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))) return;
       //logger.info(`RAW PREREQ LIST for ${courseId}: ${JSON.stringify(prereqList)}`);
       //logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
       if (!isBalancedPrereqText(prereqList)) {
