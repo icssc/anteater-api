@@ -367,15 +367,6 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     }
     return;
   }
-
-  const andParts = splitOnAnd(prereq);
-  if (andParts.length > 1) {
-    const andTree = buildPrereqTree(prereq);
-    if (Object.keys(andTree).length) {
-      prereqTree.OR?.push(andTree);
-    }
-    return;
-  }
   const req: Prerequisite | undefined = prereq.startsWith("NO")
     ? parseAntirequisite(prereq)
     : parsePrerequisite(prereq);
