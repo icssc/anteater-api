@@ -144,7 +144,8 @@ export const websocQuerySchema = z.object({
   }),
   days: daysSchema.optional().openapi({
     description:
-      "Only include sections which meet on at least one of the specified days of the week",
+      "Comma-separated day tokens. Canonical tokens are M, Tu, W, Th, F, S, and Su; common full and abbreviated aliases are also accepted. Only include sections which meet on at least one supplied day. Concatenated tokens such as TuTh are invalid.",
+    example: "Tu,Th",
   }),
   building: z.string().optional().openapi({
     description: "Only include sections which have at least one meeting in the specified building",
