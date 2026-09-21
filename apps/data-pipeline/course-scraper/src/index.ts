@@ -65,32 +65,6 @@ const prereqFieldLabels = {
   Title: 1,
   Prerequisite: 2,
 };
-type StandingAffiliationRow = { courseId: string; raw: string; extracted: string };
-const standingAffiliationRows: StandingAffiliationRow[] = [];
-
-// Course IDs where at least one standing- or affiliation-type clause was
-// successfully matched while building that course's tree.
-const coursesWithStandingOrAffiliationClause = new Set<string>();
-
-// Carries the course id down through the tree-building functions so
-// flagStandingOrAffiliationClause knows which course to mark.
-type RequirementLogContext = { courseId: string };
-
-function flagStandingOrAffiliationClause(ctx: RequirementLogContext) {
-  coursesWithStandingOrAffiliationClause.add(ctx.courseId);
-}
-
-function writeStandingAffiliationJson(path: string, rows: StandingAffiliationRow[]) {
-  // `extracted` is a JSON string (from JSON.stringify(resolved) in
-  // buildPrereqTree); parse it back so it pretty-prints as a nested object
-  // rather than an escaped string.
-  const pretty = rows.map((r) => ({
-    courseId: r.courseId,
-    raw: r.raw,
-    extracted: JSON.parse(r.extracted),
-  }));
-  writeFileSync(path, JSON.stringify(pretty, null, 2));
-}
 
 const unitFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
@@ -302,7 +276,7 @@ function extractStandingOrAffiliation(
   return undefined;
 }
 
-function parsePrerequisite(prereq: string, ctx: RequirementLogContext): Prerequisite | undefined {
+function parsePrerequisite(prereq: string): Prerequisite | undefined {
   if (/\(\s*recommended\s*\)/i.test(prereq)) {
     //logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
     return undefined;
@@ -336,12 +310,10 @@ function parsePrerequisite(prereq: string, ctx: RequirementLogContext): Prerequi
 
   const extracted = extractStandingOrAffiliation(prereq);
 
-  flagStandingOrAffiliationClause(ctx);
-
   return extracted;
 }
 
-function parseAntirequisite(prereq: string, ctx: RequirementLogContext): Prerequisite | undefined {
+function parseAntirequisite(prereq: string): Prerequisite | undefined {
   const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+?)\sscore\sof\s(\d)\sor\sgreater$/);
   if (antiAPReqMatch) {
     return {
@@ -371,7 +343,6 @@ function parseAntirequisite(prereq: string, ctx: RequirementLogContext): Prerequ
   //ex: NO PSYCHOLOGY MAJORS ONLY
   const extracted = extractStandingOrAffiliation(withoutNo);
   if (extracted) {
-    flagStandingOrAffiliationClause(ctx);
     /*logger.info(
       `NEGATED REQUIREMENT CAPTURED [${extracted.category}: ${extracted.value}]: ${JSON.stringify(prereq)}`,
     );*/
@@ -382,10 +353,10 @@ function parseAntirequisite(prereq: string, ctx: RequirementLogContext): Prerequ
   return undefined;
 }
 
-function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: RequirementLogContext) {
+function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   //logger.info(`AND LEAF INPUT: ${JSON.stringify(prereq)}`);
   if (prereq.startsWith("NO")) {
-    const req = parseAntirequisite(prereq, ctx);
+    const req = parseAntirequisite(prereq);
     //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
@@ -393,7 +364,7 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: Require
       logger.warn(`DROPPED AND-LEAF (antirequisite): ${JSON.stringify(prereq)}`);
     }*/
   } else {
-    const req = parsePrerequisite(prereq, ctx);
+    const req = parsePrerequisite(prereq);
     //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
@@ -403,14 +374,14 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: Require
   }
 }
 //uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
-function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: RequirementLogContext) {
+function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   //logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
 
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree: PrerequisiteTree = { OR: [] };
     const orReqs = splitOnOr(prereq.slice(1, -1).trim());
     for (const orReq of orReqs) {
-      buildORLeaf(nestedTree, orReq.trim(), ctx);
+      buildORLeaf(nestedTree, orReq.trim());
     }
     if (nestedTree.OR?.length) {
       prereqTree.OR?.push(nestedTree.OR.length === 1 ? nestedTree.OR[0] : nestedTree);
@@ -418,8 +389,8 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: Requirem
     return;
   }
   const req: Prerequisite | undefined = prereq.startsWith("NO")
-    ? parseAntirequisite(prereq, ctx)
-    : parsePrerequisite(prereq, ctx);
+    ? parseAntirequisite(prereq)
+    : parsePrerequisite(prereq);
 
   //logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
 
@@ -443,9 +414,6 @@ function splitOnAnd(prereqList: string): string[] {
     if (char === "(") depth++;
     else if (char === ")") depth--;
 
-    // Check if current position has "AND" at depth 0. A word boundary is required
-    // both before and after the token, so "AND" inside a longer word (e.g. "STANDING",
-    // "COMMAND") is never mistaken for the separator
     const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
     if (depth === 0 && precededByWhiteSpace && prereqList.slice(i).match(/^AND\b/)) {
       parts.push(current.trim());
@@ -501,7 +469,7 @@ function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree
       const orReqs = splitOnOr(prereq.slice(1, -1).trim());
       const orTree: PrerequisiteTree = { OR: [] };
       for (const orReq of orReqs) {
-        buildORLeaf(orTree, orReq.trim(), ctx);
+        buildORLeaf(orTree, orReq.trim());
       }
       if (orTree.OR?.length) {
         prereqTree.AND?.push(orTree);
@@ -509,7 +477,7 @@ function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree
         logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
       }*/
     } else {
-      buildANDLeaf(prereqTree, prereq, ctx);
+      buildANDLeaf(prereqTree, prereq);
     }
   }
   if (prereqTree.AND) {
@@ -526,13 +494,6 @@ function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree
     ...(prereqTree.OR?.length && { OR: prereqTree.OR }),
     ...(prereqTree.NOT?.length && { NOT: prereqTree.NOT }),
   };
-  if (coursesWithStandingOrAffiliationClause.has(courseId)) {
-    standingAffiliationRows.push({
-      courseId,
-      raw: prereqList,
-      extracted: JSON.stringify(resolved),
-    });
-  }
   return resolved;
 }
 
@@ -1011,11 +972,6 @@ async function main() {
       ),
     );
     logger.info("Wrote prerequisites to file.");
-    writeStandingAffiliationJson(
-      `${__dirname}/../logs/requirement-clauses.json`,
-      standingAffiliationRows,
-    );
-    logger.info(`Wrote ${standingAffiliationRows.length} requirement clause row(s) to JSON.`);
   }
   logger.info("Scraping courses...");
   logger.info("Scraping list of departments...");
@@ -1035,13 +991,6 @@ async function main() {
       .filter((entry) => !!entry),
   );
   logger.info(`Found ${departments.size} departments to scrape`);
-  /*logger.info(`Departments: ${[...departments.keys()].sort().join(", ")}`);
-  const registrarKeys = new Set(prerequisites.keys());
-  const catalogueKeys = new Set(departments.keys());
-  const inRegistrarNotCatalogue = [...registrarKeys].filter((k) => !catalogueKeys.has(k));
-  const inCatalogueNotRegistrar = [...catalogueKeys].filter((k) => !registrarKeys.has(k));
-  logger.warn(`Registrar depts with no catalogue match: ${inRegistrarNotCatalogue.sort().join(", ")}`);
-  logger.warn(`Catalogue depts with no registrar match: ${inCatalogueNotRegistrar.sort().join(", ")}`);*/
   for (const [deptCode, deptPath] of departments) {
     await scrapeCoursesInDepartment({
       db,
