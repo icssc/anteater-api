@@ -140,6 +140,52 @@ export const coursesByCursorQuerySchema = z.object({
   }),
 });
 
+const standingPrerequisiteSchema = z.union([
+  z
+    .object({
+      prereqType: z.literal("standing"),
+      classLevel: z.enum([
+        "FRESHMAN",
+        "FRESHMEN",
+        "SOPHOMORE",
+        "JUNIOR",
+        "SENIOR",
+        "LOWER DIVISION",
+        "UPPER DIVISION",
+        "GRADUATE",
+        "NEW TRANSFERS",
+      ]),
+    })
+    .strict(),
+  z
+    .object({
+      prereqType: z.literal("standing"),
+      writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+    })
+    .strict(),
+]);
+
+const affiliationPrerequisiteSchema = z.union([
+  z
+    .object({
+      prereqType: z.literal("affiliation"),
+      major: z.string(),
+    })
+    .strict(),
+  z
+    .object({
+      prereqType: z.literal("affiliation"),
+      school: z.string(),
+    })
+    .strict(),
+  z
+    .object({
+      prereqType: z.literal("affiliation"),
+      honors: z.literal(true),
+    })
+    .strict(),
+]);
+
 export const prerequisiteSchema = z.union([
   z.object({
     prereqType: z.literal("course"),
@@ -147,32 +193,20 @@ export const prerequisiteSchema = z.union([
     courseId: z.string(),
     minGrade: z.string().optional(),
   }),
+
   z.object({
     prereqType: z.literal("course"),
     coreq: z.literal(true),
     courseId: z.string(),
   }),
+
   z.object({
     prereqType: z.literal("exam"),
     examName: z.string(),
     minGrade: z.string().optional(),
   }),
-  z.object({
-    prereqType: z.literal("requirement"),
-    requirement: z.string().optional().openapi({
-      description:
-        "Raw, plain text that couldn't be classified into a 'category'/'value' pair below",
-      example: "Bio 199 Packet must be submitted to Bio Sci Student Affairs prior to enrollment.",
-    }),
-    category: z.enum(["standing", "affiliation"]).optional().openapi({
-      description:
-        "'standing' covers class standing, new transfers, and writing requirements; 'affiliation' covers major, school, and campuswide honors",
-    }),
-    value: z.string().optional().openapi({
-      description: "The specific standing/affiliation.",
-      example: "SCHOOL OF I&C SCI",
-    }),
-  }),
+  standingPrerequisiteSchema,
+  affiliationPrerequisiteSchema,
 ]);
 
 export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({

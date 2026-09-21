@@ -5,10 +5,13 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type {
+  AffiliationPrerequisite,
+  ClassLevel,
   CoursePrerequisite,
   Prerequisite,
   PrerequisiteTree,
-  RequirementPrerequisite,
+  StandingPrerequisite,
+  WritingRequirement,
 } from "@packages/db/schema";
 import {
   course,
@@ -62,6 +65,32 @@ const prereqFieldLabels = {
   Title: 1,
   Prerequisite: 2,
 };
+type StandingAffiliationRow = { courseId: string; raw: string; extracted: string };
+const standingAffiliationRows: StandingAffiliationRow[] = [];
+
+// Course IDs where at least one standing- or affiliation-type clause was
+// successfully matched while building that course's tree.
+const coursesWithStandingOrAffiliationClause = new Set<string>();
+
+// Carries the course id down through the tree-building functions so
+// flagStandingOrAffiliationClause knows which course to mark.
+type RequirementLogContext = { courseId: string };
+
+function flagStandingOrAffiliationClause(ctx: RequirementLogContext) {
+  coursesWithStandingOrAffiliationClause.add(ctx.courseId);
+}
+
+function writeStandingAffiliationJson(path: string, rows: StandingAffiliationRow[]) {
+  // `extracted` is a JSON string (from JSON.stringify(resolved) in
+  // buildPrereqTree); parse it back so it pretty-prints as a nested object
+  // rather than an escaped string.
+  const pretty = rows.map((r) => ({
+    courseId: r.courseId,
+    raw: r.raw,
+    extracted: JSON.parse(r.extracted),
+  }));
+  writeFileSync(path, JSON.stringify(pretty, null, 2));
+}
 
 const unitFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
@@ -211,47 +240,69 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   return { prereqType: "course", coreq, courseId: base, ...(minGrade ? { minGrade } : {}) };
 }
 
-type RequirementCategory = "standing" | "affiliation";
-type RequirementExtraction = { category: RequirementCategory; value: string };
+function extractStandingOrAffiliation(
+  text: string,
+): StandingPrerequisite | AffiliationPrerequisite | undefined {
+  const classLevelMatch = text.match(
+    /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+  );
 
-const STANDING_EXTRACTORS: RegExp[] = [
-  /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
-  /^(NEW TRANSFERS)\s+ONLY$/i,
-];
+  if (classLevelMatch) {
+    const classLevel = classLevelMatch[1] as ClassLevel;
 
-const AFFILIATION_EXTRACTORS: RegExp[] = [
-  /^(CAMPUSWIDE HONORS)\s+ONLY$/i,
-  /^SCHOOL OF (.+?)\s+ONLY$/i,
-  /^(.+?)\s+MAJORS?\s+ONLY$/i,
-];
-
-function extractRequirementInfo(text: string): RequirementExtraction | undefined {
-  for (const pattern of STANDING_EXTRACTORS) {
-    if (pattern.test(text)) {
-      return {
-        category: "standing",
-        value: text.replace(/\s+ONLY$/i, "").trim(),
-      };
-    }
+    return {
+      prereqType: "standing",
+      classLevel,
+    };
   }
 
-  for (const pattern of AFFILIATION_EXTRACTORS) {
-    if (pattern.test(text)) {
-      return {
-        category: "affiliation",
-        value: text.replace(/\s+ONLY$/i, "").trim(),
-      };
-    }
+  if (/^NEW TRANSFERS\s+ONLY$/i.test(text)) {
+    const classLevel: ClassLevel = "NEW TRANSFERS";
+
+    return {
+      prereqType: "standing",
+      classLevel,
+    };
   }
 
-  if (/WRITING$/i.test(text)) {
-    return { category: "standing", value: text };
+  if (/^LOWER DIVISION WRITING$/i.test(text) || /^ENTRY LEVEL WRITING$/i.test(text)) {
+    const writingRequirement = text as WritingRequirement;
+
+    return {
+      prereqType: "standing",
+      writingRequirement,
+    };
+  }
+
+  if (/^CAMPUSWIDE HONORS\s+ONLY$/i.test(text)) {
+    return { prereqType: "affiliation", honors: true };
+  }
+
+  const schoolMatch = text.match(/^SCHOOL OF (.+?)\s+ONLY$/i);
+
+  if (schoolMatch) {
+    return {
+      prereqType: "affiliation",
+      school: text
+        .replace(/^SCHOOL OF\s+/i, "")
+        .replace(/\s+ONLY$/i, "")
+        .trim(),
+    };
+  }
+
+  const majorMatch = text.match(/^(.+?)\s+MAJORS?\s+ONLY$/i);
+
+  if (majorMatch) {
+    return {
+      prereqType: "affiliation",
+      major: text.replace(/\s+MAJORS?\s+ONLY$/i, "").trim(),
+    };
   }
 
   return undefined;
 }
 
-function parsePrerequisite(prereq: string): Prerequisite | undefined {
+function parsePrerequisite(prereq: string, ctx: RequirementLogContext): Prerequisite | undefined {
   if (/\(\s*recommended\s*\)/i.test(prereq)) {
     //logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
     return undefined;
@@ -283,16 +334,14 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return undefined;
   }
 
-  const extracted = extractRequirementInfo(prereq);
-  /*logger.info(
-    `REQUIREMENT TEXT CAPTURED${extracted ? ` [${extracted.category}: ${extracted.value}]` : ""}: ${JSON.stringify(prereq)}`,
-  );*/
-  return extracted
-    ? { prereqType: "requirement", ...extracted }
-    : { prereqType: "requirement", requirement: prereq };
+  const extracted = extractStandingOrAffiliation(prereq);
+
+  flagStandingOrAffiliationClause(ctx);
+
+  return extracted;
 }
 
-function parseAntirequisite(prereq: string): Prerequisite | undefined {
+function parseAntirequisite(prereq: string, ctx: RequirementLogContext): Prerequisite | undefined {
   const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+?)\sscore\sof\s(\d)\sor\sgreater$/);
   if (antiAPReqMatch) {
     return {
@@ -320,22 +369,23 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   }
 
   //ex: NO PSYCHOLOGY MAJORS ONLY
-  const extracted = extractRequirementInfo(withoutNo);
+  const extracted = extractStandingOrAffiliation(withoutNo);
   if (extracted) {
+    flagStandingOrAffiliationClause(ctx);
     /*logger.info(
       `NEGATED REQUIREMENT CAPTURED [${extracted.category}: ${extracted.value}]: ${JSON.stringify(prereq)}`,
     );*/
-    return { prereqType: "requirement", ...extracted };
+    return extracted;
   }
 
   logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
-function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
+function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: RequirementLogContext) {
   //logger.info(`AND LEAF INPUT: ${JSON.stringify(prereq)}`);
   if (prereq.startsWith("NO")) {
-    const req = parseAntirequisite(prereq);
+    const req = parseAntirequisite(prereq, ctx);
     //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
@@ -343,7 +393,7 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
       logger.warn(`DROPPED AND-LEAF (antirequisite): ${JSON.stringify(prereq)}`);
     }*/
   } else {
-    const req = parsePrerequisite(prereq);
+    const req = parsePrerequisite(prereq, ctx);
     //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
@@ -353,14 +403,14 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   }
 }
 //uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
-function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
+function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string, ctx: RequirementLogContext) {
   //logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
 
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree: PrerequisiteTree = { OR: [] };
     const orReqs = splitOnOr(prereq.slice(1, -1).trim());
     for (const orReq of orReqs) {
-      buildORLeaf(nestedTree, orReq.trim());
+      buildORLeaf(nestedTree, orReq.trim(), ctx);
     }
     if (nestedTree.OR?.length) {
       prereqTree.OR?.push(nestedTree.OR.length === 1 ? nestedTree.OR[0] : nestedTree);
@@ -368,8 +418,8 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     return;
   }
   const req: Prerequisite | undefined = prereq.startsWith("NO")
-    ? parseAntirequisite(prereq)
-    : parsePrerequisite(prereq);
+    ? parseAntirequisite(prereq, ctx)
+    : parsePrerequisite(prereq, ctx);
 
   //logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
 
@@ -442,7 +492,8 @@ function splitOnOr(prereqList: string): string[] {
   return parts;
 }
 
-function buildPrereqTree(prereqList: string): PrerequisiteTree {
+function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree {
+  const ctx = { courseId, rawText: prereqList };
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
   const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
@@ -450,7 +501,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       const orReqs = splitOnOr(prereq.slice(1, -1).trim());
       const orTree: PrerequisiteTree = { OR: [] };
       for (const orReq of orReqs) {
-        buildORLeaf(orTree, orReq.trim());
+        buildORLeaf(orTree, orReq.trim(), ctx);
       }
       if (orTree.OR?.length) {
         prereqTree.AND?.push(orTree);
@@ -458,7 +509,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
         logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
       }*/
     } else {
-      buildANDLeaf(prereqTree, prereq);
+      buildANDLeaf(prereqTree, prereq, ctx);
     }
   }
   if (prereqTree.AND) {
@@ -470,11 +521,19 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       prereqTree.NOT = undefined;
     }
   }
-  return {
+  const resolved: PrerequisiteTree = {
     ...(prereqTree.AND?.length && { AND: prereqTree.AND }),
     ...(prereqTree.OR?.length && { OR: prereqTree.OR }),
     ...(prereqTree.NOT?.length && { NOT: prereqTree.NOT }),
   };
+  if (coursesWithStandingOrAffiliationClause.has(courseId)) {
+    standingAffiliationRows.push({
+      courseId,
+      raw: prereqList,
+      extracted: JSON.stringify(resolved),
+    });
+  }
+  return resolved;
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
@@ -513,7 +572,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         skippedCourseIds.push(courseId);
         return;
       }
-      prereqs.set(courseId, buildPrereqTree(prereqList));
+      prereqs.set(courseId, buildPrereqTree(prereqList, courseId));
     }
   });
   if (skippedCourseIds.length) {
@@ -652,13 +711,14 @@ function parseRepeatability(repeatText: string): {
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
 
 //requirement leaves never reach here
-const prereqToString = (prereq: Exclude<Prerequisite, RequirementPrerequisite>) =>
-  prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
+const prereqToString = (
+  prereq: Exclude<Prerequisite, StandingPrerequisite | AffiliationPrerequisite>,
+) => (prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName);
 
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
   const toEntry = (x: Prerequisite | PrerequisiteTree): string[] => {
     if (!isPrereq(x)) return prereqTreeToList(x);
-    return x.prereqType === "requirement" ? [] : [prereqToString(x)];
+    return x.prereqType === "standing" || x.prereqType === "affiliation" ? [] : [prereqToString(x)];
   };
   if (tree.AND) {
     return tree.AND.flatMap(toEntry);
@@ -771,7 +831,6 @@ async function scrapeCoursesInDepartment(meta: {
       departmentAlias: getDepartmentAlias(c.department),
     })),
   );
-
   const courseDiff = diffString(dbCourses, coursesForInsert);
   if (!courseDiff.length) {
     logger.info(`No difference found between database and scraped course data for ${deptCode}.`);
@@ -952,6 +1011,11 @@ async function main() {
       ),
     );
     logger.info("Wrote prerequisites to file.");
+    writeStandingAffiliationJson(
+      `${__dirname}/../logs/requirement-clauses.json`,
+      standingAffiliationRows,
+    );
+    logger.info(`Wrote ${standingAffiliationRows.length} requirement clause row(s) to JSON.`);
   }
   logger.info("Scraping courses...");
   logger.info("Scraping list of departments...");
@@ -971,6 +1035,13 @@ async function main() {
       .filter((entry) => !!entry),
   );
   logger.info(`Found ${departments.size} departments to scrape`);
+  /*logger.info(`Departments: ${[...departments.keys()].sort().join(", ")}`);
+  const registrarKeys = new Set(prerequisites.keys());
+  const catalogueKeys = new Set(departments.keys());
+  const inRegistrarNotCatalogue = [...registrarKeys].filter((k) => !catalogueKeys.has(k));
+  const inCatalogueNotRegistrar = [...catalogueKeys].filter((k) => !registrarKeys.has(k));
+  logger.warn(`Registrar depts with no catalogue match: ${inRegistrarNotCatalogue.sort().join(", ")}`);
+  logger.warn(`Catalogue depts with no registrar match: ${inCatalogueNotRegistrar.sort().join(", ")}`);*/
   for (const [deptCode, deptPath] of departments) {
     await scrapeCoursesInDepartment({
       db,
