@@ -463,7 +463,7 @@ function splitOnOr(prereqList: string): string[] {
   return parts;
 }
 
-function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree {
+function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
   const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
@@ -535,7 +535,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         skippedCourseIds.push(courseId);
         return;
       }
-      prereqs.set(courseId, buildPrereqTree(prereqList, courseId));
+      prereqs.set(courseId, buildPrereqTree(prereqList));
     }
   });
   if (skippedCourseIds.length) {
