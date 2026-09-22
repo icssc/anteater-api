@@ -206,6 +206,9 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
       }
       continue;
     }
+    logger.warn(
+      `Unrecognized annotation [${JSON.stringify(ann)}] in ${JSON.stringify(prereq)}; dropping entire match.`,
+    );
     return undefined;
   }
   if (isExam) {
@@ -349,7 +352,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return extracted;
   }
 
-  logger.warn(`UNPARSED ANTIREQUISITE: ${JSON.stringify(prereq)}`);
+  logger.warn(`Unparsed antirequisite: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
@@ -461,7 +464,6 @@ function splitOnOr(prereqList: string): string[] {
 }
 
 function buildPrereqTree(prereqList: string, courseId: string): PrerequisiteTree {
-  const ctx = { courseId, rawText: prereqList };
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
   const prereqs = splitOnAnd(prereqList);
   for (const prereq of prereqs) {
@@ -509,7 +511,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
       const prereqCell = $(entry[prereqFieldLabels.Prerequisite]);
-      const prereqCellHtml = prereqCell.html() ?? "";
+      //const prereqCellHtml = prereqCell.html() ?? "";
       const prereqList = prereqCell
         .contents()
         .map((_, node) => $(node).text())
