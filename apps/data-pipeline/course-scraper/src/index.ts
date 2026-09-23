@@ -177,9 +177,6 @@ async function fetchWithDelay(url: string, delayMs = 1000) {
   }
 }
 
-/*
-replaces old reqWithGradeMatch and courseCoreqMatch with this one function that can handle courses with both such as DRAMA 10 ( coreq ) ( minGrade )
- */
 function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   const match = prereq.match(/^([^()]+?)((?:\s*\([^()]*\))+)$/);
   if (!match) return undefined;
@@ -212,9 +209,9 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
     return undefined;
   }
   if (isExam) {
-    return { prereqType: "exam", examName: base, ...(minGrade ? { minGrade } : {}) };
+    return { prereqType: "exam", examName: base, minGrade };
   }
-  return { prereqType: "course", coreq, courseId: base, ...(minGrade ? { minGrade } : {}) };
+  return { prereqType: "course", coreq, courseId: base, minGrade };
 }
 
 function extractStandingOrAffiliation(
