@@ -145,22 +145,34 @@ const standingPrerequisiteSchema = z.object({
   standing: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("classLevel"),
-      classLevel: z.enum([
-        "FRESHMAN",
-        "FRESHMEN",
-        "SOPHOMORE",
-        "JUNIOR",
-        "SENIOR",
-        "LOWER DIVISION",
-        "UPPER DIVISION",
-        "GRADUATE",
-        "NEW TRANSFERS",
-      ]),
+      classLevel: z
+        .enum([
+          "FRESHMAN",
+          "FRESHMEN",
+          "SOPHOMORE",
+          "JUNIOR",
+          "SENIOR",
+          "LOWER DIVISION",
+          "UPPER DIVISION",
+          "GRADUATE",
+          "NEW TRANSFERS",
+        ])
+        .openapi({
+          description:
+            "The class standing required to take this course. Everything except Graduate and New Transfers are unit based.",
+          example: "JUNIOR",
+        }),
     }),
-    z.object({
-      type: z.literal("writingRequirement"),
-      writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
-    }),
+    z
+      .object({
+        type: z.literal("writingRequirement"),
+        writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+      })
+      .openapi({
+        description:
+          "The writing requirement that must've been completed prior to taking this course.",
+        example: "LOWER DIVISION WRITING",
+      }),
   ]),
 });
 
@@ -169,15 +181,24 @@ const affiliationPrerequisiteSchema = z.object({
   affiliation: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("major"),
-      major: z.string(),
+      major: z.string().openapi({
+        description: "Students must be this major to enroll in this course.",
+        example: "COMPUTER SCI & ENGR",
+      }),
     }),
     z.object({
       type: z.literal("school"),
-      school: z.string(),
+      school: z.string().openapi({
+        description: "Students must be in this school to enroll in this course.",
+        example: "I&C SCI",
+      }),
     }),
     z.object({
       type: z.literal("honors"),
-      honors: z.literal(true),
+      honors: z.literal(true).openapi({
+        description:
+          "Always true, only appears when students must be in the Campuswide Honors Program.",
+      }),
     }),
   ]),
 });
