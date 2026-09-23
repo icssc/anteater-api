@@ -47,37 +47,35 @@ export type ClassLevel =
 
 export type WritingRequirement = "LOWER DIVISION WRITING" | "ENTRY LEVEL WRITING";
 
-export type StandingPrerequisite =
-  | {
-      prereqType: "standing";
-      classLevel: ClassLevel;
-      writingRequirement?: never;
-    }
-  | {
-      prereqType: "standing";
-      writingRequirement: WritingRequirement;
-      classLevel?: never;
-    };
+export type StandingPrerequisite = {
+  prereqType: "standing";
+  standing:
+    | {
+        type: "classLevel";
+        classLevel: ClassLevel;
+      }
+    | {
+        type: "writingRequirement";
+        writingRequirement: WritingRequirement;
+      };
+};
 
-export type AffiliationPrerequisite =
-  | {
-      prereqType: "affiliation";
-      major: string;
-      school?: never;
-      honors?: never;
-    }
-  | {
-      prereqType: "affiliation";
-      school: string;
-      major?: never;
-      honors?: never;
-    }
-  | {
-      prereqType: "affiliation";
-      honors: true;
-      major?: never;
-      school?: never;
-    };
+export type AffiliationPrerequisite = {
+  prereqType: "affiliation";
+  affiliation:
+    | {
+        type: "major";
+        major: string;
+      }
+    | {
+        type: "school";
+        school: string;
+      }
+    | {
+        type: "honors";
+        honors: true;
+      };
+};
 
 export type Prerequisite =
   | CoursePrerequisite

@@ -140,10 +140,11 @@ export const coursesByCursorQuerySchema = z.object({
   }),
 });
 
-const standingPrerequisiteSchema = z.union([
-  z
-    .object({
-      prereqType: z.literal("standing"),
+const standingPrerequisiteSchema = z.object({
+  prereqType: z.literal("standing"),
+  standing: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("classLevel"),
       classLevel: z.enum([
         "FRESHMAN",
         "FRESHMEN",
@@ -155,36 +156,31 @@ const standingPrerequisiteSchema = z.union([
         "GRADUATE",
         "NEW TRANSFERS",
       ]),
-    })
-    .strict(),
-  z
-    .object({
-      prereqType: z.literal("standing"),
+    }),
+    z.object({
+      type: z.literal("writingRequirement"),
       writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
-    })
-    .strict(),
-]);
+    }),
+  ]),
+});
 
-const affiliationPrerequisiteSchema = z.union([
-  z
-    .object({
-      prereqType: z.literal("affiliation"),
+const affiliationPrerequisiteSchema = z.object({
+  prereqType: z.literal("affiliation"),
+  affiliation: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("major"),
       major: z.string(),
-    })
-    .strict(),
-  z
-    .object({
-      prereqType: z.literal("affiliation"),
+    }),
+    z.object({
+      type: z.literal("school"),
       school: z.string(),
-    })
-    .strict(),
-  z
-    .object({
-      prereqType: z.literal("affiliation"),
+    }),
+    z.object({
+      type: z.literal("honors"),
       honors: z.literal(true),
-    })
-    .strict(),
-]);
+    }),
+  ]),
+});
 
 export const prerequisiteSchema = z.union([
   z.object({

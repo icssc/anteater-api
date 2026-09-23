@@ -225,11 +225,14 @@ function extractStandingOrAffiliation(
   );
 
   if (classLevelMatch) {
-    const classLevel = classLevelMatch[1] as ClassLevel;
+    const classLevel = classLevelMatch[1].toUpperCase() as ClassLevel;
 
     return {
       prereqType: "standing",
-      classLevel,
+      standing: {
+        type: "classLevel",
+        classLevel,
+      },
     };
   }
 
@@ -238,21 +241,33 @@ function extractStandingOrAffiliation(
 
     return {
       prereqType: "standing",
-      classLevel,
+      standing: {
+        type: "classLevel",
+        classLevel,
+      },
     };
   }
 
   if (/^LOWER DIVISION WRITING$/i.test(text) || /^ENTRY LEVEL WRITING$/i.test(text)) {
-    const writingRequirement = text as WritingRequirement;
+    const writingRequirement = text.toUpperCase() as WritingRequirement;
 
     return {
       prereqType: "standing",
-      writingRequirement,
+      standing: {
+        type: "writingRequirement",
+        writingRequirement,
+      },
     };
   }
 
   if (/^CAMPUSWIDE HONORS\s+ONLY$/i.test(text)) {
-    return { prereqType: "affiliation", honors: true };
+    return {
+      prereqType: "affiliation",
+      affiliation: {
+        type: "honors",
+        honors: true,
+      },
+    };
   }
 
   const schoolMatch = text.match(/^SCHOOL OF (.+?)\s+ONLY$/i);
@@ -260,10 +275,13 @@ function extractStandingOrAffiliation(
   if (schoolMatch) {
     return {
       prereqType: "affiliation",
-      school: text
-        .replace(/^SCHOOL OF\s+/i, "")
-        .replace(/\s+ONLY$/i, "")
-        .trim(),
+      affiliation: {
+        type: "school",
+        school: text
+          .replace(/^SCHOOL OF\s+/i, "")
+          .replace(/\s+ONLY$/i, "")
+          .trim(),
+      },
     };
   }
 
@@ -272,7 +290,10 @@ function extractStandingOrAffiliation(
   if (majorMatch) {
     return {
       prereqType: "affiliation",
-      major: text.replace(/\s+MAJORS?\s+ONLY$/i, "").trim(),
+      affiliation: {
+        type: "major",
+        major: text.replace(/\s+MAJORS?\s+ONLY$/i, "").trim(),
+      },
     };
   }
 
