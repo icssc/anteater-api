@@ -303,8 +303,8 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return undefined;
   }
 
-  const annotated = parseAnnotatedCourseOrExam(prereq);
-  if (annotated) return annotated;
+  const courseOrExam = parseAnnotatedCourseOrExam(prereq);
+  if (courseOrExam) return courseOrExam;
 
   if (prereq.match(/^AP.*|^[A-Z0-9&/\s]+\d\S*$/)) {
     return prereq.startsWith("AP")
