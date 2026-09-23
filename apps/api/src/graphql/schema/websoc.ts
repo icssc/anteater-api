@@ -85,7 +85,7 @@ type WebsocSchool @cacheControl(maxAge: 300) {
 }
 
 type WebsocResponse @cacheControl(maxAge: 300) {
-    schools: [WebsocSchool!]!
+    schools: [WebsocSchool!]
 }
 
 type WebsocTerm @cacheControl(maxAge: 300) {

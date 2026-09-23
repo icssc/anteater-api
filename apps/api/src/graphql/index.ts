@@ -1,4 +1,5 @@
 import { EnvelopArmorPlugin } from "@escape.tech/graphql-armor";
+import { useDeferStream } from "@graphql-yoga/plugin-defer-stream";
 import { useResponseCache } from "@graphql-yoga/plugin-response-cache";
 import { database } from "@packages/db";
 import { createSchema, createYoga } from "graphql-yoga";
@@ -23,6 +24,7 @@ graphqlRouter.use("*", async (c) => {
             session: () => null,
           })
         : {},
+      useDeferStream(),
     ],
     schema: createSchema({ typeDefs, resolvers }),
   });

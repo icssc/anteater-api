@@ -30,12 +30,13 @@ import {
 import { isFalse, isTrue, websocTermSortOrder } from "@packages/db/utils";
 import { negativeAsNull } from "@packages/stdlib";
 import type { z } from "zod";
-import type {
-  syllabiQuerySchema,
-  websocDepartmentsQuerySchema,
-  websocQuerySchema,
-  websocResponseSchema,
-  websocSectionSchema,
+import {
+  type syllabiQuerySchema,
+  type websocDepartmentsQuerySchema,
+  type websocQuerySchema,
+  type websocResponseSchema,
+  websocSchoolSchema,
+  type websocSectionSchema,
 } from "$schema";
 import {
   buildCourseLevelQuery,
@@ -353,23 +354,58 @@ export class WebsocService {
       section: getTableColumns(websocSection),
     };
 
-    if (input.includeRelatedCourses) {
-      // pull only the course IDs; don't need any data from subquery
-      const sub = this.makeSelect({ courseId: websocCourse.id }, true)
-        .where(buildQuery(input))
-        .limit(1000)
-        .as("sub");
+    // Im not gonna think about related courses complication for now but come back to it !!!
+    // if (input.includeRelatedCourses) {
+    //   // pull only the course IDs; don't need any data from subquery
+    //   const sub = this.makeSelect({ courseId: websocCourse.id }, true)
+    //     .where(buildQuery(input))
+    //     .limit(1000)
+    //     .as("sub");
 
-      return this.makeSelect(selectionToReturn, false)
-        .rightJoin(sub, eq(websocCourse.id, sub.courseId))
-        .then((rows) => rows as Row[])
-        .then(transformRows);
-    }
+    //   return this.makeSelect(selectionToReturn, false)
+    //     .rightJoin(sub, eq(websocCourse.id, sub.courseId))
+    //     .then((rows) => rows as Row[])
+    //     .then(transformRows);
+    // }
 
-    return this.makeSelect(selectionToReturn, true)
-      .where(buildQuery(input))
-      .then((rows) => rows as Row[])
-      .then(transformRows);
+    const schoolIds = await this.db
+      .selectDistinct({ id: websocSchool.id })
+      .from(websocSchool)
+      .where(and(eq(websocSchool.year, input.year), eq(websocSchool.quarter, input.quarter)))
+      .then((rows) => rows.map(({ id }) => id));
+    console.log(`found ${schoolIds.length} schools`);
+
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    (async () => {
+      // await writer.write(encoder.encode(`{"ok":true,"data":[`))
+      let first = true;
+
+      for (const schoolId of schoolIds) {
+        // get data
+        const schoolData = await this.makeSelect(selectionToReturn)
+          .where(and(buildQuery(input), eq(websocSchool.id, schoolId)))
+          .then((rows) => rows as Row[])
+          .then(transformRows)
+          .then((d) => websocSchoolSchema.parse(d.schools[0]));
+
+        // if (!first) await writer.write(encoder.encode(","))
+        first = false;
+        await writer.write(encoder.encode(JSON.stringify(schoolData)));
+      }
+
+      // await writer.write(encoder.encode("]}"));
+      await writer.close();
+    })();
+
+    return readable;
+
+    // return this.makeSelect(selectionToReturn, true)
+    //   .where(buildQuery(input))
+    //   .then((rows) => rows as Row[])
+    //   .then(transformRows);
   }
 
   async getAllTerms() {
