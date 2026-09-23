@@ -274,10 +274,7 @@ function extractStandingOrAffiliation(
       prereqType: "affiliation",
       affiliation: {
         type: "school",
-        school: text
-          .replace(/^SCHOOL OF\s+/i, "")
-          .replace(/\s+ONLY$/i, "")
-          .trim(),
+        school: schoolMatch[1].trim(),
       },
     };
   }
@@ -289,7 +286,7 @@ function extractStandingOrAffiliation(
       prereqType: "affiliation",
       affiliation: {
         type: "major",
-        major: text.replace(/\s+MAJORS?\s+ONLY$/i, "").trim(),
+        major: majorMatch[1].trim(),
       },
     };
   }
