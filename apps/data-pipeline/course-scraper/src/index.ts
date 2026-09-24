@@ -679,7 +679,7 @@ function prereqTreeToList(tree: PrerequisiteTree): string[] {
   return [];
 }
 
-//check for cliff-hanging source text like for PSYCH 173A
+// check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parenthesis balance out otherwise the text is truncated.
 function isBalancedPrereqText(prereqList: string): boolean {
   let depth = 0;
   for (const char of prereqList) {
