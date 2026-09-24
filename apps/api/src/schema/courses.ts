@@ -140,6 +140,69 @@ export const coursesByCursorQuerySchema = z.object({
   }),
 });
 
+const standingPrerequisiteSchema = z.object({
+  prereqType: z.literal("standing"),
+  standing: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("classLevel"),
+      classLevel: z
+        .enum([
+          "FRESHMAN",
+          "FRESHMEN",
+          "SOPHOMORE",
+          "JUNIOR",
+          "SENIOR",
+          "LOWER DIVISION",
+          "UPPER DIVISION",
+          "GRADUATE",
+          "NEW TRANSFERS",
+        ])
+        .openapi({
+          description:
+            "The class standing required to take this course. Everything except Graduate and New Transfers are unit based.",
+          example: "JUNIOR",
+        }),
+    }),
+    z
+      .object({
+        type: z.literal("writingRequirement"),
+        writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+      })
+      .openapi({
+        description:
+          "The writing requirement that must've been completed prior to taking this course.",
+        example: "LOWER DIVISION WRITING",
+      }),
+  ]),
+});
+
+const affiliationPrerequisiteSchema = z.object({
+  prereqType: z.literal("affiliation"),
+  affiliation: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("major"),
+      major: z.string().openapi({
+        description: "Students must be this major to enroll in this course.",
+        example: "COMPUTER SCI & ENGR",
+      }),
+    }),
+    z.object({
+      type: z.literal("school"),
+      school: z.string().openapi({
+        description: "Students must be in this school to enroll in this course.",
+        example: "I&C SCI",
+      }),
+    }),
+    z.object({
+      type: z.literal("honors"),
+      honors: z.literal(true).openapi({
+        description:
+          "Always true, only appears when students must be in the Campuswide Honors Program.",
+      }),
+    }),
+  ]),
+});
+
 export const prerequisiteSchema = z.union([
   z.object({
     prereqType: z.literal("course"),
@@ -147,16 +210,20 @@ export const prerequisiteSchema = z.union([
     courseId: z.string(),
     minGrade: z.string().optional(),
   }),
+
   z.object({
     prereqType: z.literal("course"),
     coreq: z.literal(true),
     courseId: z.string(),
   }),
+
   z.object({
     prereqType: z.literal("exam"),
     examName: z.string(),
     minGrade: z.string().optional(),
   }),
+  standingPrerequisiteSchema,
+  affiliationPrerequisiteSchema,
 ]);
 
 export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({
