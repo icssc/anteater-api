@@ -483,11 +483,11 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = splitOnOr(prereq.slice(1, -1).trim());
-      const orTree: PrerequisiteTree = { OR: [] };
+      const orTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
       for (const orReq of orReqs) {
         buildORLeaf(orTree, orReq.trim());
       }
-      if (orTree.OR?.length) {
+      if (orTree.OR.length) {
         prereqTree.AND?.push(orTree);
       } /*else {
         logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
