@@ -73,7 +73,6 @@ export type AffiliationPrerequisite = {
       }
     | {
         type: "honors";
-        honors: true;
       };
 };
 

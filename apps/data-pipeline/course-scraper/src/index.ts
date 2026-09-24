@@ -262,7 +262,6 @@ function extractStandingOrAffiliation(
       prereqType: "affiliation",
       affiliation: {
         type: "honors",
-        honors: true,
       },
     };
   }
