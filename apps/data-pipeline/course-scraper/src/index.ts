@@ -395,12 +395,12 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   //logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
 
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
-    const nestedTree: PrerequisiteTree = { OR: [] };
+    const nestedTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
     const orReqs = splitOnOr(prereq.slice(1, -1).trim());
     for (const orReq of orReqs) {
       buildORLeaf(nestedTree, orReq.trim());
     }
-    if (nestedTree.OR?.length) {
+    if (nestedTree.OR.length) {
       prereqTree.OR?.push(nestedTree.OR.length === 1 ? nestedTree.OR[0] : nestedTree);
     }
     return;
