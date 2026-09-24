@@ -1,5 +1,7 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { database } from "@packages/db";
+import type { TypedResponse } from "hono";
+import type { SuccessStatusCode } from "hono/utils/http-status";
 import { defaultHook } from "$hooks";
 import { productionCache } from "$middleware";
 import {
@@ -82,18 +84,28 @@ websocRouter.get("*", productionCache({ cacheName: "anteater-api", cacheControl:
 websocRouter.openapi(websocRoute, async (c) => {
   const query = c.req.valid("query");
   const service = new WebsocService(database(c.env.DB.connectionString));
-  return c.json(
-    {
-      ok: true,
-      data: websocResponseSchema.parse(await service.getWebsocResponse(query)),
-    },
+  // return c.json(
+  //   {
+  //     ok: true,
+  //     data: websocResponseSchema.parse(await service.getWebsocResponse(query)),
+  //   },
+  //   200,
+  // );
+  const e = await service.getWebsocResponse(query);
+  const r = c.newResponse(
+    await service.getWebsocResponse(query), // should return a readable stream
     200,
-  );
+    {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+  ) as any | (Response & TypedResponse<SuccessStatusCode, 200, "json">); // fix this type
+  return r;
 });
 
 websocRouter.openapi(websocTermsRoute, async (c) => {
   const service = new WebsocService(database(c.env.DB.connectionString));
-  return c.json({ ok: true, data: await service.getAllTerms() }, 200);
+  const r = c.json({ ok: true, data: await service.getAllTerms() }, 200);
+  return r;
 });
 
 websocRouter.openapi(websocDepartmentsRoute, async (c) => {

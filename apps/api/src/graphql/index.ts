@@ -1,10 +1,9 @@
 import { EnvelopArmorPlugin } from "@escape.tech/graphql-armor";
-import { useResponseCache } from "@graphql-yoga/plugin-response-cache";
+import { useDeferStream } from "@graphql-yoga/plugin-defer-stream";
 import { database } from "@packages/db";
 import { createSchema, createYoga } from "graphql-yoga";
 import { Hono } from "hono";
 import type { GraphQLContext } from "$graphql/graphql-context";
-import { YogaKVCache } from "$graphql/plugins";
 import { resolvers } from "$graphql/resolvers";
 import { typeDefs } from "$graphql/schema";
 
@@ -17,12 +16,13 @@ graphqlRouter.use("*", async (c) => {
     maskedErrors: false,
     plugins: [
       EnvelopArmorPlugin({ blockFieldSuggestion: { enabled: false }, maxDepth: { n: 8 } }),
-      c.env.CF_ENV === "prod"
-        ? useResponseCache({
-            cache: new YogaKVCache(c.env.GQL_CACHE),
-            session: () => null,
-          })
-        : {},
+      // c.env.CF_ENV === "prod"
+      //   ? useResponseCache({
+      //       cache: new YogaKVCache(c.env.GQL_CACHE),
+      //       session: () => null,
+      //     })
+      //   : {},
+      useDeferStream(),
     ],
     schema: createSchema({ typeDefs, resolvers }),
   });
