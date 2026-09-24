@@ -1,10 +1,10 @@
 export const websocSchema = `#graphql
-type HourMinute @cacheControl(maxAge: 300) {
+type HourMinute  {
     hour: Int!
     minute: Int!
 }
 
-type WebsocSectionMeeting @cacheControl(maxAge: 300) {
+type WebsocSectionMeeting  {
     timeIsTBA: Boolean!
     bldg: [String!]
     days: String
@@ -12,7 +12,7 @@ type WebsocSectionMeeting @cacheControl(maxAge: 300) {
     endTime: HourMinute
 }
 
-type WebsocSectionFinalExam @cacheControl(maxAge: 300) {
+type WebsocSectionFinalExam  {
     examStatus: String!
     dayOfWeek: String
     month: Int
@@ -22,12 +22,12 @@ type WebsocSectionFinalExam @cacheControl(maxAge: 300) {
     bldg: [String!]
 }
 
-type WebsocSectionCurrentlyEnrolled @cacheControl(maxAge: 300) {
+type WebsocSectionCurrentlyEnrolled  {
     totalEnrolled: String!
     sectionEnrolled: String!
 }
 
-type WebsocSection @cacheControl(maxAge: 300) {
+type WebsocSection  {
     units: String!
     status: String!
     meetings: [WebsocSectionMeeting!]!
@@ -48,7 +48,7 @@ type WebsocSection @cacheControl(maxAge: 300) {
     updatedAt: String!
 }
 
-type WebsocCourse @cacheControl(maxAge: 300) {
+type WebsocCourse  {
     sections: [WebsocSection!]!
     deptCode: String!
     courseTitle: String!
@@ -59,7 +59,7 @@ type WebsocCourse @cacheControl(maxAge: 300) {
     updatedAt: String!
 }
 
-type WebsocCoursePreview @cacheControl(maxAge: 300) {
+type WebsocCoursePreview  {
     deptCode: String!
     courseTitle: String!
     courseNumber: String!
@@ -67,7 +67,7 @@ type WebsocCoursePreview @cacheControl(maxAge: 300) {
     quarter: Term!
 }
 
-type WebsocDepartment @cacheControl(maxAge: 300) {
+type WebsocDepartment (maxAge: 300) {
     courses: [WebsocCourse!]!
     deptCode: String!
     deptName: String!
@@ -77,23 +77,23 @@ type WebsocDepartment @cacheControl(maxAge: 300) {
     updatedAt: String!
 }
 
-type WebsocSchool @cacheControl(maxAge: 300) {
+type WebsocSchool {
     departments: [WebsocDepartment!]!
     schoolName: String!
     schoolComment: String!
     updatedAt: String!
 }
 
-type WebsocResponse @cacheControl(maxAge: 300) {
+type WebsocResponse  {
     schools: [WebsocSchool!]
 }
 
-type WebsocTerm @cacheControl(maxAge: 300) {
+type WebsocTerm  {
     shortName: String!
     longName: String!
 }
 
-type WebsocDepartmentPreview @cacheControl(maxAge: 300) {
+type WebsocDepartmentPreview  {
     deptCode: String!
     deptName: String!
 }
