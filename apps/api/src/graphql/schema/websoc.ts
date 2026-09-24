@@ -67,7 +67,7 @@ type WebsocCoursePreview  {
     quarter: Term!
 }
 
-type WebsocDepartment (maxAge: 300) {
+type WebsocDepartment {
     courses: [WebsocCourse!]!
     deptCode: String!
     deptName: String!
