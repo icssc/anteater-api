@@ -347,18 +347,17 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
 
   const withoutNo = prereq.replace(/^NO\s+/, "").trim();
 
-  //call parseAnnotatedCourseOrExam to handle ( coreq ) and ( min grade = C ) annotations
   const annotated = parseAnnotatedCourseOrExam(withoutNo);
   if (annotated) {
     return annotated;
   }
 
-  //already handled by parseRepeatability
+  //Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
   if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
     return undefined;
   }
 
-  //ex: NO PSYCHOLOGY MAJORS ONLY
+  // ex: NO PSYCHOLOGY MAJORS ONLY
   const extracted = extractStandingOrAffiliation(withoutNo);
   if (extracted) {
     /*logger.info(
