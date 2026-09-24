@@ -296,7 +296,6 @@ function extractStandingOrAffiliation(
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
   if (/\(\s*recommended\s*\)/i.test(prereq)) {
-    //logger.info(`IGNORING RECOMMENDED PREREQUISITE: ${JSON.stringify(prereq)}`);
     return undefined;
   }
 
@@ -360,9 +359,6 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   // ex: NO PSYCHOLOGY MAJORS ONLY
   const extracted = extractStandingOrAffiliation(withoutNo);
   if (extracted) {
-    /*logger.info(
-      `NEGATED REQUIREMENT CAPTURED [${extracted.category}: ${extracted.value}]: ${JSON.stringify(prereq)}`,
-    );*/
     return extracted;
   }
 
@@ -371,29 +367,20 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
 }
 
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
-  //logger.info(`AND LEAF INPUT: ${JSON.stringify(prereq)}`);
   if (prereq.startsWith("NO")) {
     const req = parseAntirequisite(prereq);
-    //logger.info(`AND LEAF PARSED (antirequisite): ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.NOT?.push(req);
-    } /*else {
-      logger.warn(`DROPPED AND-LEAF (antirequisite): ${JSON.stringify(prereq)}`);
-    }*/
+    }
   } else {
     const req = parsePrerequisite(prereq);
-    //logger.info(`AND LEAF PARSED: ${JSON.stringify(req)}`);
     if (req) {
       prereqTree.AND?.push(req);
-    } /*else {
-      logger.warn(`DROPPED AND-LEAF: ${JSON.stringify(prereq)}`);
-    }*/
+    }
   }
 }
-//uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
+// uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
 function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
-  //logger.info(`PREREQ INPUT: ${JSON.stringify(prereq)}`);
-
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
     const orReqs = splitOnOr(prereq.slice(1, -1).trim());
@@ -409,13 +396,9 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     ? parseAntirequisite(prereq)
     : parsePrerequisite(prereq);
 
-  //logger.info(`PARSED RESULT: ${JSON.stringify(req)}`);
-
   if (req) {
     prereqTree.OR?.push(req);
-  } /*else {
-    logger.warn(`Undefined prerequisite parsed in buildORLeaf: ${JSON.stringify(prereq)}`);
-  }*/
+  }
 }
 
 const BOILERPLATE_STRINGS = ["Display all prerequisites on file submitted by department."];
@@ -443,8 +426,6 @@ function splitOnAnd(prereqList: string): string[] {
   }
 
   if (current.trim()) parts.push(current.trim());
-  //logger.info(`splitOnAnd input: ${JSON.stringify(prereqList)}`);
-  //logger.info(`splitOnAnd output: ${JSON.stringify(parts)}`);
   return parts;
 }
 
@@ -472,8 +453,6 @@ function splitOnOr(prereqList: string): string[] {
   }
 
   if (current.trim()) parts.push(current.trim());
-  //logger.info(`splitOnOr input: ${JSON.stringify(prereqList)}`);
-  //logger.info(`splitOnOr output: ${JSON.stringify(parts)}`);
   return parts;
 }
 
@@ -489,9 +468,7 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       }
       if (orTree.OR.length) {
         prereqTree.AND?.push(orTree);
-      } /*else {
-        logger.warn(`DROPPED ENTIRE OR-GROUP (no leaves parsed): ${JSON.stringify(prereq)}`);
-      }*/
+      }
     } else {
       buildANDLeaf(prereqTree, prereq);
     }
@@ -525,7 +502,6 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
       const prereqCell = $(entry[prereqFieldLabels.Prerequisite]);
-      //const prereqCellHtml = prereqCell.html() ?? "";
       const prereqList = prereqCell
         .contents()
         .map((_, node) => $(node).text())
@@ -538,8 +514,6 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         courseId = courseId.split("*")[0].trim();
       }
       if (BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))) return;
-      //logger.info(`RAW PREREQ LIST for ${courseId}: ${JSON.stringify(prereqList)}`);
-      //logger.info(`RAW PREREQ HTML for ${courseId}: ${JSON.stringify(prereqCellHtml)}`);
       if (!isBalancedPrereqText(prereqList)) {
         logger.warn(
           `Truncated prereq source for ${courseId}: unbalanced parentheses, likely cut off ` +
