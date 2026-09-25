@@ -298,7 +298,7 @@ export default {
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
-        electiveUnitsGranted: 4,
+        electiveUnitsGranted: 0,
         geGranted: [],
         coursesGranted: { AND: ["EARTHSS 1"] },
       },
@@ -312,7 +312,7 @@ export default {
         unitsGranted: 8,
         electiveUnitsGranted: 0,
         // the three courses below satisfy GE-4 so do not encode here
-        geGranted: [],
+        geGranted: {},
         coursesGranted: { AND: ["FRENCH 1A", "FRENCH 1B", "FRENCH 1C"] },
       },
       // FRENCH 2A-FRENCH 2B-FRENCH 2C. Satisfies categories VI and VIII of the UCI GE requirement
@@ -735,8 +735,8 @@ export default {
         electiveUnitsGranted: 0,
         // all three are satisfied given prereq of spanish 1 series
         // spanish 3 and spanish 3h also satisfy different GEs but doing the AP gives you both
-        geGranted: { "GE-6": 1, "GE-7": 1, "GE-8": 1 },
-        coursesGranted: { OR: ["SPANISH 3", "SPANISH 3H"] },
+        geGranted: { "GE-6": 1 },
+        coursesGranted: { AND: ["SPANISH 3", "SPANISH 3H"] },
       },
     ],
   },
@@ -745,11 +745,23 @@ export default {
     rewards: [
       // STATS 7 or STATS 8 or MGMT 7 or SOCECOL 13 or EDUC 15
       {
-        acceptableScores: [3, 4, 5],
+        acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         geGranted: {},
         coursesGranted: { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
+      },
+      {
+        acceptableScores: [4, 5],
+        unitsGranted: 4,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: {
+          AND: [
+            { AND: ["MGMT 7"] },
+            { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
+          ],
+        },
       },
     ],
   },
