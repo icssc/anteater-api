@@ -345,6 +345,8 @@ export class WebsocService {
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
   }
 
+  async getWebsocSchoolResponse(input: WebsocServiceInput) {}
+
   async getWebsocResponse(input: WebsocServiceInput) {
     // final selection of actual data we need to process on our end
     const selectionToReturn = {
@@ -390,6 +392,8 @@ export class WebsocService {
           .then((rows) => rows as Row[])
           .then(transformRows)
           .then((d) => websocSchoolSchema.parse(d.schools[0]));
+        const byteSize = new TextEncoder().encode(JSON.stringify(schoolData)).length;
+        console.log(`fetched ${byteSize} data from school ${schoolId}`);
 
         // if (!first) await writer.write(encoder.encode(","))
         first = false;

@@ -21,21 +21,10 @@ export const websocResolvers = {
         console.log("called repeater");
 
         try {
-          let c = 1;
           while (true) {
             const { done, value } = await reader.read();
             if (done) return;
-            const result = websocSchoolSchema.safeParse(
-              JSON.parse(new TextDecoder().decode(value)),
-            );
-            if (!result.success) {
-              console.log("error:", result.error.issues);
-            } else {
-              console.log("pushing school", c);
-              c++;
-              // console.log(websocSchoolSchema.parse(json))
-              await push(result.data);
-            }
+            await push(websocSchoolSchema.parse(JSON.parse(new TextDecoder().decode(value))));
           }
         } finally {
           try {
