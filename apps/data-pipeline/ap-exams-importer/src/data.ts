@@ -50,7 +50,7 @@ export default {
     rewards: [
       // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A, and
       // satisfaction of category VIII, plus 4 units of elective credit; may not replace School of Humanities
-      // requirements
+      // requirements; may not replace Archaeology minor requirements.
       {
         acceptableScores: [3],
         unitsGranted: 8,
@@ -59,7 +59,8 @@ export default {
         coursesGranted: { AND: ["ART HIS 40A"] },
       },
       // Two courses toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A and
-      // ART HIS 40B, and satisfaction of category VIII; may not replace School of Humanities requirements
+      // ART HIS 40B, and satisfaction of category VIII; may not replace School of Humanities requirements; may not
+      // replace Archaeology minor requirements.
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
@@ -578,7 +579,7 @@ export default {
       },
     ],
   },
-  // precalculus: "No university credit awarded."
+  // Precalculus: scores 4 or 5 are approved as Area G college-prep elective; No university credit awarded
   "AP Music Theory": {
     rewards: [
       // Elective credit only
@@ -684,7 +685,6 @@ export default {
         geGranted: {},
         coursesGranted: { AND: [] },
       },
-      // PSCI 9 or COGS 7A
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
@@ -743,24 +743,22 @@ export default {
   "AP Statistics": {
     catalogueName: "AP STATISTICS",
     rewards: [
-      // STATS 7 or STATS 8 or MGMT 7 or SOCECOL 13 or EDUC 15
+      // STATS 7 or STATS 8 or SOCECOL 13 or EDUC 15
       {
         acceptableScores: [3],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         geGranted: {},
-        coursesGranted: { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
+        coursesGranted: { OR: ["STATS 7", "STATS 8", "SOCECOL 13", "EDUC 15"] },
       },
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         geGranted: {},
+        // MGMT 7
         coursesGranted: {
-          AND: [
-            { AND: ["MGMT 7"] },
-            { OR: ["STATS 7", "STATS 8", "MGMT 7", "SOCECOL 13", "EDUC 15"] },
-          ],
+          AND: [{ AND: ["MGMT 7"] }, { OR: ["STATS 7", "STATS 8", "SOCECOL 13", "EDUC 15"] }],
         },
       },
     ],
