@@ -668,11 +668,12 @@ function prereqToString(
   return prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
 }
 
+function toEntry(x: Prerequisite | PrerequisiteTree): string[] {
+  if (!isPrereq(x)) return prereqTreeToList(x);
+  return x.prereqType === "standing" || x.prereqType === "affiliation" ? [] : [prereqToString(x)];
+}
+
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
-  const toEntry = (x: Prerequisite | PrerequisiteTree): string[] => {
-    if (!isPrereq(x)) return prereqTreeToList(x);
-    return x.prereqType === "standing" || x.prereqType === "affiliation" ? [] : [prereqToString(x)];
-  };
   if (tree.AND) {
     return tree.AND.flatMap(toEntry);
   }
