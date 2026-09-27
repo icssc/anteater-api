@@ -660,7 +660,8 @@ function parseRepeatability(repeatText: string): {
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
 
-//requirement leaves never reach here
+// standing/affiliation leaves never reach here since they don't belong in the prerequisite junction table.
+// they are filtered out in prereqTreeToList prior to this function being called.
 const prereqToString = (
   prereq: Exclude<Prerequisite, StandingPrerequisite | AffiliationPrerequisite>,
 ) => (prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName);
