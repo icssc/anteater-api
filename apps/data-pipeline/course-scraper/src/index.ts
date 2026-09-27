@@ -662,9 +662,11 @@ const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "pre
 
 // standing/affiliation leaves never reach here since they don't belong in the prerequisite junction table.
 // they are filtered out in prereqTreeToList prior to this function being called.
-const prereqToString = (
+function prereqToString(
   prereq: Exclude<Prerequisite, StandingPrerequisite | AffiliationPrerequisite>,
-) => (prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName);
+) {
+  return prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
+}
 
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
   const toEntry = (x: Prerequisite | PrerequisiteTree): string[] => {
