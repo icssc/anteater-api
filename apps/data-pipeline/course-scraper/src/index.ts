@@ -517,7 +517,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         logger.warn(
           `Truncated prereq source for ${courseId}: unbalanced parentheses, likely cut off ` +
             `by the registrar's page. Skipping. ` +
-            `Raw text: ${JSON.stringify(prereqList)}`,
+            `Raw text: ${prereqList}`,
         );
         skippedCourseIds.push(courseId);
         return;
