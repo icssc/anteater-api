@@ -218,7 +218,7 @@ function extractStandingOrAffiliation(
   text: string,
 ): StandingPrerequisite | AffiliationPrerequisite | undefined {
   const classLevelMatch = text.match(
-    /^(FRESHM[AE]N|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+    /^(FRESHMAN|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
   );
 
   if (classLevelMatch) {

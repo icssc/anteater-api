@@ -146,15 +146,16 @@ const standingPrerequisiteSchema = z.object({
     z.object({
       type: z.literal("classLevel"),
       classLevel: z.enum([
-        "FRESHMAN",
-        "FRESHMEN",
-        "SOPHOMORE",
-        "JUNIOR",
+        // Observed in WebSoc:
         "SENIOR",
+        "JUNIOR",
         "LOWER DIVISION",
         "UPPER DIVISION",
-        "GRADUATE",
         "NEW TRANSFERS",
+        // Not yet observed in WebSoc, but expected to exist:
+        "FRESHMAN",
+        "SOPHOMORE",
+        "GRADUATE",
       ]),
     }),
     z.object({
@@ -169,10 +170,7 @@ const affiliationPrerequisiteSchema = z.object({
   affiliation: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("major"),
-      major: z.string().openapi({
-        description: "Students must be this major to enroll in this course.",
-        example: "COMPUTER SCI & ENGR",
-      }),
+      major: z.string(),
     }),
     z.object({
       type: z.literal("school"),
