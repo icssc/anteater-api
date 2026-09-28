@@ -324,9 +324,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return undefined;
   }
 
-  const extracted = extractStandingOrAffiliation(prereq);
-
-  return extracted;
+  return extractStandingOrAffiliation(prereq);
 }
 
 function parseAntirequisite(prereq: string): Prerequisite | undefined {
