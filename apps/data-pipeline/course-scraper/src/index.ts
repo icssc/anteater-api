@@ -228,7 +228,7 @@ function extractStandingOrAffiliation(
       prereqType: "standing",
       standing: {
         type: "classLevel",
-        classLevel,
+        value: classLevel,
       },
     };
   }
@@ -240,7 +240,7 @@ function extractStandingOrAffiliation(
       prereqType: "standing",
       standing: {
         type: "writingRequirement",
-        writingRequirement,
+        value: writingRequirement,
       },
     };
   }
@@ -261,7 +261,7 @@ function extractStandingOrAffiliation(
       prereqType: "affiliation",
       affiliation: {
         type: "school",
-        school: schoolMatch[1].trim(),
+        value: schoolMatch[1].trim(),
       },
     };
   }
@@ -273,7 +273,7 @@ function extractStandingOrAffiliation(
       prereqType: "affiliation",
       affiliation: {
         type: "major",
-        major: majorMatch[1].trim(),
+        value: majorMatch[1].trim(),
       },
     };
   }

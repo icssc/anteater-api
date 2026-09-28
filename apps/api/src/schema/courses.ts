@@ -145,7 +145,7 @@ const standingPrerequisiteSchema = z.object({
   standing: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("classLevel"),
-      classLevel: z.enum([
+      value: z.enum([
         // Observed in WebSoc:
         "SENIOR",
         "JUNIOR",
@@ -160,7 +160,7 @@ const standingPrerequisiteSchema = z.object({
     }),
     z.object({
       type: z.literal("writingRequirement"),
-      writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+      value: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
     }),
   ]),
 });
@@ -170,14 +170,14 @@ const affiliationPrerequisiteSchema = z.object({
   affiliation: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("major"),
-      major: z.string().openapi({
+      value: z.string().openapi({
         description: "Students must be this major to enroll in this course.",
         example: "COMPUTER SCI & ENGR",
       }),
     }),
     z.object({
       type: z.literal("school"),
-      school: z.string().openapi({
+      value: z.string().openapi({
         description: "Students must be in this school to enroll in this course.",
         example: "I&C SCI",
       }),
@@ -195,7 +195,6 @@ export const prerequisiteSchema = z.union([
     courseId: z.string(),
     minGrade: z.string().optional(),
   }),
-
   z.object({
     prereqType: z.literal("course"),
     coreq: z.literal(true),

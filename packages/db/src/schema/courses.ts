@@ -49,11 +49,11 @@ export type StandingPrerequisite = {
   standing:
     | {
         type: "classLevel";
-        classLevel: ClassLevel;
+        value: ClassLevel;
       }
     | {
         type: "writingRequirement";
-        writingRequirement: WritingRequirement;
+        value: WritingRequirement;
       };
 };
 
@@ -62,11 +62,11 @@ export type AffiliationPrerequisite = {
   affiliation:
     | {
         type: "major";
-        major: string;
+        value: string;
       }
     | {
         type: "school";
-        school: string;
+        value: string;
       }
     | {
         type: "honors";
