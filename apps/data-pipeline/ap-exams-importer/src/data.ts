@@ -48,9 +48,7 @@ export default {
   },
   "AP Art History": {
     rewards: [
-      // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A, and
-      // satisfaction of category VIII, plus 4 units of elective credit; may not replace School of Humanities
-      // requirements; may not replace Archaeology minor requirements.
+      // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A, and satisfaction of category VIII, plus 4 units of elective credit; may not replace School of Humanities requirements; may not replace Archaeology minor requirements.
       {
         acceptableScores: [3],
         unitsGranted: 8,
