@@ -400,8 +400,6 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   }
 }
 
-const BOILERPLATE_STRINGS = ["Display all prerequisites on file submitted by department."];
-
 function splitOnAnd(prereqList: string): string[] {
   const parts: string[] = [];
   let depth = 0;
@@ -512,7 +510,6 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       if (courseId.match(/\* ([&A-Z\d ]+) since/)) {
         courseId = courseId.split("*")[0].trim();
       }
-      if (BOILERPLATE_STRINGS.some((s) => prereqList.includes(s))) return;
       if (!isBalancedPrereqText(prereqList)) {
         logger.warn(
           `Truncated prereq source for ${courseId}: unbalanced parentheses, likely cut off ` +
