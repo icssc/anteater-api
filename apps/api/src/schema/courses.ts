@@ -160,7 +160,6 @@ const standingPrerequisiteSchema = z.object({
         .openapi({
           description:
             "The class standing required to take this course. Everything except Graduate and New Transfers are unit based.",
-          example: "JUNIOR",
         }),
     }),
     z
