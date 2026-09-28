@@ -183,10 +183,6 @@ const affiliationPrerequisiteSchema = z.object({
     }),
     z.object({
       type: z.literal("honors"),
-      honors: z.literal(true).openapi({
-        description:
-          "Always true, only appears when students must be in the Campuswide Honors Program.",
-      }),
     }),
   ]),
 });
