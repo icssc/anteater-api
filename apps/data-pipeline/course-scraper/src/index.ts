@@ -501,18 +501,11 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
             `by the registrar's page. Skipping. ` +
             `Raw text: ${prereqList}`,
         );
-        skippedCourseIds.push(courseId);
         return;
       }
       prereqs.set(courseId, buildPrereqTree(prereqList));
     }
   });
-  if (skippedCourseIds.length) {
-    logger.warn(
-      `${deptCode}: skipped ${skippedCourseIds.length} course(s) with truncated prerequisite ` +
-        `source: ${skippedCourseIds.join(", ")}`,
-    );
-  }
   logger.info(`Finished scraping prerequisites for ${deptCode}`);
   return prereqs;
 }
@@ -650,19 +643,15 @@ function prereqToString(
   return prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
 }
 
-function toEntry(x: Prerequisite | PrerequisiteTree): string[] {
-  if (!isPrereq(x)) return prereqTreeToList(x);
-  return x.prereqType === "standing" || x.prereqType === "affiliation" ? [] : [prereqToString(x)];
-}
-
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
-  if (tree.AND) {
-    return tree.AND.flatMap(toEntry);
-  }
-  if (tree.OR) {
-    return tree.OR.flatMap(toEntry);
-  }
-  return [];
+  const children = tree.AND ?? tree.OR ?? [];
+
+  return children.flatMap((x) => {
+    if (!isPrereq(x)) return prereqTreeToList(x);
+    if (x.prereqType === "standing" || x.prereqType === "affiliation") return [];
+
+    return [prereqToString(x)];
+  });
 }
 
 // check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parenthesis balance out otherwise the text is truncated.
