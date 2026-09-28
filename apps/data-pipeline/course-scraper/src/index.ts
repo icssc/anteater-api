@@ -479,12 +479,11 @@ function buildPrereqTree(prereqList: string): PrerequisiteTree {
       prereqTree.NOT = undefined;
     }
   }
-  const resolved: PrerequisiteTree = {
+  return {
     ...(prereqTree.AND?.length && { AND: prereqTree.AND }),
     ...(prereqTree.OR?.length && { OR: prereqTree.OR }),
     ...(prereqTree.NOT?.length && { NOT: prereqTree.NOT }),
   };
-  return resolved;
 }
 
 async function scrapePrerequisitePage(deptCode: string, url: string) {
