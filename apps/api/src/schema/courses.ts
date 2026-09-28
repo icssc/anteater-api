@@ -201,7 +201,6 @@ export const prerequisiteSchema = z.union([
     coreq: z.literal(true),
     courseId: z.string(),
   }),
-
   z.object({
     prereqType: z.literal("exam"),
     examName: z.string(),
