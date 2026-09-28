@@ -263,7 +263,7 @@ export class WebsocService {
     includeFilterTables?: boolean,
   ) {
     const base = this.db
-      .selectDistinct(selection)
+      .select(selection)
       .from(websocSchool)
       .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
       .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
@@ -343,14 +343,25 @@ export class WebsocService {
   async getWebsocResponse(
     input: WebsocServiceInput,
   ): Promise<z.infer<typeof websocResponseSchema>> {
-    // gotta Restore includeRelatedCourses by expanding matching course IDs before fetching sections.
-    // if (input.includeRelatedCourses) { ... }
+    let matchingSectionRows: { sectionId: string }[] = [];
 
-    const matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
-      .where(buildQuery(input))
-      .then((row) => row as { sectionId: string }[]);
+    if (input.includeRelatedCourses) {
+      // pull only the course IDs; don't need any data from subquery
+      const sub = this.makeSelect({ courseId: websocCourse.id }, true)
+        .where(buildQuery(input))
+        .limit(1000)
+        .as("sub");
+
+      matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, false)
+        .rightJoin(sub, eq(websocCourse.id, sub.courseId))
+        .then((rows) => rows as { sectionId: string }[]);
+    } else {
+      matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
+        .where(buildQuery(input))
+        .then((row) => row as { sectionId: string }[]);
+    }
+
     const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
-
     if (sectionIds.length === 0) {
       return { schools: [] };
     }
