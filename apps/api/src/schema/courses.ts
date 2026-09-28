@@ -145,22 +145,17 @@ const standingPrerequisiteSchema = z.object({
   standing: z.discriminatedUnion("type", [
     z.object({
       type: z.literal("classLevel"),
-      classLevel: z
-        .enum([
-          "FRESHMAN",
-          "FRESHMEN",
-          "SOPHOMORE",
-          "JUNIOR",
-          "SENIOR",
-          "LOWER DIVISION",
-          "UPPER DIVISION",
-          "GRADUATE",
-          "NEW TRANSFERS",
-        ])
-        .openapi({
-          description:
-            "The class standing required to take this course. Everything except Graduate and New Transfers are unit based.",
-        }),
+      classLevel: z.enum([
+        "FRESHMAN",
+        "FRESHMEN",
+        "SOPHOMORE",
+        "JUNIOR",
+        "SENIOR",
+        "LOWER DIVISION",
+        "UPPER DIVISION",
+        "GRADUATE",
+        "NEW TRANSFERS",
+      ]),
     }),
     z.object({
       type: z.literal("writingRequirement"),
