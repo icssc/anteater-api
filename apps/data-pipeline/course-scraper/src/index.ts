@@ -348,7 +348,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return annotated;
   }
 
-  //Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
+  // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
   if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
     return undefined;
   }
