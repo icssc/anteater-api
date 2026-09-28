@@ -35,15 +35,12 @@ export type ExamPrerequisite = {
 };
 
 export type ClassLevel =
-  | "FRESHMAN"
-  | "FRESHMEN"
-  | "SOPHOMORE"
-  | "JUNIOR"
-  | "SENIOR"
-  | "LOWER DIVISION"
-  | "UPPER DIVISION"
-  | "GRADUATE"
-  | "NEW TRANSFERS";
+  // Observed in Websoc:
+  "JUNIOR" | "SENIOR" | "NEW TRANSFERS" | "LOWER DIVISION" | "UPPER DIVISION";
+// Not yet observed in WebSoc, but expected to exist.
+// | "FRESHMAN"
+// | "SOPHOMORE"
+// | "GRADUATE";
 
 export type WritingRequirement = "LOWER DIVISION WRITING" | "ENTRY LEVEL WRITING";
 

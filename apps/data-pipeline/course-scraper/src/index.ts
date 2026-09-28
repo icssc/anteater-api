@@ -218,23 +218,11 @@ function extractStandingOrAffiliation(
   text: string,
 ): StandingPrerequisite | AffiliationPrerequisite | undefined {
   const classLevelMatch = text.match(
-    /^(FRESHMAN|SOPHOMORE|JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION|GRADUATE)\s+STANDING\s+ONLY$/i,
+    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS))\s+ONLY$/i,
   );
 
   if (classLevelMatch) {
-    const classLevel = classLevelMatch[1].toUpperCase() as ClassLevel;
-
-    return {
-      prereqType: "standing",
-      standing: {
-        type: "classLevel",
-        classLevel,
-      },
-    };
-  }
-
-  if (/^NEW TRANSFERS\s+ONLY$/i.test(text)) {
-    const classLevel: ClassLevel = "NEW TRANSFERS";
+    const classLevel = (classLevelMatch[1] ?? classLevelMatch[2]).toUpperCase() as ClassLevel;
 
     return {
       prereqType: "standing",
@@ -435,7 +423,7 @@ function splitOnOr(prereqList: string): string[] {
     if (char === "(") depth++;
     else if (char === ")") depth--;
 
-    //word boundary check so words like "JUNIOR" and "SENIOR" don't get split on accident
+    // word boundary check so words like "JUNIOR" and "SENIOR" don't get split on accident
     const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
     if (depth === 0 && precededByWhiteSpace && prereqList.slice(i).match(/^OR\b/)) {
       parts.push(current.trim());
