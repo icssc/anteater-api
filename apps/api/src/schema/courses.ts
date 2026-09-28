@@ -162,16 +162,10 @@ const standingPrerequisiteSchema = z.object({
             "The class standing required to take this course. Everything except Graduate and New Transfers are unit based.",
         }),
     }),
-    z
-      .object({
-        type: z.literal("writingRequirement"),
-        writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
-      })
-      .openapi({
-        description:
-          "The writing requirement that must've been completed prior to taking this course.",
-        example: "LOWER DIVISION WRITING",
-      }),
+    z.object({
+      type: z.literal("writingRequirement"),
+      writingRequirement: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+    }),
   ]),
 });
 
