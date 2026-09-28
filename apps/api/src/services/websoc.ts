@@ -4,10 +4,10 @@ import {
   and,
   desc,
   eq,
-  getTableColumns,
   gt,
   gte,
   ilike,
+  inArray,
   like,
   lt,
   lte,
@@ -207,6 +207,10 @@ type Row = {
   section: typeof websocSection.$inferSelect;
 };
 
+type CourseNode = Row["course"] & { sections: z.infer<typeof websocSectionSchema>[] };
+type DepartmentNode = Row["department"] & { courses: CourseNode[] };
+type SchoolNode = Row["school"] & { departments: DepartmentNode[] };
+
 const transformSection = (section: Row["section"]): z.infer<typeof websocSectionSchema> => {
   // as described in websoc-scraper, there are non-null values which should also be interpreted as null
   return {
@@ -224,64 +228,6 @@ const transformSection = (section: Row["section"]): z.infer<typeof websocSection
     numWaitlistCap: negativeAsNull(section.numWaitlistCap)?.toString(10) ?? "",
   };
 };
-
-function transformRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
-  const schools = rows
-    .map((row) => row.school)
-    .reduce(
-      (acc, school) => acc.set(school.id, { ...school, departments: [] }),
-      new Map<
-        string,
-        Row["school"] & {
-          departments: Array<
-            Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
-          >;
-        }
-      >(),
-    );
-  const departments = rows
-    .map((row) => row.department)
-    .reduce(
-      (acc, dept) => acc.set(dept.id, { ...dept, courses: [] }),
-      new Map<
-        string,
-        Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
-      >(),
-    );
-  const courses = rows
-    .map((row) => row.course)
-    .reduce(
-      (acc, course) => acc.set(course.id, { ...course, sections: [] }),
-      new Map<string, Row["course"] & { sections: Row["section"][] }>(),
-    );
-  const sections = rows
-    .map((row) => row.section)
-    .reduce((acc, section) => acc.set(section.id, section), new Map<string, Row["section"]>());
-  for (const section of sections.values()) {
-    courses.get(section.courseId)?.sections.push(section);
-  }
-  for (const course of courses.values()) {
-    departments.get(course.departmentId)?.courses.push(course);
-  }
-  for (const department of departments.values()) {
-    schools.get(department.schoolId)?.departments.push(department);
-  }
-  return {
-    schools: schools
-      .values()
-      .map((school) => ({
-        ...school,
-        departments: school.departments.map((department) => ({
-          ...department,
-          courses: department.courses.map((course) => ({
-            ...course,
-            sections: course.sections.map(transformSection),
-          })),
-        })),
-      }))
-      .toArray(),
-  };
-}
 
 function transformTerm(term: { year: string; quarter: Term }) {
   const { year, quarter } = term;
@@ -317,7 +263,7 @@ export class WebsocService {
     includeFilterTables?: boolean,
   ) {
     const base = this.db
-      .select(selection)
+      .selectDistinct(selection)
       .from(websocSchool)
       .innerJoin(websocDepartment, eq(websocSchool.id, websocDepartment.schoolId))
       .innerJoin(websocCourse, eq(websocDepartment.id, websocCourse.departmentId))
@@ -344,32 +290,72 @@ export class WebsocService {
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
   }
 
-  async getWebsocResponse(input: WebsocServiceInput) {
-    // final selection of actual data we need to process on our end
-    const selectionToReturn = {
-      school: getTableColumns(websocSchool),
-      department: getTableColumns(websocDepartment),
-      course: getTableColumns(websocCourse),
-      section: getTableColumns(websocSection),
-    };
+  async buildSchoolTree(sectionIds: string[]) {
+    const sections = await this.db
+      .select()
+      .from(websocSection)
+      .where(inArray(websocSection.id, sectionIds));
+    const courseIds = [...new Set(sections.map((section) => section.courseId))];
+    const courses = await this.db
+      .select()
+      .from(websocCourse)
+      .where(inArray(websocCourse.id, courseIds));
+    const departmentIds = [...new Set(courses.map((course) => course.departmentId))];
+    const departments = await this.db
+      .select()
+      .from(websocDepartment)
+      .where(inArray(websocDepartment.id, departmentIds));
+    const schoolIds = [...new Set(departments.map((department) => department.schoolId))];
+    const schoolRows = await this.db
+      .select()
+      .from(websocSchool)
+      .where(inArray(websocSchool.id, schoolIds));
 
-    if (input.includeRelatedCourses) {
-      // pull only the course IDs; don't need any data from subquery
-      const sub = this.makeSelect({ courseId: websocCourse.id }, true)
-        .where(buildQuery(input))
-        .limit(1000)
-        .as("sub");
-
-      return this.makeSelect(selectionToReturn, false)
-        .rightJoin(sub, eq(websocCourse.id, sub.courseId))
-        .then((rows) => rows as Row[])
-        .then(transformRows);
+    const schools: SchoolNode[] = [];
+    const schoolById = new Map<string, SchoolNode>();
+    for (const school of schoolRows) {
+      const node: SchoolNode = { ...school, departments: [] };
+      schools.push(node);
+      schoolById.set(school.id, node);
     }
 
-    return this.makeSelect(selectionToReturn, true)
+    const departmentById = new Map<string, DepartmentNode>();
+    for (const department of departments) {
+      const node: DepartmentNode = { ...department, courses: [] };
+      departmentById.set(department.id, node);
+      schoolById.get(department.schoolId)?.departments.push(node);
+    }
+
+    const courseById = new Map<string, CourseNode>();
+    for (const course of courses) {
+      const node: CourseNode = { ...course, sections: [] };
+      courseById.set(course.id, node);
+      departmentById.get(course.departmentId)?.courses.push(node);
+    }
+
+    for (const section of sections) {
+      courseById.get(section.courseId)?.sections.push(transformSection(section));
+    }
+
+    return { schools };
+  }
+
+  async getWebsocResponse(
+    input: WebsocServiceInput,
+  ): Promise<z.infer<typeof websocResponseSchema>> {
+    // gotta Restore includeRelatedCourses by expanding matching course IDs before fetching sections.
+    // if (input.includeRelatedCourses) { ... }
+
+    const matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
       .where(buildQuery(input))
-      .then((rows) => rows as Row[])
-      .then(transformRows);
+      .then((row) => row as { sectionId: string }[]);
+    const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
+
+    if (sectionIds.length === 0) {
+      return { schools: [] };
+    }
+
+    return this.buildSchoolTree(sectionIds);
   }
 
   async getAllTerms() {
