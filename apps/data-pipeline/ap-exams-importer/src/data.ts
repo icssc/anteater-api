@@ -48,7 +48,9 @@ export default {
   },
   "AP Art History": {
     rewards: [
-      // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A, and satisfaction of category VIII, plus 4 units of elective credit; may not replace School of Humanities requirements; may not replace Archaeology minor requirements.
+      // One course toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A
+      // and satisfaction of category VIII, plus 4 units of elective credit;
+      // may not replace School of Humanities requirements; may not replace Archaeology minor requirements.
       {
         acceptableScores: [3],
         unitsGranted: 8,
@@ -57,8 +59,8 @@ export default {
         coursesGranted: { AND: ["ART HIS 40A"] },
       },
       // Two courses toward Art History major, minor, category IV of the UCI GE requirement as ART HIS 40A and
-      // ART HIS 40B, and satisfaction of category VIII; may not replace School of Humanities requirements; may not
-      // replace Archaeology minor requirements.
+      // ART HIS 40B, and satisfaction of category VIII; may not replace School of Humanities requirements;
+      // may not replace Archaeology minor requirements.
       {
         acceptableScores: [4, 5],
         unitsGranted: 8,
@@ -683,12 +685,13 @@ export default {
         geGranted: {},
         coursesGranted: { AND: [] },
       },
+      // PSY 9 or COGS 7A
       {
         acceptableScores: [4, 5],
         unitsGranted: 4,
         electiveUnitsGranted: 0,
         geGranted: {},
-        coursesGranted: { OR: ["PSCI 9", "COGS 7A"] },
+        coursesGranted: { OR: ["PSY 9", "COGS 7A"] },
       },
     ],
   },
@@ -733,8 +736,8 @@ export default {
         electiveUnitsGranted: 0,
         // all three are satisfied given prereq of spanish 1 series
         // spanish 3 and spanish 3h also satisfy different GEs but doing the AP gives you both
-        geGranted: { "GE-6": 1 },
-        coursesGranted: { AND: ["SPANISH 3", "SPANISH 3H"] },
+        geGranted: { "GE-6": 1, "GE-7": 1, "GE-8": 1 },
+        coursesGranted: { OR: ["SPANISH 3", "SPANISH 3H"] },
       },
     ],
   },
