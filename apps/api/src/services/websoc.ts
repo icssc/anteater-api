@@ -291,7 +291,65 @@ export class WebsocService {
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
   }
 
-  async buildSchoolTree(sectionIds: string[]) {
+  transformJoinedRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
+    const schools = rows
+      .map((row) => row.school)
+      .reduce(
+        (acc, school) => acc.set(school.id, { ...school, departments: [] }),
+        new Map<
+          string,
+          Row["school"] & {
+            departments: Array<
+              Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+            >;
+          }
+        >(),
+      );
+    const departments = rows
+      .map((row) => row.department)
+      .reduce(
+        (acc, dept) => acc.set(dept.id, { ...dept, courses: [] }),
+        new Map<
+          string,
+          Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+        >(),
+      );
+    const courses = rows
+      .map((row) => row.course)
+      .reduce(
+        (acc, course) => acc.set(course.id, { ...course, sections: [] }),
+        new Map<string, Row["course"] & { sections: Row["section"][] }>(),
+      );
+    const sections = rows
+      .map((row) => row.section)
+      .reduce((acc, section) => acc.set(section.id, section), new Map<string, Row["section"]>());
+    for (const section of sections.values()) {
+      courses.get(section.courseId)?.sections.push(section);
+    }
+    for (const course of courses.values()) {
+      departments.get(course.departmentId)?.courses.push(course);
+    }
+    for (const department of departments.values()) {
+      schools.get(department.schoolId)?.departments.push(department);
+    }
+    return {
+      schools: schools
+        .values()
+        .map((school) => ({
+          ...school,
+          departments: school.departments.map((department) => ({
+            ...department,
+            courses: department.courses.map((course) => ({
+              ...course,
+              sections: course.sections.map(transformSection),
+            })),
+          })),
+        }))
+        .toArray(),
+    };
+  }
+
+  async buildFromRequeries(sectionIds: string[]) {
     const sections = await this.db
       .select()
       .from(websocSection)
@@ -371,7 +429,23 @@ export class WebsocService {
       return { schools: [] };
     }
 
-    return this.buildSchoolTree(sectionIds);
+    if (sectionIds.length > 1000) {
+      // build in multiple queries
+      return this.buildFromRequeries(sectionIds);
+    } else {
+      return this.makeSelect(
+        {
+          school: getTableColumns(websocSchool),
+          department: getTableColumns(websocDepartment),
+          course: getTableColumns(websocCourse),
+          section: getTableColumns(websocSection),
+        },
+        true,
+      )
+        .where(buildQuery(input))
+        .then((rows) => rows as Row[])
+        .then(this.transformJoinedRows);
+    }
   }
 
   async getAllTerms() {
