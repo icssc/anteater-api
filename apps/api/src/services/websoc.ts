@@ -303,7 +303,7 @@ export class WebsocService {
       .where(inArray(websocCourse.id, courseIds));
     const departmentIds = [...new Set(courses.map((course) => course.departmentId))];
 
-    // small enough to do together
+    // small enough to do together; avoid one more round trip
     const departmentsAndSchools = await this.db
       .select({
         department: getTableColumns(websocDepartment),
