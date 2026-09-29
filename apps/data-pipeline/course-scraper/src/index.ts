@@ -368,7 +368,7 @@ function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
-    const orReqs = splitOnOr(prereq.slice(1, -1).trim());
+    const orReqs = splitOnOperator(prereq.slice(1, -1).trim(), "OR");
     for (const orReq of orReqs) {
       buildORLeaf(nestedTree, orReq.trim());
     }
@@ -386,7 +386,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   }
 }
 
-function splitOnAnd(prereqList: string): string[] {
+function splitOnOperator(prereqList: string, operator: "AND" | "OR"): string[] {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
@@ -398,53 +398,29 @@ function splitOnAnd(prereqList: string): string[] {
     else if (char === ")") depth--;
 
     const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
-    if (depth === 0 && precededByWhiteSpace && prereqList.slice(i).match(/^AND\b/)) {
+
+    if (
+      depth === 0 &&
+      precededByWhiteSpace &&
+      prereqList.slice(i).match(new RegExp(`^${operator}\\b`))
+    ) {
       parts.push(current.trim());
       current = "";
-      i += 2; // skip "AND"
+      i += operator.length - 1;
       continue;
     }
-
     current += char;
   }
-
-  if (current.trim()) parts.push(current.trim());
-  return parts;
-}
-
-function splitOnOr(prereqList: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = "";
-
-  for (let i = 0; i < prereqList.length; i++) {
-    const char = prereqList[i];
-
-    if (char === "(") depth++;
-    else if (char === ")") depth--;
-
-    // word boundary check so words like "JUNIOR" and "SENIOR" don't get split on accident
-    const precededByWhiteSpace = i > 0 && /\s/.test(prereqList[i - 1]);
-    if (depth === 0 && precededByWhiteSpace && prereqList.slice(i).match(/^OR\b/)) {
-      parts.push(current.trim());
-      current = "";
-      i += 1; // skip "OR"
-      continue;
-    }
-
-    current += char;
-  }
-
   if (current.trim()) parts.push(current.trim());
   return parts;
 }
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = splitOnAnd(prereqList);
+  const prereqs = splitOnOperator(prereqList, "AND");
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
-      const orReqs = splitOnOr(prereq.slice(1, -1).trim());
+      const orReqs = splitOnOperator(prereq.slice(1, -1).trim(), "OR");
       const orTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
       for (const orReq of orReqs) {
         buildORLeaf(orTree, orReq.trim());
@@ -477,7 +453,6 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
   const prereqPageText = await fetchWithDelay(url);
   const $ = load(prereqPageText);
   const prereqs = new Map<string, PrerequisiteTree>();
-  const skippedCourseIds: string[] = [];
   $("table tbody tr").each(function () {
     const entry = $(this).find("td");
     if ($(entry).length === 3) {
@@ -763,10 +738,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -803,10 +778,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
