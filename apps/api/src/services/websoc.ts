@@ -439,9 +439,12 @@ export class WebsocService {
     }
 
     if (sectionIds.length > 1000) {
-      // build in multiple queries
+      // we sometimes OOM on big (e.g. entire term) requests...
+      // do multiple queries to avoid thousands of copies of dept/school object coming from sql and being gc'd too slowly
       return this.buildFromRequeries(sectionIds);
     } else {
+      // when set is small enough, short round-trip time is preferable for slightly higher memory
+      // and this set is small enough to never OOM
       return this.makeSelect(
         {
           school: getTableColumns(websocSchool),
