@@ -218,7 +218,7 @@ function extractStandingOrAffiliation(
   text: string,
 ): StandingPrerequisite | AffiliationPrerequisite | undefined {
   const classLevelMatch = text.match(
-    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS))\s+ONLY$/i,
+    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/i,
   );
 
   if (classLevelMatch) {
@@ -245,7 +245,7 @@ function extractStandingOrAffiliation(
     };
   }
 
-  if (/^CAMPUSWIDE HONORS\s+ONLY$/i.test(text)) {
+  if (/^CAMPUSWIDE HONORS ONLY$/i.test(text)) {
     return {
       prereqType: "affiliation",
       affiliation: {
@@ -254,7 +254,7 @@ function extractStandingOrAffiliation(
     };
   }
 
-  const schoolMatch = text.match(/^SCHOOL OF (.+?)\s+ONLY$/i);
+  const schoolMatch = text.match(/^SCHOOL OF (.+?) ONLY$/i);
 
   if (schoolMatch) {
     return {
@@ -266,7 +266,7 @@ function extractStandingOrAffiliation(
     };
   }
 
-  const majorMatch = text.match(/^(.+?)\s+MAJORS?\s+ONLY$/i);
+  const majorMatch = text.match(/^(.+?)\s+MAJORS? ONLY$/i);
 
   if (majorMatch) {
     return {
@@ -299,7 +299,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "exam", examName: prereq };
   }
 
-  const satActMatch = prereq.match(/^((?:SAT|ACT)\s+.+?)\s*>=\s*(\d+)$/i);
+  const satActMatch = prereq.match(/^((?:SAT|ACT) .+?)\s*>=\s*(\d+)$/i);
   if (satActMatch) {
     return {
       prereqType: "exam",
@@ -329,7 +329,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "course", coreq: false, courseId: antiCourseMatch[1].trim() };
   }
 
-  const withoutNo = prereq.replace(/^NO\s+/, "").trim();
+  const withoutNo = prereq.replace(/^NO /, "").trim();
 
   const annotated = parseAnnotatedCourseOrExam(withoutNo);
   if (annotated) {
