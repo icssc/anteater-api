@@ -4,6 +4,7 @@ import {
   and,
   desc,
   eq,
+  getTableColumns,
   gt,
   gte,
   ilike,
@@ -301,29 +302,33 @@ export class WebsocService {
       .from(websocCourse)
       .where(inArray(websocCourse.id, courseIds));
     const departmentIds = [...new Set(courses.map((course) => course.departmentId))];
-    const departments = await this.db
-      .select()
+
+    // small enough to do together
+    const departmentsAndSchools = await this.db
+      .select({
+        department: getTableColumns(websocDepartment),
+        school: getTableColumns(websocSchool),
+      })
       .from(websocDepartment)
+      .innerJoin(websocSchool, eq(websocDepartment.schoolId, websocSchool.id))
       .where(inArray(websocDepartment.id, departmentIds));
-    const schoolIds = [...new Set(departments.map((department) => department.schoolId))];
-    const schoolRows = await this.db
-      .select()
-      .from(websocSchool)
-      .where(inArray(websocSchool.id, schoolIds));
 
     const schools: SchoolNode[] = [];
     const schoolById = new Map<string, SchoolNode>();
-    for (const school of schoolRows) {
-      const node: SchoolNode = { ...school, departments: [] };
-      schools.push(node);
-      schoolById.set(school.id, node);
-    }
-
     const departmentById = new Map<string, DepartmentNode>();
-    for (const department of departments) {
-      const node: DepartmentNode = { ...department, courses: [] };
-      departmentById.set(department.id, node);
-      schoolById.get(department.schoolId)?.departments.push(node);
+
+    for (const { department, school } of departmentsAndSchools) {
+      const departmentNode: DepartmentNode = { ...department, courses: [] };
+      departmentById.set(department.id, departmentNode);
+
+      if (!schoolById.has(school.id)) {
+        const schoolNode: SchoolNode = { ...school, departments: [departmentNode] };
+        schools.push(schoolNode);
+        schoolById.set(school.id, schoolNode);
+      } else {
+        // just checked for inclusion
+        (schoolById.get(school.id) as SchoolNode).departments.push(departmentNode);
+      }
     }
 
     const courseById = new Map<string, CourseNode>();
