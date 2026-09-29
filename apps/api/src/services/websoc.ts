@@ -201,18 +201,18 @@ function buildQuery(input: WebsocServiceInput) {
   return and(...conditions);
 }
 
-type Row = {
+type JoinedRow = {
   school: typeof websocSchool.$inferSelect;
   department: typeof websocDepartment.$inferSelect;
   course: typeof websocCourse.$inferSelect;
   section: typeof websocSection.$inferSelect;
 };
 
-type CourseNode = Row["course"] & { sections: z.infer<typeof websocSectionSchema>[] };
-type DepartmentNode = Row["department"] & { courses: CourseNode[] };
-type SchoolNode = Row["school"] & { departments: DepartmentNode[] };
+type CourseNode = JoinedRow["course"] & { sections: z.infer<typeof websocSectionSchema>[] };
+type DepartmentNode = JoinedRow["department"] & { courses: CourseNode[] };
+type SchoolNode = JoinedRow["school"] & { departments: DepartmentNode[] };
 
-const transformSection = (section: Row["section"]): z.infer<typeof websocSectionSchema> => {
+const transformSection = (section: JoinedRow["section"]): z.infer<typeof websocSectionSchema> => {
   // as described in websoc-scraper, there are non-null values which should also be interpreted as null
   return {
     ...section,
@@ -291,16 +291,18 @@ export class WebsocService {
       .leftJoin(websocLocation, eq(websocLocation.id, websocSectionMeetingToLocation.locationId));
   }
 
-  transformJoinedRows(rows: Row[]): z.infer<typeof websocResponseSchema> {
+  transformJoinedRows(rows: JoinedRow[]): z.infer<typeof websocResponseSchema> {
     const schools = rows
       .map((row) => row.school)
       .reduce(
         (acc, school) => acc.set(school.id, { ...school, departments: [] }),
         new Map<
           string,
-          Row["school"] & {
+          JoinedRow["school"] & {
             departments: Array<
-              Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+              JoinedRow["department"] & {
+                courses: Array<JoinedRow["course"] & { sections: JoinedRow["section"][] }>;
+              }
             >;
           }
         >(),
@@ -311,18 +313,24 @@ export class WebsocService {
         (acc, dept) => acc.set(dept.id, { ...dept, courses: [] }),
         new Map<
           string,
-          Row["department"] & { courses: Array<Row["course"] & { sections: Row["section"][] }> }
+          JoinedRow["department"] & {
+            courses: Array<JoinedRow["course"] & { sections: JoinedRow["section"][] }>;
+          }
         >(),
       );
     const courses = rows
       .map((row) => row.course)
       .reduce(
         (acc, course) => acc.set(course.id, { ...course, sections: [] }),
-        new Map<string, Row["course"] & { sections: Row["section"][] }>(),
+        new Map<string, JoinedRow["course"] & { sections: JoinedRow["section"][] }>(),
       );
     const sections = rows
       .map((row) => row.section)
-      .reduce((acc, section) => acc.set(section.id, section), new Map<string, Row["section"]>());
+      .reduce(
+        (acc, section) => acc.set(section.id, section),
+        new Map<string, JoinedRow["section"]>(),
+      );
+
     for (const section of sections.values()) {
       courses.get(section.courseId)?.sections.push(section);
     }
@@ -332,6 +340,7 @@ export class WebsocService {
     for (const department of departments.values()) {
       schools.get(department.schoolId)?.departments.push(department);
     }
+
     return {
       schools: schools
         .values()
@@ -443,7 +452,7 @@ export class WebsocService {
         true,
       )
         .where(buildQuery(input))
-        .then((rows) => rows as Row[])
+        .then((rows) => rows as JoinedRow[])
         .then(this.transformJoinedRows);
     }
   }
