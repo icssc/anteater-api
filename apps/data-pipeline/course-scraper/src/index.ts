@@ -351,17 +351,19 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   return undefined;
 }
 
+function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefined {
+  return prereq.startsWith("NO") ? parseAntirequisite(prereq) : parsePrerequisite(prereq);
+}
+
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
+  const req = parsePrerequisiteOrAntirequisite(prereq);
+
+  if (!req) return;
+
   if (prereq.startsWith("NO")) {
-    const req = parseAntirequisite(prereq);
-    if (req) {
-      prereqTree.NOT?.push(req);
-    }
+    prereqTree.NOT?.push(req);
   } else {
-    const req = parsePrerequisite(prereq);
-    if (req) {
-      prereqTree.AND?.push(req);
-    }
+    prereqTree.AND?.push(req);
   }
 }
 // uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
@@ -377,10 +379,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     }
     return;
   }
-  const req: Prerequisite | undefined = prereq.startsWith("NO")
-    ? parseAntirequisite(prereq)
-    : parsePrerequisite(prereq);
-
+  const req = parsePrerequisiteOrAntirequisite(prereq);
   if (req) {
     prereqTree.OR?.push(req);
   }
