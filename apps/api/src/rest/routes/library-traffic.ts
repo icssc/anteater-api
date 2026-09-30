@@ -1,7 +1,14 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { database } from "@packages/db";
 import { defaultHook } from "$hooks";
+import { productionCache } from "$middleware";
 import {
+  libraryTrafficHistoryAggregatedQuerySchema,
+  libraryTrafficHistoryAggregatedSchema,
+  libraryTrafficHistoryPatternQuerySchema,
+  libraryTrafficHistoryPatternSchema,
+  libraryTrafficHistoryRawQuerySchema,
+  libraryTrafficHistoryRawSchema,
   libraryTrafficQuerySchema,
   libraryTrafficSchema,
   response200,
@@ -12,6 +19,11 @@ import {
 import { LibraryTrafficService } from "$services";
 
 const libraryTrafficRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+
+libraryTrafficRouter.get(
+  "*",
+  productionCache({ cacheName: "anteater-api", cacheControl: "max-age=1800" }),
+);
 
 const libraryTrafficRoute = createRoute({
   summary: "Retrieve latest library traffic data",
@@ -42,6 +54,84 @@ libraryTrafficRouter.openapi(libraryTrafficRoute, async (c) => {
   }
 
   return c.json({ ok: true, data: libraryTrafficSchema.parse(res) }, 200);
+});
+
+const libraryTrafficHistoryRawRoute = createRoute({
+  summary: "Retrieve raw historical library traffic data",
+  operationId: "libraryTrafficHistory",
+  tags: ["Library Traffic"],
+  method: "get",
+  path: "/history",
+  request: { query: libraryTrafficHistoryRawQuerySchema },
+  description:
+    "Retrieves paginated raw occupancy records. Filter by location and date range or academic term (year + quarter + period).",
+  responses: {
+    200: response200(libraryTrafficHistoryRawSchema, { isCursor: true }),
+    422: response422(),
+    500: response500(),
+  },
+});
+
+libraryTrafficRouter.openapi(libraryTrafficHistoryRawRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new LibraryTrafficService(database(c.env.DB.connectionString));
+  const { items, nextCursor } = await service.getLibraryTrafficHistoryRaw(query);
+  return c.json(
+    {
+      ok: true,
+      data: {
+        items: libraryTrafficHistoryRawSchema.parse(items),
+        nextCursor,
+      },
+    },
+    200,
+  );
+});
+
+const libraryTrafficHistoryAggregatedRoute = createRoute({
+  summary: "Retrieve aggregated historical library traffic data",
+  operationId: "libraryTrafficHistoryAggregated",
+  tags: ["Library Traffic"],
+  method: "get",
+  path: "/history/aggregated",
+  request: { query: libraryTrafficHistoryAggregatedQuerySchema },
+  description:
+    "Averages occupancy into consecutive time buckets sized by the `granularity` parameter (hour/day/week/month). Set the window with `startDate` + `endDate` and/or `year` + `quarter` to scope to a term; per-granularity range caps are documented on `endDate`.",
+  responses: {
+    200: response200(libraryTrafficHistoryAggregatedSchema),
+    422: response422(),
+    500: response500(),
+  },
+});
+
+libraryTrafficRouter.openapi(libraryTrafficHistoryAggregatedRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new LibraryTrafficService(database(c.env.DB.connectionString));
+  const res = await service.getLibraryTrafficHistoryAggregated(query);
+  return c.json({ ok: true, data: libraryTrafficHistoryAggregatedSchema.parse(res) }, 200);
+});
+
+const libraryTrafficHistoryPatternRoute = createRoute({
+  summary: "Retrieve pattern-averaged library traffic data",
+  operationId: "libraryTrafficHistoryPattern",
+  tags: ["Library Traffic"],
+  method: "get",
+  path: "/history/pattern",
+  request: { query: libraryTrafficHistoryPatternQuerySchema },
+  description:
+    "Averages occupancy across every occurrence of a repeating slot to reveal typical usage patterns. The `granularity` sets both the window size (e.g. 1-hour windows like 2-3pm) and the stride (every Monday, 2pm, Week 3, etc.).",
+  responses: {
+    200: response200(libraryTrafficHistoryPatternSchema),
+    422: response422(),
+    500: response500(),
+  },
+});
+
+libraryTrafficRouter.openapi(libraryTrafficHistoryPatternRoute, async (c) => {
+  const query = c.req.valid("query");
+  const service = new LibraryTrafficService(database(c.env.DB.connectionString));
+  const res = await service.getLibraryTrafficHistoryPattern(query);
+  return c.json({ ok: true, data: libraryTrafficHistoryPatternSchema.parse(res) }, 200);
 });
 
 export { libraryTrafficRouter };
