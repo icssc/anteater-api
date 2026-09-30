@@ -214,73 +214,6 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   return { prereqType: "course", coreq, courseId: base, minGrade };
 }
 
-function extractStandingOrAffiliation(
-  text: string,
-): StandingPrerequisite | AffiliationPrerequisite | undefined {
-  const classLevelMatch = text.match(
-    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/i,
-  );
-
-  if (classLevelMatch) {
-    const classLevel = (classLevelMatch[1] ?? classLevelMatch[2]).toUpperCase() as ClassLevel;
-
-    return {
-      prereqType: "standing",
-      standing: {
-        type: "classLevel",
-        value: classLevel,
-      },
-    };
-  }
-
-  if (/^LOWER DIVISION WRITING$/i.test(text) || /^ENTRY LEVEL WRITING$/i.test(text)) {
-    const writingRequirement = text.toUpperCase() as WritingRequirement;
-
-    return {
-      prereqType: "standing",
-      standing: {
-        type: "writingRequirement",
-        value: writingRequirement,
-      },
-    };
-  }
-
-  if (/^CAMPUSWIDE HONORS ONLY$/i.test(text)) {
-    return {
-      prereqType: "affiliation",
-      affiliation: {
-        type: "honors",
-      },
-    };
-  }
-
-  const schoolMatch = text.match(/^SCHOOL OF (.+?) ONLY$/i);
-
-  if (schoolMatch) {
-    return {
-      prereqType: "affiliation",
-      affiliation: {
-        type: "school",
-        value: schoolMatch[1].trim(),
-      },
-    };
-  }
-
-  const majorMatch = text.match(/^(.+?)\s+MAJORS? ONLY$/i);
-
-  if (majorMatch) {
-    return {
-      prereqType: "affiliation",
-      affiliation: {
-        type: "major",
-        value: majorMatch[1].trim(),
-      },
-    };
-  }
-
-  return undefined;
-}
-
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
   if (/\(\s*recommended\s*\)/i.test(prereq)) {
     return undefined;
@@ -312,7 +245,68 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return undefined;
   }
 
-  return extractStandingOrAffiliation(prereq);
+  const classLevelMatch = prereq.match(
+    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/i,
+  );
+
+  if (classLevelMatch) {
+    const classLevel = (classLevelMatch[1] ?? classLevelMatch[2]).toUpperCase() as ClassLevel;
+
+    return {
+      prereqType: "standing",
+      standing: {
+        type: "classLevel",
+        value: classLevel,
+      },
+    };
+  }
+
+  if (/^LOWER DIVISION WRITING$/i.test(prereq) || /^ENTRY LEVEL WRITING$/i.test(prereq)) {
+    const writingRequirement = prereq.toUpperCase() as WritingRequirement;
+
+    return {
+      prereqType: "standing",
+      standing: {
+        type: "writingRequirement",
+        value: writingRequirement,
+      },
+    };
+  }
+
+  if (/^CAMPUSWIDE HONORS ONLY$/i.test(prereq)) {
+    return {
+      prereqType: "affiliation",
+      affiliation: {
+        type: "honors",
+      },
+    };
+  }
+
+  const schoolMatch = prereq.match(/^SCHOOL OF (.+?) ONLY$/i);
+
+  if (schoolMatch) {
+    return {
+      prereqType: "affiliation",
+      affiliation: {
+        type: "school",
+        value: schoolMatch[1].trim(),
+      },
+    };
+  }
+
+  const majorMatch = prereq.match(/^(.+?)\s+MAJORS? ONLY$/i);
+
+  if (majorMatch) {
+    return {
+      prereqType: "affiliation",
+      affiliation: {
+        type: "major",
+        value: majorMatch[1].trim(),
+      },
+    };
+  }
+
+  return undefined;
 }
 
 function parseAntirequisite(prereq: string): Prerequisite | undefined {
@@ -342,7 +336,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   }
 
   // ex: NO PSYCHOLOGY MAJORS ONLY
-  const extracted = extractStandingOrAffiliation(withoutNo);
+  const extracted = parsePrerequisite(withoutNo);
   if (extracted) {
     return extracted;
   }
