@@ -30,12 +30,13 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  // for any table with catalogYear column, build a score as follows:
-  // - if a catalog year not specified, do whatever postgres feels like
-  // - if a catalog year is specified, order the returned years as follows:
-  //   - prefer an exact match best
-  //   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
-  //     (in opposite directions), prefer the more recent one
+  /* for any table with catalogYear column, build a score as follows:
+   * - if a catalog year not specified, do whatever postgres feels like
+   * - if a catalog year is specified, order the returned years as follows:
+   *   - prefer an exact match best
+   *   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
+   *     (in opposite directions), prefer the more recent one
+   */
   private catalogYearPriorityExpression(
     table:
       | typeof dwSchoolRequirement
@@ -236,6 +237,7 @@ export class ProgramsService {
               ...got,
               schoolRequirements:
                 got.schoolRequirements.requirements !== null ? got.schoolRequirements : null,
+              qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
             }
           : undefined;
 
@@ -279,7 +281,12 @@ export class ProgramsService {
       .where(eq(dwSchoolRequirement.id, query.id));
 
     const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
-    return orNull(got);
+    return got
+      ? {
+          ...got,
+          qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
+        }
+      : got;
   }
 
   async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
