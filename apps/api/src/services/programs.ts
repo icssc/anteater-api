@@ -173,7 +173,7 @@ export class ProgramsService {
           ...got,
           qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
         }
-      : got;
+      : undefined;
   }
 
   async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
@@ -324,6 +324,6 @@ export class ProgramsService {
           ...got,
           qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
         }
-      : got;
+      : undefined;
   }
 }
