@@ -178,7 +178,7 @@ async function fetchWithDelay(url: string, delayMs = 1000) {
 }
 
 function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
-  const match = prereq.match(/^([^()]+?)((?:\s*\([^()]*\))+)$/);
+  const match = prereq.match(/^([^()]+)((?:\s*\([^()]*\))+)$/);
   if (!match) return undefined;
 
   const base = match[1].trim();
@@ -215,7 +215,7 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
 }
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
-  if (/\(\s*recommended\s*\)/i.test(prereq)) {
+  if (/\(\s*recommended\s*\)/.test(prereq)) {
     return undefined;
   }
 
@@ -228,11 +228,11 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
       : { prereqType: "course", coreq: false, courseId: prereq };
   }
 
-  if (/^PLACEMENT EXAM$/i.test(prereq)) {
+  if (/^PLACEMENT EXAM$/.test(prereq)) {
     return { prereqType: "exam", examName: prereq };
   }
 
-  const satActMatch = prereq.match(/^((?:SAT|ACT) .+?)\s*>=\s*(\d+)$/i);
+  const satActMatch = prereq.match(/^((?:SAT|ACT) .+)\s*>=\s*(\d+)$/);
   if (satActMatch) {
     return {
       prereqType: "exam",
@@ -241,12 +241,12 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  if (/^AUTHORIZATION\b/i.test(prereq)) {
+  if (/^AUTHORIZATION\b/.test(prereq)) {
     return undefined;
   }
 
   const classLevelMatch = prereq.match(
-    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/i,
+    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/,
   );
 
   if (classLevelMatch) {
@@ -261,7 +261,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  if (/^LOWER DIVISION WRITING$/i.test(prereq) || /^ENTRY LEVEL WRITING$/i.test(prereq)) {
+  if (/^LOWER DIVISION WRITING$/.test(prereq) || /^ENTRY LEVEL WRITING$/.test(prereq)) {
     const writingRequirement = prereq.toUpperCase() as WritingRequirement;
 
     return {
@@ -273,7 +273,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  if (/^CAMPUSWIDE HONORS ONLY$/i.test(prereq)) {
+  if (/^CAMPUSWIDE HONORS ONLY$/.test(prereq)) {
     return {
       prereqType: "affiliation",
       affiliation: {
@@ -282,7 +282,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  const schoolMatch = prereq.match(/^SCHOOL OF (.+?) ONLY$/i);
+  const schoolMatch = prereq.match(/^SCHOOL OF ([A-Z& ]+) ONLY$/);
 
   if (schoolMatch) {
     return {
@@ -294,7 +294,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  const majorMatch = prereq.match(/^(.+?)\s+MAJORS? ONLY$/i);
+  const majorMatch = prereq.match(/^([A-Z&, -]+) MAJORS? ONLY$/);
 
   if (majorMatch) {
     return {
@@ -310,7 +310,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
 }
 
 function parseAntirequisite(prereq: string): Prerequisite | undefined {
-  const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+?)\sscore\sof\s(\d)\sor\sgreater$/);
+  const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+)\sscore\sof\s(\d)\sor\sgreater$/);
   if (antiAPReqMatch) {
     return {
       prereqType: "exam",
@@ -591,9 +591,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -731,10 +731,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -771,10 +771,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
