@@ -264,7 +264,12 @@ export class ProgramsService {
       .where(eq(baseTable.id, query.programId));
 
     const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
-    return orNull(got);
+    return got
+      ? {
+          ...got,
+          qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
+        }
+      : got;
   }
 
   async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
