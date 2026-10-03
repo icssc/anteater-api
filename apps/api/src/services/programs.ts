@@ -30,30 +30,6 @@ import type {
 export class ProgramsService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
-  // for any table with catalogYear column, build a score as follows:
-  // - if a catalog year not specified, do whatever postgres feels like
-  // - if a catalog year is specified, order the returned years as follows:
-  //   - prefer an exact match best
-  //   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
-  //     (in opposite directions), prefer the more recent one
-  private catalogYearPriorityExpression(
-    table:
-      | typeof dwSchoolRequirement
-      | typeof dwMajorYear
-      | typeof dwMajorSpecializationToRequirement
-      | typeof dwMinorRequirement
-      | typeof dwSpecializationRequirement,
-    catalogYear: string | undefined,
-  ) {
-    return catalogYear !== undefined
-      ? sql`CASE
-  WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
-  WHEN ${table.catalogYear} = ${catalogYear} THEN 0
-  WHEN ${table.catalogYear} < ${catalogYear} THEN SUBSTRING(${catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real + 0.5
-  END`
-      : undefined;
-  }
-
   async getMajors(query: z.infer<typeof majorsQuerySchema>) {
     return await this.db
       .select({
@@ -178,6 +154,78 @@ export class ProgramsService {
     return await this.getProgramRequirements({ programType: "specialization", query });
   }
 
+  async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
+    const order = this.catalogYearPriorityExpression(dwSchoolRequirement, query.catalogYear);
+
+    const base = this.db
+      .select({
+        id: dwSchoolRequirement.id,
+        qualifiers: dwSchoolRequirement.header,
+        requirements: dwSchoolRequirement.requirements,
+        catalogYear: dwSchoolRequirement.catalogYear,
+      })
+      .from(dwSchoolRequirement)
+      .where(eq(dwSchoolRequirement.id, query.id));
+
+    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
+    return got
+      ? {
+          ...got,
+          qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
+        }
+      : got;
+  }
+
+  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
+    return await this.db
+      .select({
+        id: catalogProgram.id,
+        programName: catalogProgram.programName,
+        variations: sql`
+          COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'label', ${catalogProgramVariation.label},
+                'courses', ${catalogProgramVariation.catalogProgram},
+                'notes', ${catalogProgramVariation.variationNotes}
+              )
+              ORDER BY ${catalogProgramVariation.id}
+            ) FILTER (WHERE ${catalogProgramVariation.id} IS NOT NULL),
+            '[]'::jsonb
+          )
+        `.as("variations"),
+      })
+      .from(catalogProgram)
+      .leftJoin(catalogProgramVariation, eq(catalogProgram.id, catalogProgramVariation.programId))
+      .where(query.id ? eq(catalogProgram.id, query.id) : undefined)
+      .groupBy(catalogProgram.id);
+  }
+
+  /* for any table with catalogYear column, build a score as follows:
+   * - if a catalog year not specified, do whatever postgres feels like
+   * - if a catalog year is specified, order the returned years as follows:
+   *   - prefer an exact match best
+   *   - otherwise, prioritize years based on absolute difference, but in the case of two equidistant years
+   *     (in opposite directions), prefer the more recent one
+   */
+  private catalogYearPriorityExpression(
+    table:
+      | typeof dwSchoolRequirement
+      | typeof dwMajorYear
+      | typeof dwMajorSpecializationToRequirement
+      | typeof dwMinorRequirement
+      | typeof dwSpecializationRequirement,
+    catalogYear: string | undefined,
+  ) {
+    return catalogYear !== undefined
+      ? sql`CASE
+  WHEN ${table.catalogYear} > ${catalogYear} THEN SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${catalogYear} FROM 1 FOR 4)::real
+  WHEN ${table.catalogYear} = ${catalogYear} THEN 0
+  WHEN ${table.catalogYear} < ${catalogYear} THEN SUBSTRING(${catalogYear} FROM 1 FOR 4)::real - SUBSTRING(${table.catalogYear} FROM 1 FOR 4)::real + 0.5
+  END`
+      : undefined;
+  }
+
   private async getProgramRequirements({
     programType,
     query,
@@ -235,7 +283,16 @@ export class ProgramsService {
           ? {
               ...got,
               schoolRequirements:
-                got.schoolRequirements.requirements !== null ? got.schoolRequirements : null,
+                got.schoolRequirements.requirements !== null
+                  ? {
+                      ...got.schoolRequirements,
+                      qualifiers:
+                        got.schoolRequirements.qualifiers !== null
+                          ? got.schoolRequirements.qualifiers
+                          : undefined,
+                    }
+                  : null,
+              qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
             }
           : undefined;
 
@@ -262,48 +319,11 @@ export class ProgramsService {
       .where(eq(baseTable.id, query.programId));
 
     const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
-    return orNull(got);
-  }
-
-  async getUgradRequirements(query: z.infer<typeof ugradRequirementsQuerySchema>) {
-    const order = this.catalogYearPriorityExpression(dwSchoolRequirement, query.catalogYear);
-
-    const base = this.db
-      .select({
-        id: dwSchoolRequirement.id,
-        qualifiers: dwSchoolRequirement.header,
-        requirements: dwSchoolRequirement.requirements,
-        catalogYear: dwSchoolRequirement.catalogYear,
-      })
-      .from(dwSchoolRequirement)
-      .where(eq(dwSchoolRequirement.id, query.id));
-
-    const [got] = await (order !== undefined ? base.orderBy(order) : base).limit(1);
-    return orNull(got);
-  }
-
-  async getSamplePrograms(query: z.infer<typeof sampleProgramsQuerySchema>) {
-    return await this.db
-      .select({
-        id: catalogProgram.id,
-        programName: catalogProgram.programName,
-        variations: sql`
-          COALESCE(
-            JSONB_AGG(
-              JSONB_BUILD_OBJECT(
-                'label', ${catalogProgramVariation.label},
-                'courses', ${catalogProgramVariation.catalogProgram},
-                'notes', ${catalogProgramVariation.variationNotes}
-              )
-              ORDER BY ${catalogProgramVariation.id}
-            ) FILTER (WHERE ${catalogProgramVariation.id} IS NOT NULL),
-            '[]'::jsonb
-          )
-        `.as("variations"),
-      })
-      .from(catalogProgram)
-      .leftJoin(catalogProgramVariation, eq(catalogProgram.id, catalogProgramVariation.programId))
-      .where(query.id ? eq(catalogProgram.id, query.id) : undefined)
-      .groupBy(catalogProgram.id);
+    return got
+      ? {
+          ...got,
+          qualifiers: got.qualifiers !== null ? got.qualifiers : undefined,
+        }
+      : got;
   }
 }
