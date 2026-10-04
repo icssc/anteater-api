@@ -72,7 +72,7 @@ export type AffiliationPrerequisite = {
         value: string;
       }
     | {
-        type: "honors";
+        type: "campuswide honors";
       };
 };
 

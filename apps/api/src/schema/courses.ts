@@ -182,7 +182,7 @@ const affiliationPrerequisiteSchema = z.object({
       }),
     }),
     z.object({
-      type: z.literal("honors"),
+      type: z.literal("campuswide honors"),
     }),
   ]),
 });

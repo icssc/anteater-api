@@ -275,7 +275,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return {
       prereqType: "affiliation",
       affiliation: {
-        type: "honors",
+        type: "campuswide honors",
       },
     };
   }
