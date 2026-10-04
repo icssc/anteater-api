@@ -146,7 +146,6 @@ const standingPrerequisiteSchema = z.object({
     z.object({
       type: z.literal("classLevel"),
       value: z.enum([
-        // Observed in WebSoc:
         "SENIOR",
         "JUNIOR",
         "LOWER DIVISION",

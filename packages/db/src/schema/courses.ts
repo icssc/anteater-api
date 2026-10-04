@@ -35,8 +35,11 @@ export type ExamPrerequisite = {
 };
 
 export type ClassLevel =
-  // Observed in Websoc:
-  "JUNIOR" | "SENIOR" | "NEW TRANSFERS" | "LOWER DIVISION" | "UPPER DIVISION";
+  | "JUNIOR"
+  | "SENIOR"
+  | "NEW TRANSFERS"
+  | "LOWER DIVISION"
+  | "UPPER DIVISION";
 // Not yet observed in WebSoc, but expected to exist.
 // | "FRESHMAN"
 // | "SOPHOMORE"

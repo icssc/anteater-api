@@ -5,12 +5,10 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray, or } from "@packages/db/drizzle";
 import type {
-  AffiliationPrerequisite,
   ClassLevel,
   CoursePrerequisite,
   Prerequisite,
   PrerequisiteTree,
-  StandingPrerequisite,
   WritingRequirement,
 } from "@packages/db/schema";
 import {
@@ -246,7 +244,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
   }
 
   const classLevelMatch = prereq.match(
-    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\s+STANDING|(NEW TRANSFERS)) ONLY$/,
+    /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\sSTANDING|(NEW TRANSFERS)) ONLY$/,
   );
 
   if (classLevelMatch) {
@@ -261,8 +259,8 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  if (/^LOWER DIVISION WRITING$/.test(prereq) || /^ENTRY LEVEL WRITING$/.test(prereq)) {
-    const writingRequirement = prereq.toUpperCase() as WritingRequirement;
+  if (prereq === "LOWER DIVISION WRITING" || prereq === "ENTRY LEVEL WRITING") {
+    const writingRequirement = prereq as WritingRequirement;
 
     return {
       prereqType: "standing",
@@ -273,7 +271,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  if (/^CAMPUSWIDE HONORS ONLY$/.test(prereq)) {
+  if (prereq === "CAMPUSWIDE HONORS ONLY") {
     return {
       prereqType: "affiliation",
       affiliation: {
@@ -294,7 +292,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     };
   }
 
-  const majorMatch = prereq.match(/^([A-Z&, -]+) MAJORS? ONLY$/);
+  const majorMatch = prereq.match(/^([A-Z&, -]+) MAJORS ONLY$/);
 
   if (majorMatch) {
     return {
@@ -603,14 +601,8 @@ function parseRepeatability(repeatText: string): {
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
 
-// standing/affiliation leaves never reach here since they don't belong in the prerequisite junction table.
-// they are filtered out in prereqTreeToList prior to this function being called.
-function prereqToString(
-  prereq: Exclude<Prerequisite, StandingPrerequisite | AffiliationPrerequisite>,
-) {
-  return prereq.prereqType === "course" ? prereq.courseId.replaceAll(/ /g, "") : prereq.examName;
-}
-
+// Standing/affiliation prerequisites don't belong in the prerequisite
+// junction table, so they are excluded from the resulting list.
 function prereqTreeToList(tree: PrerequisiteTree): string[] {
   const children = tree.AND ?? tree.OR ?? [];
 
@@ -618,11 +610,11 @@ function prereqTreeToList(tree: PrerequisiteTree): string[] {
     if (!isPrereq(x)) return prereqTreeToList(x);
     if (x.prereqType === "standing" || x.prereqType === "affiliation") return [];
 
-    return [prereqToString(x)];
+    return [x.prereqType === "course" ? x.courseId.replaceAll(" ", "") : x.examName];
   });
 }
 
-// check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parenthesis balance out otherwise the text is truncated.
+// check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parenthesis balances out, otherwise the text is definitely truncated.
 // ( ANTHRO 2A ( min grade = D- ) OR PSYCH 7A ( min grade = D- ) OR COGS 7A ( min grade = D- ) OR PSY BEH 9 ( min grade = D- ) OR
 function isBalancedPrereqText(prereqList: string): boolean {
   let depth = 0;
@@ -725,6 +717,7 @@ async function scrapeCoursesInDepartment(meta: {
       departmentAlias: getDepartmentAlias(c.department),
     })),
   );
+
   const courseDiff = diffString(dbCourses, coursesForInsert);
   if (!courseDiff.length) {
     logger.info(`No difference found between database and scraped course data for ${deptCode}.`);
