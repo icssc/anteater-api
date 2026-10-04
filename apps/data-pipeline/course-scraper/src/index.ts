@@ -213,7 +213,7 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
 }
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
-  if (/\(\s*recommended\s*\)/.test(prereq)) {
+  if (prereq === "( recommended )") {
     return undefined;
   }
 
@@ -226,7 +226,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
       : { prereqType: "course", coreq: false, courseId: prereq };
   }
 
-  if (/^PLACEMENT EXAM$/.test(prereq)) {
+  if (prereq === "PLACEMENT EXAM") {
     return { prereqType: "exam", examName: prereq };
   }
 
@@ -329,7 +329,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   }
 
   // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
-  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
+  if (prereq === "NO REPEATS ALLOWED") {
     return undefined;
   }
 
