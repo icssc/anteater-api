@@ -614,7 +614,7 @@ function prereqTreeToList(tree: PrerequisiteTree): string[] {
   });
 }
 
-// check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parenthesis balances out, otherwise the text is definitely truncated.
+// check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parentheses balances out, otherwise the text is definitely truncated.
 // ( ANTHRO 2A ( min grade = D- ) OR PSYCH 7A ( min grade = D- ) OR COGS 7A ( min grade = D- ) OR PSY BEH 9 ( min grade = D- ) OR
 function isBalancedPrereqText(prereqList: string): boolean {
   let depth = 0;
