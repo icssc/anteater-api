@@ -253,7 +253,12 @@ function transformTerm(term: { year: string; quarter: Term }) {
       longQtr = "Summer Session 2";
       break;
   }
-  return { shortName: `${year} ${quarter}`, longName: `${year} ${longQtr}` };
+  return {
+    year,
+    quarter,
+    shortName: `${year} ${quarter}`,
+    longName: `${year} ${longQtr}`,
+  };
 }
 
 export class WebsocService {
