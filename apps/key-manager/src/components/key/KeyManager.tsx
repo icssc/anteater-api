@@ -4,7 +4,7 @@ import type { KeyData } from "@packages/key-types";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
-import { getUserApiKeys } from "@/app/actions/keys";
+import { getKeysOwned } from "@/app/actions/keys";
 import KeyTableRow from "@/components/key/view/KeyTableRow";
 import HeadingText from "@/components/layout/HeadingText";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import Placeholder from "@/components/ui/placeholder";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MAX_API_KEYS } from "@/lib/utils";
 
-const KeyManager = () => {
+function KeyManager() {
   const [loading, setLoading] = useState<boolean>(true);
   const [apiKeys, setApiKeys] = useState<Record<string, KeyData>>({});
 
@@ -20,7 +20,7 @@ const KeyManager = () => {
 
   useEffect(() => {
     startTransition(async () => {
-      const keys = await getUserApiKeys();
+      const keys = await getKeysOwned();
       setApiKeys(keys);
       setLoading(false);
     });
@@ -64,7 +64,7 @@ const KeyManager = () => {
             <Link href="/create">
               <PlusIcon />
               <p>
-                Create Key ({Object.keys(apiKeys).length}/{MAX_API_KEYS})
+                Create key ({Object.keys(apiKeys).length}/{MAX_API_KEYS})
               </p>
             </Link>
           </Button>
@@ -72,6 +72,6 @@ const KeyManager = () => {
       )}
     </div>
   );
-};
+}
 
 export default KeyManager;

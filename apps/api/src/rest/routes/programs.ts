@@ -173,7 +173,7 @@ programsRouter.openapi(specializationsRoute, async (c) => {
     return c.json(
       {
         ok: false,
-        message: "No data on specializations for a major by that ID",
+        message: "No data on specializations for a major by that ID in that catalog year",
       },
       404,
     );
@@ -191,7 +191,7 @@ programsRouter.openapi(majorRequirements, async (c) => {
         {
           ok: false,
           message:
-            "Couldn't find major requirements associated with this major and specialization; check your IDs?",
+            "Couldn't find major requirements associated with this major and specialization; check your IDs and catalog year?",
         },
         404,
       );
@@ -206,7 +206,7 @@ programsRouter.openapi(minorRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this minor; check your ID?",
+          message: "Couldn't find this minor; check your ID and catalog year?",
         },
         404,
       );
@@ -221,7 +221,7 @@ programsRouter.openapi(specializationRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this specialization; check your ID?",
+          message: "Couldn't find this specialization; check your ID and catalog year?",
         },
         404,
       );
@@ -236,7 +236,8 @@ programsRouter.openapi(ugradRequirements, async (c) => {
     : c.json(
         {
           ok: false,
-          message: "Couldn't find this undergraduate requirements block; check your ID?",
+          message:
+            "Couldn't find this undergraduate requirements block; check your ID and catalog year?",
         },
         404,
       );

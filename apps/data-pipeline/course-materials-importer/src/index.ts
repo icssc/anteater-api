@@ -1,24 +1,16 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { and, eq, getTableColumns, or } from "@packages/db/drizzle";
+import { and, eq, or } from "@packages/db/drizzle";
 import type { MaterialRequirement, Term, TextbookFormat } from "@packages/db/schema";
 import { courseMaterial, websocSection } from "@packages/db/schema";
+import { chunkUpsertData } from "@packages/db/utils";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
 
 const INPUT_DIR = "./input";
 
 const REQUIRED_FIELDS = ["Term", "Dept/Course", "Title", "Format"] as const;
-
-const MAX_PARAMS_PER_INSERT = 65534;
-
-const ROWS_PER_INSERT = Math.floor(
-  MAX_PARAMS_PER_INSERT /
-    Object.values(getTableColumns(courseMaterial)).filter(
-      (data) => !data.default && !data.generated,
-    ).length,
-);
 
 async function main() {
   const url = process.env.DB_URL;
@@ -98,11 +90,10 @@ async function main() {
 
   await db.transaction(async (tx) => {
     await tx.delete(courseMaterial);
-    for (let i = 0; i < values.length; i += ROWS_PER_INSERT) {
-      await tx
-        .insert(courseMaterial)
-        .values(values.slice(i, i + ROWS_PER_INSERT))
-        .onConflictDoNothing();
+    const insertChunks = chunkUpsertData(courseMaterial, values);
+    console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
+    for (const chunk of insertChunks) {
+      await tx.insert(courseMaterial).values(chunk).onConflictDoNothing();
     }
   });
 

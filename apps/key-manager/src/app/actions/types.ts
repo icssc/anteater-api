@@ -1,76 +1,74 @@
-import { accessControlledResources, type KeyData } from "@packages/key-types";
+import { accessControlledResources } from "@packages/key-types";
 import { z } from "zod";
 
-export const createKeySchema = z
-  .object({
-    _type: z.enum(["publishable", "secret"]),
-    name: z.string().min(1).max(30),
-    createdAt: z.date(),
-    origins: z.array(z.object({ url: z.string() })).optional(),
-    rateLimitOverride: z.number().positive().optional(),
-    resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
-  })
-  .strict();
+export const originSchema = z.httpUrl();
+export const formOriginSchema = z.object({ url: originSchema });
 
-export const createRefinedKeySchema = createKeySchema.superRefine((data, ctx) => {
-  if (data._type === "publishable") {
-    if (!data.origins || data.origins.length === 0) {
-      ctx.issues.push({
-        input: data.origins,
-        code: "custom",
-        message: "At least one origin is required for publishable keys",
-        path: ["origins"],
-      });
-    } else {
-      const urlsSet = new Set();
-      data.origins.forEach((origin, index) => {
-        if (!origin.url.startsWith("http://") && !origin.url.startsWith("https://")) {
-          ctx.issues.push({
-            input: origin.url,
-            code: "custom",
-            message: "Origin URL must use http:// or https://",
-            path: ["origins", index, "url"],
-          });
-        } else {
+const keyFormBaseSchema = z.object({
+  name: z.string().min(1).max(30),
+  rateLimitOverride: z.number().nonnegative().optional(),
+  resources: z.record(z.enum(accessControlledResources), z.boolean()).optional(),
+});
+
+export const keyFormSchema = z.discriminatedUnion("_type", [
+  keyFormBaseSchema.extend({
+    _type: z.literal("publishable"),
+    origins: z
+      .array(formOriginSchema)
+      .min(1, "At least one origin is required for publishable keys")
+      .refine((origins) => {
+        const urlsSet = new Set();
+        for (const [i, origin] of origins.entries()) {
           if (urlsSet.has(origin.url)) {
-            ctx.issues.push({
+            return {
               input: origin.url,
               code: "custom",
               message: "Duplicate origins are not allowed",
-              path: ["origins", index, "url"],
-            });
+              path: [i, "url"],
+            };
           } else {
             urlsSet.add(origin.url);
           }
         }
-      });
-    }
-  }
+      }),
+  }),
+  keyFormBaseSchema.extend({ _type: z.literal("secret") }),
+]);
+
+export const keyStorageBaseSchema = keyFormBaseSchema.extend({
+  createdAt: z.coerce.date(),
 });
 
-const originSchema = z.object({ url: z.string() });
+export const keyFormCodec = z.codec(
+  keyFormSchema,
+  z.discriminatedUnion("_type", [
+    keyStorageBaseSchema.extend({
+      _type: z.literal("publishable"),
+      origins: z.record(originSchema, z.boolean()),
+    }),
+    keyStorageBaseSchema.extend({ _type: z.literal("secret") }),
+  ]),
+  {
+    decode: (data) => {
+      switch (data._type) {
+        case "secret":
+          return { ...data, createdAt: new Date() };
+        case "publishable":
+          return {
+            ...data,
+            createdAt: new Date(),
+            origins: Object.fromEntries(
+              data.origins.map((origin: z.infer<typeof formOriginSchema>) => [origin.url, true]),
+            ) as Record<string, boolean>,
+          };
+      }
+    },
+    encode: (data) => ({
+      ...data,
+      origins:
+        data._type === "publishable" ? Object.entries(data.origins).map(([url]) => ({ url })) : [],
+    }),
+  },
+);
 
-export const createKeyTransform = createKeySchema.transform((data) => {
-  return {
-    ...data,
-    // turn origins from originSchema to Record<string, boolean>
-    origins:
-      data._type === "publishable"
-        ? (Object.fromEntries(
-            data.origins?.map((origin: z.infer<typeof originSchema>) => [origin.url, true]) ?? [],
-          ) as Record<string, boolean>)
-        : undefined,
-    rateLimitOverride: data.rateLimitOverride,
-    createdAt: new Date(),
-  } as KeyData;
-});
-
-export const unprivilegedKeySchema = createKeySchema
-  .omit({
-    resources: true,
-    rateLimitOverride: true,
-  })
-  .strict();
-
-export type CreateKeyFormValues = z.infer<typeof createKeySchema>;
-export type CreateKeyValues = z.infer<typeof createKeyTransform>;
+export type CreateKeyFormValues = z.infer<typeof keyFormSchema>;

@@ -39,7 +39,7 @@ const FormField = <
   );
 };
 
-const useFormField = () => {
+function useFormField() {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
@@ -60,7 +60,7 @@ const useFormField = () => {
     formMessageId: `${id}-form-item-message`,
     ...fieldState,
   };
-};
+}
 
 type FormItemContextValue = {
   id: string;

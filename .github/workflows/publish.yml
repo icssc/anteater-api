@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/publish.yml
       - packages/public/libwebsoc-next/package.json
+  workflow_dispatch:
 
 permissions:
   id-token: write

@@ -2,13 +2,24 @@ import { createHash } from "node:crypto";
 import type { database } from "@packages/db";
 import { eq } from "@packages/db/drizzle";
 import type {
+  CourseConstraintTree,
+  DegreeWorksNonExclusivityQualifier,
   DegreeWorksProgram,
   DegreeWorksProgramId,
   DegreeWorksRequirement,
-  Term,
+  DegreeWorksRequirementQualifier,
 } from "@packages/db/schema";
-import { course } from "@packages/db/schema";
-import type { Block, Rule, WithClause } from "$types";
+import { course, type DegreeWorksProgramType } from "@packages/db/schema";
+import { getFromMapOrThrow } from "@packages/stdlib";
+import { programTypeSchema } from "$schema";
+import type { Block, ProgramCodes, QualifierClause, Rule, WithClause } from "$types";
+import {
+  andTrees,
+  classifyTree,
+  invertWithArrayToTree,
+  orTrees,
+  withArrayToTree,
+} from "./WithArrayUtils";
 
 export class AuditParser {
   // currently unused because we can no longer detect whether specialization(s) exist and must instead guess-and-check
@@ -19,7 +30,16 @@ export class AuditParser {
   private static readonly WILDCARD_REGEX = /\w@/;
   private static readonly RANGE_REGEX = /-\w+/;
 
+  // Set of majors and specializations are used to parse out non-existent references to other programs in a qualifier
+  // being a referenceable program doesn't guarantee that it is a valid program in the given catalog year
+  private referenceableMajors: ProgramCodes[] | undefined;
+  private referenceableSpecs: string[] | undefined;
+
   private requirementIdMap = new Map<string, string>();
+
+  // Set of referenceable programs found in degreeworks qualifiers, but not valid during the given catalog year
+  // We maintain a set in order to only log a warning the first time this  program is referenced (as to not clutter the output)
+  private unknownPrograms = new Set<string>();
 
   constructor(
     private readonly db: ReturnType<typeof database>,
@@ -28,21 +48,30 @@ export class AuditParser {
     console.log("[AuditParser.new] AuditParser initialized");
   }
 
-  parseBlock = async (
-    blockId: string,
-    block: Block,
-    otherBlock?: Block,
-  ): Promise<DegreeWorksProgram> => ({
-    ...this.parseBlockId(blockId),
-    name: block.title,
-    requirements: await this.ruleArrayToRequirements([
-      ...(otherBlock?.ruleArray ?? []),
-      ...block.ruleArray,
-    ]),
-    // populate later; we cannot determine specializations on the spot
-    specs: [],
-    specializationRequired: await this.checkSpecializationIsRequired(block.ruleArray),
-  });
+  setReferenceablePrograms(potentialMajors: ProgramCodes[], potentialSpecs: string[]) {
+    this.referenceableMajors = potentialMajors;
+    this.referenceableSpecs = potentialSpecs;
+  }
+
+  async parseBlock(blockId: string, block: Block, otherBlock?: Block): Promise<DegreeWorksProgram> {
+    const programId = this.parseBlockId(blockId);
+    const header = block.header?.qualifierArray
+      ? await this.parseQualifiers(block.header.qualifierArray, programId)
+      : [];
+
+    return {
+      ...programId,
+      name: block.title,
+      requirements: await this.ruleArrayToRequirements(
+        [...(otherBlock?.ruleArray ?? []), ...block.ruleArray],
+        programId,
+      ),
+      ...(header.length && { header }),
+      // populate later; we cannot determine specializations on the spot
+      specs: [],
+      specializationRequired: this.checkSpecializationIsRequired(block.ruleArray),
+    };
+  }
 
   lexOrd = new Intl.Collator().compare;
 
@@ -139,67 +168,6 @@ export class AuditParser {
     return requirementId;
   }
 
-  static parseDWTerm(raw: string) {
-    const [yearStr, termStr] = raw.split(" ");
-    const year = Number.parseInt(yearStr, 10);
-    const mapping = {
-      FALL: "Fall",
-      WINTER: "Winter",
-      SPRING: "Spring",
-      SUMMER1: "Summer1",
-      SUMMER10WK: "Summer10wk",
-      SUMMER2: "Summer2",
-    } as const;
-    const term = mapping[termStr as keyof typeof mapping];
-    return { year, term };
-  }
-
-  static termToOrdinal(year: number, term: Term): number {
-    const termOrder: Record<Term, number> = {
-      Winter: 0,
-      Spring: 1,
-      Summer1: 2,
-      Summer10wk: 3,
-      Summer2: 4,
-      Fall: 5,
-    };
-    return year * 10 + termOrder[term];
-  }
-
-  static getSchoolYearTermRange(catalogYear: string): {
-    min: number;
-    max: number;
-  } {
-    const startYear = Number.parseInt(catalogYear.slice(0, 4), 10);
-    const endYear = Number.parseInt(catalogYear.slice(4, 8), 10);
-    return {
-      min: AuditParser.termToOrdinal(startYear, "Fall"),
-      max: AuditParser.termToOrdinal(endYear, "Summer2"),
-    };
-  }
-
-  static canSchoolYearSatisfyDWTerm(
-    operator: WithClause["operator"],
-    dwtermOrdinal: number,
-    schoolYearMin: number,
-    schoolYearMax: number,
-  ): boolean {
-    switch (operator) {
-      case "=":
-        return dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax;
-      case "<":
-        return schoolYearMin < dwtermOrdinal;
-      case "<=":
-        return schoolYearMin <= dwtermOrdinal;
-      case ">":
-        return schoolYearMax > dwtermOrdinal;
-      case ">=":
-        return schoolYearMax >= dwtermOrdinal;
-      case "<>":
-        return !(dwtermOrdinal >= schoolYearMin && dwtermOrdinal <= schoolYearMax);
-    }
-  }
-
   /**
    * Certain requirements change label depending on whether they've been fulfilled.
    * This is undesirable for archival so we will quash these.
@@ -210,94 +178,7 @@ export class AuditParser {
     return label.replaceAll(/ Satisfied/g, " Required").replaceAll(/ satisfied/g, " required");
   }
 
-  parseUnitRestrictionOperator(
-    operatorLike: string,
-  ): (minUnit: number, maxUnit: number, valueList: string[]) => boolean {
-    // for > and >= operations, we use a loose interpretation for variable unit courses
-    // thus, a 1-4 unit course where DWCREDIT > 2 is included, as it is possible for the course to
-    // be taken for 3 or 4 units and meet the withClause requirement
-    // for < and <= which appear to be only in exception lists, we use a strict interpretation
-    // thus if a requirement can be fullfilled by a course *except* if DWCREDIT < 2,
-    // a 1-4 unit course WILL NOT be included in the EXCEPTION list, which means it will be a valid course for the requirement
-    switch (operatorLike) {
-      case "<":
-        return (_minUnit, maxUnit, valueList) => maxUnit < Number.parseInt(valueList[0], 10);
-      case "<=":
-        return (_minUnit, maxUnit, valueList) => maxUnit <= Number.parseInt(valueList[0], 10);
-      case "=":
-        return (minUnit, maxUnit, valueList) =>
-          minUnit <= Number.parseInt(valueList[0], 10) &&
-          Number.parseInt(valueList[0], 10) <= maxUnit;
-      case ">":
-        return (_minUnit, maxUnit, valueList) => maxUnit > Number.parseInt(valueList[0], 10);
-      case ">=":
-        return (_minUnit, maxUnit, valueList) => maxUnit >= Number.parseInt(valueList[0], 10);
-      default:
-        return () => false;
-    }
-  }
-
-  private classMatchesWithClause(c: typeof course.$inferSelect, withClause: WithClause): boolean {
-    switch (withClause.code) {
-      case "DWCREDIT":
-      case "DWCREDITS":
-        return this.parseUnitRestrictionOperator(withClause.operator)(
-          Number.parseInt(c.minUnits, 10),
-          Number.parseInt(c.maxUnits, 10),
-          withClause.valueList,
-        );
-      case "DWTERM": {
-        const { min: schoolYearMin, max: schoolYearMax } = AuditParser.getSchoolYearTermRange(
-          this.catalogYear,
-        );
-        // valueList contains specific term(s) from the DWTERM constraint
-        // Courses pass this filter only if at least one term in the current
-        // catalog year satisfies a DWTERM predicate
-        return withClause.valueList.some((dwtermRaw) => {
-          const { year, term } = AuditParser.parseDWTerm(dwtermRaw);
-          const dwtermOrdinal = AuditParser.termToOrdinal(year, term);
-          return AuditParser.canSchoolYearSatisfyDWTerm(
-            withClause.operator,
-            dwtermOrdinal,
-            schoolYearMin,
-            schoolYearMax,
-          );
-        });
-      }
-      // There may be more withArray Codes that can be applied here to filter out courses
-      // see https://github.com/icssc/anteater-api/pull/286
-      default:
-        return true;
-    }
-  }
-
-  filterThroughWithArray(classes: (typeof course.$inferSelect)[], withArray: WithClause[]) {
-    if (withArray.length === 0) return structuredClone(classes);
-
-    // group AND clauses together: "A AND B OR C AND D" => [(A,B), (C,D)]
-    const orGroups: WithClause[][] = [];
-    let currentGroup: WithClause[] = [];
-
-    for (const withClause of withArray) {
-      if (withClause.connector === "OR") {
-        if (currentGroup.length > 0) {
-          orGroups.push(currentGroup);
-        }
-        currentGroup = [withClause];
-      } else {
-        currentGroup.push(withClause);
-      }
-    }
-    if (currentGroup.length > 0) {
-      orGroups.push(currentGroup);
-    }
-
-    return structuredClone(classes).filter((c) =>
-      orGroups.some((group) => group.every((clause) => this.classMatchesWithClause(c, clause))),
-    );
-  }
-
-  async checkSpecializationIsRequired(ruleArray: Rule[]) {
+  checkSpecializationIsRequired(ruleArray: Rule[]) {
     // We infer whether a major requires a specialization by searching for a
     // conditional rule with text that matches words related to "specialization."
 
@@ -316,7 +197,163 @@ export class AuditParser {
     });
   }
 
-  async ruleArrayToRequirements(ruleArray: Rule[]) {
+  async parseQualifiers(qualifierArray: QualifierClause[], programId: DegreeWorksProgramId) {
+    if (!this.referenceableMajors || !this.referenceableSpecs) {
+      throw Error("AuditParser is missing lists of referenceable programs");
+    }
+    const qualifiers = new Map<QualifierClause["name"], DegreeWorksRequirementQualifier>();
+    for (const qualifier of qualifierArray) {
+      switch (qualifier.name) {
+        case "NONEXCLUSIVE": {
+          if (!qualifiers.has("NONEXCLUSIVE")) {
+            qualifiers.set("NONEXCLUSIVE", {
+              qualifierType: "NonExclusive",
+              appliesToBlocks: [],
+            });
+          }
+
+          const nonExclusiveQualifier = getFromMapOrThrow(
+            qualifiers,
+            "NONEXCLUSIVE",
+          ) as DegreeWorksNonExclusivityQualifier;
+
+          const appliedBlockIds =
+            qualifier.subTextList?.join("").replaceAll(/[ ()]/g, "").split(",") ?? [];
+          for (const blockId of appliedBlockIds) {
+            let [programType, code] = blockId.split("=");
+
+            // Preprocessing Steps:
+            // A set of BA programs share the same header, stating that every program in the set can share 2 classes with any other program in the set
+            // This includes a qualifier that tries to share 2 classes with itself
+            // We assume any qualifier that references itself with the same programType and code is meaningless because the correct way to share internally is with `THISBLOCK`
+            if (programType === programId.programType && code === programId.code) {
+              continue;
+            }
+            // The correct way to state classes can be shared with other requirements in the same program is by using `THISBLOCK`
+            // we convert and serve this data as an absolute reference
+            if (programType === "THISBLOCK") {
+              programType = programId.programType;
+              code = programId.code;
+            }
+            if (programType === "ALLBLOCKS") {
+              nonExclusiveQualifier.appliesToBlocks.push(
+                ...([
+                  { programType: "COLLEGE" },
+                  { programType: "MAJOR" },
+                  { programType: "SPEC" },
+                  { programType: "MINOR" },
+                ] as { programType: DegreeWorksProgramType }[]),
+              );
+              continue;
+            }
+
+            const parsedProgramType = programTypeSchema.parse(programType);
+            // If no code is specified, then the qualifier affects all programs that match the program type i.e. all majors, all minors, etc.
+            if (!code) {
+              nonExclusiveQualifier.appliesToBlocks.push({
+                programType: parsedProgramType,
+                maxShared: qualifier.classes,
+              });
+              continue;
+            }
+
+            const parsedCodes: string[] = [];
+            switch (parsedProgramType) {
+              case "MAJOR":
+              case "SPEC": {
+                // The degree type is not given as part of the code and must be inferred
+                // If parsing an undergraduate degree, different program ids cannot share the same code (i.e BA-201 cannot exist if BS-201 exists)
+                // So we can match the correct degree
+                let foundDegree: string | undefined;
+                const ineligibleProgramKey = `${programId.school}:${programId.programType}:${code}`;
+                if (programId.school === "U" || programId.programType !== "MAJOR") {
+                  foundDegree = this.referenceableMajors.find(
+                    ({ majorCode, degreeCode }) =>
+                      code.startsWith(majorCode) && degreeCode.startsWith("B"),
+                  )?.degreeCode;
+                  if (
+                    foundDegree === undefined &&
+                    !this.unknownPrograms.has(ineligibleProgramKey)
+                  ) {
+                    this.unknownPrograms.add(ineligibleProgramKey);
+                    console.warn(
+                      `No undergrad program found with ${parsedProgramType} code ${code}`,
+                    );
+                  }
+                }
+                // If parsing a grad degree, PHD and MS can have the same code
+                // We assume that the program that is being referred to shares the same degree as this program
+                else {
+                  foundDegree = this.referenceableMajors.find(
+                    ({ majorCode, degreeCode }) =>
+                      code.startsWith(majorCode) && degreeCode === programId.degreeType,
+                  )?.degreeCode;
+                  if (
+                    foundDegree === undefined &&
+                    !this.unknownPrograms.has(ineligibleProgramKey)
+                  ) {
+                    this.unknownPrograms.add(ineligibleProgramKey);
+                    console.log(programId);
+                    console.warn(
+                      `No ${programId.degreeType} program found with MAJOR code, ${code}`,
+                    );
+                  }
+                }
+
+                if (!foundDegree) break;
+                if (parsedProgramType === "SPEC" && code.endsWith("@")) {
+                  // The '@' wildcard can be used to denote a sharing with all specializations of a major, i.e `BS-153@`
+                  // note that we filter through potential specializations, some of which may be outdated
+                  parsedCodes.push(
+                    ...this.referenceableSpecs
+                      .filter((spec) => spec.startsWith(code.slice(0, code.length - 1)))
+                      .map((matchedSpec) => `${foundDegree}-${matchedSpec}`),
+                  );
+                } else {
+                  parsedCodes.push(`${foundDegree}-${code}`);
+                }
+                break;
+              }
+              case "MINOR":
+              case "COLLEGE":
+              case "LIBL":
+                // code is given in the numerical representation for "COLLEGE" types, i.e "55" for School of Biological Science
+                // LIBL refers to Liberal Learnings
+                parsedCodes.push(code);
+                break;
+              case "OTHER":
+                // code can be "AHPER" | "AHGEO" | "345O" | "429O" | "153HON"
+                // "AHPER" and "AHGEO" refers to the Art History Specializations, which are special cases that are excepted in Scraper.ts.
+                // "345O" and "429O" are the "345 (BA English) OTHER" and "429 (BA History) OTHER" blocks (see pr 386)
+                // "153HON" likely stands for an outdated honors chemistry program
+
+                if (!["AHPER", "AHGEO", "345O", "429O", "153HON"].includes(code)) {
+                  console.warn("Unknown OTHER block code:", code);
+                }
+                break;
+            }
+            nonExclusiveQualifier.appliesToBlocks.push(
+              ...parsedCodes.map((c) => {
+                return {
+                  programType: parsedProgramType,
+                  code: c,
+                  maxShared: qualifier.classes,
+                };
+              }),
+            );
+          }
+          break;
+        }
+        case "EXCLUSIVE":
+          qualifiers.set("EXCLUSIVE", {
+            qualifierType: "Exclusive",
+          });
+      }
+    }
+    return qualifiers.values().toArray();
+  }
+
+  async ruleArrayToRequirements(ruleArray: Rule[], blockId: DegreeWorksProgramId) {
     const ret: DegreeWorksRequirement[] = [];
     for (const rule of ruleArray) {
       switch (rule.ruleType) {
@@ -330,6 +367,19 @@ export class AuditParser {
               x.withArray ? x.withArray : [],
             ],
           );
+          const includeTreesById = new Map<string, CourseConstraintTree[]>();
+          const excludeInvertedTreesById = new Map<string, CourseConstraintTree[]>();
+          const pushTree = (
+            map: Map<string, CourseConstraintTree[]>,
+            id: string,
+            tree: CourseConstraintTree | null,
+          ) => {
+            if (tree === null) return;
+            const trees = map.get(id) ?? [];
+            trees.push(tree);
+            map.set(id, trees);
+          };
+
           const toInclude: Map<string, typeof course.$inferSelect> = new Map(
             await Promise.all(
               includedCourses.map(([x, withArray]) =>
@@ -339,7 +389,19 @@ export class AuditParser {
               ),
             ).then((x) =>
               x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
+                .flatMap(([classes, withArray]) => {
+                  const tree = withArrayToTree(withArray);
+                  const filtered: (typeof course.$inferSelect)[] = [];
+                  for (const c of classes) {
+                    const match = classifyTree(c, tree, this.catalogYear);
+                    if (match === "never") continue;
+                    filtered.push(c);
+                    if (match === "sometimes") {
+                      pushTree(includeTreesById, c.id, tree);
+                    }
+                  }
+                  return filtered;
+                })
                 .map((y) => [y.id, y]),
             ),
           );
@@ -349,19 +411,36 @@ export class AuditParser {
               `${x.discipline} ${x.number}${x.numberEnd ? `-${x.numberEnd}` : ""}`,
               x.withArray ? x.withArray : [],
             ]) ?? [];
-          const toExclude = new Set<string>(
-            await Promise.all(
-              excludedCourses.map(([x, withArray]) =>
-                this.normalizeCourseId
-                  .bind(this)(x)
-                  .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
-              ),
-            ).then((x) =>
-              x
-                .flatMap(([classes, withArray]) => this.filterThroughWithArray(classes, withArray))
-                .map((y) => y.id),
+          const toExclude = new Set<string>();
+          await Promise.all(
+            excludedCourses.map(([x, withArray]) =>
+              this.normalizeCourseId
+                .bind(this)(x)
+                .then((x) => [x, withArray] as [(typeof course.$inferSelect)[], WithClause[]]),
             ),
-          );
+          ).then((x) => {
+            for (const [classes, withArray] of x) {
+              if (withArray.length === 0) {
+                for (const c of classes) {
+                  toExclude.add(c.id);
+                }
+                continue;
+              }
+
+              const invertedTree = invertWithArrayToTree(withArray);
+              for (const c of classes) {
+                const match = classifyTree(c, invertedTree, this.catalogYear);
+                if (match === "never") {
+                  toExclude.add(c.id);
+                  continue;
+                }
+                if (match === "sometimes" && toInclude.has(c.id)) {
+                  pushTree(excludeInvertedTreesById, c.id, invertedTree);
+                }
+              }
+            }
+          });
+
           const courses = Array.from(toInclude)
             .filter(([x]) => !toExclude.has(x))
             .sort(([, a], [, b]) =>
@@ -370,6 +449,26 @@ export class AuditParser {
                 : this.lexOrd(a.department, b.department),
             )
             .map(([x]) => x);
+
+          const qualifiers = rule.requirement.qualifierArray
+            ? await this.parseQualifiers(rule.requirement.qualifierArray, blockId)
+            : [];
+          const hasQualifiers = qualifiers.length !== 0;
+
+          const courseConstraints: Record<string, CourseConstraintTree> = {};
+          for (const id of courses) {
+            const tree = andTrees([
+              orTrees(includeTreesById.get(id) ?? []),
+              ...(excludeInvertedTreesById.get(id) ?? []),
+            ]);
+
+            if (tree !== null) {
+              courseConstraints[id] = tree;
+            }
+          }
+          const optionalCourseConstraints =
+            Object.keys(courseConstraints).length > 0 ? { courseConstraints } : {};
+
           if (rule.requirement.classesBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
             const requirementType = "Course";
@@ -379,8 +478,10 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
+              ...(hasQualifiers && { qualifiers }),
               courseCount: Number.parseInt(rule.requirement.classesBegin, 10),
               courses,
+              ...optionalCourseConstraints,
             });
           } else if (rule.requirement.creditsBegin) {
             const label = AuditParser.suppressLabelPolymorphism(rule.label);
@@ -391,8 +492,10 @@ export class AuditParser {
               label,
               requirementId,
               requirementType,
+              ...(hasQualifiers && { qualifiers }),
               unitCount: Number.parseInt(rule.requirement.creditsBegin, 10),
               courses,
+              ...optionalCourseConstraints,
             });
           }
           break;
@@ -400,7 +503,7 @@ export class AuditParser {
         case "Group": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, blockId);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({
@@ -418,7 +521,7 @@ export class AuditParser {
             if (rules.length > 1) {
               const label = "Select 1 of the following";
               const requirementType = "Group";
-              const requirements = await this.ruleArrayToRequirements(rules);
+              const requirements = await this.ruleArrayToRequirements(rules, blockId);
               const contentsSalt = requirements.map((req) => req.requirementId).join("_");
               const requirementId = this.generateRequirementId(requirementType, contentsSalt);
               ret.push({
@@ -429,7 +532,7 @@ export class AuditParser {
                 requirements,
               });
             } else if (rules.length === 1) {
-              ret.push(...(await this.ruleArrayToRequirements(rules)));
+              ret.push(...(await this.ruleArrayToRequirements(rules, blockId)));
             }
           }
           break;
@@ -450,7 +553,7 @@ export class AuditParser {
         case "Subset": {
           const label = AuditParser.suppressLabelPolymorphism(rule.label);
           const requirementType = "Group";
-          const requirements = await this.ruleArrayToRequirements(rule.ruleArray);
+          const requirements = await this.ruleArrayToRequirements(rule.ruleArray, blockId);
           const contentsSalt = requirements.map((req) => req.requirementId).join("_");
           const requirementId = this.generateRequirementId(requirementType, contentsSalt);
           ret.push({

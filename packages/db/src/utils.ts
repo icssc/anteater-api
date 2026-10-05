@@ -1,8 +1,21 @@
-import type { ColumnBaseConfig, SQL } from "drizzle-orm";
+import type { ColumnBaseConfig, InferInsertModel, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import type { Term, terms } from "./schema";
+import type { Term, terms } from "./schema/websoc.ts";
+
+const MAX_PG_PARAM_INSERT_COUNT = 65_000;
+
+export function chunkUpsertData<T extends PgTable>(table: T, array: InferInsertModel<T>[]) {
+  const columnCount = Object.values(getTableColumns(table)).filter((col) => !col.generated).length;
+  const rowCount = Math.floor(MAX_PG_PARAM_INSERT_COUNT / columnCount);
+  const chunks = [];
+
+  for (let i = 0; i < array.length; i += rowCount) {
+    chunks.push(array.slice(i, i + rowCount));
+  }
+  return chunks;
+}
 
 // Drizzle date({ mode: "date" }) columns return JS Dates. postgres.js can't bind a Date as a
 // parameter inside a raw sql`` expression (no column type to encode it with), so render to a
