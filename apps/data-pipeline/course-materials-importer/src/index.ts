@@ -46,6 +46,12 @@ async function main() {
     }
   }
 
+  if (inputTerms.size > 1) {
+    throw new Error(
+      `Multiple input terms found: ${Array.from(inputTerms).join(", ")}. Expected at most one term.`,
+    );
+  }
+
   const values: (typeof courseMaterial.$inferInsert)[] = [];
 
   console.log(`Processing ${inputData.length} course material entries...`);
