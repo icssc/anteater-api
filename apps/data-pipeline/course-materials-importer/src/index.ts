@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { and, eq, or } from "@packages/db/drizzle";
+import { and, eq, inArray, or } from "@packages/db/drizzle";
 import type { MaterialRequirement, Term, TextbookFormat } from "@packages/db/schema";
 import { courseMaterial, websocSection } from "@packages/db/schema";
 import { chunkUpsertData } from "@packages/db/utils";
@@ -37,6 +37,15 @@ async function main() {
       if (!entry.has(field)) throw new Error(`Missing field: ${field}`);
     }
   }
+
+  const inputTerms = new Set<string>();
+  for (const entry of inputData) {
+    const term = entry.get("Term");
+    if (term) {
+      inputTerms.add(term);
+    }
+  }
+
   const values: (typeof courseMaterial.$inferInsert)[] = [];
 
   console.log(`Processing ${inputData.length} course material entries...`);
@@ -73,23 +82,59 @@ async function main() {
       continue;
     }
 
+    const isbnRaw = entry.get("ISBN");
+    const isbn = isbnRaw
+      ? String(isbnRaw)
+          .split(";")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const mmsIdRaw = entry.get("MMS ID");
+    const mmsId = mmsIdRaw
+      ? String(mmsIdRaw)
+          .split("|")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
     values.push({
       sectionId: section.id,
       title: getFromMapOrThrow(entry, "Title"),
       author: entry.get("Author"),
       edition: entry.get("Edition"),
-      isbn: entry.get("ISBN"),
+      isbn,
       format: (entry.get("Format") || null) as TextbookFormat,
       requirement: (inputRequirement === "Go to Class First"
         ? "GoToClassFirst"
         : inputRequirement || null) as MaterialRequirement,
-      mmsId: entry.get("MMS ID"),
+      mmsId,
       link: entry.get("Link"),
     });
   }
 
   await db.transaction(async (tx) => {
-    await tx.delete(courseMaterial);
+    for (const termStr of inputTerms) {
+      const [quarter, year] = termStr.split(" ");
+      const sectionsInTerm = tx
+        .select({ id: websocSection.id })
+        .from(websocSection)
+        .where(
+          and(
+            eq(websocSection.year, year),
+            quarter === "Summer"
+              ? or(
+                  eq(websocSection.quarter, "Summer1"),
+                  eq(websocSection.quarter, "Summer10wk"),
+                  eq(websocSection.quarter, "Summer2"),
+                )
+              : eq(websocSection.quarter, quarter as Term),
+          ),
+        );
+
+      await tx.delete(courseMaterial).where(inArray(courseMaterial.sectionId, sectionsInTerm));
+    }
+
     const insertChunks = chunkUpsertData(courseMaterial, values);
     console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
     for (const chunk of insertChunks) {
