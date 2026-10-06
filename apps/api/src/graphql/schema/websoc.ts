@@ -89,6 +89,8 @@ type WebsocResponse @cacheControl(maxAge: 300) {
 }
 
 type WebsocTerm @cacheControl(maxAge: 300) {
+    year: String!
+    quarter: Term!
     shortName: String!
     longName: String!
 }
