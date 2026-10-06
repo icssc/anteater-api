@@ -1,6 +1,6 @@
 ---
 name: ISSUE_TEMPLATE
-about: Describe an issue present in the API or make a feature request
+about: Describe an issue or make a feature request
 title: ""
 labels: ""
 assignees: ""
@@ -40,4 +40,4 @@ assignees: ""
 
 ## Your Environment
 
-<!--- Include as many relevant details about the environment you experienced the bug in -->
+<!--- Relevant details about the environment you experienced the bug in -->
