@@ -144,7 +144,7 @@ export const websocQuerySchema = z.object({
   }),
   days: daysSchema.optional().openapi({
     description:
-      "Comma-separated day tokens, e.g. M, Tu, W, Th, F, S, or Su. Only include sections which meet on at least one of the specified days of the week.",
+      "Comma-separated day tokens, e.g. M, Tu, W, Th, F, Sa, or Su. Only include sections which meet on at least one of the specified days of the week.",
     example: "Tu,Th",
   }),
   building: z.string().optional().openapi({
