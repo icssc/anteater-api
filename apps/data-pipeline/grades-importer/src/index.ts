@@ -1,9 +1,10 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { and, eq, getTableColumns, or } from "@packages/db/drizzle";
+import { and, eq, or } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
 import { websocSection, websocSectionGrade } from "@packages/db/schema";
+import { chunkUpsertData } from "@packages/db/utils";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
 
@@ -25,15 +26,6 @@ const REQUIRED_FIELDS = [
   "GradeNPCount",
   "GradeWCount",
 ] as const;
-
-const MAX_PARAMS_PER_INSERT = 65534;
-
-const ROWS_PER_INSERT = Math.floor(
-  MAX_PARAMS_PER_INSERT /
-    Object.values(getTableColumns(websocSectionGrade)).filter(
-      (data) => !data.default && !data.generated,
-    ).length,
-);
 
 const gradesSectionMapper = (
   gs: Map<string, string>,
@@ -103,11 +95,10 @@ async function main() {
     values.push({ sectionId: row.sectionId, ...data });
   }
   await db.transaction(async (tx) => {
-    for (let i = 0; i < values.length; i += ROWS_PER_INSERT) {
-      await tx
-        .insert(websocSectionGrade)
-        .values(values.slice(i, i + ROWS_PER_INSERT))
-        .onConflictDoNothing();
+    const insertChunks = chunkUpsertData(websocSectionGrade, values);
+    console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
+    for (const chunk of insertChunks) {
+      await tx.insert(websocSectionGrade).values(chunk).onConflictDoNothing();
     }
   });
   exit(0);

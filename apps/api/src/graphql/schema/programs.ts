@@ -41,6 +41,7 @@ type ProgramCourseRequirement implements ProgramRequirementBase @cacheControl(ma
     courseCount: Int!
     courses: [String!]!
     courseConstraints: JSON
+    qualifiers: JSON
 }
 
 type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -50,6 +51,7 @@ type ProgramUnitRequirement implements ProgramRequirementBase @cacheControl(maxA
     unitCount: Int!
     courses: [String!]!
     courseConstraints: JSON
+    qualifiers: JSON
 }
 
 type ProgramGroupRequirement implements ProgramRequirementBase @cacheControl(maxAge: 86400) {
@@ -71,6 +73,7 @@ union ProgramRequirement = ProgramCourseRequirement | ProgramUnitRequirement | P
 interface Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
@@ -82,6 +85,7 @@ type SchoolRequirements @cacheControl(maxAge: 86400) {
 type Major implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
     schoolRequirements: SchoolRequirements
 }
@@ -89,12 +93,14 @@ type Major implements Program @cacheControl(maxAge: 86400) {
 type Minor implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
 type Specialization implements Program @cacheControl(maxAge: 86400) {
     id: String!
     name: String!
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!
 }
 
@@ -105,20 +111,24 @@ enum UgradRequirementsBlockId {
 
 type UgradRequirements @cacheControl(maxAge: 86400) {
     id: UgradRequirementsBlockId!,
+    qualifiers: JSON
     requirements: [ProgramRequirement!]!,
 }
 
 input MajorRequirementsQuery {
     programId: String!
     specializationId: String
+    catalogYear: String
 }
 
 input ProgramRequirementsQuery {
     programId: String!
+    catalogYear: String
 }
 
 input MajorsQuery {
-    id: String!
+    id: String
+    catalogYear: String
 }
 
 input MinorsQuery {
@@ -131,6 +141,7 @@ input SpecializationsQuery {
 
 input UgradRequrementsQuery {
     id: UgradRequirementsBlockId!
+    catalogYear: String
 }
 
 extend type Query {
