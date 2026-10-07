@@ -24,7 +24,7 @@ export const qualifierClauseBaseSchema = z.object({
 
 export const qualifierNonExclusiveSchema = qualifierClauseBaseSchema.extend({
   name: z.literal("NONEXCLUSIVE"),
-  classes: z.number().optional(),
+  classes: z.string().optional(),
 });
 
 export const qualifierExclusiveSchema = qualifierClauseBaseSchema.extend({
