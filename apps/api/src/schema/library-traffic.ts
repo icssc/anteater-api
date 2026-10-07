@@ -48,7 +48,7 @@ const historyFilterBase = z.object({
 });
 
 export const libraryTrafficHistoryRawQuerySchema = historyFilterBase.extend({
-  cursor: z.string().optional().openapi({
+  cursor: z.uuid().optional().openapi({
     description:
       "Pagination cursor (row id) from a previous response's nextCursor — returns rows after this point",
   }),
