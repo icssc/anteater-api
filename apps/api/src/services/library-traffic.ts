@@ -154,6 +154,13 @@ export class LibraryTrafficService {
     // Convert stored UTC timestamps to Pacific time before extracting hour/day/month buckets
     const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
 
+    // Chosen in JS rather than bound as a parameter: bucketExpr is repeated in SELECT, GROUP BY
+    // and ORDER BY, and Postgres treats differently-numbered parameters ($1, $2, ...) as distinct
+    // expressions, which fails the GROUP BY check.
+    const fallOffset = isFinals
+      ? sql`0`
+      : sql`CASE WHEN ${calendarTerm.quarter} = 'Fall' THEN 4 ELSE 0 END`;
+
     const bucketExpr = {
       hour: sql`EXTRACT(hour FROM ${localTs})`.mapWith(Number),
       day: sql`EXTRACT(isodow FROM ${localTs})`.mapWith(Number),
@@ -161,10 +168,9 @@ export class LibraryTrafficService {
       // with Fall's 4-day Thursday offset applied only during instruction so that Monday of the
       // first full week = week 1 and the Thu–Sun stub = week 0. Finals always start on a fixed
       // weekday so the offset is not applied there.
-      week: sql`floor(
-        (${localTs}::date - ${periodStart}
-         - CASE WHEN ${calendarTerm.quarter} = 'Fall' AND NOT ${isFinals} THEN 4 ELSE 0 END)::numeric / 7
-      )::int + 1`.mapWith(Number),
+      week: sql`floor((${localTs}::date - ${periodStart} - ${fallOffset})::numeric / 7)::int + 1`.mapWith(
+        Number,
+      ),
       month: sql`EXTRACT(month FROM ${localTs})`.mapWith(Number),
     }[input.granularity];
 
