@@ -6,7 +6,7 @@ export type RestaurantId = (typeof restaurantIds)[number];
 export const restaurantIDToURL = {
   anteatery: "the-anteatery",
   brandywine: "brandywine",
-} as const;
+} as Record<RestaurantId, string>;
 
 export type MealPeriod = LocationResponse["data"]["Commerce_mealPeriods"][0];
 
