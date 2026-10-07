@@ -46,6 +46,9 @@ async function main() {
     }
   }
 
+  // UCI Libraries has said they will only give us 1 input term at a time, so by default we only allow
+  // for 1 term in the importer. Just in case we need to input multiple terms at once, we are keeping the
+  // logic that supports multiple inputTerms, which will work if we comment out the error handling here.
   if (inputTerms.size > 1) {
     throw new Error(
       `Multiple input terms found: ${Array.from(inputTerms).join(", ")}. Expected at most one term.`,
