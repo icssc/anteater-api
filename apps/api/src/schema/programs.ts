@@ -1,14 +1,38 @@
 import { z } from "@hono/zod-openapi";
-import { type CourseConstraintTree, WithConstraintCode } from "@packages/db/schema";
+import type { CourseConstraintTree } from "@packages/db/schema";
+import { degreeWorksProgramTypes, withConstraintCodes } from "@packages/db/schema";
 
 const programIdBase = z.string({
   error: (issue) => (issue.input === undefined ? "programId is required" : "invalid programId"),
 });
 
+const catalogYearInputSchema = z
+  .string()
+  .length(8)
+  .refine(
+    (s) => {
+      const [l, r] = [s.slice(undefined, 4), s.slice(4)];
+      return Number(l) === Number(r) - 1;
+    },
+    {
+      error: "catalogYear takes form of two contiguous years, e.g. 20242025",
+    },
+  )
+  .optional()
+  .openapi({
+    description:
+      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is from an unspecified year",
+    example: "20242025",
+  });
+
 export const majorsQuerySchema = z.object({
   id: z.string().optional().openapi({
     description: "The ID of a single major to request, if provided",
     example: "BA-163",
+  }),
+  catalogYear: catalogYearInputSchema.openapi({
+    description:
+      "If specified, data is derived from the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, data is from the latest known catalog year",
   }),
 });
 
@@ -17,12 +41,17 @@ export const minorsQuerySchema = z.object({
     description: "The ID of a single minor to request, if provided",
     example: "49A",
   }),
+  // no catalogYear; has no known effect on minors
 });
 
 export const specializationsQuerySchema = z.object({
   majorId: z.string().optional().openapi({
     description: "Only fetch specializations associated with the major with this ID, if provided",
     example: "BS-201",
+  }),
+  catalogYear: catalogYearInputSchema.openapi({
+    description:
+      "If specified, return specializations valid in the closest known catalog year (prioritizing more recent years in case of a tie); otherwise, return all specializations over all years",
   }),
 });
 
@@ -36,6 +65,7 @@ export const majorRequirementsQuerySchema = z.object({
       "if provided, fetch major requirements given this specialization; providing no specialization when one is required has unspecified behavior",
     example: "BS-201A",
   }),
+  catalogYear: catalogYearInputSchema,
 });
 
 export const minorRequirementsQuerySchema = z.object({
@@ -43,6 +73,7 @@ export const minorRequirementsQuerySchema = z.object({
     description: "A minor ID to query requirements for",
     example: "459",
   }),
+  catalogYear: catalogYearInputSchema,
 });
 
 export const specializationRequirementsQuerySchema = z.object({
@@ -50,16 +81,68 @@ export const specializationRequirementsQuerySchema = z.object({
     description: "A specialization ID to query requirements for",
     example: "BS-201E",
   }),
+  catalogYear: catalogYearInputSchema,
 });
 
 export const UgradRequirementsBlockIds = ["UC", "GE", "CHC4", "CHC2"] as const;
 
 export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
+  catalogYear: catalogYearInputSchema,
+});
+
+export const exclusiveQualifierSchema = z
+  .object({
+    qualifierType: z.literal("Exclusive"),
+  })
+  .openapi({
+    description:
+      "When present on a requirement, reverts a `NonExclusive` qualifier on a parent block, preventing courses fulfilling part of this requirement from being used in other requirements",
+  });
+
+export const nonExclusiveQualifierSchema = z
+  .object({
+    qualifierType: z.literal("NonExclusive"),
+    appliesToBlocks: z.array(
+      z.object({
+        programType: z.enum(degreeWorksProgramTypes).openapi({
+          description: "The type of programs this qualifier applies to",
+          examples: ["MAJOR", "MINOR", "SPEC", "COLLEGE", "OTHER"],
+        }),
+        code: z
+          .string()
+          .optional()
+          .openapi({
+            description:
+              "The code of a specific program this qualifier applies to. These are ids for majors, minors, and specializations (i.e. `BS-201`, `120`, `BS-201A`); numerical codes representing colleges for college requirements (i.e `55` for School of Biological Sciences); and misc strings for other blocks (i.e `LIBL` for Liberal Learning). If no code is specified, this qualifier applies to all programs of the specified `programType`",
+            examples: ["BS-201", "120", "BS-201A", "55", "LIBL"],
+          }),
+      }),
+    ),
+  })
+  .openapi({
+    description:
+      "By default, a course cannot be used to satisfy two different requirements, unless the 'NonExclusive' qualifier allows re-use in another requirement with matching `programType` and `code`",
+  });
+
+export const qualifierSchema = z
+  .union([nonExclusiveQualifierSchema, exclusiveQualifierSchema])
+  .openapi({
+    description: "Further qualifiers for how courses can apply to a program requirement",
+  });
+
+const qualifierArraySchema = z.array(qualifierSchema).optional().openapi({
+  description: "Qualifiers for this requirement",
+});
+
+const catalogYearOutputSchema = z.string().openapi({
+  description:
+    "The catalog year from which data is actually derived. This will be a catalog closest to the input catalog year; see above.",
+  example: "20252026",
 });
 
 const courseConstraintSchema = z.object({
-  code: z.enum(WithConstraintCode),
+  code: z.enum(withConstraintCodes),
   operator: z.enum(["<", "<=", "=", ">=", ">", "<>"]),
   valueList: z.array(z.string()),
 });
@@ -102,6 +185,7 @@ export const programCourseRequirementSchema = programRequirementBaseSchema
     courseCount: z.number().int().nonnegative().openapi({
       description: "The number of courses from this set demanded by this requirement.",
     }),
+    qualifiers: qualifierArraySchema,
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
@@ -127,6 +211,7 @@ export const programUnitRequirementSchema = programRequirementBaseSchema
       .int()
       .nonnegative()
       .openapi({ description: "The number of units needed for this requirement." }),
+    qualifiers: qualifierArraySchema,
     courses: z
       .array(z.string())
       .openapi({ description: "The courses permissible for fulfilling this requirement." }),
@@ -236,6 +321,7 @@ export const majorsResponseSchema = z.array(
     specializationRequired: z.boolean().openapi({
       description: "Whether a specialization must be completed to complete this degree",
     }),
+    catalogYear: catalogYearOutputSchema,
     specializations: z.array(z.string()).openapi({
       description: "The ID(s) of specialization(s) associated with this major",
       example: [
@@ -290,6 +376,10 @@ export const programRequirementsResponseSchema = z.object({
   name: z.string().openapi({
     description: "Human name for this program",
   }),
+  catalogYear: catalogYearOutputSchema,
+  qualifiers: qualifierArraySchema.openapi({
+    description: "Qualifiers that apply to all requirements in this program",
+  }),
   requirements: z.array(programRequirementSchema).openapi({
     description:
       "The set of of requirements for this program; a course, unit, or group requirement as follows:",
@@ -304,6 +394,7 @@ export const majorRequirementsResponseSchema = programRequirementsResponseSchema
   schoolRequirements: z
     .object({
       name: z.string().openapi({ description: "Name for this school's requirements" }),
+      qualifiers: programRequirementsResponseSchema.shape.qualifiers,
       requirements: programRequirementsResponseSchema.shape.requirements,
     })
     .nullable()
@@ -328,6 +419,10 @@ export const specializationRequirementsResponseSchema = programRequirementsRespo
 
 export const ugradRequirementsResponseSchema = z.object({
   id: z.string().openapi({ description: "ID of the requirements block fetched" }),
+  catalogYear: catalogYearOutputSchema,
+  qualifiers: qualifierArraySchema.openapi({
+    description: "Qualifiers that apply to all requirements in this block",
+  }),
   requirements: z
     .array(programRequirementSchema)
     .openapi({ description: "The requirements in this requirements block" }),

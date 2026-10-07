@@ -58,7 +58,7 @@ export class DiningService {
         conds.push(lt(diningEvent.start, sql`${input.before}::date + INTERVAL '1 day'`));
       }
     } else {
-      // default: only get events ending at or after the current time or ones with a null end time with a start date within 2 weeks of the current time
+      // default: only get events ending at or after the current time or ones with a null end time that was updated at most 2 weeks ago
       conds.push(
         or(
           gte(diningEvent.end, sql`NOW()`),

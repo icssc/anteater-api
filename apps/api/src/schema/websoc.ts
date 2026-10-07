@@ -316,6 +316,8 @@ export const websocResponseSchema = z.object({
 });
 
 export const websocTermResponseSchema = z.object({
+  year: yearSchema,
+  quarter: z.enum(terms),
   shortName: z.string().openapi({ example: "2025 Fall" }),
   longName: z.string().openapi({ example: "2025 Fall Quarter" }),
 });

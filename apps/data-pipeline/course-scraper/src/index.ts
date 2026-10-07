@@ -236,7 +236,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/AND/).map((prereq) => prereq.trim());
+  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = prereq
@@ -282,7 +282,10 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
       const prereqList = $(entry[prereqFieldLabels.Prerequisite])
-        .text()
+        .contents()
+        .map((_, node) => $(node).text())
+        .get()
+        .join(" ")
         .replace(/\s+/g, " ")
         .trim();
       if (!courseId || !courseTitle || !prereqList) return;

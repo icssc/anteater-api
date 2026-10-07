@@ -2,6 +2,7 @@ import type { database } from "@packages/db";
 import { and, eq, ilike, inArray, isNotNull } from "@packages/db/drizzle";
 import {
   courseMaterial,
+  type materialTerms,
   websocCourse,
   websocSection,
   websocSectionToInstructor,
@@ -88,9 +89,10 @@ export class CourseMaterialsService {
       .reduce((acc, row) => {
         if (!acc.has(row.materialId)) {
           const displayQuarter = row.quarter.startsWith("Summer") ? "Summer" : row.quarter;
+
           acc.set(row.materialId, {
             ...row,
-            quarter: displayQuarter as any,
+            quarter: displayQuarter as (typeof materialTerms)[number],
             sectionCode: row.sectionCode.toString(10).padStart(5, "0"),
           });
         }

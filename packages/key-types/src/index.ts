@@ -51,6 +51,11 @@ export type BaseKeyData = {
    * If present, specifies which additional resources requests made using this key are allowed to access.
    */
   resources?: Record<AccessControlledResource, boolean>;
+
+  /**
+   * User ID of the owner/issuer of this key.
+   */
+  owner: string;
 };
 
 export type KeyData = BaseKeyData & (PublishableKeyData | SecretKeyData);

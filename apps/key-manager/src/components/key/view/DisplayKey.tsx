@@ -13,11 +13,11 @@ interface Props {
 const DisplayKey: React.FC<Props> = ({ keyText, copyText, background, label, copy = true }) => {
   const [copied, setCopied] = React.useState<boolean>(false);
 
-  const handleCopyKey = (apiKey: string) => {
+  function handleCopyKey(apiKey: string) {
     navigator.clipboard.writeText(apiKey).then();
     setCopied(true);
     setTimeout(() => setCopied(false), 500);
-  };
+  }
 
   return (
     <div className={"space-y-2 max-w-full overflow-x-auto"}>
