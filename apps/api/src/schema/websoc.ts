@@ -198,6 +198,7 @@ export const websocQuerySchema = z.object({
     })
     .openapi({
       description: restrictionCodesDescription,
+      example: "L,M",
     }),
   includeRelatedCourses: z.coerce
     .string()
@@ -266,6 +267,7 @@ export const websocSectionSchema = z.object({
   numRequested: z.string(),
   restrictions: z.string().openapi({
     description: restrictionCodesDescription,
+    example: "A and L",
   }),
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
