@@ -144,7 +144,8 @@ export const websocQuerySchema = z.object({
   }),
   days: daysSchema.optional().openapi({
     description:
-      "Only include sections which meet on at least one of the specified days of the week",
+      "Only include sections which meet on at least one of the specified days of the week, separated by commas. Day abbreviations follow WebSoc (https://www.reg.uci.edu/help/WebSoc-Glossary.shtml#Days).",
+    example: "Tu,Th",
   }),
   building: z.string().optional().openapi({
     description: "Only include sections which have at least one meeting in the specified building",

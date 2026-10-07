@@ -8,7 +8,7 @@ interface MeetingDays {
   meetsSunday: boolean;
 }
 
-type Day = "M" | "Tu" | "W" | "Th" | "F" | "S" | "Su";
+type Day = "M" | "Tu" | "W" | "Th" | "F" | "Sa" | "Su";
 type Days = Day[];
 
 const dayMap: Record<Day, keyof MeetingDays> = {
@@ -17,7 +17,7 @@ const dayMap: Record<Day, keyof MeetingDays> = {
   W: "meetsWednesday",
   Th: "meetsThursday",
   F: "meetsFriday",
-  S: "meetsSaturday",
+  Sa: "meetsSaturday",
   Su: "meetsSunday",
 };
 
