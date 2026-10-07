@@ -161,7 +161,8 @@ export const libraryTrafficHistoryPatternEntrySchema = historyLocationBase.exten
   }),
   label: z.string().openapi({
     example: "2pm",
-    description: "Human-readable bucket label (e.g. '2pm', 'Monday', 'Week 7', 'June')",
+    description:
+      "Human-readable bucket label (e.g. '2pm', 'Monday', 'Week 7', 'June', 'Finals Week')",
   }),
   avgCount: z.number().openapi({
     example: 87.3,

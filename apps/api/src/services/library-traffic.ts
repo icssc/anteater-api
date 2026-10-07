@@ -271,7 +271,9 @@ export class LibraryTrafficService {
           ? String(row.quarter)
           : undefined
         : input.quarter,
-      label: patternLabel(input.granularity, row.bucket),
+      // Finals week buckets are relative to finalsStart, so "Week 1" would read as the first
+      // week of instruction
+      label: isWeek && isFinals ? "Finals Week" : patternLabel(input.granularity, row.bucket),
     }));
   }
 
