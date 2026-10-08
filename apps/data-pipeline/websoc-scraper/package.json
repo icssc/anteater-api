@@ -15,8 +15,7 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "@types/node": "26.1.0",
-    "cheerio": "catalog:",
-    "cross-fetch": "4.1.0"
+    "cheerio": "catalog:"
   },
   "devDependencies": {
     "wrangler": "catalog:"
