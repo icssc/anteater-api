@@ -17,7 +17,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "domhandler": "6.0.1",
+    "domhandler": "catalog:",
     "wrangler": "catalog:"
   }
 }

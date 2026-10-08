@@ -12,12 +12,12 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "cheerio": "catalog:",
-    "json-diff": "1.0.6",
-    "readline-sync": "1.4.10",
-    "sort-keys": "6.0.1"
+    "json-diff": "catalog:",
+    "readline-sync": "catalog:",
+    "sort-keys": "catalog:"
   },
   "devDependencies": {
-    "@types/json-diff": "1.0.3",
-    "@types/readline-sync": "1.4.8"
+    "@types/json-diff": "catalog:",
+    "@types/readline-sync": "catalog:"
   }
 }
