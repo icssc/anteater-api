@@ -11,8 +11,7 @@
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.2.0",
-    "cross-fetch": "4.1.0",
+    "cheerio": "catalog:",
     "domhandler": "6.0.1",
     "he": "1.2.0",
     "json-diff": "1.0.6",

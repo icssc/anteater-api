@@ -13,8 +13,7 @@
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.2.0",
-    "cross-fetch": "4.1.0",
+    "cheerio": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

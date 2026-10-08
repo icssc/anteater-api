@@ -2,7 +2,6 @@ import type { database } from "@packages/db";
 import { inArray, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import fetch from "cross-fetch";
 import { z } from "zod";
 import { losAngelesNowNaive } from "./time";
 
