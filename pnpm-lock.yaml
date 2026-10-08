@@ -21,6 +21,9 @@ catalogs:
     drizzle-kit:
       specifier: 0.31.10
       version: 0.31.10
+    drizzle-orm:
+      specifier: 0.45.2
+      version: 0.45.2
     json-diff:
       specifier: 1.0.6
       version: 1.0.6
@@ -467,7 +470,7 @@ importers:
         specifier: 2.1.1
         version: 2.1.1
       drizzle-orm:
-        specifier: 0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@cloudflare/workers-types@4.20241230.0)(postgres@3.4.9)
       lucide-react:
         specifier: 1.23.0
@@ -528,7 +531,7 @@ importers:
   packages/db:
     dependencies:
       drizzle-orm:
-        specifier: 0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@cloudflare/workers-types@4.20241230.0)(postgres@3.4.9)
       postgres:
         specifier: 3.4.9
