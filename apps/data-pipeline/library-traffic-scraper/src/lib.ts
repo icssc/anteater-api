@@ -3,7 +3,6 @@ import { lt } from "@packages/db/drizzle";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { load } from "cheerio";
-import fetch from "cross-fetch";
 import { z } from "zod";
 
 const rawRespOKSchema = z.object({

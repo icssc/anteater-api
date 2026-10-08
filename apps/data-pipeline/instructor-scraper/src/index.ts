@@ -6,7 +6,6 @@ import { eq, isNull, or } from "@packages/db/drizzle";
 import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
 import { chunkUpsertData, conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
-import fetch from "cross-fetch";
 import he from "he";
 import { base64ToString } from "uint8array-extras";
 import winston from "winston";
@@ -62,7 +61,7 @@ async function fetchDirectoryWithDelay(name: string, delayMs = 1000): Promise<Di
       body: new URLSearchParams({ uciKey: name, filter: "all" }),
     }).then((x) => x.json());
     logger.info("Request succeeded");
-    return res;
+    return res as DirectoryResponse;
   } catch {
     const delay = Math.min(2 * delayMs, MAX_DELAY_MS);
     logger.warn(`Rate limited, waiting for ${delay} ms`);

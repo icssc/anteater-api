@@ -12,7 +12,6 @@ import {
 } from "@packages/db/schema";
 import { orNull, sleep } from "@packages/stdlib";
 import { type Cheerio, load } from "cheerio";
-import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";

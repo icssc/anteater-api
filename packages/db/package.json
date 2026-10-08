@@ -19,11 +19,11 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.2",
+    "drizzle-orm": "catalog:",
     "postgres": "3.4.9"
   },
   "devDependencies": {
     "dotenv": "17.4.2",
-    "drizzle-kit": "0.31.10"
+    "drizzle-kit": "catalog:"
   }
 }
