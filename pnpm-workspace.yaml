@@ -10,6 +10,8 @@ catalog:
   "@types/json-diff": 1.0.3
   "@types/readline-sync": 1.4.8
   cheerio: 1.2.0
+  drizzle-kit: 0.31.10
+  drizzle-ork: 0.45.2
   domhandler: 6.0.1
   json-diff: 1.0.6
   readline-sync: 1.4.10
