@@ -7,7 +7,7 @@ import fetch from "cross-fetch";
 import { z } from "zod";
 
 const HEADERS_INIT = {
-  "user-agent": "ICCSC-AAPI-Library-Traffic",
+  "user-agent": "ICSSC-AnteaterAPI (+https://studentcouncil.ics.uci.edu/)",
 };
 
 const rawRespOKSchema = z.object({
