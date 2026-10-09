@@ -6,6 +6,10 @@ import { load } from "cheerio";
 import fetch from "cross-fetch";
 import { z } from "zod";
 
+const HEADERS_INIT = {
+  "user-agent": "ICCSC-AAPI-Library-Traffic",
+};
+
 const rawRespOKSchema = z.object({
   message: z.literal("OK"),
   data: z.object({
@@ -49,9 +53,9 @@ function codeToLibrary(code: string): string {
 
 // Build map of location metadata by ID from the UCI Libraries website
 async function collectLocationMeta(): Promise<Record<string, LocationMeta>> {
-  const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today").then((r) =>
-    r.text(),
-  );
+  const html = await fetch("https://www.lib.uci.edu/where-do-you-want-study-today", {
+    headers: HEADERS_INIT,
+  }).then((r) => r.text());
   const $ = load(html);
 
   // Find the <script> tag containing the location metadata arrays
@@ -117,7 +121,9 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
   const url = `https://www.lib.uci.edu/sites/all/scripts/occuspace.php?id=${id}`;
   try {
     // Double-encoded JSON: double parse required
-    const parsedResponse = await fetch(url)
+    const parsedResponse = await fetch(url, {
+      headers: HEADERS_INIT,
+    })
       .then((r) => r.json())
       .then((obj) => JSON.parse(obj as string));
 
