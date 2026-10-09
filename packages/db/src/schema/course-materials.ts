@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { index, pgEnum, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 import { websocSection } from "./websoc.ts";
 
@@ -18,13 +19,13 @@ export const courseMaterial = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    isbn: varchar("isbn"),
+    isbn: varchar("isbn").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
     author: varchar("author"),
     title: varchar("title").notNull(),
     edition: varchar("edition"),
     format: textbookFormat("format").notNull(),
     requirement: materialRequirement("requirement"),
-    mmsId: varchar("mms_id"),
+    mmsId: varchar("mms_id").array().notNull().default(sql`ARRAY[]::VARCHAR[]`),
     link: text("link"),
   },
   (table) => [index().on(table.sectionId)],

@@ -14,7 +14,6 @@ import {
 } from "@packages/db/schema";
 import { DEPT_TO_ALIAS, type DeptCode, orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
-import fetch from "cross-fetch";
 import type { Element as DomElement } from "domhandler";
 import { hasChildren } from "domhandler";
 import { diffString } from "json-diff";

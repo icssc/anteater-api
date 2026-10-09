@@ -6,7 +6,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     version: "2.0.0",
     title: "Anteater API",
     description:
-      "The unified API for UCI related data. View documentation at https://docs.icssc.club/docs/developer/anteaterapi and API reference at https://anteaterapi.com/reference.\n\nWhile all data from this API is derived from official UCI sources where applicable, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepancies at https://github.com/icssc/anteater-api/issues.",
+      "The unified API for UCI related data. This is our [API reference](https://anteaterapi.com/reference). For more information on how to use Anteater API for your next project, view our [documentation](https://docs.icssc.club/docs/developer/anteaterapi).\n\nWhile all data from this API is derived from official UCI sources where applicable, we cannot guarantee its accuracy. However, we do take data accuracy very seriously, and we urge you to report any discrepancies at [our Github issues page](https://github.com/icssc/anteater-api/issues).",
     contact: { email: "icssc@uci.edu" },
   },
   externalDocs: {
@@ -54,7 +54,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "LARC",
       description:
-        "Present and past LARC (https://larc.uci.edu/) sections. Sourced from LARC's enrollment site (https://enroll.larc.uci.edu/).",
+        "Present and past [LARC](https://larc.uci.edu/) sections. Sourced from [LARC's enrollment site](https://enroll.larc.uci.edu/).",
     },
     {
       name: "Study Rooms",
@@ -64,12 +64,12 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
     {
       name: "Catalogue",
-      description: "Data sourced from the UCI Catalogue (https://catalogue.uci.edu).",
+      description: "Data sourced from the [UCI Catalogue](https://catalogue.uci.edu).",
     },
     {
       name: "Library Traffic",
       description:
-        "Library traffic data for the UCI Libraries. Data is sourced from the UCI Libraries site (https://www.lib.uci.edu/).",
+        "Library traffic data for the UCI Libraries. Data is sourced from the [UCI Libraries site](https://www.lib.uci.edu/).",
     },
     {
       name: "Dining",
@@ -78,7 +78,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     {
       name: "Course Materials",
       description:
-        "Data on low/no-cost course materials for UCI classes. Data is provided by UCI Libraries (https://www.lib.uci.edu/).",
+        "Data on low/no-cost course materials for UCI classes. Data is provided by [UCI Libraries](https://www.lib.uci.edu/).",
     },
     { name: "Other" },
   ],

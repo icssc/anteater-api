@@ -252,7 +252,7 @@ export class AuditParser {
             if (!code) {
               nonExclusiveQualifier.appliesToBlocks.push({
                 programType: parsedProgramType,
-                maxShared: qualifier.classes,
+                ...(qualifier.classes ? { maxShared: Number.parseInt(qualifier.classes, 10) } : {}),
               });
               continue;
             }
@@ -337,7 +337,9 @@ export class AuditParser {
                 return {
                   programType: parsedProgramType,
                   code: c,
-                  maxShared: qualifier.classes,
+                  ...(qualifier.classes
+                    ? { maxShared: Number.parseInt(qualifier.classes, 10) }
+                    : {}),
                 };
               }),
             );

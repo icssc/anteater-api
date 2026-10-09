@@ -32,8 +32,8 @@ type CourseMaterial @cacheControl(maxAge: 86400) {
     edition: String
     format: TextbookFormat!
     requirement: MaterialRequirement
-    isbn: String
-    mmsId: String
+    isbn: [String!]!
+    mmsId: [String!]!
     link: String
 }
 

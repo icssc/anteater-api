@@ -72,15 +72,21 @@ export const courseMaterialsSchema = z.object({
   requirement: z.enum(materialRequirements).nullable().openapi({
     description: "The extent to which this course material is required for this particular course.",
   }),
-  isbn: z.string().nullable().openapi({
-    description: "The ISBN of this course material.",
-    example: "9780062065254",
-  }),
-  mmsId: z.string().nullable().openapi({
-    description:
-      "The Metadata Management System ID of this course material, typically used to determine the material's URL.",
-    example: "9780062065254",
-  }),
+  isbn: z
+    .string()
+    .array()
+    .openapi({
+      description: "The ISBN(s) of this course material.",
+      example: ["9780062065254"],
+    }),
+  mmsId: z
+    .string()
+    .array()
+    .openapi({
+      description:
+        "The Metadata Management System ID(s) of this course material, typically used to determine the material's URL.",
+      example: ["9780062065254"],
+    }),
   link: z.string().nullable().openapi({
     description:
       "The URL of this course material, typically located under https://uci.primo.exlibrisgroup.com.",
