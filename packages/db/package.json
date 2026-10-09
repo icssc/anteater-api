@@ -19,6 +19,7 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@packages/stdlib": "workspace:*",
     "drizzle-orm": "catalog:",
     "postgres": "3.4.9"
   },
