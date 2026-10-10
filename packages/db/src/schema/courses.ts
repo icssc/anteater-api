@@ -25,6 +25,7 @@ export type CourseCorequisite = {
   prereqType: "course";
   coreq: true;
   courseId: string;
+  minGrade?: string;
 };
 
 export type ExamPrerequisite = {
@@ -33,7 +34,54 @@ export type ExamPrerequisite = {
   minGrade?: string;
 };
 
-export type Prerequisite = CoursePrerequisite | CourseCorequisite | ExamPrerequisite;
+export type ClassLevel =
+  | "JUNIOR"
+  | "SENIOR"
+  | "NEW TRANSFERS"
+  | "LOWER DIVISION"
+  | "UPPER DIVISION";
+// Not yet observed in WebSoc, but expected to exist.
+// | "FRESHMAN"
+// | "SOPHOMORE"
+// | "GRADUATE";
+
+export type WritingRequirement = "LOWER DIVISION WRITING" | "ENTRY LEVEL WRITING";
+
+export type StandingPrerequisite = {
+  prereqType: "standing";
+  standing:
+    | {
+        type: "classLevel";
+        value: ClassLevel;
+      }
+    | {
+        type: "writingRequirement";
+        value: WritingRequirement;
+      };
+};
+
+export type AffiliationPrerequisite = {
+  prereqType: "affiliation";
+  affiliation:
+    | {
+        type: "major";
+        value: string;
+      }
+    | {
+        type: "school";
+        value: string;
+      }
+    | {
+        type: "CHC";
+      };
+};
+
+export type Prerequisite =
+  | CoursePrerequisite
+  | CourseCorequisite
+  | ExamPrerequisite
+  | StandingPrerequisite
+  | AffiliationPrerequisite;
 
 export type PrerequisiteTree = {
   AND?: Array<Prerequisite | PrerequisiteTree>;
