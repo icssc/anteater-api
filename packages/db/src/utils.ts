@@ -17,6 +17,11 @@ export function chunkUpsertData<T extends PgTable>(table: T, array: InferInsertM
   return chunks;
 }
 
+// Drizzle date({ mode: "date" }) columns return JS Dates. postgres.js can't bind a Date as a
+// parameter inside a raw sql`` expression (no column type to encode it with), so render to a
+// YYYY-MM-DD string and cast in SQL instead.
+export const toDateString = (d: Date): string => d.toISOString().slice(0, 10);
+
 export const isTrue = <T extends ColumnBaseConfig<"boolean", string>>(col: PgColumn<T>): SQL =>
   eq(col, true);
 
