@@ -1,6 +1,6 @@
 import type { OpenAPIObjectConfigure } from "@hono/zod-openapi";
 
-export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
+export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = (c) => ({
   openapi: "3.0.0",
   info: {
     version: "2.0.0",
@@ -14,12 +14,8 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
   },
   servers: [
     {
-      url: "https://anteaterapi.com",
-      description: "Anteater API Production",
-    },
-    {
-      url: "http://localhost:8787",
-      description: "Anteater API Local Development Instance",
+      url: new URL(c.req.url).origin,
+      description: "Current deployment",
     },
   ],
   tags: [
@@ -82,4 +78,4 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     },
     { name: "Other" },
   ],
-};
+});
