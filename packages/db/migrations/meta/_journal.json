@@ -267,6 +267,13 @@
       "when": 1791271717794,
       "tag": "0037_course_materials_isbn_mms_array",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791588503828,
+      "tag": "0038_enrollment_resolution",
+      "breakpoints": true
     }
   ]
 }
