@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { isNotNull, isNull } from "@packages/db/drizzle";
 import { diningEvent, diningRestaurant } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import z from "zod";
@@ -8,7 +9,17 @@ import { queryAdobeECommerce } from "./query.ts";
 
 function parseEventDate(dateStr: string | null, time: string | null): Date | null {
   if (!dateStr || !time) return null;
-  return new Date(`${dateStr}T${time}`);
+
+  // convert out of UCI time
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute, second] = time.split(":").map(Number);
+
+  const naive = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  const laStr = naive.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour12: false });
+  const laDate = new Date(laStr);
+
+  const offset = naive.getTime() - laDate.getTime();
+  return new Date(naive.getTime() + offset);
 }
 
 const getAEMEventsQuery = `
@@ -150,11 +161,25 @@ export async function updateEvents(db: ReturnType<typeof database>): Promise<voi
       });
 
     console.log(`Upserting ${allEvents.length} events...`);
+    // If an event has a start time, we target unique on [restaurantId, start, end] which means
+    // different titles for an event happening at the same place and time is considered a rename of the same event
     await db
       .insert(diningEvent)
-      .values(allEvents)
+      .values(allEvents.filter((e) => e.start))
       .onConflictDoUpdate({
-        target: [diningEvent.title, diningEvent.restaurantId, diningEvent.start],
+        target: [diningEvent.restaurantId, diningEvent.start, diningEvent.end],
+        targetWhere: isNotNull(diningEvent.start),
+        set: conflictUpdateSetAllCols(diningEvent),
+      });
+
+    // If an event has neither a start nor end time (i.e. Amnesty Week), we target a unique title in order to prevent
+    // duplicate events from being added each scrape
+    await db
+      .insert(diningEvent)
+      .values(allEvents.filter((e) => !e.start))
+      .onConflictDoUpdate({
+        target: [diningEvent.restaurantId, diningEvent.title],
+        targetWhere: isNull(diningEvent.start),
         set: conflictUpdateSetAllCols(diningEvent),
       });
   } catch (error) {

@@ -14,7 +14,6 @@ import {
 } from "@packages/db/schema";
 import { DEPT_TO_ALIAS, type DeptCode, orNull, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
-import fetch from "cross-fetch";
 import type { Element as DomElement } from "domhandler";
 import { hasChildren } from "domhandler";
 import { diffString } from "json-diff";
@@ -126,6 +125,7 @@ function parseCourseBlock(
   );
   const geText = norm($b.find(".detail-gened").first().text());
   const geFlags = generateGEs(geText ? [geText] : []);
+  const repeatabilityData = parseRepeatability(repeatText);
 
   return {
     id,
@@ -141,6 +141,8 @@ function parseCourseBlock(
     prerequisiteTree: prereqs?.get(`${deptCode} ${courseNumber}`) ?? {},
     prerequisiteText: prereqText,
     repeatability: repeatText,
+    repeatabilityTimes: repeatabilityData.repeatabilityTimes,
+    repeatabilityType: repeatabilityData.unit,
     gradingOption: gradingText,
     concurrent: concText,
     sameAs: sameAsText,
@@ -233,7 +235,7 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
 
 function buildPrereqTree(prereqList: string): PrerequisiteTree {
   const prereqTree: PrerequisiteTree = { AND: [], NOT: [] };
-  const prereqs = prereqList.split(/AND/).map((prereq) => prereq.trim());
+  const prereqs = prereqList.split(/ AND /).map((prereq) => prereq.trim());
   for (const prereq of prereqs) {
     if (prereq[0] === "(") {
       const orReqs = prereq
@@ -279,7 +281,10 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
       let courseId = $(entry[prereqFieldLabels.Course]).text().replace(/\s+/g, " ").trim();
       const courseTitle = $(entry[prereqFieldLabels.Title]).text().replace(/\s+/g, " ").trim();
       const prereqList = $(entry[prereqFieldLabels.Prerequisite])
-        .text()
+        .contents()
+        .map((_, node) => $(node).text())
+        .get()
+        .join(" ")
         .replace(/\s+/g, " ")
         .trim();
       if (!courseId || !courseTitle || !prereqList) return;
@@ -376,6 +381,44 @@ function generateGEs(rawCourse: string[]) {
     res.geText = maybeGEText;
   }
   return res;
+}
+
+function parseRepeatability(repeatText: string): {
+  repeatabilityTimes: number | null;
+  unit: "credit_hours" | "times" | null;
+} {
+  const timesMatch1 = /May be taken for credit (\d+) time(s)?/.exec(repeatText);
+  const timesMatch2 = /May be taken (\d+) time(s)? */.exec(repeatText);
+  const unitsMatch = /May be taken for credit for (\d+) units/.exec(repeatText);
+
+  if (timesMatch1) {
+    return {
+      repeatabilityTimes: Number.parseInt(timesMatch1[1], 10),
+      unit: "times",
+    };
+  } else if (timesMatch2) {
+    return {
+      repeatabilityTimes: Number.parseInt(timesMatch2[1], 10),
+      unit: "times",
+    };
+  } else if (unitsMatch) {
+    return {
+      repeatabilityTimes: Number.parseInt(unitsMatch[1], 10),
+      unit: "credit_hours",
+    };
+  } else if (repeatText.toLowerCase().includes("unlimited")) {
+    return {
+      repeatabilityTimes: null,
+      unit: null,
+    };
+  } else if (repeatText.trim() !== "") {
+    throw new Error(`Unrecognized repeatability text: ${repeatText}`);
+  }
+
+  return {
+    repeatabilityTimes: 0,
+    unit: "times",
+  };
 }
 
 const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;

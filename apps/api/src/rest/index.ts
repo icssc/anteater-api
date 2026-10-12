@@ -3,6 +3,7 @@ import { defaultHook } from "$hooks";
 import { apExamsRouter } from "./routes/ap-exams.ts";
 import { calendarRouter } from "./routes/calendar";
 import { catalogueRouter } from "./routes/catalogue.ts";
+import { courseMaterialsRouter } from "./routes/course-materials.ts";
 import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { diningRouter } from "./routes/dining";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
@@ -21,6 +22,7 @@ const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 restRouter.route("/apExams", apExamsRouter);
 restRouter.route("/calendar", calendarRouter);
+restRouter.route("/courseMaterials", courseMaterialsRouter);
 restRouter.route("/courses", coursesRouter);
 restRouter.route("/coursesCursor", coursesCursorRouter);
 restRouter.route("/dining", diningRouter);

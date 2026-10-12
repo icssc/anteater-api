@@ -4,7 +4,6 @@ import type { Term } from "@packages/db/schema";
 import { larcSection, websocCourse } from "@packages/db/schema";
 import { parseMeetingDays, parseStartAndEndTimes, sleep } from "@packages/stdlib";
 import { load } from "cheerio";
-import { fetch } from "cross-fetch";
 
 type LarcSection = {
   daysString: string;

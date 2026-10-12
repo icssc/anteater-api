@@ -2,14 +2,14 @@
 
 ## Description
 
-<!--- Describe your changes in detail -->
+<!--- Describe your changes in detail. What did you do, and why did you do it that way? -->
 
 ## Related Issue
 
-<!--- This project only accepts pull requests related to open issues -->
-<!--- If suggesting a new feature or change, please discuss it in an issue first -->
-<!--- If fixing a bug, there should be an issue describing it with steps to reproduce -->
-<!--- Please link to the issue here: -->
+<!--- This project only accepts pull requests related to open issues. -->
+<!--- If suggesting a new feature or change, please discuss it in an issue first. -->
+<!--- If fixing a bug, there should be an issue describing it with steps to reproduce. -->
+<!--- Please link to the issue here, using its number (e.g. #727) -->
 
 ## Motivation and Context
 
@@ -25,7 +25,8 @@
 
 ## Types of changes
 
-<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
+<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply. -->
+<!--- A checked box should look like this: [x] (notice there are no spaces inside the box) -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)

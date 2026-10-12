@@ -2,7 +2,7 @@ import type { KeyData } from "@packages/key-types";
 import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { startTransition, useState } from "react";
-import { deleteUserApiKey } from "@/app/actions/keys";
+import { deleteKeyById } from "@/app/actions/keys";
 import DisplayKey from "@/components/key/view/DisplayKey";
 import { Button } from "@/components/ui/button";
 import ButtonSpinner from "@/components/ui/button-spinner";
@@ -26,11 +26,11 @@ interface Props {
 const DeleteKey: React.FC<Props> = ({ apiKey, apiKeyName, apiKeys, setApiKeys, afterDelete }) => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const handleDeleteKey = (key: string) => {
+  function handleDeleteKey(key: string) {
     setIsDeleting(true);
 
     startTransition(async () => {
-      await deleteUserApiKey(key);
+      await deleteKeyById(key);
 
       if (setApiKeys) {
         const newApiKeys = { ...apiKeys };
@@ -45,7 +45,7 @@ const DeleteKey: React.FC<Props> = ({ apiKey, apiKeyName, apiKeys, setApiKeys, a
 
       setIsDeleting(false);
     });
-  };
+  }
 
   const abbreviatedKey = `...${apiKey.substring(apiKey.indexOf(".") + 1)}`;
 

@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { createUserApiKey } from "@/app/actions/keys";
-import { type CreateKeyFormValues, createRefinedKeySchema } from "@/app/actions/types";
+import { createKey } from "@/app/actions/keys";
+import { type CreateKeyFormValues, keyFormSchema } from "@/app/actions/types";
 import NameField from "@/components/key/form/NameField";
 import OriginsField from "@/components/key/form/OriginsField";
 import RateLimitOverrideField from "@/components/key/form/RateLimitOverrideField";
@@ -22,7 +22,7 @@ import ButtonSpinner from "@/components/ui/button-spinner";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 
-const CreateKey = () => {
+function CreateKey() {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -33,7 +33,7 @@ const CreateKey = () => {
   }, [session, router]);
 
   const formProps = {
-    resolver: zodResolver(createRefinedKeySchema),
+    resolver: zodResolver(keyFormSchema),
     defaultValues: {
       _type: "" as CreateKeyFormValues["_type"],
       name: "",
@@ -53,9 +53,9 @@ const CreateKey = () => {
 
   async function onSubmit(values: CreateKeyFormValues) {
     setIsCreating(true);
-    const result = await createUserApiKey(values);
+    const result = await createKey(values);
     if (result.ok) {
-      setKey(result.key);
+      setKey(result.keyId);
       setIsDialogOpen(true);
     } else {
       setError(result.error);
@@ -63,11 +63,11 @@ const CreateKey = () => {
     setIsCreating(false);
   }
 
-  const handleDialogClose = (isOpen: boolean) => {
+  function handleDialogClose(isOpen: boolean) {
     if (!isOpen && key) {
       router.push(`/edit/${key}`);
     }
-  };
+  }
 
   return (
     <div className={"content"}>
@@ -77,7 +77,7 @@ const CreateKey = () => {
             <ChevronLeft />
           </Link>
         </Button>
-        <HeadingText>Create Key</HeadingText>
+        <HeadingText>Create key</HeadingText>
       </div>
 
       <Form {...form}>
@@ -120,19 +120,13 @@ const CreateKey = () => {
 
             <DisplayKey keyText={key} background />
             <DialogFooter>
-              <Button
-                onClick={() => {
-                  handleDialogClose(false);
-                }}
-              >
-                Close
-              </Button>
+              <Button onClick={handleDialogClose.bind(undefined, false)}>Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
     </div>
   );
-};
+}
 
 export default CreateKey;

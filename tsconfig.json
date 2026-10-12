@@ -3,6 +3,7 @@
     "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "lib": ["ESNext"],
+    "types": ["node"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",

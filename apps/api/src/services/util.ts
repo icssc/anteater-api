@@ -155,7 +155,7 @@ export function buildDaysOfWeekQuery(
         case "F":
           daysConditions.push(isTrue(table.meetsFriday));
           break;
-        case "S":
+        case "Sa":
           daysConditions.push(isTrue(table.meetsSaturday));
           break;
         case "Su":

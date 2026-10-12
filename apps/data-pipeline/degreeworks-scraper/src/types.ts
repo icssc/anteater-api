@@ -1,6 +1,11 @@
+import type { DegreeWorksProgram } from "@packages/db/schema";
 import type { z } from "zod";
 import type {
   blockSchema,
+  qualifierClauseBaseSchema,
+  qualifierDefaultSchema,
+  qualifierExclusiveSchema,
+  qualifierNonExclusiveSchema,
   ruleBaseSchema,
   ruleBlockSchema,
   ruleBlocktypeSchema,
@@ -52,6 +57,13 @@ export type Block = z.infer<typeof blockSchema>;
 
 export type WithClause = z.infer<typeof withClauseSchema>;
 
+export type QualifierClause = z.infer<typeof qualifierClauseBaseSchema> &
+  (
+    | z.infer<typeof qualifierNonExclusiveSchema>
+    | z.infer<typeof qualifierExclusiveSchema>
+    | z.infer<typeof qualifierDefaultSchema>
+  );
+
 export type SpecializationCache = z.infer<typeof specializationCacheSchema>;
 
 export interface UndergraduateRequirements {
@@ -64,3 +76,28 @@ export interface UndergraduateRequirements {
   // requirements for the two-year variant of campuswide honors collegium
   CHC2: Block | undefined;
 }
+
+/**
+ * Information necessary to find complete major requirements
+ * @param schoolCode this corresponds to the UCI notion of division, e.g. "U" or "G"
+ * @param degreeCode a degree code, e.g. "BS"
+ * @param collegeCode this corresponds to the UCI notion of school, e.g. 55 for the school of bio sci
+ * @param majorCode a major code
+ * @param specCode a specialization code
+ */
+export type ProgramCodes = {
+  schoolCode: string;
+  degreeCode: string;
+  collegeCode?: string;
+  majorCode: string;
+  specCode?: string;
+};
+/**
+ * college requirements can vary by major and major requirements can vary by specialization
+ * eventually, we may want degree type; e.g. MFA provides some requirements
+ */
+export type MajorProgram = {
+  college?: DegreeWorksProgram;
+  major: DegreeWorksProgram;
+  specCode?: string;
+};

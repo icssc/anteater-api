@@ -4,7 +4,6 @@ import { calendarTerm } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
 import { load } from "cheerio";
-import fetch from "cross-fetch";
 import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";

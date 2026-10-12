@@ -30,7 +30,7 @@ import { findCurrentlyActiveSchedule } from "./util.ts";
  * the next Sunday.
  * @param db the Drizzle database instance
  * @param today will update using menus from this date to the next sunday, inclusive
- * @param restaurantId the restaurant to upsert the menu for ("anteatery", "brandywine")
+ * @param restaurantId the restaurant to upsert the menu for
  */
 export async function updateRestaurant(
   db: ReturnType<typeof database>,

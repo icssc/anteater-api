@@ -53,6 +53,7 @@ type WebsocCourse @cacheControl(maxAge: 300) {
     deptCode: String!
     courseTitle: String!
     courseNumber: String!
+    courseId: String!
     courseComment: String!
     prerequisiteLink: String!
     updatedAt: String!
@@ -88,6 +89,8 @@ type WebsocResponse @cacheControl(maxAge: 300) {
 }
 
 type WebsocTerm @cacheControl(maxAge: 300) {
+    year: String!
+    quarter: Term!
     shortName: String!
     longName: String!
 }
@@ -103,6 +106,7 @@ input WebsocQuery {
     ge: String
     department: String
     courseNumber: String
+    courseId: String
     sectionCodes: String
     instructorName: String
     days: String

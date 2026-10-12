@@ -4,7 +4,6 @@ import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import type { Cheerio, CheerioAPI } from "cheerio";
 import { load } from "cheerio";
-import fetch from "cross-fetch";
 import type { AnyNode } from "domhandler";
 import { losAngelesNowNaive } from "./time";
 

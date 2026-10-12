@@ -1,0 +1,16 @@
+{
+  "name": "@apps/course-materials-importer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Script for importing course materials data from UCI Libraries",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
+    "node-xlsx": "0.24.0"
+  }
+}

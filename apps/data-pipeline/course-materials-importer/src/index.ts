@@ -1,0 +1,158 @@
+import { readdirSync } from "node:fs";
+import { exit } from "node:process";
+import { database } from "@packages/db";
+import { and, eq, inArray, or } from "@packages/db/drizzle";
+import type { MaterialRequirement, Term, TextbookFormat } from "@packages/db/schema";
+import { courseMaterial, websocSection } from "@packages/db/schema";
+import { chunkUpsertData } from "@packages/db/utils";
+import { getFromMapOrThrow } from "@packages/stdlib";
+import xlsx from "node-xlsx";
+
+const INPUT_DIR = "./input";
+
+const REQUIRED_FIELDS = ["Term", "Dept/Course", "Title", "Format"] as const;
+
+async function main() {
+  const url = process.env.DB_URL;
+  if (!url) throw new Error("DB_URL not found");
+  const db = database(url);
+
+  const inputData: Map<string, string>[] = readdirSync(INPUT_DIR).flatMap((fileName) => {
+    const data: string[][] = xlsx.parse(`${INPUT_DIR}/${fileName}`)[0].data;
+    const columns = data[0];
+    return data
+      .slice(1)
+      .filter((x) => x)
+      .map(
+        (row) =>
+          new Map(
+            row
+              .map((val, i): [string, string] => [columns[i], val])
+              .filter((entry) => entry[0] !== undefined),
+          ),
+      );
+  });
+  for (const entry of inputData) {
+    for (const field of REQUIRED_FIELDS) {
+      if (!entry.has(field)) throw new Error(`Missing field: ${field}`);
+    }
+  }
+
+  const inputTerms = new Set<string>();
+  for (const entry of inputData) {
+    const term = entry.get("Term");
+    if (term) {
+      inputTerms.add(term);
+    }
+  }
+
+  // UCI Libraries has said they will only give us 1 input term at a time, so by default we only allow
+  // for 1 term in the importer. Just in case we need to input multiple terms at once, we are keeping the
+  // logic that supports multiple inputTerms, which will work if we comment out the error handling here.
+  if (inputTerms.size > 1) {
+    throw new Error(
+      `Multiple input terms found: ${Array.from(inputTerms).join(", ")}. Expected at most one term.`,
+    );
+  }
+
+  const values: (typeof courseMaterial.$inferInsert)[] = [];
+
+  console.log(`Processing ${inputData.length} course material entries...`);
+  for (const entry of inputData) {
+    const sectionCode = entry.get("Course Code");
+    if (!sectionCode) {
+      continue;
+    }
+    const termStr = getFromMapOrThrow(entry, "Term");
+    const [quarter, year] = termStr.split(" ");
+    const deptCourseStr = getFromMapOrThrow(entry, "Dept/Course");
+    const lastSpaceIndex = deptCourseStr.lastIndexOf(" ");
+    const dept = deptCourseStr.substring(0, lastSpaceIndex);
+    const courseNum = deptCourseStr.substring(lastSpaceIndex + 1);
+    const inputRequirement = entry.get("Req/Rec");
+    const [section] = await db
+      .select({ id: websocSection.id })
+      .from(websocSection)
+      .where(
+        and(
+          eq(websocSection.year, year),
+          quarter === "Summer"
+            ? or(
+                eq(websocSection.quarter, "Summer1"),
+                eq(websocSection.quarter, "Summer10wk"),
+                eq(websocSection.quarter, "Summer2"),
+              )
+            : eq(websocSection.quarter, quarter as Term),
+          eq(websocSection.sectionCode, Number.parseInt(sectionCode, 10)),
+        ),
+      );
+    if (!section) {
+      console.log(`Could not find section for ${dept} ${courseNum} (${termStr})`);
+      continue;
+    }
+
+    const isbnRaw = entry.get("ISBN");
+    const isbn = isbnRaw
+      ? String(isbnRaw)
+          .split(";")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const mmsIdRaw = entry.get("MMS ID");
+    const mmsId = mmsIdRaw
+      ? String(mmsIdRaw)
+          .split("|")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    values.push({
+      sectionId: section.id,
+      title: getFromMapOrThrow(entry, "Title"),
+      author: entry.get("Author"),
+      edition: entry.get("Edition"),
+      isbn,
+      format: (entry.get("Format") || null) as TextbookFormat,
+      requirement: (inputRequirement === "Go to Class First"
+        ? "GoToClassFirst"
+        : inputRequirement || null) as MaterialRequirement,
+      mmsId,
+      link: entry.get("Link"),
+    });
+  }
+
+  await db.transaction(async (tx) => {
+    for (const termStr of inputTerms) {
+      const [quarter, year] = termStr.split(" ");
+      const sectionsInTerm = tx
+        .select({ id: websocSection.id })
+        .from(websocSection)
+        .where(
+          and(
+            eq(websocSection.year, year),
+            quarter === "Summer"
+              ? or(
+                  eq(websocSection.quarter, "Summer1"),
+                  eq(websocSection.quarter, "Summer10wk"),
+                  eq(websocSection.quarter, "Summer2"),
+                )
+              : eq(websocSection.quarter, quarter as Term),
+          ),
+        );
+
+      await tx.delete(courseMaterial).where(inArray(courseMaterial.sectionId, sectionsInTerm));
+    }
+
+    const insertChunks = chunkUpsertData(courseMaterial, values);
+    console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
+    for (const chunk of insertChunks) {
+      await tx.insert(courseMaterial).values(chunk).onConflictDoNothing();
+    }
+  });
+
+  console.log("Import complete.");
+  exit(0);
+}
+
+main().then();

@@ -24,6 +24,8 @@ type Course @cacheControl(maxAge: 86400) {
     prerequisites: [CoursePreview!]!
     dependencies: [CoursePreview!]!
     repeatability: String!
+    repeatabilityTimes: Int
+    repeatabilityType: String
     gradingOption: String!
     concurrent: String!
     sameAs: String!

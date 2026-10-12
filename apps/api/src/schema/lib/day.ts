@@ -23,7 +23,7 @@ const allDays = [
   "Sun",
 ] as const;
 
-const normalizedDays = ["M", "Tu", "W", "Th", "F", "S", "Su"] as const;
+const normalizedDays = ["M", "Tu", "W", "Th", "F", "Sa", "Su"] as const;
 
 const dayMapping: Record<(typeof allDays)[number], (typeof normalizedDays)[number]> = {
   M: "M",
@@ -41,9 +41,9 @@ const dayMapping: Record<(typeof allDays)[number], (typeof normalizedDays)[numbe
   F: "F",
   Fr: "F",
   Fri: "F",
-  S: "S",
-  Sa: "S",
-  Sat: "S",
+  S: "Sa",
+  Sa: "Sa",
+  Sat: "Sa",
   Su: "Su",
   Sun: "Su",
 };

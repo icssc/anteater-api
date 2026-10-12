@@ -15,10 +15,12 @@ const RateLimitOverrideField: React.FC<Props> = ({ form }) => {
       name="rateLimitOverride"
       render={() => (
         <FormItem>
-          <FormLabel>Rate Limit Override</FormLabel>
+          <FormLabel>Rate limit override</FormLabel>
           <Input
-            placeholder="Rate Limit Override (Optional)"
-            {...form.register("rateLimitOverride", { valueAsNumber: true })}
+            placeholder="Requests per hour (optional)"
+            {...form.register("rateLimitOverride", {
+              setValueAs: (v) => (v === "" ? undefined : Number(v)),
+            })}
             type={"number"}
           />
           <FormMessage />

@@ -222,8 +222,64 @@
     {
       "idx": 31,
       "version": "7",
-      "when": 1779165515291,
-      "tag": "0031_fix_missing_instructor_data",
+      "when": 1779214381101,
+      "tag": "0031_course_materials",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779233554981,
+      "tag": "0032_course_repeatability_parsing",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1781212381503,
+      "tag": "0033_dw_catalog_years",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1781820145349,
+      "tag": "0034_dining_event_null_start",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1784481774757,
+      "tag": "0035_rename_sample_program_to_catalog_program",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1785093506228,
+      "tag": "0036_dw_requirement_headers",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791271717794,
+      "tag": "0037_course_materials_isbn_mms_array",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791588503828,
+      "tag": "0038_enrollment_resolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791824914116,
+      "tag": "0039_swift_jack_power",
       "breakpoints": true
     }
   ]

@@ -6,16 +6,16 @@ export type RestaurantId = (typeof restaurantIds)[number];
 export const restaurantIDToURL = {
   anteatery: "the-anteatery",
   brandywine: "brandywine",
-} as const;
+} as Record<RestaurantId, string>;
 
 export type MealPeriod = LocationResponse["data"]["Commerce_mealPeriods"][0];
 
 export type WeekTimes = [string, string, string, string, string, string, string];
 
 export type MealPeriodWithHours = MealPeriod & {
-  // The hours for which the meal period opens (e.g. openHours[day] = "11:00")
+  // The start time for this period on each day of the week (e.g. openHours[day] = "11:00")
   openHours: WeekTimes;
-  // The hours for which the meal period occurs (e.g. openHours[day] = "14:00")
+  // The end time for this period on each day of the week (e.g. openHours[day] = "14:00")
   closeHours: WeekTimes;
 };
 

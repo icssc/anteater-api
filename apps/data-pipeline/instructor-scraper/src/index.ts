@@ -4,9 +4,8 @@ import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { and, eq, isNotNull, isNull } from "@packages/db/drizzle";
 import { instructor, instructorToWebsocInstructor, websocInstructor } from "@packages/db/schema";
-import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { chunkUpsertData, conflictUpdateSetAllCols } from "@packages/db/utils";
 import { sleep } from "@packages/stdlib";
-import fetch from "cross-fetch";
 import he from "he";
 import { base64ToString } from "uint8array-extras";
 import winston from "winston";
@@ -20,13 +19,23 @@ const defaultFormat = [
 
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.combine(...defaultFormat),
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(winston.format.colorize(), ...defaultFormat),
     }),
     new winston.transports.File({
       filename: `${__dirname}/../logs/${Date.now()}.log`,
+      format: winston.format.combine(...defaultFormat),
+    }),
+    new winston.transports.File({
+      filename: `${__dirname}/../logs/debug/${Date.now()}.log`,
+      level: "debug",
+      format: winston.format.combine(
+        winston.format.printf((info) => `${info.message}`),
+        winston.format((info) => {
+          return info.level === "debug" ? info : false;
+        })(),
+      ),
     }),
   ],
 });
@@ -66,7 +75,7 @@ async function fetchDirectoryWithDelay(name: string, delayMs = 800): Promise<Dir
       body: new URLSearchParams({ uciKey: name, filter: "all" }),
     }).then((x) => x.json());
     logger.info("Request succeeded");
-    return res;
+    return res as DirectoryResponse;
   } catch {
     const delay = Math.min(2 * delayMs, MAX_DELAY_MS);
     logger.warn(`Rate limited, waiting for ${delay} ms`);
@@ -171,8 +180,6 @@ async function main() {
       ),
     )
     .then((rows) => rows.filter((x) => !x.name.startsWith("STAFF")));
-
-  console.log(names);
 
   logger.info(`Found ${names.length} WebSoc instructors without associated instructors`);
 
@@ -354,6 +361,7 @@ async function main() {
 
     logger.error(`Cannot find a unique match for instructor with WebSoc name '${name}'.`);
     logger.error("Assigning this instructor a null UCInetID.");
+    logger.debug(`${row.id}\n${row.name}\n${row.department}`);
 
     if (websocIdToUcinetids.has(uniqueWebsocId)) {
       websocIdToUcinetids.get(uniqueWebsocId)?.push(null);
@@ -374,6 +382,7 @@ async function main() {
   ].filter((v) => v.instructorUcinetid !== "student");
 
   await db.transaction(async (tx) => {
+    /*
     await tx
       .insert(instructor)
       .values(ucinetidToInstructorObject.values().toArray())
@@ -381,16 +390,42 @@ async function main() {
         target: instructor.ucinetid,
         set: conflictUpdateSetAllCols(instructor),
       });
-    await tx
-      .insert(instructorToWebsocInstructor)
-      .values(uciNetIds)
-      .onConflictDoUpdate({
-        target: [
-          instructorToWebsocInstructor.instructorUcinetid,
-          instructorToWebsocInstructor.websocInstructorId,
-        ],
-        set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
-      });
+      */
+
+    const instructorUpsertChunk = chunkUpsertData(
+      instructor,
+      ucinetidToInstructorObject.values().toArray(),
+    );
+    console.log(`split instructor data into ${instructorUpsertChunk.length} chunk(s)`);
+    for (const chunk of instructorUpsertChunk) {
+      await tx
+        .insert(instructor)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: instructor.ucinetid,
+          set: conflictUpdateSetAllCols(instructor),
+        });
+    }
+
+    const instructorToWebsocInstructorUpsertChunks = chunkUpsertData(
+      instructorToWebsocInstructor,
+      uciNetIds,
+    );
+    console.log(
+      `split instructorToWebsocInstructor data into ${instructorToWebsocInstructorUpsertChunks.length} chunk(s)`,
+    );
+    for (const chunk of instructorToWebsocInstructorUpsertChunks) {
+      await tx
+        .insert(instructorToWebsocInstructor)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: [
+            instructorToWebsocInstructor.instructorUcinetid,
+            instructorToWebsocInstructor.websocInstructorId,
+          ],
+          set: conflictUpdateSetAllCols(instructorToWebsocInstructor),
+        });
+    }
   });
   exit(0);
 }

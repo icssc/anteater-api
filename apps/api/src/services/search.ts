@@ -89,7 +89,6 @@ export class SearchService {
     if (input.department) {
       courseConditions.push(inArray(course.department, input.department));
     }
-
     return and(...courseConditions);
   }
 

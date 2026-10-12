@@ -1,10 +1,16 @@
 import z from "zod";
-import type { DiningHallInformation, MealPeriodWithHours, Schedule } from "./model.ts";
+import type {
+  DiningHallInformation,
+  MealPeriodWithHours,
+  RestaurantId,
+  restaurantIDToURL,
+  Schedule,
+} from "./model.ts";
 import { queryAdobeECommerce } from "./query.ts";
 import { parseOpeningHours } from "./util.ts";
 
 export type FetchLocationVariables = {
-  locationUrlKey: "brandywine" | "the-anteatery";
+  locationUrlKey: (typeof restaurantIDToURL)[RestaurantId];
   sortOrder: "ASC" | "DESC";
 };
 
