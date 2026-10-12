@@ -22,7 +22,7 @@ DROP INDEX "websoc_section_to_instructor_instructor_name_index";--> statement-br
     Hope to release this update as soon as possible
 */
 
-ALTER TABLE "websoc_instructor" DROP CONSTRAINT "websoc_instructor_pkey" CASCADE;--> statement-breakpoint
+ALTER TABLE "websoc_instructor" DROP CONSTRAINT "websoc_instructor_pkey";--> statement-breakpoint
 ALTER TABLE "instructor_to_websoc_instructor" ADD COLUMN "websoc_instructor_id" uuid NOT NULL;--> statement-breakpoint
 ALTER TABLE "websoc_instructor" ADD COLUMN "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL;--> statement-breakpoint
 ALTER TABLE "websoc_instructor" ADD COLUMN "school" varchar;--> statement-breakpoint
@@ -36,7 +36,7 @@ CREATE UNIQUE INDEX "websoc_instructor_name_school_index" ON "websoc_instructor"
 CREATE INDEX "websoc_section_to_instructor_instructor_id_index" ON "websoc_section_to_instructor" USING btree ("instructor_id");--> statement-breakpoint
 ALTER TABLE "instructor_to_websoc_instructor" DROP COLUMN "websoc_instructor_name";--> statement-breakpoint
 ALTER TABLE "websoc_section_to_instructor" DROP COLUMN "instructor_name";--> statement-breakpoint
-CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "course"."updated_at", "course"."department", "course"."shortened_dept", "course"."department_alias", "course"."course_number", "course"."course_numeric", "course"."school", "course"."title", "course"."course_level", "course"."min_units", "course"."max_units", "course"."description", "course"."department_name", "course"."prerequisite_tree", "course"."prerequisite_text", "course"."repeatability", "course"."grading_option", "course"."concurrent", "course"."same_as", "course"."restriction", "course"."overlap", "course"."corequisites", "course"."is_ge_1a", "course"."is_ge_1b", "course"."is_ge_2", "course"."is_ge_3", "course"."is_ge_4", "course"."is_ge_5a", "course"."is_ge_5b", "course"."is_ge_6", "course"."is_ge_7", "course"."is_ge_8", "course"."ge_text", 
+CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "course"."updated_at", "course"."department", "course"."shortened_dept", "course"."department_alias", "course"."course_number", "course"."course_numeric", "course"."school", "course"."title", "course"."course_level", "course"."min_units", "course"."max_units", "course"."description", "course"."department_name", "course"."prerequisite_tree", "course"."prerequisite_text", "course"."repeatability", "course"."repeatability_times", "course"."repeatability_type", "course"."grading_option", "course"."concurrent", "course"."same_as", "course"."restriction", "course"."overlap", "course"."corequisites", "course"."is_ge_1a", "course"."is_ge_1b", "course"."is_ge_2", "course"."is_ge_3", "course"."is_ge_4", "course"."is_ge_5a", "course"."is_ge_5b", "course"."is_ge_6", "course"."is_ge_7", "course"."is_ge_8", "course"."ge_text", 
         ARRAY_REMOVE(COALESCE(
           (
             SELECT ARRAY_AGG(
