@@ -169,7 +169,7 @@ export class LibraryTrafficService {
     const bucketExpr = {
       hour: sql`EXTRACT(hour FROM ${localTs})`.mapWith(Number),
       day: sql`EXTRACT(isodow FROM ${localTs})`.mapWith(Number),
-      // Same week-of-term logic as getWeek() in week.ts: Pacific calendar dates, 1-indexed,
+      // Same week-of-term logic as getWeek() in @packages/stdlib: Pacific calendar dates, 1-indexed,
       // with Fall's 4-day Thursday offset applied only during instruction so that Monday of the
       // first full week = week 1 and the Thu–Sun stub = week 0. Finals always start on a fixed
       // weekday so the offset is not applied there.
