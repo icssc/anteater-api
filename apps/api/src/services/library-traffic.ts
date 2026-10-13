@@ -155,9 +155,6 @@ export class LibraryTrafficService {
     const periodStart = isFinals ? calendarTerm.finalsStart : calendarTerm.instructionStart;
     const periodEnd = isFinals ? calendarTerm.finalsEnd : calendarTerm.instructionEnd;
     const isWeek = input.granularity === "week";
-    // Week bucket is term-relative (1-10), which only makes sense per-quarter; for other
-    // granularities (hour-of-day, day-of-week, month) we always combine all terms
-    const separateByTerm = isWeek && !!input.quarter;
 
     // Chosen in JS rather than bound as a parameter: bucketExpr is repeated in SELECT, GROUP BY
     // and ORDER BY, and Postgres treats differently-numbered parameters ($1, $2, ...) as distinct
@@ -189,73 +186,41 @@ export class LibraryTrafficService {
       input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
     );
 
-    // Grouping by the location's primary key lets Postgres infer its name columns
-    const groupBy = [libraryTraffic.id, bucketExpr] as const;
+    const query = this.db
+      .select({
+        locationId: libraryTraffic.id,
+        locationName: libraryTraffic.locationName,
+        libraryName: libraryTraffic.libraryName,
+        bucket: bucketExpr,
+        avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
+        avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
+      })
+      .from(libraryTrafficHistory)
+      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+      .$dynamic();
 
-    const selectFields = {
-      locationId: libraryTraffic.id,
-      locationName: libraryTraffic.locationName,
-      libraryName: libraryTraffic.libraryName,
-      year: separateByTerm ? calendarTerm.year : sql<string | null>`null`,
-      quarter: separateByTerm ? calendarTerm.quarter : sql<string | null>`null`,
-      bucket: bucketExpr,
-      avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
-      avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
-    };
-
-    let rows: {
-      locationId: number;
-      locationName: string | null;
-      libraryName: string | null;
-      year: string | null;
-      quarter: string | null;
-      bucket: number;
-      avgCount: number;
-      avgPercentage: number;
-    }[];
-    if (isWeek) {
-      // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
-      // Exactly one term matches per row when quarter is provided; without quarter, summer
-      // term overlap is a known edge case (specify quarter for accurate week data).
-      const base = this.db
-        .select(selectFields)
-        .from(libraryTrafficHistory)
-        .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-        .innerJoin(calendarTerm, termConds)
-        .where(and(...localConds));
-
-      rows = await (separateByTerm
-        ? base
-            .groupBy(...groupBy, calendarTerm.year, calendarTerm.quarter)
-            .orderBy(
-              asc(calendarTerm.year),
-              asc(calendarTerm.quarter),
-              asc(libraryTraffic.id),
-              asc(bucketExpr),
-            )
-        : base.groupBy(...groupBy).orderBy(asc(libraryTraffic.id), asc(bucketExpr)));
-    } else {
-      // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows
-      // for timestamps that fall in multiple terms and bias the averages. EXISTS avoids that.
-      const inTerm = exists(this.db.select({ one: sql`1` }).from(calendarTerm).where(termConds));
-
-      rows = await this.db
-        .select(selectFields)
-        .from(libraryTrafficHistory)
-        .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-        .where(and(...localConds, inTerm))
-        .groupBy(...groupBy)
-        .orderBy(asc(libraryTraffic.id), asc(bucketExpr));
-    }
+    const rows = await (isWeek
+      ? // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
+        // Exactly one term matches per row when quarter is provided; without quarter, summer
+        // term overlap is a known edge case (specify quarter for accurate week data).
+        query.innerJoin(calendarTerm, termConds).where(and(...localConds))
+      : // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows
+        // for timestamps that fall in multiple terms and bias the averages. EXISTS avoids that.
+        query.where(
+          and(
+            ...localConds,
+            exists(this.db.select({ one: sql`1` }).from(calendarTerm).where(termConds)),
+          ),
+        )
+    )
+      // Grouping by the location's primary key lets Postgres infer its name columns
+      .groupBy(libraryTraffic.id, bucketExpr)
+      .orderBy(asc(libraryTraffic.id), asc(bucketExpr));
 
     return rows.map((row) => ({
       ...row,
-      year: separateByTerm ? (row.year ?? undefined) : input.year,
-      quarter: separateByTerm
-        ? row.quarter != null
-          ? String(row.quarter)
-          : undefined
-        : input.quarter,
+      year: input.year,
+      quarter: input.quarter,
       // Finals week buckets are relative to finalsStart, so "Week 1" would read as the first
       // week of instruction
       label: isWeek && isFinals ? "Finals Week" : patternLabel(input.granularity, row.bucket),
