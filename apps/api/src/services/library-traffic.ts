@@ -219,8 +219,6 @@ export class LibraryTrafficService {
 
     return rows.map((row) => ({
       ...row,
-      year: input.year,
-      quarter: input.quarter,
       // Finals week buckets are relative to finalsStart, so "Week 1" would read as the first
       // week of instruction
       label: isWeek && isFinals ? "Finals Week" : patternLabel(input.granularity, row.bucket),

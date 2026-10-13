@@ -81,8 +81,6 @@ type LibraryTrafficHistoryPatternEntry @cacheControl(maxAge: 1800) {
   locationId: Int!
   locationName: String!
   libraryName: LibraryName!
-  year: String
-  quarter: String
   bucket: Int!
   label: String!
   avgCount: Float!

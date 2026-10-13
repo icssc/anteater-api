@@ -144,16 +144,6 @@ export const libraryTrafficHistoryPatternQuerySchema = historyFilterBase
   );
 
 export const libraryTrafficHistoryPatternEntrySchema = historyLocationBase.extend({
-  year: z.string().optional().openapi({
-    example: "2026",
-    description:
-      "Academic year for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the year query param if provided.",
-  }),
-  quarter: z.string().optional().openapi({
-    example: "Fall",
-    description:
-      "Academic quarter for this bucket. Populated from term data when week granularity with quarter filter; otherwise echoes the quarter query param if provided.",
-  }),
   bucket: z.number().int().openapi({
     example: 14,
     description:
