@@ -131,25 +131,23 @@ export class LibraryTrafficService {
 
     const conds = [...historyFilterConds(input), ...(await this.termDateConds(input))];
 
-    return this.db
-      .select({
-        locationId: libraryTrafficHistory.locationId,
-        locationName: libraryTraffic.locationName,
-        libraryName: libraryTraffic.libraryName,
-        bucketStart: bucketStartExpr,
-        avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
-        avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
-      })
-      .from(libraryTrafficHistory)
-      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-      .where(and(...conds))
-      .groupBy(
-        libraryTrafficHistory.locationId,
-        libraryTraffic.locationName,
-        libraryTraffic.libraryName,
-        bucketStartExpr,
-      )
-      .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketStartExpr));
+    return (
+      this.db
+        .select({
+          locationId: libraryTraffic.id,
+          locationName: libraryTraffic.locationName,
+          libraryName: libraryTraffic.libraryName,
+          bucketStart: bucketStartExpr,
+          avgCount: avg(libraryTrafficHistory.trafficCount).mapWith(Number),
+          avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
+        })
+        .from(libraryTrafficHistory)
+        .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
+        .where(and(...conds))
+        // Grouping by the location's primary key lets Postgres infer its name columns
+        .groupBy(libraryTraffic.id, bucketStartExpr)
+        .orderBy(asc(libraryTraffic.id), asc(bucketStartExpr))
+    );
   }
 
   async getLibraryTrafficHistoryPattern(input: LibraryTrafficHistoryPatternServiceInput) {
@@ -191,15 +189,11 @@ export class LibraryTrafficService {
       input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
     );
 
-    const groupBy = [
-      libraryTrafficHistory.locationId,
-      libraryTraffic.locationName,
-      libraryTraffic.libraryName,
-      bucketExpr,
-    ] as const;
+    // Grouping by the location's primary key lets Postgres infer its name columns
+    const groupBy = [libraryTraffic.id, bucketExpr] as const;
 
     const selectFields = {
-      locationId: libraryTrafficHistory.locationId,
+      locationId: libraryTraffic.id,
       locationName: libraryTraffic.locationName,
       libraryName: libraryTraffic.libraryName,
       year: separateByTerm ? calendarTerm.year : sql<string | null>`null`,
@@ -236,10 +230,10 @@ export class LibraryTrafficService {
             .orderBy(
               asc(calendarTerm.year),
               asc(calendarTerm.quarter),
-              asc(libraryTrafficHistory.locationId),
+              asc(libraryTraffic.id),
               asc(bucketExpr),
             )
-        : base.groupBy(...groupBy).orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr)));
+        : base.groupBy(...groupBy).orderBy(asc(libraryTraffic.id), asc(bucketExpr)));
     } else {
       // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows
       // for timestamps that fall in multiple terms and bias the averages. EXISTS avoids that.
@@ -251,7 +245,7 @@ export class LibraryTrafficService {
         .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
         .where(and(...localConds, inTerm))
         .groupBy(...groupBy)
-        .orderBy(asc(libraryTrafficHistory.locationId), asc(bucketExpr));
+        .orderBy(asc(libraryTraffic.id), asc(bucketExpr));
     }
 
     return rows.map((row) => ({
