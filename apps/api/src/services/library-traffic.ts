@@ -1,5 +1,5 @@
 import type { database } from "@packages/db";
-import { and, asc, avg, eq, exists, gt, gte, lte, or, sql } from "@packages/db/drizzle";
+import { and, asc, avg, eq, exists, gt, gte, lte, or, type SQL, sql } from "@packages/db/drizzle";
 import { calendarTerm, libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { toDateString } from "@packages/db/utils";
 import { HTTPException } from "hono/http-exception";
@@ -19,6 +19,26 @@ type LibraryTrafficHistoryRawServiceInput = z.infer<typeof libraryTrafficHistory
 type LibraryTrafficHistoryPatternServiceInput = z.infer<
   typeof libraryTrafficHistoryPatternQuerySchema
 >;
+type HistoryFilterInput = Pick<
+  LibraryTrafficHistoryRawServiceInput,
+  "libraryName" | "locationName" | "year" | "quarter" | "period" | "startDate" | "endDate"
+>;
+
+// Readings are stored in UTC; buckets and term boundaries are evaluated in Pacific time
+const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
+// Pacific calendar date of each reading — used for term-based date filters to avoid the
+// UTC-midnight cutoff that would drop the last ~8h of data on the final day of a term.
+const localDate = sql`${localTs}::date`;
+
+// Location and explicit date range filters shared by all history endpoints
+function historyFilterConds(input: HistoryFilterInput) {
+  const conds: SQL[] = [];
+  if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
+  if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
+  if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
+  if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+  return conds;
+}
 
 function patternLabel(granularity: string, bucket: number): string {
   if (granularity === "hour") {
@@ -52,6 +72,29 @@ function patternLabel(granularity: string, bucket: number): string {
 export class LibraryTrafficService {
   constructor(private readonly db: ReturnType<typeof database>) {}
 
+  // Restricts readings to the instruction or finals dates of the given term; explicit
+  // startDate/endDate filters intersect with this when both are provided
+  private async termDateConds(input: HistoryFilterInput) {
+    if (!input.year || !input.quarter) return [];
+    const [term] = await this.db
+      .select()
+      .from(calendarTerm)
+      .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
+    if (!term) {
+      throw new HTTPException(400, {
+        message: `No calendar term found for ${input.year} ${input.quarter}`,
+      });
+    }
+    const isFinals = input.period === "finals";
+    return [
+      gte(
+        localDate,
+        sql`${toDateString(isFinals ? term.finalsStart : term.instructionStart)}::date`,
+      ),
+      lte(localDate, sql`${toDateString(isFinals ? term.finalsEnd : term.instructionEnd)}::date`),
+    ];
+  }
+
   getLibraryTraffic(input: LibraryTrafficServiceInput) {
     const conds = [];
 
@@ -77,10 +120,6 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryAggregated(input: LibraryTrafficHistoryAggregatedServiceInput) {
-    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
-    // Pacific calendar date of each reading — used for term-based date filters to avoid the
-    // UTC-midnight cutoff that would drop the last ~8h of data on the final day of a term.
-    const localDate = sql`${localTs}::date`;
     // Truncate in Pacific time then convert back to UTC so the returned timestamp is a true UTC
     // moment aligned to the bucket boundary in Pacific time.
     const bucketStartExpr = {
@@ -90,36 +129,7 @@ export class LibraryTrafficService {
       month: sql<Date>`(date_trunc('month', ${localTs}) AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'UTC'`,
     }[input.granularity];
 
-    const conds = [];
-
-    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
-    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-
-    if (input.year && input.quarter) {
-      const [term] = await this.db
-        .select()
-        .from(calendarTerm)
-        .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
-      if (!term) {
-        throw new HTTPException(400, {
-          message: `No calendar term found for ${input.year} ${input.quarter}`,
-        });
-      }
-      const isFinals = input.period === "finals";
-      conds.push(
-        gte(
-          localDate,
-          sql`${toDateString(isFinals ? term.finalsStart : term.instructionStart)}::date`,
-        ),
-      );
-      conds.push(
-        lte(localDate, sql`${toDateString(isFinals ? term.finalsEnd : term.instructionEnd)}::date`),
-      );
-    }
-
-    // Explicit date range intersects with the term filter when both are provided
-    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
-    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    const conds = [...historyFilterConds(input), ...(await this.termDateConds(input))];
 
     return this.db
       .select({
@@ -151,9 +161,6 @@ export class LibraryTrafficService {
     // granularities (hour-of-day, day-of-week, month) we always combine all terms
     const separateByTerm = isWeek && !!input.quarter;
 
-    // Convert stored UTC timestamps to Pacific time before extracting hour/day/month buckets
-    const localTs = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')`;
-
     // Chosen in JS rather than bound as a parameter: bucketExpr is repeated in SELECT, GROUP BY
     // and ORDER BY, and Postgres treats differently-numbered parameters ($1, $2, ...) as distinct
     // expressions, which fails the GROUP BY check.
@@ -175,11 +182,7 @@ export class LibraryTrafficService {
     }[input.granularity];
 
     // Conditions on libraryTrafficHistory and libraryTraffic (used in both query paths)
-    const localConds = [];
-    if (input.locationName) localConds.push(eq(libraryTraffic.locationName, input.locationName));
-    if (input.libraryName) localConds.push(eq(libraryTraffic.libraryName, input.libraryName));
-    if (input.startDate) localConds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
-    if (input.endDate) localConds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    const localConds = historyFilterConds(input);
 
     const groupBy = [
       libraryTrafficHistory.locationId,
@@ -278,37 +281,10 @@ export class LibraryTrafficService {
   }
 
   async getLibraryTrafficHistoryRaw(input: LibraryTrafficHistoryRawServiceInput) {
-    const localDate = sql`(${libraryTrafficHistory.timestamp} AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')::date`;
-
-    const conds = [];
-
-    if (input.locationName) conds.push(eq(libraryTraffic.locationName, input.locationName));
-    if (input.libraryName) conds.push(eq(libraryTraffic.libraryName, input.libraryName));
-
-    if (input.year && input.quarter) {
-      const [term] = await this.db
-        .select()
-        .from(calendarTerm)
-        .where(and(eq(calendarTerm.year, input.year), eq(calendarTerm.quarter, input.quarter)));
-      if (!term) {
-        throw new HTTPException(400, {
-          message: `No calendar term found for ${input.year} ${input.quarter}`,
-        });
-      }
-      const isFinals = input.period === "finals";
-      conds.push(
-        gte(
-          localDate,
-          sql`${toDateString(isFinals ? term.finalsStart : term.instructionStart)}::date`,
-        ),
-      );
-      conds.push(
-        lte(localDate, sql`${toDateString(isFinals ? term.finalsEnd : term.instructionEnd)}::date`),
-      );
-    }
-
-    if (input.startDate) conds.push(gte(libraryTrafficHistory.timestamp, input.startDate));
-    if (input.endDate) conds.push(lte(libraryTrafficHistory.timestamp, input.endDate));
+    const conds: (SQL | undefined)[] = [
+      ...historyFilterConds(input),
+      ...(await this.termDateConds(input)),
+    ];
 
     if (input.cursor) {
       const [cursorRow] = await this.db
