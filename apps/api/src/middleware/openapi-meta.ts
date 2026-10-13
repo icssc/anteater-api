@@ -1,6 +1,31 @@
 import type { OpenAPIObjectConfigure } from "@hono/zod-openapi";
 
-export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
+const productionServerUrl = "https://anteaterapi.com";
+const localServerUrl = "http://localhost:8787";
+
+const getServers = (requestUrl: string) => {
+  const currentServerUrl = new URL(requestUrl).origin;
+  const currentServerDescription =
+    currentServerUrl === productionServerUrl
+      ? "Anteater API Production"
+      : new URL(currentServerUrl).hostname === "localhost"
+        ? "Anteater API Local Development Instance"
+        : "Current deployment";
+  const servers = [
+    { url: currentServerUrl, description: currentServerDescription },
+    { url: productionServerUrl, description: "Anteater API Production" },
+    { url: localServerUrl, description: "Anteater API Local Development Instance" },
+  ];
+  const seenUrls = new Set<string>();
+
+  return servers.filter(({ url }) => {
+    if (seenUrls.has(url)) return false;
+    seenUrls.add(url);
+    return true;
+  });
+};
+
+export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = (c) => ({
   openapi: "3.0.0",
   info: {
     version: "2.0.0",
@@ -12,16 +37,7 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
   externalDocs: {
     url: "https://docs.icssc.club/docs/developer/anteaterapi/rest-api",
   },
-  servers: [
-    {
-      url: "https://anteaterapi.com",
-      description: "Anteater API Production",
-    },
-    {
-      url: "http://localhost:8787",
-      description: "Anteater API Local Development Instance",
-    },
-  ],
+  servers: getServers(c.req.url),
   tags: [
     {
       name: "WebSoc",
@@ -82,4 +98,4 @@ export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = {
     },
     { name: "Other" },
   ],
-};
+});
