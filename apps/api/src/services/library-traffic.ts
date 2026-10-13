@@ -175,7 +175,7 @@ export class LibraryTrafficService {
       // with Fall's 4-day Thursday offset applied only during instruction so that Monday of the
       // first full week = week 1 and the Thu–Sun stub = week 0. Finals always start on a fixed
       // weekday so the offset is not applied there.
-      week: sql`floor((${localTs}::date - ${periodStart} - ${fallOffset})::numeric / 7)::int + 1`.mapWith(
+      week: sql`floor((${localDate} - ${periodStart} - ${fallOffset})::numeric / 7)::int + 1`.mapWith(
         Number,
       ),
       month: sql`EXTRACT(month FROM ${localTs})`.mapWith(Number),
@@ -183,6 +183,13 @@ export class LibraryTrafficService {
 
     // Conditions on libraryTrafficHistory and libraryTraffic (used in both query paths)
     const localConds = historyFilterConds(input);
+    // Reading falls within a term's instruction (or finals) dates, optionally a specific term
+    const termConds = and(
+      gte(localDate, periodStart),
+      lte(localDate, periodEnd),
+      input.year ? eq(calendarTerm.year, input.year) : undefined,
+      input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
+    );
 
     const groupBy = [
       libraryTrafficHistory.locationId,
@@ -216,19 +223,12 @@ export class LibraryTrafficService {
       // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
       // Exactly one term matches per row when quarter is provided; without quarter, summer
       // term overlap is a known edge case (specify quarter for accurate week data).
-      const conds = [...localConds];
-      if (input.year) conds.push(eq(calendarTerm.year, input.year));
-      if (input.quarter) conds.push(eq(calendarTerm.quarter, input.quarter));
-
       const base = this.db
         .select(selectFields)
         .from(libraryTrafficHistory)
         .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-        .innerJoin(
-          calendarTerm,
-          and(gte(sql`${localTs}::date`, periodStart), lte(sql`${localTs}::date`, periodEnd)),
-        )
-        .where(and(...conds));
+        .innerJoin(calendarTerm, termConds)
+        .where(and(...localConds));
 
       rows = await (separateByTerm
         ? base
@@ -243,19 +243,7 @@ export class LibraryTrafficService {
     } else {
       // Summer1/Summer10wk/Summer2 instruction periods overlap, so a JOIN would duplicate rows
       // for timestamps that fall in multiple terms and bias the averages. EXISTS avoids that.
-      const inTerm = exists(
-        this.db
-          .select({ one: sql`1` })
-          .from(calendarTerm)
-          .where(
-            and(
-              gte(sql`${localTs}::date`, periodStart),
-              lte(sql`${localTs}::date`, periodEnd),
-              input.year ? eq(calendarTerm.year, input.year) : undefined,
-              input.quarter ? eq(calendarTerm.quarter, input.quarter) : undefined,
-            ),
-          ),
-      );
+      const inTerm = exists(this.db.select({ one: sql`1` }).from(calendarTerm).where(termConds));
 
       rows = await this.db
         .select(selectFields)
