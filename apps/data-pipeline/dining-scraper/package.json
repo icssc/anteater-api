@@ -13,7 +13,7 @@
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
     "date-fns": "4.4.0",
-    "winston": "3.19.0",
+    "winston": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

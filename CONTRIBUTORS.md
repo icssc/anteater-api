@@ -9,13 +9,17 @@ Contributors are listed below in alphabetical order of their GitHub username.
 | 2019–2020 | Mars ([@uci-mars](https://github.com/uci-mars)) \[founder\]    |
 | 2020–2022 | Raman Gupta ([@ramanxg](https://github.com/ramanxg))           |
 | 2022–2024 | Eddy Chen ([@ecxyzzy](https://github.com/ecxyzzy))             |
-| 2024–     | Andrew Wang ([@andrew-wang0](https://github.com/andrew-wang0)) |
+| 2024–2025 | Andrew Wang ([@andrew-wang0](https://github.com/andrew-wang0)) |
+| 2025-2026 | Sanskar Mishra ([@sanskarm7](https://github.com/sanskarm7))    |
+| 2026-2027 | Dante Dam ([@laggycomputer](https://github.com/laggycomputer)) |
+| 2026-2027 | June Kim ([@HwijungK](https://github.com/HwijungK))            |
 
 ## Contributors
 
 This list includes individuals who have contributed to this and previous iterations of Anteater API/PeterPortal API.
 
-A contribution may come in the form of a pull request, but may also include (but is not limited to) creating issues, providing feedback, etc.
+A contribution may come in the form of a pull request, but may also include (but is not limited to) creating issues,
+providing feedback, etc.
 
 Previous Project Leads are not included in this list.
 
@@ -41,12 +45,10 @@ Previous Project Leads are not included in this list.
 - Kirby Ammari ([@kirbster6](https://github.com/kirbster6))
 - Yizhen Liu ([@imliuyzh](https://github.com/imliuyzh))
 - Jordan Yee ([@jordany33](https://github.com/jordany33))
-- Dante Dam ([@laggycomputer](https://github.com/laggycomputer))
 - Minh Nguyen ([@MinhxNguyen7](https://github.com/MinhxNguyen7))
 - Nathan Nguyen ([@nathantoannguyen](https://github.com/nathantoannguyen))
 - Pranav Reddy ([@pranavmreddy](https://github.com/pranavmreddy))
 - Randy Huynh ([@RandyHuynh5815](https://github.com/RandyHuynh5815))
-- Sanskar Mishra ([@sanskarm7](https://github.com/sanskarm7))
 - Nathaniel Louis Tisuela ([@tisuela](https://github.com/tisuela))
 - Tianjiao Huang ([@tjhu](https://github.com/tjhu))
 - Frederick Dong ([@Voark](https://github.com/Voark))

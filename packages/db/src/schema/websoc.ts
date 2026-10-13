@@ -1,7 +1,7 @@
+import { terms } from "@packages/stdlib";
 import { type SQL, sql } from "drizzle-orm";
 import {
   boolean,
-  date,
   decimal,
   index,
   integer,
@@ -49,9 +49,10 @@ export type WebsocSectionFinalExam =
 
 export type FinalExamStatus = WebsocSectionFinalExam["examStatus"];
 
-export const terms = ["Fall", "Winter", "Spring", "Summer1", "Summer10wk", "Summer2"] as const;
+export type { Term } from "@packages/stdlib";
+export { terms } from "@packages/stdlib";
+
 export const term = pgEnum("term", terms);
-export type Term = (typeof terms)[number];
 
 export const courseLevels = ["LowerDiv", "UpperDiv", "Graduate"] as const;
 export const courseLevel = pgEnum("course_level", courseLevels);
@@ -85,6 +86,10 @@ export type SectionType = (typeof websocSectionTypes)[number];
 export const websocMeta = pgTable("websoc_meta", {
   name: varchar("name").primaryKey(),
   lastScraped: timestamp("last_scraped", { mode: "date", withTimezone: true }).notNull(),
+  lastEnrollmentSnapshot: timestamp("last_enrollment_snapshot", {
+    mode: "date",
+    withTimezone: true,
+  }),
 });
 
 export const websocSchool = pgTable(
@@ -329,7 +334,7 @@ export const websocSectionEnrollment = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    createdAt: date("created_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     year: varchar("year").notNull(),
     quarter: term("quarter").notNull(),
     maxCapacity: integer("max_capacity").notNull(),

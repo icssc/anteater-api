@@ -6,11 +6,13 @@ const eventImageResponseSchema = z.object({
       items: z.array(
         z.object({
           title: z.string().min(1),
-          image: z.object({
-            _dynamicUrl: z.string(),
-            height: z.number(),
-            width: z.number(),
-          }),
+          image: z
+            .object({
+              _dynamicUrl: z.string(),
+              height: z.number(),
+              width: z.number(),
+            })
+            .nullable(),
         }),
       ),
     }),
@@ -19,6 +21,8 @@ const eventImageResponseSchema = z.object({
 
 /**
  * Returns a map of the event name to its corresponding event image URL.
+ *
+ * This map may be missing some entries, as the image field on events is nullable (see above schema).
  */
 export async function fetchEventImages(): Promise<Map<string, string>> {
   const response = await fetch(
@@ -35,9 +39,14 @@ export async function fetchEventImages(): Promise<Map<string, string>> {
   const eventMap = new Map<string, string>();
 
   for (const item of fetched.data.eventList.items) {
-    const imageID = item.image._dynamicUrl.slice(36).split("/")[0] ?? "";
+    if (item.image !== null) {
+      const imageID = item.image._dynamicUrl.slice(36).split("/")[0] ?? "";
 
-    eventMap.set(item.title, `https://images.elevate-dxp.com/adobe/assets/urn:aaid:aem:${imageID}`);
+      eventMap.set(
+        item.title,
+        `https://images.elevate-dxp.com/adobe/assets/urn:aaid:aem:${imageID}`,
+      );
+    }
   }
 
   return eventMap;

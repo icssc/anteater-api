@@ -123,7 +123,7 @@ export type DegreeWorksNonExclusivityQualifier = {
   appliesToBlocks: {
     programType: DegreeWorksProgramType;
     code?: string; // i.e. `BS-201`, `120`, 'BS-201A`, `55`
-    maxShared?: string;
+    maxShared?: number;
   }[];
 };
 

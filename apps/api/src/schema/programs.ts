@@ -117,6 +117,10 @@ export const nonExclusiveQualifierSchema = z
               "The code of a specific program this qualifier applies to. These are ids for majors, minors, and specializations (i.e. `BS-201`, `120`, `BS-201A`); numerical codes representing colleges for college requirements (i.e `55` for School of Biological Sciences); and misc strings for other blocks (i.e `LIBL` for Liberal Learning). If no code is specified, this qualifier applies to all programs of the specified `programType`",
             examples: ["BS-201", "120", "BS-201A", "55", "LIBL"],
           }),
+        maxShared: z.int().optional().openapi({
+          description:
+            "If given, the maximum number of courses from this block that can simultaneously be applied to another applicable block",
+        }),
       }),
     ),
   })

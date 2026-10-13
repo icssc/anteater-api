@@ -11,19 +11,18 @@
   "dependencies": {
     "@packages/db": "workspace:*",
     "@packages/stdlib": "workspace:*",
-    "cheerio": "1.2.0",
-    "cross-fetch": "4.1.0",
-    "domhandler": "6.0.1",
+    "cheerio": "catalog:",
+    "domhandler": "catalog:",
     "he": "1.2.0",
-    "json-diff": "1.0.6",
-    "readline-sync": "1.4.10",
-    "sort-keys": "6.0.1",
+    "json-diff": "catalog:",
+    "readline-sync": "catalog:",
+    "sort-keys": "catalog:",
     "uint8array-extras": "1.5.0",
-    "winston": "3.19.0"
+    "winston": "catalog:"
   },
   "devDependencies": {
     "@types/he": "1.2.3",
-    "@types/json-diff": "1.0.3",
-    "@types/readline-sync": "1.4.8"
+    "@types/json-diff": "catalog:",
+    "@types/readline-sync": "catalog:"
   }
 }

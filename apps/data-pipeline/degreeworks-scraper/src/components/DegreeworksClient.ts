@@ -1,7 +1,6 @@
-import fetch from "cross-fetch";
 import type { z } from "zod";
+import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "$schema";
 import type { Block, ProgramCodes, UndergraduateRequirements } from "$types";
-import { dwAuditOKResponseSchema, dwMappingResponseSchema } from "../schema";
 
 export class DegreeworksClient {
   private static readonly API_URL = "https://reg.uci.edu/RespDashboard/api";
@@ -10,13 +9,13 @@ export class DegreeworksClient {
 
   private constructor(
     private readonly studentId: string,
-    private readonly headers: HeadersInit,
+    private readonly headers: Record<string, string>,
     private readonly delay: number,
   ) {}
 
   static async new(
     studentId: string,
-    headers: HeadersInit,
+    headers: Record<string, string>,
     delay = 1000,
   ): Promise<DegreeworksClient> {
     const dw = new DegreeworksClient(studentId, headers, delay);

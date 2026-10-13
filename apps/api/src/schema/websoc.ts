@@ -69,6 +69,9 @@ export type ParsedRange = {
 
 export type ParsedNumber = ParsedInteger | ParsedString | ParsedRange;
 
+const restrictionCodesDescription =
+  "Restriction codes as listed on WebSoc. See [UCI's restriction code definitions](https://reg.uci.edu/enrollment/restrict_codes.html) for their meanings.";
+
 const isValidRestrictionCode = (code: string): code is (typeof restrictionCodes)[number] =>
   (restrictionCodes as readonly string[]).includes(code);
 
@@ -130,7 +133,10 @@ export const websocQuerySchema = z.object({
           });
           return z.NEVER;
         }
-        parsedNums.push({ _type: "ParsedInteger", value: Number.parseInt(code, 10) });
+        parsedNums.push({
+          _type: "ParsedInteger",
+          value: Number.parseInt(code, 10),
+        });
       }
       return parsedNums;
     })
@@ -190,6 +196,10 @@ export const websocQuerySchema = z.object({
         parsedCodes.push(code);
       }
       return parsedCodes;
+    })
+    .openapi({
+      description: restrictionCodesDescription,
+      example: "L,M",
     }),
   includeRelatedCourses: z.coerce
     .string()
@@ -256,7 +266,10 @@ export const websocSectionSchema = z.object({
   sectionCode: z.string(),
   sectionType: z.enum(websocSectionTypes),
   numRequested: z.string(),
-  restrictions: z.string(),
+  restrictions: z.string().openapi({
+    description: restrictionCodesDescription,
+    example: "A and L",
+  }),
   numOnWaitlist: z.string(),
   numWaitlistCap: z.string(),
   sectionComment: z.string(),

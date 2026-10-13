@@ -94,6 +94,8 @@ export class CourseMaterialsService {
             ...row,
             quarter: displayQuarter as (typeof materialTerms)[number],
             sectionCode: row.sectionCode.toString(10).padStart(5, "0"),
+            isbn: row.isbn ?? [],
+            mmsId: row.mmsId ?? [],
           });
         }
         return acc;
