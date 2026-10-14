@@ -4,6 +4,7 @@ import {
   courseMaterial,
   type materialTerms,
   websocCourse,
+  websocInstructor,
   websocSection,
   websocSectionToInstructor,
 } from "@packages/db/schema";
@@ -27,7 +28,7 @@ function buildQuery(input: CourseMaterialsServiceInput) {
     }
   }
   if (input.instructor) {
-    conditions.push(ilike(websocSectionToInstructor.instructorName, `%${input.instructor}%`));
+    conditions.push(ilike(websocInstructor.name, `%${input.instructor}%`));
   }
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
@@ -83,6 +84,7 @@ export class CourseMaterialsService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
+      .innerJoin(websocInstructor, eq(websocSectionToInstructor.instructorId, websocInstructor.id))
       .where(buildQuery(input));
 
     return rows

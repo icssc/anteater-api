@@ -278,8 +278,8 @@
     {
       "idx": 39,
       "version": "7",
-      "when": 1791824914116,
-      "tag": "0039_swift_jack_power",
+      "when": 1792004975538,
+      "tag": "0039_fix_missing_instructor_data",
       "breakpoints": true
     }
   ]

@@ -316,7 +316,7 @@ async function main() {
       }
     }
 
-    if (i % PARTIAL_WRITE_PERIOD === 0) {
+    if (i % PARTIAL_WRITE_PERIOD === 0 && ucinetidToInstructorObject.size > 0) {
       // small wip, yes there's repeated work rn
       await db.transaction(async (tx) => {
         await tx

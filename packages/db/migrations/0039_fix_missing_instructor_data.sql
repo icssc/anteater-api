@@ -22,7 +22,7 @@ DROP INDEX "websoc_section_to_instructor_instructor_name_index";--> statement-br
     Hope to release this update as soon as possible
 */
 
-ALTER TABLE "websoc_instructor" DROP CONSTRAINT "websoc_instructor_pkey";--> statement-breakpoint
+-- ALTER TABLE "websoc_instructor" DROP CONSTRAINT "<constraint_name>";--> statement-breakpoint
 ALTER TABLE "instructor_to_websoc_instructor" ADD COLUMN "websoc_instructor_id" uuid NOT NULL;--> statement-breakpoint
 ALTER TABLE "websoc_instructor" ADD COLUMN "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL;--> statement-breakpoint
 ALTER TABLE "websoc_instructor" ADD COLUMN "school" varchar;--> statement-breakpoint
@@ -88,8 +88,10 @@ CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "cours
             'email', "instructor"."email",
             'department', "instructor"."department",
             'shortenedNames', ARRAY(
-              SELECT "instructor_to_websoc_instructor"."websoc_instructor_id"
+              SELECT DISTINCT "websoc_instructor"."name"
               FROM "instructor_to_websoc_instructor"
+              JOIN "websoc_instructor" 
+              ON "instructor_to_websoc_instructor"."websoc_instructor_id" = "websoc_instructor"."id"
               WHERE "instructor_to_websoc_instructor"."instructor_ucinetid" = "instructor"."ucinetid"
             )
           )
