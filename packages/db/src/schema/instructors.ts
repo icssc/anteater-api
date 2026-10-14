@@ -28,13 +28,13 @@ export const instructorToWebsocInstructor = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     instructorUcinetid: varchar("instructor_ucinetid").references(() => instructor.ucinetid),
-    websocInstructorName: varchar("websoc_instructor_name")
+    websocInstructorId: uuid("websoc_instructor_id")
       .notNull()
-      .references(() => websocInstructor.name),
+      .references(() => websocInstructor.id),
   },
   (table) => [
     index().on(table.instructorUcinetid),
-    index().on(table.websocInstructorName),
-    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorName),
+    index().on(table.websocInstructorId),
+    uniqueIndex().on(table.instructorUcinetid, table.websocInstructorId),
   ],
 );

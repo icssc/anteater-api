@@ -2,6 +2,7 @@ import type { database } from "@packages/db";
 import { and, avg, eq, gt, inArray, or, sql, sum } from "@packages/db/drizzle";
 import {
   websocCourse,
+  websocInstructor,
   websocSection,
   websocSectionGrade,
   websocSectionToInstructor,
@@ -22,7 +23,7 @@ function buildQuery(input: GradesServiceInput) {
     conditions.push(eq(websocCourse.quarter, input.quarter));
   }
   if (input.instructor) {
-    conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+    conditions.push(eq(websocInstructor.name, input.instructor));
   }
   if (input.department) {
     conditions.push(eq(websocCourse.deptCode, input.department));
@@ -129,7 +130,7 @@ export class GradesService {
         year: websocCourse.year,
         department: websocCourse.deptCode,
         sectionCode: websocSection.sectionCode,
-        instructor: websocSectionToInstructor.instructorName,
+        instructor: websocInstructor.name,
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
@@ -138,6 +139,7 @@ export class GradesService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .where(buildQuery(input))
       .then((rows) =>
         rows.reduce(
@@ -193,6 +195,7 @@ export class GradesService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .where(buildQuery(input))
       .then((rows) =>
         rows.reduce(
@@ -277,6 +280,7 @@ export class GradesService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .groupBy(websocCourse.deptCode, websocCourse.courseNumber)
       .where(buildQuery(input));
   }
@@ -287,7 +291,7 @@ export class GradesService {
         department: websocCourse.deptCode,
         courseNumber: websocCourse.courseNumber,
         instructor: sql<string>`COALESCE(
-                ${websocSectionToInstructor.instructorName},
+                ${websocInstructor.name},
                 'STAFF'
                 )`,
         gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
@@ -307,11 +311,8 @@ export class GradesService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
-      .groupBy(
-        websocCourse.deptCode,
-        websocCourse.courseNumber,
-        websocSectionToInstructor.instructorName,
-      )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
+      .groupBy(websocCourse.deptCode, websocCourse.courseNumber, websocInstructor.name)
       .where(buildQuery(input));
   }
 }

@@ -290,10 +290,20 @@ export const websocLocation = pgTable(
   (table) => [uniqueIndex().on(table.building, table.room)],
 );
 
-export const websocInstructor = pgTable("websoc_instructor", {
-  name: varchar("name").primaryKey(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
-});
+export const websocInstructor = pgTable(
+  "websoc_instructor",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name").notNull(),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    school: varchar("school"),
+    department: varchar("department"),
+  },
+  (table) => [uniqueIndex().on(table.name, table.school)],
+);
 
 export const websocSectionToInstructor = pgTable(
   "websoc_section_to_instructor",
@@ -302,11 +312,11 @@ export const websocSectionToInstructor = pgTable(
     sectionId: uuid("section_id")
       .references(() => websocSection.id)
       .notNull(),
-    instructorName: varchar("instructor_name")
-      .references(() => websocInstructor.name)
+    instructorId: uuid("instructor_id")
+      .references(() => websocInstructor.id)
       .notNull(),
   },
-  (table) => [index().on(table.sectionId), index().on(table.instructorName)],
+  (table) => [index().on(table.sectionId), index().on(table.instructorId)],
 );
 
 export const websocSectionMeetingToLocation = pgTable(

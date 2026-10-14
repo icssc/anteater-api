@@ -284,10 +284,7 @@ export class WebsocService {
         websocSectionToInstructor,
         eq(websocSection.id, websocSectionToInstructor.sectionId),
       )
-      .leftJoin(
-        websocInstructor,
-        eq(websocSectionToInstructor.instructorName, websocInstructor.name),
-      )
+      .leftJoin(websocInstructor, eq(websocSectionToInstructor.instructorId, websocInstructor.id))
       .leftJoin(websocSectionMeeting, eq(websocSection.id, websocSectionMeeting.sectionId))
       .leftJoin(
         websocSectionMeetingToLocation,
@@ -530,7 +527,15 @@ export class WebsocService {
       conditions.push(eq(websocSection.quarter, input.quarter));
     }
     if (input.instructor) {
-      conditions.push(eq(websocSectionToInstructor.instructorName, input.instructor));
+      const namedInstructor = await this.db
+        .select({ id: websocInstructor.id })
+        .from(websocInstructor)
+        .where(eq(websocInstructor.name, input.instructor))
+        .limit(1);
+
+      if (namedInstructor.length !== 0) {
+        conditions.push(eq(websocSectionToInstructor.instructorId, namedInstructor[0].id));
+      }
     }
     return this.db
       .select({
@@ -539,14 +544,15 @@ export class WebsocService {
         url: websocSection.webURL,
         instructorNames: sql<
           string[]
-        >`ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${websocSectionToInstructor.instructorName}), NULL)`,
+        >`ARRAY_REMOVE(ARRAY_AGG(DISTINCT ${websocInstructor.name}), NULL)`,
       })
       .from(websocSection)
       .innerJoin(websocCourse, eq(websocSection.courseId, websocCourse.id))
       .leftJoin(
         websocSectionToInstructor,
-        eq(websocSectionToInstructor.sectionId, websocSection.id),
+        and(eq(websocSectionToInstructor.sectionId, websocSection.id)),
       )
+      .innerJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .where(and(...conditions))
       .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
       .orderBy(desc(websocSection.year), desc(websocTermSortOrder(websocSection.quarter)));

@@ -215,7 +215,7 @@
     {
       "idx": 30,
       "version": "7",
-      "when": 1777449716686,
+      "when": 1779139948026,
       "tag": "0030_dining_schedules",
       "breakpoints": true
     },
@@ -273,6 +273,13 @@
       "version": "7",
       "when": 1791588503828,
       "tag": "0038_enrollment_resolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792004975538,
+      "tag": "0039_fix_missing_instructor_data",
       "breakpoints": true
     }
   ]

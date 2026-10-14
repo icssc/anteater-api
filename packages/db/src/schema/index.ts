@@ -85,8 +85,10 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
             'email', ${instructor.email},
             'department', ${instructor.department},
             'shortenedNames', ARRAY(
-              SELECT ${instructorToWebsocInstructor.websocInstructorName}
+              SELECT DISTINCT ${websocInstructor.name}
               FROM ${instructorToWebsocInstructor}
+              JOIN ${websocInstructor} 
+              ON ${instructorToWebsocInstructor.websocInstructorId} = ${websocInstructor.id}
               WHERE ${instructorToWebsocInstructor.instructorUcinetid} = ${instructor.ucinetid}
             )
           )
@@ -98,10 +100,10 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
     .leftJoin(websocCourse, eq(websocCourse.courseId, course.id))
     .leftJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
     .leftJoin(websocSectionToInstructor, eq(websocSectionToInstructor.sectionId, websocSection.id))
-    .leftJoin(websocInstructor, eq(websocInstructor.name, websocSectionToInstructor.instructorName))
+    .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
     .leftJoin(
       instructorToWebsocInstructor,
-      eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+      eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
     )
     .leftJoin(
       instructor,
@@ -119,11 +121,13 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
     qb
       .select({
         instructorUcinetid: instructorToWebsocInstructor.instructorUcinetid,
-        shortenedNames: sql`ARRAY_AGG(${instructorToWebsocInstructor.websocInstructorName})`.as(
-          "shortened_names",
-        ),
+        shortenedNames: sql<string[]>`ARRAY_AGG(${websocInstructor.name})`.as("shortened_names"),
       })
       .from(instructorToWebsocInstructor)
+      .innerJoin(
+        websocInstructor,
+        eq(websocInstructor.id, instructorToWebsocInstructor.websocInstructorId),
+      )
       .groupBy(instructorToWebsocInstructor.instructorUcinetid),
   );
   const termsCte = qb.$with("terms_cte").as(
@@ -145,13 +149,10 @@ export const instructorView = pgMaterializedView("instructor_view").as((qb) => {
         websocSectionToInstructor,
         eq(websocSectionToInstructor.sectionId, websocSection.id),
       )
-      .leftJoin(
-        websocInstructor,
-        eq(websocInstructor.name, websocSectionToInstructor.instructorName),
-      )
+      .leftJoin(websocInstructor, eq(websocInstructor.id, websocSectionToInstructor.instructorId))
       .leftJoin(
         instructorToWebsocInstructor,
-        eq(instructorToWebsocInstructor.websocInstructorName, websocInstructor.name),
+        eq(instructorToWebsocInstructor.websocInstructorId, websocInstructor.id),
       )
       .groupBy(course.id, instructorToWebsocInstructor.instructorUcinetid),
   );

@@ -75,7 +75,7 @@ export class EnrollmentHistoryService {
         )
         .leftJoin(
           websocInstructor,
-          eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+          eq(websocInstructor.id, websocSectionToInstructor.instructorId),
         );
     }
     const downsampled = this.db
@@ -219,7 +219,7 @@ export class EnrollmentHistoryService {
         )
         .leftJoin(
           websocInstructor,
-          eq(websocInstructor.name, websocSectionToInstructor.instructorName),
+          eq(websocInstructor.id, websocSectionToInstructor.instructorId),
         );
     }
 
