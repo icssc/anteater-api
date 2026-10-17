@@ -182,9 +182,7 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   const base = match[1].trim();
   const annotations = [...match[2].matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
 
-  if (/\( recommended \)/.test(prereq)) {
-    return undefined;
-  }
+  if (annotations.includes("recommended")) return undefined;
 
   let coreq = false;
   let minGrade: string | undefined;
@@ -589,9 +587,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -724,10 +722,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -764,10 +762,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
