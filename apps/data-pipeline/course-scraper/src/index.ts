@@ -215,7 +215,15 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
 }
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
+  if (/\brecommended\b/.test(prereq)) {
+    return undefined;
+  }
+
   if (/^AUTHORIZATION\b/.test(prereq)) {
+    return undefined;
+  }
+
+  if (/^Display all prerequisites on file\b/.test(prereq)) {
     return undefined;
   }
 
@@ -306,6 +314,10 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
 }
 
 function parseAntirequisite(prereq: string): Prerequisite | undefined {
+  // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
+  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
+    return undefined;
+  }
   const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+)\sscore\sof\s(\d)\sor\sgreater$/);
   if (antiAPReqMatch) {
     return {
@@ -324,11 +336,6 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   const annotated = parseAnnotatedCourseOrExam(withoutNo);
   if (annotated) {
     return annotated;
-  }
-
-  // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
-  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
-    return undefined;
   }
 
   // ex: NO PSYCHOLOGY MAJORS ONLY
