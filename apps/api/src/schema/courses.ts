@@ -170,7 +170,7 @@ const affiliationPrerequisiteSchema = z.object({
     z.object({
       type: z.literal("major"),
       value: z.string().openapi({
-        description: "Students must be this major to enroll in this course.",
+        description: "Students must be in this major to enroll in this course.",
         example: "COMPUTER SCI & ENGR",
       }),
     }),

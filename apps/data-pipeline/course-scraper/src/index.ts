@@ -182,6 +182,10 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   const base = match[1].trim();
   const annotations = [...match[2].matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
 
+  if (/\( recommended \)/.test(prereq)) {
+    return undefined;
+  }
+
   let coreq = false;
   let minGrade: string | undefined;
   let isExam = false;
@@ -213,7 +217,7 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
 }
 
 function parsePrerequisite(prereq: string): Prerequisite | undefined {
-  if (prereq === "( recommended )") {
+  if (/^AUTHORIZATION\b/.test(prereq)) {
     return undefined;
   }
 
@@ -230,17 +234,13 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
     return { prereqType: "exam", examName: prereq };
   }
 
-  const satActMatch = prereq.match(/^((?:SAT|ACT) .+)\s*>=\s*(\d+)$/);
+  const satActMatch = prereq.match(/^((?:SAT|ACT) .+) >= (\d+)$/);
   if (satActMatch) {
     return {
       prereqType: "exam",
       examName: satActMatch[1].trim(),
       minGrade: satActMatch[2].trim(),
     };
-  }
-
-  if (/^AUTHORIZATION\b/.test(prereq)) {
-    return undefined;
   }
 
   const classLevelMatch = prereq.match(
@@ -303,7 +303,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
       },
     };
   }
-
+  logger.warn(`Unparsed prerequisite: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
@@ -329,7 +329,7 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   }
 
   // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
-  if (prereq === "NO REPEATS ALLOWED") {
+  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
     return undefined;
   }
 
