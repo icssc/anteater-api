@@ -196,8 +196,7 @@ export class LibraryTrafficService {
         avgPercentage: avg(libraryTrafficHistory.trafficPercentage).mapWith(Number),
       })
       .from(libraryTrafficHistory)
-      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id))
-      .$dynamic();
+      .innerJoin(libraryTraffic, eq(libraryTrafficHistory.locationId, libraryTraffic.id));
 
     const rows = await (isWeek
       ? // Week-of-term numbering needs calendarTerm JOINed for periodStart and the Fall offset.
