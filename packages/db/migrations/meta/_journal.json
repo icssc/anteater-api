@@ -274,6 +274,13 @@
       "when": 1791588503828,
       "tag": "0038_enrollment_resolution",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792358601761,
+      "tag": "0039_library_traffic_history_timestamp_index",
+      "breakpoints": true
     }
   ]
 }

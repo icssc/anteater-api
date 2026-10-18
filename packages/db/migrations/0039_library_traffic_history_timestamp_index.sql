@@ -1,0 +1,1 @@
+CREATE INDEX "library_traffic_history_timestamp_id_index" ON "library_traffic_history" USING btree ("timestamp","id");
