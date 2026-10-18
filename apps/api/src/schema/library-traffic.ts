@@ -88,12 +88,19 @@ export const libraryTrafficHistoryAggregatedQuerySchema = historyFilterBase
     endDate: z.coerce.date().optional().openapi({
       example: "2026-01-31T23:59:59Z",
       description:
-        "End of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
+        "End of the time range (inclusive). Required unless year + quarter are provided (always required for hour granularity). Combined with year/quarter when both are provided. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
     }),
   })
   .refine(({ year, quarter, startDate, endDate }) => (year && quarter) || (startDate && endDate), {
     message: "Either (year + quarter) or (startDate + endDate) must be provided",
   })
+  // A term alone spans ~11 weeks, well past the hourly cap, so hourly needs an explicit range
+  .refine(
+    ({ granularity, startDate, endDate }) => granularity !== "hour" || (startDate && endDate),
+    {
+      message: "startDate and endDate are required for hour granularity",
+    },
+  )
   .refine(
     ({ granularity, startDate, endDate }) => {
       if (!startDate || !endDate) return true;
