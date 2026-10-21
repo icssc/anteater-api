@@ -83,7 +83,7 @@ export const libraryTrafficHistoryAggregatedQuerySchema = historyFilterBase
     startDate: z.coerce.date().optional().openapi({
       example: "2026-01-01T00:00:00Z",
       description:
-        "Start of the time range (inclusive). Required unless year + quarter are provided. Combined with year/quarter when both are provided.",
+        "Start of the time range (inclusive). Required unless year + quarter are provided (always required for hour granularity). Combined with year/quarter when both are provided.",
     }),
     endDate: z.coerce.date().optional().openapi({
       example: "2026-01-31T23:59:59Z",
