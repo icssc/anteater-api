@@ -86,7 +86,8 @@ export const libraryTrafficHistoryAggregatedQuerySchema = historyFilterBase
         "Start of the time range (inclusive). Required unless year + quarter are provided (always required for hour granularity). Combined with year/quarter when both are provided.",
     }),
     endDate: z.coerce.date().optional().openapi({
-      example: "2026-01-31T23:59:59Z",
+      // Kept within the 14-day hourly cap so the /reference example works for every granularity
+      example: "2026-01-14T23:59:59Z",
       description:
         "End of the time range (inclusive). Required unless year + quarter are provided (always required for hour granularity). Combined with year/quarter when both are provided. Max range: 14 days (hour), 365 days (day), 730 days (week/month).",
     }),
