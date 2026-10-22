@@ -490,6 +490,9 @@ importers:
       react-hook-form:
         specifier: 7.85.0
         version: 7.85.0(react@19.2.7)
+      readline-sync:
+        specifier: 'catalog:'
+        version: 1.4.10
       tailwind-merge:
         specifier: 3.6.0
         version: 3.6.0
@@ -512,6 +515,9 @@ importers:
       '@types/react-dom':
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/readline-sync':
+        specifier: 'catalog:'
+        version: 1.4.8
       drizzle-kit:
         specifier: 'catalog:'
         version: 0.31.10
