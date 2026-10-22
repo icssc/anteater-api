@@ -6,6 +6,6 @@ pre-commit:
       run: pnpm check:biome -- {staged_files}
       stage_fixed: true
     check-prettier:
-      glob: "*.{json,md,toml,yml,yaml}"
+      glob: "*.{json,jsonc,md,toml,yml,yaml}"
       run: pnpm prettier --write {staged_files}
       stage_fixed: true
