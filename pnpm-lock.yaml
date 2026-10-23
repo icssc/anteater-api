@@ -43,8 +43,8 @@ catalogs:
       specifier: 4.106.0
       version: 4.106.0
     zod:
-      specifier: 4.4.2
-      version: 4.4.2
+      specifier: 4.6.7
+      version: 4.6.7
 
 overrides:
   '@auth/core': 0.41.2
@@ -87,17 +87,17 @@ importers:
         specifier: 3.2.0
         version: 3.2.0(@apollo/server@4.11.0(graphql@16.14.2))(@envelop/core@5.5.1)(@escape.tech/graphql-armor-types@0.7.0)
       '@graphql-tools/merge':
-        specifier: 9.1.10
-        version: 9.1.10(graphql@16.14.2)
+        specifier: 10.0.6
+        version: 10.0.6(graphql@16.14.2)
       '@graphql-yoga/plugin-response-cache':
         specifier: 3.23.2
         version: 3.23.2(graphql-yoga@5.21.2(graphql@16.14.2))(graphql@16.14.2)
       '@hono-rate-limiter/cloudflare':
         specifier: 0.2.2
-        version: 0.2.2(@cloudflare/workers-types@4.20241230.0)(hono@4.13.7)
+        version: 0.2.2(@cloudflare/workers-types@4.20241230.0)(hono@4.13.13)
       '@hono/zod-openapi':
         specifier: 1.4.0
-        version: 1.4.0(hono@4.13.7)(zod@4.4.2)
+        version: 1.4.0(hono@4.13.13)(zod@4.6.7)
       '@packages/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -106,7 +106,7 @@ importers:
         version: link:../../packages/stdlib
       '@scalar/hono-api-reference':
         specifier: 0.11.7
-        version: 0.11.7(hono@4.13.7)
+        version: 0.11.7(hono@4.13.13)
       graphql:
         specifier: 16.14.2
         version: 16.14.2
@@ -114,14 +114,14 @@ importers:
         specifier: 5.21.2
         version: 5.21.2(graphql@16.14.2)
       hono:
-        specifier: 4.13.7
-        version: 4.13.7
+        specifier: 4.13.13
+        version: 4.13.13
       hono-rate-limiter:
         specifier: 0.5.3
-        version: 0.5.3(hono@4.13.7)
+        version: 0.5.3(hono@4.13.13)
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -223,7 +223,7 @@ importers:
         version: 4.0.0
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
 
   apps/data-pipeline/dining-scraper:
     dependencies:
@@ -241,7 +241,7 @@ importers:
         version: 3.19.0
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
     devDependencies:
       wrangler:
         specifier: 'catalog:'
@@ -328,7 +328,7 @@ importers:
         version: 1.2.0
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
     devDependencies:
       wrangler:
         specifier: 'catalog:'
@@ -391,7 +391,7 @@ importers:
         version: 1.2.0
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
     devDependencies:
       domhandler:
         specifier: 'catalog:'
@@ -403,8 +403,8 @@ importers:
   apps/data-pipeline/websoc-scraper:
     dependencies:
       '@icssc/libwebsoc-next':
-        specifier: 1.1.3
-        version: 1.1.3
+        specifier: 1.1.4
+        version: 1.1.4
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
@@ -432,7 +432,7 @@ importers:
         version: 5.4.0(react-hook-form@7.85.0(react@19.2.7))
       '@opennextjs/cloudflare':
         specifier: ^1.20.9
-        version: 1.20.9(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.106.0)
+        version: 1.20.9(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.106.0)
       '@paralleldrive/cuid2':
         specifier: 3.3.0
         version: 3.3.0
@@ -476,11 +476,11 @@ importers:
         specifier: 1.23.0
         version: 1.23.0(react@19.2.7)
       next:
-        specifier: 16.3.8
-        version: 16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 16.4.2
+        version: 16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-auth:
         specifier: 5.0.0-beta.32
-        version: 5.0.0-beta.32(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+        version: 5.0.0-beta.32(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -498,7 +498,7 @@ importers:
         version: 1.0.7(tailwindcss@3.4.15)
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
     devDependencies:
       '@packages/key-types':
         specifier: workspace:*
@@ -551,7 +551,7 @@ importers:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 4.4.2
+        version: 4.6.7
 
   packages/public/libwebsoc-next:
     dependencies:
@@ -598,7 +598,7 @@ packages:
   '@apollo/server@4.11.0':
     resolution: {integrity: sha512-SWDvbbs0wl2zYhKG6aGLxwTJ72xpqp0awb2lotNpfezd9VcAvzaUizzKQqocephin2uMoaA8MguoyBmgtPzNWw==}
     engines: {node: '>=14.16.0'}
-    deprecated: Apollo Server v4 is deprecated and will transition to end-of-life on January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
+    deprecated: Apollo Server v4 is end-of-life since January 26, 2026. As long as you are already using a non-EOL version of Node.js, upgrading to v5 should take only a few minutes. See https://www.apollographql.com/docs/apollo-server/previous-versions for details.
     peerDependencies:
       graphql: ^16.6.0
 
@@ -1898,6 +1898,12 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@graphql-tools/merge@10.0.6':
+    resolution: {integrity: sha512-lhuHibwpZgP7I9EQ/d65vY/ZjqcSQ0l9dsj4Lk75h9Ex6vkGN4TrOYNitB5/IKdweho2JIOpZIAjif3CgiKbYg==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
   '@graphql-tools/merge@8.4.2':
     resolution: {integrity: sha512-XbrHAaj8yDuINph+sAfuq3QCZ/tKblrTLOpirK0+CAgNlZUCHs0Fa+xtMUURgwCVThLle1AF7svJCxFizygLsw==}
     peerDependencies:
@@ -1931,6 +1937,12 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+
+  '@graphql-tools/utils@13.1.3':
+    resolution: {integrity: sha512-7enmp5ihGqUFYnyFX1l1NwdJEu0sTvmXIqTAEJtu+9YaUyI0PnihkYT84pz78KIMx8afQ4Vt4F9wBIIANfPXRw==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
 
   '@graphql-tools/utils@9.2.1':
     resolution: {integrity: sha512-WUw506Ql6xzmOORlriNrD6Ugx+HjVgYxt9KCXD9mHAak+eaXSwuGGPyE60hy9xaDEoXKBsG7SkG69ybitaVl6A==}
@@ -1985,8 +1997,8 @@ packages:
     peerDependencies:
       react-hook-form: ^7.55.0
 
-  '@icssc/libwebsoc-next@1.1.3':
-    resolution: {integrity: sha512-Gj3SRaPkfi73IVaOwqi/6jCPSsRup2vtVCtUA2VxEW33f+OlhnO1qFz4YSstE4RUxAVhGdQRtjhIXyADI0owLQ==}
+  '@icssc/libwebsoc-next@1.1.4':
+    resolution: {integrity: sha512-ei8WgrieKKaHnORBp6od3OL7ZhXQOcT4t7N3s1H5w+BsfWYtXOHMFqC29YP9Ap6bCScK0vR5OgOrZU0icH5i8w==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -2325,57 +2337,57 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@next/env@16.3.8':
-    resolution: {integrity: sha512-Al9zqHVV7TJv0eFuOU4U7Lvv74PTih4Ch63sk2xCIpSTkE3udFnaOcnzP2lQVymiL7yS9Cj2iClUXlR3EQ5sEw==}
+  '@next/env@16.4.2':
+    resolution: {integrity: sha512-nTUTFH7G5/J/fmpkjVLegOkqyKOP0CEsJcMsyO4UCYeN1su+YMW/MfaSErnJskL7XM+UDK6aTvslxsRCyya/sA==}
 
-  '@next/swc-darwin-arm64@16.3.8':
-    resolution: {integrity: sha512-2JPRMh2nmQG5CiL7cXGL9AGwnPWJQ//cTtAUCT+w511QHk79SYz3LGv/pc5X643B/WEO0rvu3Yww0hqwt3kgeA==}
+  '@next/swc-darwin-arm64@16.4.2':
+    resolution: {integrity: sha512-ONkhFvZNFWlsEHOM/81AtxdyuJP2KRYKYR0JxPwvcu1AuPMMMgcL+wW2luldJvMtZwKtUxoSkCychW5wIeoYSw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@16.3.8':
-    resolution: {integrity: sha512-GZtCCOBKJ4leVIT/Th0llWKhD1ca92lzbQiS5R5ON9QkoiFnilFsebDae1JU2a3HWoKMEmEZWGs1AGLavVM72Q==}
+  '@next/swc-darwin-x64@16.4.2':
+    resolution: {integrity: sha512-luPCMbOsCoaF+kXJEUjmjmOZg1lC3BflhmUu+ZmW4tBu2vW/4AXak8JBFvePizGkxVmNiAw/r9ra+6UviCWtWQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-linux-arm64-gnu@16.3.8':
-    resolution: {integrity: sha512-O659ygeQYqneJ1fBKMpFxIFqYkYswu8IAS1OCKK/4f3ZgJJm1dRz4fVJZRi/kLLWjnBKnebOePA4WNv+sV1pVA==}
+  '@next/swc-linux-arm64-gnu@16.4.2':
+    resolution: {integrity: sha512-xhwFTAncJyaCNy5KqKKuKaIIdCy1/1ZV1s5S1G0hhT7wGMkDTlfJ6aQbfRFnIG/s3/kDrxQ8aycVe+c5QnP8ow==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@next/swc-linux-arm64-musl@16.3.8':
-    resolution: {integrity: sha512-dSjKSyWpzxoO1d3DIZZcP4XJcNaKeLmxQMFOiYl5vuBRMmweIqnAhty8tAmRsvTss779cK1FtYnDMj40e4TQlg==}
+  '@next/swc-linux-arm64-musl@16.4.2':
+    resolution: {integrity: sha512-T1PNmfbPcxr5ndtWUL/3wQtLXsz808lq6sc2GrNT5k2oquF7UyqZddHSuAewHVsWsGXe6nsl9HoN1YNriVjuSg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@next/swc-linux-x64-gnu@16.3.8':
-    resolution: {integrity: sha512-lbqOuz3RPRcv+o9msNsJw5x4+Y1ZwPTs6vmL6DCf7i0fZfvng/F59wyeDwqHIvV0mK//RBy/jJkZ+nCKsSMXjQ==}
+  '@next/swc-linux-x64-gnu@16.4.2':
+    resolution: {integrity: sha512-N9cDUOCGtkJG5PNKDFZUF3xXndrJJcpLp121uAGjIGvO/U2p9tfdNOM9htj7+5f72l0m8rMw/cvYacUJBQoudg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@next/swc-linux-x64-musl@16.3.8':
-    resolution: {integrity: sha512-+316WswI8ScVgZeUd+1KGaXkHhaYQzCjvH/05TZSpJ8zBizb1a4G7DtO7F12jcBIqMOtsz9ji1t48fmKtzqsGA==}
+  '@next/swc-linux-x64-musl@16.4.2':
+    resolution: {integrity: sha512-yY2uh1YhX6ufuYy2FCbw1dqblbhI57GLYAJfCkqD9auTv6pLrH67Uccjc3QMKBeCYAG6lkgu08ExmX1bbjejjQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@next/swc-win32-arm64-msvc@16.3.8':
-    resolution: {integrity: sha512-ji0gd4kMYUxO+1fJBIbiBVRCjzG/lloiyCccnlebvb1ZJ5qXCPZqYg4Jl1DrrixnWNMKylzgpmMWx0yNDYXlzw==}
+  '@next/swc-win32-arm64-msvc@16.4.2':
+    resolution: {integrity: sha512-j/ArWRIHpMMB6wYLMhr2puTguBt70lNU/Cmjl9p6dTDE8DGknYJMP9PdwPk2dqpCNL/KIX9yfngDvIesxJPmsg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-x64-msvc@16.3.8':
-    resolution: {integrity: sha512-WcTlaKt/TWkh5kUjdJcUmB1XgZ+1c6fz4Y9fDHL73YNSdGaUWjceeWrrlwF0nv19iABYWC4iAq1oX1w4Bn0vfg==}
+  '@next/swc-win32-x64-msvc@16.4.2':
+    resolution: {integrity: sha512-AA4edyWHDko3NCSo0x6GomsdgFb0oR1J3MXU1b5xt6FRFg4AucrMPW3S0hCe/9onU0O1BbpGQBsqo1r0Gneu1g==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -3392,6 +3404,10 @@ packages:
     resolution: {integrity: sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA==}
     engines: {node: '>=16.0.0'}
 
+  '@whatwg-node/promise-helpers@2.0.0':
+    resolution: {integrity: sha512-/i9CS0Z96o+cPwaYoAyVxAThDiUX1wV3tDmNWPJbn+vtdR+JftuCDg1NGCXBrzIYVDGkJ8uT6ctwmrBOUzOpKQ==}
+    engines: {node: '>=22.15.0'}
+
   '@whatwg-node/server@0.11.0':
     resolution: {integrity: sha512-VSdkwnJRr8Yv9UgB2aXB3VUPWwd6Oqnn0hycFwhg9pZgWxJXb7JmhsiXe9tmpMwjHFxli12PGcz9aI63YYloGQ==}
     engines: {node: '>=18.0.0'}
@@ -4033,10 +4049,6 @@ packages:
     resolution: {integrity: sha512-IEMIf7298kXuZSRFoGfMYrl7is8LpavODgbNz1cwIudv7KwVFnuU+UsMporfq6PD6aXSlawZlARiA3UywCTfMw==}
     hasBin: true
 
-  fast-xml-parser@5.5.9:
-    resolution: {integrity: sha512-jldvxr1MC6rtiZKgrFnDSvT8xuH+eJqxqOBThUVjYrxssYTo1avZLGql5l0a0BAERR01CadYzZ83kVEkbyDg+g==}
-    hasBin: true
-
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
 
@@ -4209,8 +4221,8 @@ packages:
       unstorage:
         optional: true
 
-  hono@4.13.7:
-    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
   htmlparser2@10.1.0:
@@ -4650,8 +4662,8 @@ packages:
       nodemailer:
         optional: true
 
-  next@16.3.8:
-    resolution: {integrity: sha512-U7QEZaTini6wKrb8A8hqLLqYQyCetegKjCpJOyxk642vWoMoU1x5PyZCJFvgYgiptA8xc5j/9xYlZFO7w9Sjmw==}
+  next@16.4.2:
+    resolution: {integrity: sha512-r+oBJojfefUjOiWkBhXgLS+igxX/7BWyK59uHnyOyplMSLtBZ+QLP3okrdYTbrfrbrmNTVWLBPaHDX9KRaIt3w==}
     engines: {node: '>=20.9.0'}
     hasBin: true
     peerDependencies:
@@ -5531,8 +5543,8 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  zod@4.4.2:
-    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
@@ -5705,10 +5717,10 @@ snapshots:
       '@ast-grep/napi-win32-ia32-msvc': 0.40.5
       '@ast-grep/napi-win32-x64-msvc': 0.40.5
 
-  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.2)':
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.6.7)':
     dependencies:
       openapi3-ts: 4.6.0
-      zod: 4.4.2
+      zod: 4.6.7
 
   '@auth/core@0.41.2':
     dependencies:
@@ -6856,6 +6868,12 @@ snapshots:
       graphql: 16.14.2
       tslib: 2.8.1
 
+  '@graphql-tools/merge@10.0.6(graphql@16.14.2)':
+    dependencies:
+      '@graphql-tools/utils': 13.1.3(graphql@16.14.2)
+      graphql: 16.14.2
+      tslib: 2.8.1
+
   '@graphql-tools/merge@8.4.2(graphql@16.14.2)':
     dependencies:
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
@@ -6901,6 +6919,13 @@ snapshots:
       graphql: 16.14.2
       tslib: 2.8.1
 
+  '@graphql-tools/utils@13.1.3(graphql@16.14.2)':
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.14.2)
+      '@whatwg-node/promise-helpers': 2.0.0
+      graphql: 16.14.2
+      tslib: 2.8.1
+
   '@graphql-tools/utils@9.2.1(graphql@16.14.2)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.14.2)
@@ -6936,34 +6961,34 @@ snapshots:
       '@repeaterjs/repeater': 3.1.0
       tslib: 2.8.1
 
-  '@hono-rate-limiter/cloudflare@0.2.2(@cloudflare/workers-types@4.20241230.0)(hono@4.13.7)':
+  '@hono-rate-limiter/cloudflare@0.2.2(@cloudflare/workers-types@4.20241230.0)(hono@4.13.13)':
     dependencies:
       '@cloudflare/workers-types': 4.20241230.0
-      hono: 4.13.7
+      hono: 4.13.13
 
-  '@hono/zod-openapi@1.4.0(hono@4.13.7)(zod@4.4.2)':
+  '@hono/zod-openapi@1.4.0(hono@4.13.13)(zod@4.6.7)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.2)
-      '@hono/zod-validator': 0.8.0(hono@4.13.7)(zod@4.4.2)
-      hono: 4.13.7
+      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.6.7)
+      '@hono/zod-validator': 0.8.0(hono@4.13.13)(zod@4.6.7)
+      hono: 4.13.13
       openapi3-ts: 4.6.0
-      zod: 4.4.2
+      zod: 4.6.7
 
-  '@hono/zod-validator@0.8.0(hono@4.13.7)(zod@4.4.2)':
+  '@hono/zod-validator@0.8.0(hono@4.13.13)(zod@4.6.7)':
     dependencies:
-      hono: 4.13.7
-      zod: 4.4.2
+      hono: 4.13.13
+      zod: 4.6.7
 
   '@hookform/resolvers@5.4.0(react-hook-form@7.85.0(react@19.2.7))':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.85.0(react@19.2.7)
 
-  '@icssc/libwebsoc-next@1.1.3':
+  '@icssc/libwebsoc-next@1.1.4':
     dependencies:
       cheerio: 1.2.0
       cross-fetch: 4.1.0
-      fast-xml-parser: 5.5.9
+      fast-xml-parser: 5.10.1
     transitivePeerDependencies:
       - encoding
 
@@ -7198,30 +7223,30 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@next/env@16.3.8': {}
+  '@next/env@16.4.2': {}
 
-  '@next/swc-darwin-arm64@16.3.8':
+  '@next/swc-darwin-arm64@16.4.2':
     optional: true
 
-  '@next/swc-darwin-x64@16.3.8':
+  '@next/swc-darwin-x64@16.4.2':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@16.3.8':
+  '@next/swc-linux-arm64-gnu@16.4.2':
     optional: true
 
-  '@next/swc-linux-arm64-musl@16.3.8':
+  '@next/swc-linux-arm64-musl@16.4.2':
     optional: true
 
-  '@next/swc-linux-x64-gnu@16.3.8':
+  '@next/swc-linux-x64-gnu@16.4.2':
     optional: true
 
-  '@next/swc-linux-x64-musl@16.3.8':
+  '@next/swc-linux-x64-musl@16.4.2':
     optional: true
 
-  '@next/swc-win32-arm64-msvc@16.3.8':
+  '@next/swc-win32-arm64-msvc@16.4.2':
     optional: true
 
-  '@next/swc-win32-x64-msvc@16.3.8':
+  '@next/swc-win32-x64-msvc@16.4.2':
     optional: true
 
   '@noble/ciphers@1.3.0': {}
@@ -7263,7 +7288,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@opennextjs/aws@4.1.8(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))':
+  '@opennextjs/aws@4.1.8(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@aws-sdk/client-cloudfront': 3.984.0
@@ -7279,24 +7304,24 @@ snapshots:
       cookie: 1.1.1
       esbuild: 0.25.4
       express: 5.2.1
-      next: 16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       path-to-regexp: 6.3.0
       urlpattern-polyfill: 10.1.0
       yaml: 2.9.0
     transitivePeerDependencies:
       - supports-color
 
-  '@opennextjs/cloudflare@1.20.9(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.106.0)':
+  '@opennextjs/cloudflare@1.20.9(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(wrangler@4.106.0)':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
-      '@opennextjs/aws': 4.1.8(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
+      '@opennextjs/aws': 4.1.8(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
       ci-info: 4.4.0
       cloudflare: 4.5.0
       comment-json: 4.6.2
       enquirer: 2.4.1
       glob: 12.0.0
-      next: 16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       ts-tqdm: 0.8.6
       wrangler: 4.106.0(@cloudflare/workers-types@4.20241230.0)
       yargs: 18.0.0
@@ -7825,10 +7850,10 @@ snapshots:
 
   '@scalar/helpers@0.9.0': {}
 
-  '@scalar/hono-api-reference@0.11.7(hono@4.13.7)':
+  '@scalar/hono-api-reference@0.11.7(hono@4.13.13)':
     dependencies:
       '@scalar/client-side-rendering': 0.3.0
-      hono: 4.13.7
+      hono: 4.13.13
 
   '@scalar/schemas@0.7.0':
     dependencies:
@@ -7840,7 +7865,7 @@ snapshots:
       '@scalar/helpers': 0.9.0
       nanoid: 5.1.16
       type-fest: 5.7.0
-      zod: 4.4.2
+      zod: 4.6.7
 
   '@scalar/validation@0.6.0': {}
 
@@ -8242,6 +8267,10 @@ snapshots:
       tslib: 2.8.1
 
   '@whatwg-node/promise-helpers@1.3.2':
+    dependencies:
+      tslib: 2.8.1
+
+  '@whatwg-node/promise-helpers@2.0.0':
     dependencies:
       tslib: 2.8.1
 
@@ -8980,12 +9009,6 @@ snapshots:
       strnum: 2.4.1
       xml-naming: 0.3.0
 
-  fast-xml-parser@5.5.9:
-    dependencies:
-      fast-xml-builder: 1.2.0
-      path-expression-matcher: 1.6.2
-      strnum: 2.4.1
-
   fastq@1.20.1:
     dependencies:
       reusify: 1.1.0
@@ -9166,11 +9189,11 @@ snapshots:
 
   heap@0.2.7: {}
 
-  hono-rate-limiter@0.5.3(hono@4.13.7):
+  hono-rate-limiter@0.5.3(hono@4.13.13):
     dependencies:
-      hono: 4.13.7
+      hono: 4.13.13
 
-  hono@4.13.7: {}
+  hono@4.13.13: {}
 
   htmlparser2@10.1.0:
     dependencies:
@@ -9503,15 +9526,15 @@ snapshots:
 
   negotiator@1.0.0: {}
 
-  next-auth@5.0.0-beta.32(next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
+  next-auth@5.0.0-beta.32(next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
     dependencies:
       '@auth/core': 0.41.2
-      next: 16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
 
-  next@16.3.8(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  next@16.4.2(@types/node@26.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
-      '@next/env': 16.3.8
+      '@next/env': 16.4.2
       '@swc/helpers': 0.5.23
       baseline-browser-mapping: 2.10.40
       caniuse-lite: 1.0.30001800
@@ -9520,14 +9543,14 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       styled-jsx: 5.1.6(react@19.2.7)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 16.3.8
-      '@next/swc-darwin-x64': 16.3.8
-      '@next/swc-linux-arm64-gnu': 16.3.8
-      '@next/swc-linux-arm64-musl': 16.3.8
-      '@next/swc-linux-x64-gnu': 16.3.8
-      '@next/swc-linux-x64-musl': 16.3.8
-      '@next/swc-win32-arm64-msvc': 16.3.8
-      '@next/swc-win32-x64-msvc': 16.3.8
+      '@next/swc-darwin-arm64': 16.4.2
+      '@next/swc-darwin-x64': 16.4.2
+      '@next/swc-linux-arm64-gnu': 16.4.2
+      '@next/swc-linux-arm64-musl': 16.4.2
+      '@next/swc-linux-x64-gnu': 16.4.2
+      '@next/swc-linux-x64-musl': 16.4.2
+      '@next/swc-win32-arm64-msvc': 16.4.2
+      '@next/swc-win32-x64-msvc': 16.4.2
       sharp: 0.35.5(@types/node@26.1.0)
     transitivePeerDependencies:
       - '@babel/core'
@@ -10464,4 +10487,4 @@ snapshots:
       cookie: 1.1.1
       youch-core: 0.3.3
 
-  zod@4.4.2: {}
+  zod@4.6.7: {}
