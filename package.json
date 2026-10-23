@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "check:biome": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off",
-    "check:prettier": "prettier --write **/*.md **/*.toml **/*.yml **/*.yaml **/*.json",
+    "check:prettier": "prettier --write **/*.md **/*.toml **/*.yml **/*.yaml **/*.json **/*.jsonc",
     "check:types": "pnpm -r check:types",
     "db:generate": "dotenv -- pnpm --filter '@packages/db' generate",
     "db:migrate": "dotenv -- pnpm --filter '@packages/db' migrate",

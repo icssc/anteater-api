@@ -54,5 +54,16 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+
+  "overrides": [
+    {
+      "includes": ["**/*.jsonc"],
+      "json": {
+        "formatter": {
+          "trailingCommas": "all"
+        }
+      }
+    }
+  ]
 }
