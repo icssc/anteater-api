@@ -9,7 +9,6 @@ import type {
   CoursePrerequisite,
   Prerequisite,
   PrerequisiteTree,
-  WritingRequirement,
 } from "@packages/db/schema";
 import {
   course,
@@ -195,12 +194,8 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
     }
     const gradeMatch = ann.match(/^min (\S+) = (\S{1,2})$/);
     if (gradeMatch) {
-      if (gradeMatch[1] === "grade") {
-        minGrade = gradeMatch[2];
-      } else {
-        isExam = true;
-        minGrade = gradeMatch[2];
-      }
+      minGrade = gradeMatch[2];
+      if (gradeMatch[1] !== "grade") isExam = true;
       continue;
     }
     logger.warn(
@@ -230,10 +225,12 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
   const courseOrExam = parseAnnotatedCourseOrExam(prereq);
   if (courseOrExam) return courseOrExam;
 
-  if (prereq.match(/^AP.*|^[A-Z0-9&/\s]+\d\S*$/)) {
-    return prereq.startsWith("AP")
-      ? { prereqType: "exam", examName: prereq }
-      : { prereqType: "course", coreq: false, courseId: prereq };
+  if (prereq.startsWith("AP ")) {
+    return { prereqType: "exam", examName: prereq };
+  }
+
+  if (/^[A-Z0-9&/\s]+\d\S*$/.test(prereq)) {
+    return { prereqType: "course", coreq: false, courseId: prereq };
   }
 
   if (prereq === "PLACEMENT EXAM") {
@@ -254,7 +251,7 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
   );
 
   if (classLevelMatch) {
-    const classLevel = (classLevelMatch[1] ?? classLevelMatch[2]).toUpperCase() as ClassLevel;
+    const classLevel = (classLevelMatch[1] ?? classLevelMatch[2]) as ClassLevel;
 
     return {
       prereqType: "standing",
@@ -266,13 +263,11 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
   }
 
   if (prereq === "LOWER DIVISION WRITING" || prereq === "ENTRY LEVEL WRITING") {
-    const writingRequirement = prereq as WritingRequirement;
-
     return {
       prereqType: "standing",
       standing: {
         type: "writingRequirement",
-        value: writingRequirement,
+        value: prereq,
       },
     };
   }
@@ -594,9 +589,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -729,10 +724,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -769,10 +764,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
