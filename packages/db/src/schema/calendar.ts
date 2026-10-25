@@ -16,5 +16,4 @@ export const calendarTerm = pgTable("calendar_term", {
   finalsStart: date("finals_start", { mode: "date" }).notNull(),
   finalsEnd: date("finals_end", { mode: "date" }).notNull(),
   socAvailable: date("soc_available", { mode: "date" }).notNull(),
-  testColumn: varchar("test_column"),
 });
