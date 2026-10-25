@@ -8,7 +8,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   const url = process.env.DB_URL;
-  console.log(`github_actions: process.env.GITHUB_ACTIONS`);
   if (!url) throw new Error("Database URL not provided. Please check your .env file.");
   const db = database(url);
   await migrate(db, { migrationsFolder: join(__dirname, "../migrations") });
