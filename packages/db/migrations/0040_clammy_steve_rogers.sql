@@ -1,1 +1,0 @@
-ALTER TABLE "calendar_term" ADD COLUMN "test_column" varchar;
