@@ -10,6 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("Database URL not provided. Please check your .env file.");
+  console.log(`Github_actions: ${process.env.GITHUB_ACTIONS}`);
   if (!url.includes("localhost")) {
     if (
       !readlineSync.keyInYNStrict(
