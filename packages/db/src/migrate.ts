@@ -10,8 +10,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function main() {
   const url = process.env.DB_URL;
   if (!url) throw new Error("Database URL not provided. Please check your .env file.");
-  console.log(`Github_actions: ${process.env.GITHUB_ACTIONS}`);
-  if (!url.includes("localhost")) {
+  // Safety check if you are manually running a migration on a non local database
+  if (!url.includes("localhost") && process.env.GITHUB_ACTIONS !== "true") {
     if (
       !readlineSync.keyInYNStrict(
         "Warning. You are attempting to run a database migration on a non local database. Do you wish to proceed?",
