@@ -1,0 +1,52 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anteater-api",
+  "compatibility_date": "2026-07-02",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "kv_namespaces": [
+    {
+      "binding": "API_KEYS",
+      "id": "4c8dd3090bea4d469cd3c66b3002a5a2",
+    },
+    {
+      "binding": "GQL_CACHE",
+      "id": "4523675af51d41a4bd9b0b626ab958f9",
+    },
+  ],
+
+  "assets": { "directory": "public" },
+  "main": "src/index.ts",
+  "minify": true,
+
+  "vars": {
+    "CF_ENV": "prod",
+  },
+
+  "observability": {
+    "enabled": true,
+  },
+
+  "hyperdrive": [
+    {
+      "binding": "DB",
+      "id": "1c4c82477bfa4114a48c63d4dc838e73",
+    },
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RATE_LIMITER",
+        "class_name": "DurableObjectRateLimiter",
+      },
+    ],
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["DurableObjectRateLimiter"],
+    },
+  ],
+}

@@ -33,5 +33,8 @@ export const libraryTrafficHistory = pgTable(
     trafficPercentage: real("traffic_percentage").notNull(),
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
-  (table) => [uniqueIndex().on(table.locationId, table.timestamp)],
+  (table) => [
+    uniqueIndex().on(table.locationId, table.timestamp),
+    index().on(table.timestamp, table.id),
+  ],
 );
