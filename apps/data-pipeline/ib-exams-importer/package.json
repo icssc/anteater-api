@@ -1,0 +1,15 @@
+{
+  "name": "@apps/ib-exams-importer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Script for importing IB exam credit data from a static mapping",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "test": "tsx --test src/data.test.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*"
+  }
+}

@@ -1,12 +1,8 @@
 import { integer, json, pgTable, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
-export type APCoursesGrantedTree =
-  | {
-      AND: (APCoursesGrantedTree | string)[];
-    }
-  | {
-      OR: (APCoursesGrantedTree | string)[];
-    };
+import type { CoursesGrantedTree } from "./exam-credits";
+
+export type APCoursesGrantedTree = CoursesGrantedTree;
 
 export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),

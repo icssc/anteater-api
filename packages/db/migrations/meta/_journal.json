@@ -274,6 +274,13 @@
       "when": 1791588503828,
       "tag": "0038_enrollment_resolution",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792280551885,
+      "tag": "0039_dark_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }
