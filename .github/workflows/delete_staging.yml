@@ -39,7 +39,11 @@ jobs:
 
       - name: Delete inactive API staging instance
         working-directory: ./apps/api
-        run: pnpm wrangler delete --name=anteater-api-staging-${{ github.event.pull_request.number }}
+        shell: bash
+        # Error 10007 means the instance was never deployed (e.g. "no deploy" PRs), so there is nothing to delete
+        run: |
+          pnpm wrangler delete --name=anteater-api-staging-${{ github.event.pull_request.number }} 2>&1 | tee "$RUNNER_TEMP/wrangler-delete.log" \
+            || grep -q "code: 10007" "$RUNNER_TEMP/wrangler-delete.log"
 
       - name: Set API staging environment to inactive
         uses: strumwolf/delete-deployment-environment@a4825dd9648c57da8437a4885c3fcad58beac69c # v3.0.0
