@@ -4,6 +4,7 @@ import { ibExam, ibExamReward, ibExamToReward } from "@packages/db/schema";
 
 import { type GECategory, geCategories } from "@packages/stdlib";
 import ibExamData from "./data.ts";
+import { ibExamDataSchema } from "./schema.ts";
 
 const geCategoryToColumn = {
   "GE-1A": "ge1aCoursesGranted",
@@ -18,58 +19,13 @@ const geCategoryToColumn = {
   "GE-8": "ge8CoursesGranted",
 } as const;
 
-// Check the manually maintained data before changing the database.
-function validateData() {
-  if (Object.keys(ibExamData).length === 0) {
-    throw new Error("No IB exam data found");
-  }
-
-  for (const [examName, exam] of Object.entries(ibExamData)) {
-    if (!examName.trim() || exam.rewards.length === 0) {
-      throw new Error(`Invalid IB exam: ${examName}`);
-    }
-
-    const seenScores = new Set<number>();
-
-    for (const reward of exam.rewards) {
-      if (reward.acceptableScores.length === 0) {
-        throw new Error(`${examName}: reward has no scores`);
-      }
-
-      for (const score of reward.acceptableScores) {
-        if (![5, 6, 7].includes(score) || seenScores.has(score)) {
-          throw new Error(`${examName}: invalid or duplicate score ${score}`);
-        }
-        seenScores.add(score);
-      }
-
-      if (
-        !Number.isInteger(reward.unitsGranted) ||
-        !Number.isInteger(reward.electiveUnitsGranted) ||
-        reward.unitsGranted < 0 ||
-        reward.electiveUnitsGranted < 0 ||
-        reward.electiveUnitsGranted > reward.unitsGranted
-      ) {
-        throw new Error(`${examName}: invalid credit units`);
-      }
-
-      for (const amount of Object.values(reward.geGranted)) {
-        if (!Number.isInteger(amount) || amount < 0) {
-          throw new Error(`${examName}: invalid GE credit`);
-        }
-      }
-    }
-  }
-}
-
 async function main() {
-  validateData();
+  const exams = Object.entries(ibExamDataSchema.parse(ibExamData));
 
   const url = process.env.DB_URL;
   if (!url) throw new Error("DB_URL not found");
 
   const db = database(url);
-  const exams = Object.entries(ibExamData);
 
   try {
     await db.transaction(async (tx) => {

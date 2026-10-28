@@ -12,13 +12,10 @@ export const ibExamToReward = pgTable(
   "ib_exam_to_reward",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-
     examId: varchar("exam_id")
       .notNull()
       .references(() => ibExam.id, { onDelete: "cascade" }),
-
     score: integer("score").notNull(),
-
     reward: uuid("reward")
       .notNull()
       .references(() => ibExamReward.id, { onDelete: "cascade" }),
@@ -29,10 +26,8 @@ export const ibExamToReward = pgTable(
 // Credit awarded for a certain group of scores
 export const ibExamReward = pgTable("ib_exam_reward", {
   id: uuid("id").primaryKey().defaultRandom(),
-
   unitsGranted: integer("units_granted").notNull(),
   electiveUnitsGranted: integer("elective_units_granted").notNull(),
-
   ge1aCoursesGranted: integer("ge_1a_courses_granted").notNull().default(0),
   ge1bCoursesGranted: integer("ge_1b_courses_granted").notNull().default(0),
   ge2CoursesGranted: integer("ge_2_courses_granted").notNull().default(0),
@@ -43,8 +38,6 @@ export const ibExamReward = pgTable("ib_exam_reward", {
   ge6CoursesGranted: integer("ge_6_courses_granted").notNull().default(0),
   ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
-
   coursesGranted: json("courses_granted").$type<CoursesGrantedTree>().notNull(),
-
   notes: text("notes"),
 });
