@@ -9,6 +9,7 @@ import { diningSchema } from "./dining";
 import { enrollmentHistorySchema } from "./enrollment-history";
 import { enums } from "./enums";
 import { gradesSchema } from "./grades";
+import { ibExamsSchema } from "./ib-exams";
 import { instructorsSchema } from "./instructors";
 import { larcSchema } from "./larc";
 import { libraryTrafficSchema } from "./library-traffic";
@@ -45,6 +46,7 @@ export const typeDefs = mergeTypeDefs([
   diningSchema,
   enrollmentHistorySchema,
   gradesSchema,
+  ibExamsSchema,
   instructorsSchema,
   larcSchema,
   libraryTrafficSchema,

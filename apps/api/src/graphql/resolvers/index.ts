@@ -6,6 +6,7 @@ import { coursesResolvers } from "$graphql/resolvers/courses";
 import { diningResolvers } from "$graphql/resolvers/dining.ts";
 import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
 import { gradesResolvers } from "$graphql/resolvers/grades";
+import { ibExamResolvers } from "$graphql/resolvers/ib-exams";
 import { instructorsResolvers } from "$graphql/resolvers/instructors";
 import { larcResolvers } from "$graphql/resolvers/larc.ts";
 import { libraryTrafficResolvers } from "$graphql/resolvers/library-traffic";
@@ -23,6 +24,7 @@ export const resolvers = [
   diningResolvers,
   enrollmentHistoryResolvers,
   gradesResolvers,
+  ibExamResolvers,
   instructorsResolvers,
   larcResolvers,
   libraryTrafficResolvers,
