@@ -1,5 +1,5 @@
 {
-  "id": "5cdd4f77-b817-4130-98ff-69926b5a928a",
+  "id": "45b822ff-1a13-4f71-a6d0-28b2ede94058",
   "prevId": "96e34851-8f6a-4c78-8c9d-afdaa33ec4f1",
   "version": "7",
   "dialect": "postgresql",
@@ -2361,224 +2361,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ib_exam": {
-      "name": "ib_exam",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "catalogue_name": {
-          "name": "catalogue_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ib_exam_reward": {
-      "name": "ib_exam_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "units_granted": {
-          "name": "units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "elective_units_granted": {
-          "name": "elective_units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ge_1a_courses_granted": {
-          "name": "ge_1a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_1b_courses_granted": {
-          "name": "ge_1b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_2_courses_granted": {
-          "name": "ge_2_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_3_courses_granted": {
-          "name": "ge_3_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_4_courses_granted": {
-          "name": "ge_4_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5a_courses_granted": {
-          "name": "ge_5a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5b_courses_granted": {
-          "name": "ge_5b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_6_courses_granted": {
-          "name": "ge_6_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_7_courses_granted": {
-          "name": "ge_7_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_8_courses_granted": {
-          "name": "ge_8_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "courses_granted": {
-          "name": "courses_granted",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "notes": {
-          "name": "notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ib_exam_to_reward": {
-      "name": "ib_exam_to_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "exam_id": {
-          "name": "exam_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reward": {
-          "name": "reward",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "ib_exam_to_reward_exam_id_score_index": {
-          "name": "ib_exam_to_reward_exam_id_score_index",
-          "columns": [
-            {
-              "expression": "exam_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "score",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ib_exam_to_reward_exam_id_ib_exam_id_fk": {
-          "name": "ib_exam_to_reward_exam_id_ib_exam_id_fk",
-          "tableFrom": "ib_exam_to_reward",
-          "tableTo": "ib_exam",
-          "columnsFrom": ["exam_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "ib_exam_to_reward_reward_ib_exam_reward_id_fk": {
-          "name": "ib_exam_to_reward_reward_ib_exam_reward_id_fk",
-          "tableFrom": "ib_exam_to_reward",
-          "tableTo": "ib_exam_reward",
-          "columnsFrom": ["reward"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.instructor": {
       "name": "instructor",
       "schema": "",
@@ -3013,6 +2795,27 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "library_traffic_history_timestamp_id_index": {
+          "name": "library_traffic_history_timestamp_id_index",
+          "columns": [
+            {
+              "expression": "timestamp",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}

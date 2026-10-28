@@ -946,7 +946,8 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
 
   if (currentTerm) {
     const week = getWeek(scraperTimestamp, currentTerm.instructionStart, currentTerm.quarter);
-    const period = getPeriod(week);
+    // Summer enrollment activity is low priority, so all summer sessions snapshot weekly like REGULAR.
+    const period = currentTerm.quarter.startsWith("Summer") ? "REGULAR" : getPeriod(week);
     const { hour, currentDayOfWeek } = getPacificTimeParts(scraperTimestamp);
 
     switch (period) {
