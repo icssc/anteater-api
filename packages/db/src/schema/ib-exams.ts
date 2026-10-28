@@ -1,6 +1,5 @@
+import type { CoursesGrantedTree } from "@packages/stdlib";
 import { integer, json, pgTable, text, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-
-import type { CoursesGrantedTree } from "./exam-credits";
 
 // Each individual IB exam
 export const ibExam = pgTable("ib_exam", {

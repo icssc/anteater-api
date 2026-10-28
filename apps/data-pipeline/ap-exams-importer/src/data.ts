@@ -1,37 +1,8 @@
 // https://apstudents.collegeboard.org/courses
 // https://catalogue.uci.edu/informationforprospectivestudents/undergraduateadmissions/#advancedplacementandinternationalbaccalaureatecredittext
+import type { Exam } from "@packages/stdlib";
 
-import type { APCoursesGrantedTree } from "@packages/db/schema";
-
-export const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
-
-export type geCategory = (typeof geCategories)[number];
-
-type APExam = {
-  catalogueName?: string;
-  rewards: {
-    acceptableScores: (1 | 2 | 3 | 4 | 5)[];
-    // units granted, most relevant for residency requirement
-    unitsGranted: number;
-    // units of catch-all elective credit granted not through a course
-    electiveUnitsGranted: number;
-    // GEs granted directly and not through a course; this specifies the number of courses granted
-    geGranted: { [C in geCategory]?: number };
-    coursesGranted: APCoursesGrantedTree;
-  }[];
-};
-type Mapping = Record<string, APExam>;
+type Mapping = Record<string, Exam<1 | 2 | 3 | 4 | 5>>;
 
 export default {
   "AP African American Studies": {

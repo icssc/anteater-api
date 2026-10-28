@@ -1,6 +1,7 @@
 export * from "./calendar-utils";
 export * from "./day-utils";
 export * from "./dept-utils";
+export * from "./exam-credits";
 export * from "./int-utils";
 export * from "./map-utils";
 export * from "./null-utils";

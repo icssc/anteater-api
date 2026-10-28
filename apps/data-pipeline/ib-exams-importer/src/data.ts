@@ -1,36 +1,8 @@
-import type { CoursesGrantedTree } from "@packages/db/schema";
+import type { Exam } from "@packages/stdlib";
 
-// The GE categories used by the existing AP importer.
-export const geCategories = [
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
+export type IBExamMapping = Record<string, Exam<5 | 6 | 7>>;
 
-export type GECategory = (typeof geCategories)[number];
-
-export type IBExam = {
-  catalogueName?: string;
-  rewards: {
-    acceptableScores: (5 | 6 | 7)[];
-    unitsGranted: number;
-    electiveUnitsGranted: number;
-    geGranted: Partial<Record<GECategory, number>>;
-    coursesGranted: CoursesGrantedTree;
-    notes?: string;
-  }[];
-};
-
-export type IBExamMapping = Record<string, IBExam>;
-
-// Initial examples; we'll add the remaining subjects later.
+// Initial examples, add remaining subjects later.
 const ibExamData: IBExamMapping = {
   "IB Chemistry (HL)": {
     rewards: [

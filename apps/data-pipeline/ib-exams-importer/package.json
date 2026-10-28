@@ -10,6 +10,7 @@
     "test": "tsx --test src/data.test.ts"
   },
   "dependencies": {
-    "@packages/db": "workspace:*"
+    "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*"
   }
 }

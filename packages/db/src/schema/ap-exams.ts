@@ -1,6 +1,5 @@
+import type { CoursesGrantedTree } from "@packages/stdlib";
 import { integer, json, pgTable, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-
-import type { CoursesGrantedTree } from "./exam-credits";
 
 export type APCoursesGrantedTree = CoursesGrantedTree;
 

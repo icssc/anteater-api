@@ -2,7 +2,8 @@ import { database } from "@packages/db";
 import { eq, notInArray } from "@packages/db/drizzle";
 import { ibExam, ibExamReward, ibExamToReward } from "@packages/db/schema";
 
-import ibExamData, { type GECategory, geCategories } from "./data.ts";
+import { type GECategory, geCategories } from "@packages/stdlib";
+import ibExamData from "./data.ts";
 
 const geCategoryToColumn = {
   "GE-1A": "ge1aCoursesGranted",

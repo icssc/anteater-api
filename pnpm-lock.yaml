@@ -135,6 +135,9 @@ importers:
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../../../packages/stdlib
 
   apps/data-pipeline/calendar-scraper:
     dependencies:
@@ -264,6 +267,9 @@ importers:
       '@packages/db':
         specifier: workspace:*
         version: link:../../../packages/db
+      '@packages/stdlib':
+        specifier: workspace:*
+        version: link:../../../packages/stdlib
 
   apps/data-pipeline/instructor-scraper:
     dependencies:
