@@ -1,3 +1,5 @@
+// https://catalogue.uci.edu/informationforprospectivestudents/undergraduateadmissions/#advancedplacementandinternationalbaccalaureatecredittext
+
 import type { Exam } from "@packages/stdlib";
 
 export type IBExamMapping = Record<string, Exam<5 | 6 | 7>>;
