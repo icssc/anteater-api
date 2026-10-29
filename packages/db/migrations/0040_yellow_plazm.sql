@@ -1,0 +1,1 @@
+ALTER TABLE "dw_major_year" ADD COLUMN IF NOT EXISTS "college_code" varchar;

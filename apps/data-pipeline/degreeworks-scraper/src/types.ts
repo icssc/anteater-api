@@ -100,4 +100,5 @@ export type MajorProgram = {
   college?: DegreeWorksProgram;
   major: DegreeWorksProgram;
   specCode?: string;
+  collegeCode?: string;
 };

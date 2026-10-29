@@ -47,6 +47,7 @@ async function main() {
     .values()
     .map(
       ({
+        collegeCode,
         college,
         major: { name, degreeType, code, requirements, header, specializationRequired },
         specCode,
@@ -60,6 +61,7 @@ async function main() {
           specializationRequired,
           header,
           requirements,
+          collegeCode,
           college,
           requirementId: undefined as bigint | undefined,
         };
@@ -144,6 +146,7 @@ async function main() {
             specializationRequired: m.specializationRequired,
             collegeRequirementsTitle: m.college?.name,
             collegeHeader: m.college?.header,
+            collegeCode: m.collegeCode,
             collegeRequirements: m.college?.requirements,
           })),
       )
