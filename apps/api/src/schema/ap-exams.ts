@@ -1,6 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import type { APCoursesGrantedTree } from "@packages/db/schema";
-
+import type { ExamCoursesGrantedTree } from "@packages/stdlib";
 import { geCategories } from "./lib";
 
 export const apExamsQuerySchema = z.object({
@@ -14,7 +13,7 @@ export const apExamsQuerySchema = z.object({
   }),
 });
 
-export const coursesGrantedTreeSchema: z.ZodType<APCoursesGrantedTree> = z
+export const coursesGrantedTreeSchema: z.ZodType<ExamCoursesGrantedTree> = z
   .object({
     AND: z
       .union([z.lazy(() => coursesGrantedTreeSchema), z.string()])

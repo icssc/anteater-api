@@ -1,8 +1,8 @@
-import { type CoursesGrantedTree, geCategories } from "@packages/stdlib";
+import { type ExamCoursesGrantedTree, geCategories } from "@packages/stdlib";
 import { z } from "zod";
 
 // A course credit reward can contain nested AND/OR requirements
-const coursesGrantedTreeSchema: z.ZodType<CoursesGrantedTree> = z.lazy(() =>
+const coursesGrantedTreeSchema: z.ZodType<ExamCoursesGrantedTree> = z.lazy(() =>
   z.union([
     z.object({
       AND: z.array(z.union([z.string(), coursesGrantedTreeSchema])),

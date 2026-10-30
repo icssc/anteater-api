@@ -13,9 +13,9 @@ export const geCategories = [
 
 export type GECategory = (typeof geCategories)[number];
 
-export type CoursesGrantedTree =
-  | { AND: (CoursesGrantedTree | string)[] }
-  | { OR: (CoursesGrantedTree | string)[] };
+export type ExamCoursesGrantedTree =
+  | { AND: (ExamCoursesGrantedTree | string)[] }
+  | { OR: (ExamCoursesGrantedTree | string)[] };
 
 export type Exam<Score extends number = number> = {
   catalogueName?: string;
@@ -27,7 +27,7 @@ export type Exam<Score extends number = number> = {
     electiveUnitsGranted: number;
     // Number of GE courses granted directly, not through a course
     geGranted: Partial<Record<GECategory, number>>;
-    coursesGranted: CoursesGrantedTree;
+    coursesGranted: ExamCoursesGrantedTree;
     notes?: string;
   }[];
 };

@@ -1,4 +1,4 @@
-import type { CoursesGrantedTree } from "@packages/stdlib";
+import type { ExamCoursesGrantedTree } from "@packages/stdlib";
 import { integer, json, pgTable, text, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 // Each individual IB exam
@@ -38,6 +38,6 @@ export const ibExamReward = pgTable("ib_exam_reward", {
   ge6CoursesGranted: integer("ge_6_courses_granted").notNull().default(0),
   ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
-  coursesGranted: json("courses_granted").$type<CoursesGrantedTree>().notNull(),
+  coursesGranted: json("courses_granted").$type<ExamCoursesGrantedTree>().notNull(),
   notes: text("notes"),
 });
