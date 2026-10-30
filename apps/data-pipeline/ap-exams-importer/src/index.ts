@@ -4,7 +4,8 @@ import { database } from "@packages/db";
 import { notInArray } from "@packages/db/drizzle";
 import { apExam, apExamReward, apExamToReward } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
-import apExamData, { geCategories, type geCategory } from "./data.ts";
+import { type GECategory, geCategories } from "@packages/stdlib";
+import apExamData from "./data.ts";
 
 const geCategoryToColumn = {
   "GE-1A": "ge1aCoursesGranted",
@@ -36,7 +37,7 @@ async function main() {
       for (const reward of examData.rewards) {
         const geCourses = Object.fromEntries(
           geCategories.map((cat) => [geCategoryToColumn[cat], reward.geGranted?.[cat] ?? 0]),
-        ) as Record<(typeof geCategoryToColumn)[geCategory], number>;
+        ) as Record<(typeof geCategoryToColumn)[GECategory], number>;
 
         const { id: rewardId } = await tx
           .insert(apExamReward)

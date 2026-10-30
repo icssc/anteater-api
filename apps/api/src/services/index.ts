@@ -5,6 +5,7 @@ export * from "./courses";
 export * from "./dining";
 export * from "./enrollment-history";
 export * from "./grades";
+export * from "./ib-exams";
 export * from "./instructors";
 export * from "./library-traffic";
 export * from "./programs";
