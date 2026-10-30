@@ -17,6 +17,7 @@ type StudyRoom = {
   description: string;
   directions: string;
   techEnhanced: boolean;
+  imageUrl: string | null;
   slots: Slot[];
 };
 
@@ -202,6 +203,7 @@ async function getRoomInfo(site: LocationSite, RoomId: string): Promise<StudyRoo
     description: "",
     directions: "",
     techEnhanced: false,
+    imageUrl: null,
     slots: [],
   };
   const text = await fetch(url).then((x) => x.text());
@@ -219,6 +221,11 @@ async function getRoomInfo(site: LocationSite, RoomId: string): Promise<StudyRoo
     }
     room.location = headerMatch[3].trim();
     room.capacity = Number.parseInt(headerMatch[4], 10);
+  }
+
+  const imageSrc = $("#s-lc-item-title-area img.img-thumbnail").first().attr("src");
+  if (imageSrc) {
+    room.imageUrl = new URL(imageSrc, url).toString();
   }
 
   const directionsHeader = $(".s-lc-section-directions");
