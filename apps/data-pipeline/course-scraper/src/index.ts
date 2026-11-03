@@ -209,57 +209,35 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   return { prereqType: "course", coreq, courseId: base, minGrade };
 }
 
-// Parses one leaf of a prerequisite expression. A leading "NO " marks an antirequisite; it is
-// stripped and the rest is parsed exactly like a prerequisite. Returns undefined for leaves that
-// are intentionally dropped or can't be parsed (the latter logs a warning).
-function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefined {
-  // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
-  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
+function parsePrerequisite(prereq: string): Prerequisite | undefined {
+  if (/\brecommended\b/.test(prereq)) {
     return undefined;
   }
 
-  // An antirequisite is a prerequisite with a leading "NO ".
-  const isAntirequisite = prereq.startsWith("NO ");
-  const text = isAntirequisite ? prereq.slice(3).trim() : prereq;
-
-  if (/\brecommended\b/.test(text)) {
+  if (/^AUTHORIZATION\b/.test(prereq)) {
     return undefined;
   }
 
-  if (/^AUTHORIZATION\b/.test(text)) {
+  if (/^Display all prerequisites on file\b/.test(prereq)) {
     return undefined;
   }
 
-  if (/^Display all prerequisites on file\b/.test(text)) {
-    return undefined;
-  }
-
-  const courseOrExam = parseAnnotatedCourseOrExam(text);
+  const courseOrExam = parseAnnotatedCourseOrExam(prereq);
   if (courseOrExam) return courseOrExam;
 
-  // AP Exam Antirequisite takes the form "NO AP CALCULUS AB score of 3 or greater".
-  const antiAPReqMatch = text.match(/^(AP .+) score of (\d) or greater$/);
-  if (antiAPReqMatch) {
-    return {
-      prereqType: "exam",
-      examName: antiAPReqMatch[1],
-      minGrade: antiAPReqMatch[2],
-    };
+  if (prereq.startsWith("AP ")) {
+    return { prereqType: "exam", examName: prereq };
   }
 
-  if (text.startsWith("AP ")) {
-    return { prereqType: "exam", examName: text };
+  if (/^[A-Z0-9&/\s]+\d\S*$/.test(prereq)) {
+    return { prereqType: "course", coreq: false, courseId: prereq };
   }
 
-  if (/^[A-Z0-9&/\s]+\d\S*$/.test(text)) {
-    return { prereqType: "course", coreq: false, courseId: text };
+  if (prereq === "PLACEMENT EXAM") {
+    return { prereqType: "exam", examName: prereq };
   }
 
-  if (text === "PLACEMENT EXAM") {
-    return { prereqType: "exam", examName: text };
-  }
-
-  const satActMatch = text.match(/^((?:SAT|ACT) .+) >= (\d+)$/);
+  const satActMatch = prereq.match(/^((?:SAT|ACT) .+) >= (\d+)$/);
   if (satActMatch) {
     return {
       prereqType: "exam",
@@ -268,7 +246,7 @@ function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefi
     };
   }
 
-  const classLevelMatch = text.match(
+  const classLevelMatch = prereq.match(
     /^(?:(JUNIOR|SENIOR|LOWER DIVISION|UPPER DIVISION)\sSTANDING|(NEW TRANSFERS)) ONLY$/,
   );
 
@@ -284,17 +262,17 @@ function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefi
     };
   }
 
-  if (text === "LOWER DIVISION WRITING" || text === "ENTRY LEVEL WRITING") {
+  if (prereq === "LOWER DIVISION WRITING" || prereq === "ENTRY LEVEL WRITING") {
     return {
       prereqType: "standing",
       standing: {
         type: "writingRequirement",
-        value: text,
+        value: prereq,
       },
     };
   }
 
-  if (text === "CAMPUSWIDE HONORS ONLY") {
+  if (prereq === "CAMPUSWIDE HONORS ONLY") {
     return {
       prereqType: "affiliation",
       affiliation: {
@@ -303,7 +281,7 @@ function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefi
     };
   }
 
-  const schoolMatch = text.match(/^SCHOOL OF ([A-Z& ]+) ONLY$/);
+  const schoolMatch = prereq.match(/^SCHOOL OF ([A-Z& ]+) ONLY$/);
 
   if (schoolMatch) {
     return {
@@ -315,7 +293,7 @@ function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefi
     };
   }
 
-  const majorMatch = text.match(/^([A-Z&, -]+) MAJORS ONLY$/);
+  const majorMatch = prereq.match(/^([A-Z&, -]+) MAJORS ONLY$/);
 
   if (majorMatch) {
     return {
@@ -326,11 +304,47 @@ function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefi
       },
     };
   }
-
-  logger.warn(
-    `Unparsed ${isAntirequisite ? "antirequisite" : "prerequisite"}: ${JSON.stringify(prereq)}`,
-  );
+  logger.warn(`Unparsed prerequisite: ${JSON.stringify(prereq)}`);
   return undefined;
+}
+
+function parseAntirequisite(prereq: string): Prerequisite | undefined {
+  // Repeatability is captured from the catalog page, parsed by parseReaptability(). Websoc instances of it are discarded here.
+  if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
+    return undefined;
+  }
+  const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+)\sscore\sof\s(\d)\sor\sgreater$/);
+  if (antiAPReqMatch) {
+    return {
+      prereqType: "exam",
+      examName: antiAPReqMatch[1].trim(),
+      minGrade: antiAPReqMatch[2].trim(),
+    };
+  }
+  const antiCourseMatch = prereq.match(/^NO\s([A-Z0-9&/\s]+\d\S*)$/);
+  if (antiCourseMatch) {
+    return { prereqType: "course", coreq: false, courseId: antiCourseMatch[1].trim() };
+  }
+
+  const withoutNo = prereq.replace(/^NO /, "").trim();
+
+  const annotated = parseAnnotatedCourseOrExam(withoutNo);
+  if (annotated) {
+    return annotated;
+  }
+
+  // ex: NO PSYCHOLOGY MAJORS ONLY
+  const extracted = parsePrerequisite(withoutNo);
+  if (extracted) {
+    return extracted;
+  }
+
+  logger.warn(`Unparsed antirequisite: ${JSON.stringify(prereq)}`);
+  return undefined;
+}
+
+function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefined {
+  return prereq.startsWith("NO") ? parseAntirequisite(prereq) : parsePrerequisite(prereq);
 }
 
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
