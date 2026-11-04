@@ -21,9 +21,11 @@
   "dependencies": {
     "@packages/stdlib": "workspace:*",
     "drizzle-orm": "catalog:",
-    "postgres": "3.4.9"
+    "postgres": "3.4.9",
+    "readline-sync": "catalog:"
   },
   "devDependencies": {
+    "@types/readline-sync": "catalog:",
     "dotenv": "17.4.2",
     "drizzle-kit": "catalog:"
   }
