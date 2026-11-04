@@ -79,7 +79,7 @@ interface Program @cacheControl(maxAge: 86400) {
 
 type SchoolRequirements @cacheControl(maxAge: 86400) {
     name: String!
-    code: String
+    code: String!
     requirements: [ProgramRequirement!]!
 }
 

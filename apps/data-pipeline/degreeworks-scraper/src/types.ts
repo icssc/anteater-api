@@ -88,7 +88,7 @@ export interface UndergraduateRequirements {
 export type ProgramCodes = {
   schoolCode: string;
   degreeCode: string;
-  collegeCode?: string;
+  collegeCode: string;
   majorCode: string;
   specCode?: string;
 };
@@ -97,8 +97,7 @@ export type ProgramCodes = {
  * eventually, we may want degree type; e.g. MFA provides some requirements
  */
 export type MajorProgram = {
-  college?: DegreeWorksProgram;
+  college?: DegreeWorksProgram & { collegeCode: string };
   major: DegreeWorksProgram;
   specCode?: string;
-  collegeCode?: string;
 };

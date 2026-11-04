@@ -202,6 +202,7 @@ export const dwMajorYear = pgTable(
     collegeRequirementsTitle: varchar("college_requirements_title"),
     collegeHeader: jsonb("college_header").$type<DegreeWorksRequirementQualifier[]>(),
     collegeRequirements: jsonb("college_requirements").$type<DegreeWorksRequirement[]>(),
+    collegeCode: varchar("college_code"),
   },
   (table) => [uniqueIndex().on(table.programId, table.catalogYear), index().on(table.catalogYear)],
 );
