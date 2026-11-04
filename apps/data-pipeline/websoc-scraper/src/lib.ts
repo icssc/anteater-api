@@ -617,7 +617,7 @@ const doChunkUpsert = async (
         }),
     );
 
-    console.log(instructorsToInsert);
+    console.log(`Inserting ${instructorsToInsert.length} instructors`);
 
     if (instructorsToInsert.length) {
       // we need to make sure they all have ids, so this one can't be atomic...

@@ -1,0 +1,10 @@
+.git
+.env*
+!.env.example
+**/node_modules
+**/.wrangler
+**/.DS_Store
+packages/db/db*.sql*
+apps/data-pipeline/migration-resolver/out
+apps/data-pipeline/migration-resolver/logs
+apps/data-pipeline/migration-resolver/rebuild-progress.txt

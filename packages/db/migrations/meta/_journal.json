@@ -281,6 +281,13 @@
       "when": 1792004975538,
       "tag": "0039_fix_missing_instructor_data",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792006008267,
+      "tag": "0040_sticky_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

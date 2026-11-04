@@ -84,8 +84,8 @@ export const courseView = pgMaterializedView("course_view").as((qb) => {
             'title', ${instructor.title},
             'email', ${instructor.email},
             'department', ${instructor.department},
-            'shortenedNames', ARRAY(
-              SELECT DISTINCT ${websocInstructor.name}
+            'shortenedNames', ARRAY_DISTINCT(
+              SELECT ${websocInstructor.name}
               FROM ${instructorToWebsocInstructor}
               JOIN ${websocInstructor} 
               ON ${instructorToWebsocInstructor.websocInstructorId} = ${websocInstructor.id}
