@@ -281,6 +281,20 @@
       "when": 1792358601761,
       "tag": "0039_library_traffic_history_timestamp_index",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793161109371,
+      "tag": "0040_ib_exams",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793400312415,
+      "tag": "0041_ap_exam_reward_notes",
+      "breakpoints": true
     }
   ]
 }

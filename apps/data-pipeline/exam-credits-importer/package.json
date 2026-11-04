@@ -1,0 +1,18 @@
+{
+  "name": "@apps/exam-credits-importer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Import AP and IB exam credit mappings",
+  "type": "module",
+  "scripts": {
+    "check:types": "tsc -p ./tsconfig.json -noEmit",
+    "start:ap": "dotenv -e ../../../.env -- tsx src/index.ts ap",
+    "start:ib": "dotenv -e ../../../.env -- tsx src/index.ts ib",
+    "test": "tsx --test src/data.test.ts"
+  },
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
+    "zod": "catalog:"
+  }
+}

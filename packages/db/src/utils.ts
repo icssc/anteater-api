@@ -1,7 +1,10 @@
+import type { GECategory } from "@packages/stdlib";
 import type { ColumnBaseConfig, InferInsertModel, SQL } from "drizzle-orm";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import type { apExamReward } from "./schema/ap-exams.ts";
+import type { ibExamReward } from "./schema/ib-exams.ts";
 import type { Term, terms } from "./schema/websoc.ts";
 
 const MAX_PG_PARAM_INSERT_COUNT = 65_000;
@@ -67,3 +70,20 @@ export function conflictUpdateSetAllCols<T extends PgTable>(table: T): PgUpdateS
     return acc;
   }, {});
 }
+
+type ExamRewardColumn = keyof typeof apExamReward.$inferSelect &
+  keyof typeof ibExamReward.$inferSelect;
+
+// Maps GE categories to their corresponding AP/IB reward columns.
+export const geCategoryToColumn = {
+  "GE-1A": "ge1aCoursesGranted",
+  "GE-1B": "ge1bCoursesGranted",
+  "GE-2": "ge2CoursesGranted",
+  "GE-3": "ge3CoursesGranted",
+  "GE-4": "ge4CoursesGranted",
+  "GE-5A": "ge5aCoursesGranted",
+  "GE-5B": "ge5bCoursesGranted",
+  "GE-6": "ge6CoursesGranted",
+  "GE-7": "ge7CoursesGranted",
+  "GE-8": "ge8CoursesGranted",
+} as const satisfies Record<GECategory, ExamRewardColumn>;

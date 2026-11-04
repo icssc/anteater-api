@@ -1,0 +1,1 @@
+ALTER TABLE "ap_exam_reward" ADD COLUMN "notes" text;
