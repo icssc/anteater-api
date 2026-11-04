@@ -1,12 +1,11 @@
-import { apExamResolvers } from "$graphql/resolvers/ap-exams";
 import { calendarResolvers } from "$graphql/resolvers/calendar";
 import { catalogueResolvers } from "$graphql/resolvers/catalogue.ts";
 import { courseMaterialsResolvers } from "$graphql/resolvers/course-materials.ts";
 import { coursesResolvers } from "$graphql/resolvers/courses";
 import { diningResolvers } from "$graphql/resolvers/dining.ts";
 import { enrollmentHistoryResolvers } from "$graphql/resolvers/enrollment-history";
+import { examCreditsResolvers } from "$graphql/resolvers/exam-credits";
 import { gradesResolvers } from "$graphql/resolvers/grades";
-import { ibExamResolvers } from "$graphql/resolvers/ib-exams";
 import { instructorsResolvers } from "$graphql/resolvers/instructors";
 import { larcResolvers } from "$graphql/resolvers/larc.ts";
 import { libraryTrafficResolvers } from "$graphql/resolvers/library-traffic";
@@ -17,14 +16,13 @@ import { websocResolvers } from "$graphql/resolvers/websoc";
 import { weekResolvers } from "$graphql/resolvers/week";
 
 export const resolvers = [
-  apExamResolvers,
   calendarResolvers,
   courseMaterialsResolvers,
   coursesResolvers,
   diningResolvers,
   enrollmentHistoryResolvers,
+  examCreditsResolvers,
   gradesResolvers,
-  ibExamResolvers,
   instructorsResolvers,
   larcResolvers,
   libraryTrafficResolvers,

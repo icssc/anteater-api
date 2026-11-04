@@ -8,6 +8,7 @@ import {
   ibExamReward,
   ibExamToReward,
 } from "@packages/db/schema";
+import { geCategoryToColumn } from "@packages/db/utils";
 import { type ExamCoursesGrantedTree, type GECategory, geCategories } from "@packages/stdlib";
 
 type ExamQuery = {
@@ -39,19 +40,6 @@ type ExamResponse = {
   rewards: ExamRewardResponse[];
 };
 
-const geCategoryToColumn = {
-  "GE-1A": "ge1aCoursesGranted",
-  "GE-1B": "ge1bCoursesGranted",
-  "GE-2": "ge2CoursesGranted",
-  "GE-3": "ge3CoursesGranted",
-  "GE-4": "ge4CoursesGranted",
-  "GE-5A": "ge5aCoursesGranted",
-  "GE-5B": "ge5bCoursesGranted",
-  "GE-6": "ge6CoursesGranted",
-  "GE-7": "ge7CoursesGranted",
-  "GE-8": "ge8CoursesGranted",
-} as const;
-
 function geGrantedFromReward(reward: ExamRewardRow) {
   return Object.fromEntries(
     geCategories
@@ -64,7 +52,7 @@ function accumulateRows(rows: ExamRow[]): ExamResponse[] {
   const exams = new Map<string, ExamResponse>();
 
   for (const { exam, scores, reward } of rows) {
-    // Preserve existing API behavior: omit exams without rewards.
+    // Preserve existing API behavior: omit exams without rewards
     if (reward === null) continue;
 
     let examObj = exams.get(exam.id);
@@ -78,7 +66,7 @@ function accumulateRows(rows: ExamRow[]): ExamResponse[] {
       exams.set(exam.id, examObj);
     }
 
-    // Explicitly map public fields instead of spreading DB columns.
+    // Explicitly map public fields instead of spreading DB columns
     examObj.rewards.push({
       acceptableScores: scores,
       unitsGranted: reward.unitsGranted,

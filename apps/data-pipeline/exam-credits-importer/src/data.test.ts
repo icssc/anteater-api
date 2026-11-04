@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
+import { geCategoryToColumn } from "@packages/db/utils";
+import { geCategories } from "@packages/stdlib";
 import apExamData from "./ap-data.ts";
 import ibExamData from "./ib-data.ts";
 import { apExamDataSchema, ibExamDataSchema } from "./schema.ts";
@@ -93,4 +94,10 @@ test("Rejects invalid IB scores", () => {
   };
 
   assert.equal(ibExamDataSchema.safeParse(invalidData).success, false);
+});
+
+test("All GE categories map to unique database columns", () => {
+  assert.deepEqual(Object.keys(geCategoryToColumn).sort(), [...geCategories].sort());
+
+  assert.equal(new Set(Object.values(geCategoryToColumn)).size, geCategories.length);
 });

@@ -1,17 +1,5 @@
+import { geCategoryToColumn } from "@packages/db/utils";
 import { type Exam, type GECategory, geCategories } from "@packages/stdlib";
-
-const geCategoryToColumn = {
-  "GE-1A": "ge1aCoursesGranted",
-  "GE-1B": "ge1bCoursesGranted",
-  "GE-2": "ge2CoursesGranted",
-  "GE-3": "ge3CoursesGranted",
-  "GE-4": "ge4CoursesGranted",
-  "GE-5A": "ge5aCoursesGranted",
-  "GE-5B": "ge5bCoursesGranted",
-  "GE-6": "ge6CoursesGranted",
-  "GE-7": "ge7CoursesGranted",
-  "GE-8": "ge8CoursesGranted",
-} as const;
 
 type GEColumn = (typeof geCategoryToColumn)[GECategory];
 
