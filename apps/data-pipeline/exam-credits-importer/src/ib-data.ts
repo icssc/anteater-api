@@ -32,6 +32,102 @@ const ibExamData: IBExamMapping = {
       },
     ],
   },
+
+  "IB Business & Management (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Dance (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Film (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Global Politics (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Music (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Philosophy (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Theater Arts (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Visual Arts (HL)": {
+    rewards: [
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
 };
 
 export default ibExamData;

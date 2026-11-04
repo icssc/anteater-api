@@ -101,3 +101,31 @@ test("All GE categories map to unique database columns", () => {
 
   assert.equal(new Set(Object.values(geCategoryToColumn)).size, geCategories.length);
 });
+
+test("IB elective-only exams grant eight elective units", () => {
+  const electiveOnlyExams = [
+    "IB Business & Management (HL)",
+    "IB Dance (HL)",
+    "IB Film (HL)",
+    "IB Global Politics (HL)",
+    "IB Music (HL)",
+    "IB Philosophy (HL)",
+    "IB Theater Arts (HL)",
+    "IB Visual Arts (HL)",
+  ];
+
+  for (const name of electiveOnlyExams) {
+    const exam = ibExamData[name];
+
+    assert.ok(exam, `Missing exam: ${name}`);
+    assert.equal(exam.rewards.length, 1);
+
+    assert.deepEqual(exam.rewards[0], {
+      acceptableScores: [5, 6, 7],
+      unitsGranted: 8,
+      electiveUnitsGranted: 8,
+      geGranted: {},
+      coursesGranted: { AND: [] },
+    });
+  }
+});
