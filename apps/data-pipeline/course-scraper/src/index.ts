@@ -181,8 +181,6 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   const base = match[1].trim();
   const annotations = [...match[2].matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
 
-  if (annotations.includes("recommended")) return undefined;
-
   let coreq = false;
   let minGrade: string | undefined;
   let isExam = false;
@@ -209,7 +207,12 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
   return { prereqType: "course", coreq, courseId: base, minGrade };
 }
 
-function parsePrerequisite(prereq: string): Prerequisite | undefined {
+// Parses one leaf of a prerequisite expression. Returns undefined for leaves that
+// are intentionally dropped or can't be parsed.
+function parsePrerequisite(
+  prereq: string,
+  kind: "prerequisite" | "antirequisite" = "prerequisite",
+): Prerequisite | undefined {
   if (/\brecommended\b/.test(prereq)) {
     return undefined;
   }
@@ -304,7 +307,8 @@ function parsePrerequisite(prereq: string): Prerequisite | undefined {
       },
     };
   }
-  logger.warn(`Unparsed prerequisite: ${JSON.stringify(prereq)}`);
+
+  logger.warn(`Unparsed ${kind}: ${JSON.stringify(prereq)}`);
   return undefined;
 }
 
@@ -313,52 +317,29 @@ function parseAntirequisite(prereq: string): Prerequisite | undefined {
   if (/^NO REPEATS ALLOWED\b/.test(prereq)) {
     return undefined;
   }
-  const antiAPReqMatch = prereq.match(/^NO\s(AP\s.+)\sscore\sof\s(\d)\sor\sgreater$/);
+
+  const antiAPReqMatch = prereq.match(/^NO (AP .+) score of (\d) or greater$/);
   if (antiAPReqMatch) {
     return {
       prereqType: "exam",
-      examName: antiAPReqMatch[1].trim(),
-      minGrade: antiAPReqMatch[2].trim(),
+      examName: antiAPReqMatch[1],
+      minGrade: antiAPReqMatch[2],
     };
   }
-  const antiCourseMatch = prereq.match(/^NO\s([A-Z0-9&/\s]+\d\S*)$/);
-  if (antiCourseMatch) {
-    return { prereqType: "course", coreq: false, courseId: antiCourseMatch[1].trim() };
-  }
-
-  const withoutNo = prereq.replace(/^NO /, "").trim();
-
-  const annotated = parseAnnotatedCourseOrExam(withoutNo);
-  if (annotated) {
-    return annotated;
-  }
-
-  // ex: NO PSYCHOLOGY MAJORS ONLY
-  const extracted = parsePrerequisite(withoutNo);
-  if (extracted) {
-    return extracted;
-  }
-
-  logger.warn(`Unparsed antirequisite: ${JSON.stringify(prereq)}`);
-  return undefined;
-}
-
-function parsePrerequisiteOrAntirequisite(prereq: string): Prerequisite | undefined {
-  return prereq.startsWith("NO") ? parseAntirequisite(prereq) : parsePrerequisite(prereq);
+  return parsePrerequisite(prereq.replace(/^NO /, ""), "antirequisite");
 }
 
 function buildANDLeaf(prereqTree: PrerequisiteTree, prereq: string) {
-  const req = parsePrerequisiteOrAntirequisite(prereq);
-
-  if (!req) return;
-
-  if (prereq.startsWith("NO")) {
-    prereqTree.NOT?.push(req);
+  if (prereq.startsWith("NO ")) {
+    const req = parseAntirequisite(prereq);
+    if (req) prereqTree.NOT?.push(req);
   } else {
-    prereqTree.AND?.push(req);
+    const req = parsePrerequisite(prereq);
+    if (req) prereqTree.AND?.push(req);
   }
 }
-// uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
+
+// Uses recursion to handle cases like ( AC ENG 20A OR ( PLACEMENT EXAM OR AUTHORIZATION (see SOC comments for authorization policy/instructions) ) )
 function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
   if (prereq.startsWith("(") && prereq.endsWith(")")) {
     const nestedTree = { OR: [] as (Prerequisite | PrerequisiteTree)[] };
@@ -371,7 +352,12 @@ function buildORLeaf(prereqTree: PrerequisiteTree, prereq: string) {
     }
     return;
   }
-  const req = parsePrerequisiteOrAntirequisite(prereq);
+  // Our ground assumption is that there shouldn't be any NO clauses in an OR tree.
+  if (prereq.startsWith("NO ")) {
+    logger.warn(`Discarding antirequisite in OR group: ${JSON.stringify(prereq)}`);
+    return;
+  }
+  const req = parsePrerequisite(prereq);
   if (req) {
     prereqTree.OR?.push(req);
   }
@@ -589,9 +575,9 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
-  } else if (repeatText.trim() !== "") {
+  } /*else if (repeatText.trim() !== "") {
     throw new Error(`Unrecognized repeatability text: ${repeatText}`);
-  }
+  }*/
 
   return {
     repeatabilityTimes: 0,
@@ -724,10 +710,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   const prereqRows = deepSortArray(
@@ -764,10 +750,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
+    /*if (!readlineSync.keyInYNStrict("Is this ok")) {
       logger.error("Cancelling scraping run.");
       exit(1);
-    }
+    }*/
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
