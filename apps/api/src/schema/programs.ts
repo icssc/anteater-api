@@ -398,6 +398,10 @@ export const majorRequirementsResponseSchema = programRequirementsResponseSchema
   schoolRequirements: z
     .object({
       name: z.string().openapi({ description: "Name for this school's requirements" }),
+      code: z.string().openapi({
+        description: "Numerical code for the school associated with these requirements",
+        example: "55",
+      }),
       qualifiers: programRequirementsResponseSchema.shape.qualifiers,
       requirements: programRequirementsResponseSchema.shape.requirements,
     })

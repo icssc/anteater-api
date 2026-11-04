@@ -144,6 +144,7 @@ async function main() {
             specializationRequired: m.specializationRequired,
             collegeRequirementsTitle: m.college?.name,
             collegeHeader: m.college?.header,
+            collegeCode: m.college?.collegeCode,
             collegeRequirements: m.college?.requirements,
           })),
       )

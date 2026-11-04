@@ -164,7 +164,7 @@ export class Scraper {
   private async scrapePrograms(degrees: Iterable<ProgramCodes>) {
     const ret = new Map<MajorSpecId, MajorProgram>();
     for (const degree of degrees) {
-      const { schoolCode, majorCode, degreeCode, specCode } = degree;
+      const { schoolCode, majorCode, degreeCode, specCode, collegeCode } = degree;
       const audit = await this.dw.getMajorAudit(degree);
       const majorAudit = audit?.major;
 
@@ -182,10 +182,13 @@ export class Scraper {
 
       ret.set(this.asMajorSpecId(degreeCode, majorCode, specCode), {
         college: audit?.college
-          ? await this.ap.parseBlock(
-              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
-              audit?.college,
-            )
+          ? {
+              ...(await this.ap.parseBlock(
+                `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
+                audit.college,
+              )),
+              collegeCode,
+            }
           : undefined,
         major: await this.ap.parseBlock(
           `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,

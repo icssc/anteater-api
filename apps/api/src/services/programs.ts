@@ -253,6 +253,7 @@ export class ProgramsService {
             name: dwMajorYear.collegeRequirementsTitle,
             requirements: dwMajorYear.collegeRequirements,
             qualifiers: dwMajorYear.collegeHeader,
+            code: dwMajorYear.collegeCode,
           },
         })
         .from(dwMajor)
