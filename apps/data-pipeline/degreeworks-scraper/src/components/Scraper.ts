@@ -181,12 +181,14 @@ export class Scraper {
       }
 
       ret.set(this.asMajorSpecId(degreeCode, majorCode, specCode), {
-        collegeCode,
         college: audit?.college
-          ? await this.ap.parseBlock(
-              `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
-              audit?.college,
-            )
+          ? {
+              ...(await this.ap.parseBlock(
+                `${schoolCode}-COLLEGE-${majorCode}-${degreeCode}`,
+                audit.college,
+              )),
+              collegeCode,
+            }
           : undefined,
         major: await this.ap.parseBlock(
           `${schoolCode}-MAJOR-${majorCode}-${degreeCode}`,
