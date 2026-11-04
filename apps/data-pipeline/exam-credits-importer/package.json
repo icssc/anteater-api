@@ -1,12 +1,13 @@
 {
-  "name": "@apps/ib-exams-importer",
+  "name": "@apps/exam-credits-importer",
   "version": "0.0.0",
   "private": true,
-  "description": "Script for importing IB exam credit data from a static mapping",
+  "description": "Import AP and IB exam credit mappings",
   "type": "module",
   "scripts": {
     "check:types": "tsc -p ./tsconfig.json -noEmit",
-    "start": "dotenv -e ../../../.env -- tsx src/index.ts",
+    "start:ap": "dotenv -e ../../../.env -- tsx src/index.ts ap",
+    "start:ib": "dotenv -e ../../../.env -- tsx src/index.ts ib",
     "test": "tsx --test src/data.test.ts"
   },
   "dependencies": {
