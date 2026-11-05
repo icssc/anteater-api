@@ -59,6 +59,10 @@ export const studyRoomSchema = z.object({
     description: "The link to this specific room on the UCI Libraries site.",
     example: "https://spaces.lib.uci.edu/space/44670",
   }),
+  imageUrl: z.string().nullable().openapi({
+    description: "A link to a photo of this room, if the booking site provides one",
+    example: "https://libapps.s3.amazonaws.com/accounts/88849/images/LL360.jpg",
+  }),
   slots: z.array(slotSchema).openapi({
     description: "The time slots available for this room",
   }),

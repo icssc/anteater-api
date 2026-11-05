@@ -16,6 +16,7 @@ export const studyRoomsGraphQLSchema = `#graphql
     directions: String
     techEnhanced: Boolean
     url: String!
+    imageUrl: String
     slots: [Slot!]!
   }
 

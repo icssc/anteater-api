@@ -23,6 +23,7 @@ export class StudyRoomsService {
         url: sql`COALESCE(${studyRoom.url}, CASE 
           WHEN ${studyRoom.location} = 'Anteater Learning Pavilion' THEN 'https://scheduler.oit.uci.edu/space/'
           ELSE 'https://spaces.lib.uci.edu/space/' END || ${studyRoom.id})`,
+        imageUrl: studyRoom.imageUrl,
         slots:
           sql`ARRAY_REMOVE(COALESCE(ARRAY_AGG(CASE WHEN ${studyRoomSlot.studyRoomId} IS NULL THEN NULL
             ELSE JSONB_BUILD_OBJECT(
