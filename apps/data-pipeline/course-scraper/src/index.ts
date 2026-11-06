@@ -190,6 +190,8 @@ function parseAnnotatedCourseOrExam(prereq: string): Prerequisite | undefined {
       coreq = true;
       continue;
     }
+    // course: "min grade = D-"
+    // exam: "min score = 4"
     const gradeMatch = ann.match(/^min (\S+) = (\S{1,2})$/);
     if (gradeMatch) {
       minGrade = gradeMatch[2];
