@@ -130,7 +130,7 @@ function parseCourseBlock(
   );
   const geText = norm($b.find(".detail-gened").first().text());
   const geFlags = generateGEs(geText ? [geText] : []);
-  const repeatabilityData = parseRepeatability(repeatText);
+  const repeatabilityData = parseRepeatability(id, repeatText);
 
   return {
     id,
@@ -548,7 +548,10 @@ function generateGEs(rawCourse: string[]) {
   return res;
 }
 
-function parseRepeatability(repeatText: string): {
+function parseRepeatability(
+  courseId: string,
+  repeatText: string,
+): {
   repeatabilityTimes: number | null;
   unit: "credit_hours" | "times" | null;
 } {
@@ -576,8 +579,18 @@ function parseRepeatability(repeatText: string): {
       repeatabilityTimes: null,
       unit: null,
     };
+  } else if (
+    repeatText.trim() === "May be taken for credit for unit as topics vary" &&
+    courseId === "EURO ST 201"
+  ) {
+    // as of 2026-2027 catalogue, from surrounding context, this is probably what was meant by this
+    // otherwise nonsensical text
+    return {
+      repeatabilityTimes: null,
+      unit: null,
+    };
   } else if (repeatText.trim() !== "") {
-    throw new Error(`Unrecognized repeatability text: ${repeatText}`);
+    throw new Error(`Unrecognized repeatability text in course ${courseId}: ${repeatText}`);
   }
 
   return {
