@@ -581,7 +581,7 @@ function parseRepeatability(
     };
   } else if (
     repeatText.trim() === "May be taken for credit for unit as topics vary" &&
-    courseId === "EURO ST 201"
+    courseId === "EUROST201"
   ) {
     // as of 2026-2027 catalogue, from surrounding context, this is probably what was meant by this
     // otherwise nonsensical text
