@@ -44,12 +44,11 @@ export class WeekService {
      *  always returns exactly [month, "/", day, "/", year] (e.g. 11/8/2026),
      *  so the parts can be read by position
      */
-    const [todayMonth, , todayDay, , todayYear] = laDateFormat
-      .formatToParts(new Date())
-      .map((p) => Number(p.value)) as [number, number, number, number, number];
-    const y = year ?? todayYear;
-    const m = month ?? todayMonth;
-    const d = day ?? todayDay;
+    const [{ value: todayMonth }, _sep1, { value: todayDay }, _sep2, { value: todayYear }] =
+      laDateFormat.formatToParts(new Date());
+    const y = year ?? Number(todayYear);
+    const m = month ?? Number(todayMonth);
+    const d = day ?? Number(todayDay);
     const date = new Date(Date.UTC(y, m - 1, d));
 
     const inInstructionCondition = and(
