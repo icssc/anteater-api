@@ -26,6 +26,13 @@ const getQuarter = (year: string, quarter: (typeof quarters)[number]): string =>
   }
 };
 
+const laDateFormat = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
+
 type WeekServiceInput = z.infer<typeof weekQuerySchema>;
 
 export class WeekService {
@@ -33,21 +40,16 @@ export class WeekService {
 
   async getWeekData(input: WeekServiceInput): Promise<WeekData | null> {
     const { year, month, day } = input;
-    const today = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    }).formatToParts(new Date());
-    const todayGet = (type: Intl.DateTimeFormatPartTypes) => {
-      const part = today.find((p) => p.type === type);
-      // shush linter
-      if (!part) throw new Error(`Missing ${type} in LA date parts`);
-      return Number(part.value);
-    };
-    const y = year ?? todayGet("year");
-    const m = month ?? todayGet("month");
-    const d = day ?? todayGet("day");
+    /* SAFETY: With "en-US" locale and numeric year/month/day, formatToParts
+     *  always returns exactly [month, "/", day, "/", year] (e.g. 11/8/2026),
+     *  so the parts can be read by position
+     */
+    const [todayMonth, , todayDay, , todayYear] = laDateFormat
+      .formatToParts(new Date())
+      .map((p) => Number(p.value)) as [number, number, number, number, number];
+    const y = year ?? todayYear;
+    const m = month ?? todayMonth;
+    const d = day ?? todayDay;
     const date = new Date(Date.UTC(y, m - 1, d));
 
     const inInstructionCondition = and(
