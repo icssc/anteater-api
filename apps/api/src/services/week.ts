@@ -33,10 +33,21 @@ export class WeekService {
 
   async getWeekData(input: WeekServiceInput): Promise<WeekData | null> {
     const { year, month, day } = input;
-    const today = new Date();
-    const y = year ?? today.getFullYear();
-    const m = month ?? today.getMonth() + 1;
-    const d = day ?? today.getDate();
+    const today = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(new Date());
+    const todayGet = (type: Intl.DateTimeFormatPartTypes) => {
+      const part = today.find((p) => p.type === type);
+      // shush linter
+      if (!part) throw new Error(`Missing ${type} in LA date parts`);
+      return Number(part.value);
+    };
+    const y = year ?? todayGet("year");
+    const m = month ?? todayGet("month");
+    const d = day ?? todayGet("day");
     const date = new Date(Date.UTC(y, m - 1, d));
 
     const inInstructionCondition = and(
