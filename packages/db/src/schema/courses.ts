@@ -71,7 +71,6 @@ export type AffiliationPrerequisite = {
 
 export type Prerequisite =
   | CoursePrerequisite
-  | CourseCorequisite
   | ExamPrerequisite
   | StandingPrerequisite
   | AffiliationPrerequisite;

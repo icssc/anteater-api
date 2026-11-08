@@ -456,6 +456,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         );
         return;
       }
+      console.log(courseId);
       prereqs.set(courseId, buildPrereqTree(prereqList));
     }
   });
