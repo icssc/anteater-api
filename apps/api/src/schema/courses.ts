@@ -188,7 +188,6 @@ const affiliationPrerequisiteSchema = z.object({
 });
 
 export const prerequisiteSchema = z.union([
-  // prereq or coreq
   z.object({
     prereqType: z.literal("course"),
     coreq: z.boolean(),

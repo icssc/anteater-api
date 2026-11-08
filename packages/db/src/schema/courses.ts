@@ -16,14 +16,7 @@ import { courseLevel } from "./websoc.ts";
 
 export type CoursePrerequisite = {
   prereqType: "course";
-  coreq: false;
-  courseId: string;
-  minGrade?: string;
-};
-
-export type CourseCorequisite = {
-  prereqType: "course";
-  coreq: true;
+  coreq: boolean;
   courseId: string;
   minGrade?: string;
 };
