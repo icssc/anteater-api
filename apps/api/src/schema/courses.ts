@@ -192,7 +192,7 @@ export const prerequisiteSchema = z.union([
     prereqType: z.literal("course"),
     coreq: z.boolean().openapi({
       description:
-        "Prerequisites must be taken strictly before their dependents. If this field is true, this is a corequisite, these two courses may also be taken concurrently.",
+        "Prerequisites must be taken strictly before their dependents. If this field is true, this is a corequisite, meaning these two courses may instead be taken concurrently.",
     }),
     courseId: z.string(),
     minGrade: z.string().optional(),
