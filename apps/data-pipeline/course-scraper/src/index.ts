@@ -456,7 +456,7 @@ async function scrapePrerequisitePage(deptCode: string, url: string) {
         );
         return;
       }
-      console.log(courseId);
+
       prereqs.set(courseId, buildPrereqTree(prereqList));
     }
   });
@@ -725,10 +725,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped course data for ${deptCode}:`);
     console.log(courseDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
-      logger.error("Cancelling scraping run.");
-      exit(1);
-    }
+    // if (!readlineSync.keyInYNStrict("Is this ok")) {
+    //   logger.error("Cancelling scraping run.");
+    //   exit(1);
+    // }
   }
 
   const prereqRows = deepSortArray(
@@ -765,10 +765,10 @@ async function scrapeCoursesInDepartment(meta: {
   } else {
     console.log(`Difference between database and scraped prerequisite data for ${deptCode}:`);
     console.log(prereqDiff);
-    if (!readlineSync.keyInYNStrict("Is this ok")) {
-      logger.error("Cancelling scraping run.");
-      exit(1);
-    }
+    // if (!readlineSync.keyInYNStrict("Is this ok")) {
+    //   logger.error("Cancelling scraping run.");
+    //   exit(1);
+    // }
   }
 
   if (!courseDiff.length && !prereqDiff.length) {
