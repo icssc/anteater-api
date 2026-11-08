@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { inArray } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -192,6 +193,7 @@ export async function updateRestaurant(
     const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
     const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
     const dishToPeriodRowsToUpsert = new Map<string, Set<string>>();
+    const scrapedPeriods = new Set<string>();
     let numDishToPeriodRows = 0;
 
     type DietRestrictionBase = Omit<
@@ -230,6 +232,7 @@ export async function updateRestaurant(
         ...baseDietRestriction,
       };
 
+      scrapedPeriods.add(periodId);
       dishesToUpsert.set(dish.id, { ...dish, updatedAt });
       dietRestrictionsToUpsert.set(dish.id, dietRestriction);
       nutritionInfosToUpsert.set(dish.id, { ...nutritionInfo, updatedAt });
@@ -268,22 +271,37 @@ export async function updateRestaurant(
           set: conflictUpdateSetAllCols(diningNutritionInfo),
         });
 
+      const outdatedDishesEncoded = await tx
+        .delete(diningDishToPeriod)
+        .where(inArray(diningDishToPeriod.periodId, Array.from(scrapedPeriods)))
+        .returning()
+        .then((dishes) => dishes.map(({ periodId, dishId }) => `${periodId}___${dishId}`));
+
+      const dishesToPeriodRows = dishToPeriodRowsToUpsert
+        .entries()
+        .flatMap(([periodId, dishes]) =>
+          dishes.keys().map((dishId) => {
+            return {
+              periodId,
+              dishId,
+            };
+          }),
+        )
+        .toArray();
+
+      const dishesToPeriodRowsEncoded = dishesToPeriodRows.map(
+        ({ periodId, dishId }) => `${periodId}___${dishId}`,
+      );
+      const nonexistentDish = outdatedDishesEncoded.filter(
+        (id) => !dishesToPeriodRowsEncoded.includes(id),
+      );
+      console.log(`Removed ${nonexistentDish.length} outdated dishes`);
+      console.log(nonexistentDish);
+
       console.log(`Upserting ${numDishToPeriodRows} dish-to-period rows...`);
       await tx
         .insert(diningDishToPeriod)
-        .values(
-          dishToPeriodRowsToUpsert
-            .entries()
-            .flatMap(([periodId, dishes]) =>
-              dishes.keys().map((dishId) => {
-                return {
-                  periodId,
-                  dishId,
-                };
-              }),
-            )
-            .toArray(),
-        )
+        .values(dishesToPeriodRows)
         .onConflictDoUpdate({
           target: [diningDishToPeriod.dishId, diningDishToPeriod.periodId],
           set: conflictUpdateSetAllCols(diningDishToPeriod),
