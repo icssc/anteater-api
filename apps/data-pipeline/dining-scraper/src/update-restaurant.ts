@@ -271,37 +271,35 @@ export async function updateRestaurant(
           set: conflictUpdateSetAllCols(diningNutritionInfo),
         });
 
-      const outdatedDishesEncoded = await tx
+      const removedDishes = await tx
         .delete(diningDishToPeriod)
         .where(inArray(diningDishToPeriod.periodId, Array.from(scrapedPeriods)))
         .returning()
-        .then((dishes) => dishes.map(({ periodId, dishId }) => `${periodId}___${dishId}`));
-
-      const dishesToPeriodRows = dishToPeriodRowsToUpsert
-        .entries()
-        .flatMap(([periodId, dishes]) =>
-          dishes.keys().map((dishId) => {
-            return {
-              periodId,
-              dishId,
-            };
+        .then((rows) =>
+          rows.filter((outdated) => {
+            return !getFromMapOrThrow(dishToPeriodRowsToUpsert, outdated.periodId).has(
+              outdated.dishId,
+            );
           }),
-        )
-        .toArray();
-
-      const dishesToPeriodRowsEncoded = dishesToPeriodRows.map(
-        ({ periodId, dishId }) => `${periodId}___${dishId}`,
-      );
-      const nonexistentDish = outdatedDishesEncoded.filter(
-        (id) => !dishesToPeriodRowsEncoded.includes(id),
-      );
-      console.log(`Removed ${nonexistentDish.length} outdated dishes`);
-      console.log(nonexistentDish);
+        );
+      console.log(`Removed ${removedDishes.length} outdated dishes`);
 
       console.log(`Upserting ${numDishToPeriodRows} dish-to-period rows...`);
       await tx
         .insert(diningDishToPeriod)
-        .values(dishesToPeriodRows)
+        .values(
+          dishToPeriodRowsToUpsert
+            .entries()
+            .flatMap(([periodId, dishes]) =>
+              dishes.keys().map((dishId) => {
+                return {
+                  periodId,
+                  dishId,
+                };
+              }),
+            )
+            .toArray(),
+        )
         .onConflictDoUpdate({
           target: [diningDishToPeriod.dishId, diningDishToPeriod.periodId],
           set: conflictUpdateSetAllCols(diningDishToPeriod),
