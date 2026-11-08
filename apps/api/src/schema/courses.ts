@@ -190,14 +190,12 @@ const affiliationPrerequisiteSchema = z.object({
 export const prerequisiteSchema = z.union([
   z.object({
     prereqType: z.literal("course"),
-    coreq: z.literal(false),
+    coreq: z.boolean().openapi({
+      description:
+        "Prerequisites must be taken strictly before their dependents. If this field is true, this is a corequisite, meaning these two courses may instead be taken concurrently.",
+    }),
     courseId: z.string(),
     minGrade: z.string().optional(),
-  }),
-  z.object({
-    prereqType: z.literal("course"),
-    coreq: z.literal(true),
-    courseId: z.string(),
   }),
   z.object({
     prereqType: z.literal("exam"),
