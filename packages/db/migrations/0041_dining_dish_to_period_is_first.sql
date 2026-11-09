@@ -1,0 +1,1 @@
+ALTER TABLE "dining_dish_to_period" ADD COLUMN "is_first" boolean DEFAULT false NOT NULL;

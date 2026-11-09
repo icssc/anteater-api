@@ -55,6 +55,7 @@ export type FetchedDish = {
   nutritionInfo: typeof diningNutritionInfo.$inferInsert;
   recipeAllergenCodes: Set<number>;
   recipePreferenceCodes: Set<number>;
+  isFirst: boolean;
 };
 
 export type DateDishMap = Map<string, FetchedDish[]>;
@@ -267,7 +268,7 @@ export async function fetchMenuWeekView(
 
   for (const { date, stations } of dateSkuMap) {
     for (const { id: stationId, skus } of stations) {
-      for (const sku of skus.simple) {
+      for (const [index, sku] of skus.simple.entries()) {
         const item = parsedProducts[sku];
 
         const dish = {
@@ -283,6 +284,7 @@ export async function fetchMenuWeekView(
           nutritionInfo: item?.nutritionInfo ?? {},
           recipeAllergenCodes: item?.allergenIntolerances ?? new Set<number>(),
           recipePreferenceCodes: item?.recipePreferences ?? new Set<number>(),
+          isFirst: index === 0,
         } as FetchedDish;
 
         const dishesForDate = dishes.get(date);
