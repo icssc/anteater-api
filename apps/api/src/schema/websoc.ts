@@ -1,24 +1,12 @@
 import { z } from "@hono/zod-openapi";
 import type { FinalExamStatus } from "@packages/db/schema";
 import { courseLevels, terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
-import { isBaseTenInt } from "@packages/stdlib";
+import { geCategories, isBaseTenInt } from "@packages/stdlib";
 import { courseNumberSchema, daysSchema, timeSchema, yearSchema } from "./lib";
 
 const anyArray = ["ANY"] as const;
 
-const geCategories = [
-  "ANY",
-  "GE-1A",
-  "GE-1B",
-  "GE-2",
-  "GE-3",
-  "GE-4",
-  "GE-5A",
-  "GE-5B",
-  "GE-6",
-  "GE-7",
-  "GE-8",
-] as const;
+const websocGECategories = ["ANY", ...geCategories] as const;
 
 const fullCoursesOptions = [
   "ANY",
@@ -82,7 +70,7 @@ export const websocQuerySchema = z.object({
       issue.input === undefined ? "Parameter 'quarter' is required" : "Invalid parameter 'quarter'",
   }),
   ge: z
-    .enum(geCategories)
+    .enum(websocGECategories)
     .optional()
     .transform((x) => (x === "ANY" ? undefined : x)),
   department: z.string().optional().openapi({

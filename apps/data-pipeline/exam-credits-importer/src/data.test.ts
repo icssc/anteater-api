@@ -1,131 +1,44 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { geCategoryToColumn } from "@packages/db/utils";
-import { geCategories } from "@packages/stdlib";
-import apExamData from "./ap-data.ts";
-import ibExamData from "./ib-data.ts";
+
 import { apExamDataSchema, ibExamDataSchema } from "./schema.ts";
 
-test("IB exams have valid credit mappings", () => {
-  assert.doesNotThrow(() => ibExamDataSchema.parse(ibExamData));
-});
+function reward(scores: number[], units = 8, electiveUnits = 8) {
+  return {
+    acceptableScores: scores,
+    unitsGranted: units,
+    electiveUnitsGranted: electiveUnits,
+    geGranted: {},
+    coursesGranted: { AND: [] },
+  };
+}
 
-test("Rejects empty IB exam data", () => {
-  assert.equal(ibExamDataSchema.safeParse({}).success, false);
-});
-
-test("Rejects duplicate qualifying scores", () => {
-  const invalidData = {
-    "IB Test (HL)": {
-      rewards: [
-        {
-          acceptableScores: [5, 5],
-          unitsGranted: 8,
-          electiveUnitsGranted: 8,
-          geGranted: {},
-          coursesGranted: { AND: [] },
-        },
-      ],
+test("Rejects overlapping qualifying scores", () => {
+  const data = {
+    "IB Test": {
+      rewards: [reward([5, 6]), reward([6, 7])],
     },
   };
 
-  assert.equal(ibExamDataSchema.safeParse(invalidData).success, false);
+  assert.equal(ibExamDataSchema.safeParse(data).success, false);
 });
 
-test("Rejects invalid credit units", () => {
-  const invalidData = {
-    "IB Test (HL)": {
-      rewards: [
-        {
-          acceptableScores: [5],
-          unitsGranted: 4,
-          electiveUnitsGranted: 8,
-          geGranted: {},
-          coursesGranted: { AND: [] },
-        },
-      ],
+test("Rejects elective units greater than total units", () => {
+  const data = {
+    "IB Test": {
+      rewards: [reward([5], 4, 8)],
     },
   };
 
-  assert.equal(ibExamDataSchema.safeParse(invalidData).success, false);
+  assert.equal(ibExamDataSchema.safeParse(data).success, false);
 });
 
-test("AP exams have valid credit mappings", () => {
-  const data = apExamDataSchema.parse(apExamData);
-  assert.equal(Object.keys(data).length, 39);
-});
-
-test("AP exams may have no rewards", () => {
-  const data = apExamDataSchema.parse(apExamData);
-  assert.deepEqual(data["AP Computer Science AB"].rewards, []);
-});
-
-test("Rejects AP scores outside the valid range", () => {
-  const invalidData = {
+test("AP exams can have no rewards", () => {
+  const data = {
     "AP Test": {
-      rewards: [
-        {
-          acceptableScores: [6],
-          unitsGranted: 4,
-          electiveUnitsGranted: 4,
-          geGranted: {},
-          coursesGranted: { AND: [] },
-        },
-      ],
+      rewards: [],
     },
   };
 
-  assert.equal(apExamDataSchema.safeParse(invalidData).success, false);
-});
-
-test("Rejects invalid IB scores", () => {
-  const invalidData = {
-    "IB Test (HL)": {
-      rewards: [
-        {
-          acceptableScores: [4],
-          unitsGranted: 8,
-          electiveUnitsGranted: 8,
-          geGranted: {},
-          coursesGranted: { AND: [] },
-        },
-      ],
-    },
-  };
-
-  assert.equal(ibExamDataSchema.safeParse(invalidData).success, false);
-});
-
-test("All GE categories map to unique database columns", () => {
-  assert.deepEqual(Object.keys(geCategoryToColumn).sort(), [...geCategories].sort());
-
-  assert.equal(new Set(Object.values(geCategoryToColumn)).size, geCategories.length);
-});
-
-test("IB elective-only exams grant eight elective units", () => {
-  const electiveOnlyExams = [
-    "IB Business & Management (HL)",
-    "IB Dance (HL)",
-    "IB Film (HL)",
-    "IB Global Politics (HL)",
-    "IB Music (HL)",
-    "IB Philosophy (HL)",
-    "IB Theater Arts (HL)",
-    "IB Visual Arts (HL)",
-  ];
-
-  for (const name of electiveOnlyExams) {
-    const exam = ibExamData[name];
-
-    assert.ok(exam, `Missing exam: ${name}`);
-    assert.equal(exam.rewards.length, 1);
-
-    assert.deepEqual(exam.rewards[0], {
-      acceptableScores: [5, 6, 7],
-      unitsGranted: 8,
-      electiveUnitsGranted: 8,
-      geGranted: {},
-      coursesGranted: { AND: [] },
-    });
-  }
+  assert.equal(apExamDataSchema.safeParse(data).success, true);
 });

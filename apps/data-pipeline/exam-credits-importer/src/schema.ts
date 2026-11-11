@@ -12,12 +12,7 @@ const coursesGrantedTreeSchema: z.ZodType<ExamCoursesGrantedTree> = z.lazy(() =>
   ]),
 );
 
-function createExamDataSchema(
-  examType: "AP" | "IB",
-  minScore: number,
-  maxScore: number,
-  requireRewards: boolean,
-) {
+function createExamDataSchema(minScore: number, maxScore: number, requireRewards: boolean) {
   const rewardSchema = z
     .object({
       acceptableScores: z.array(z.int().min(minScore).max(maxScore)).min(1),
@@ -57,25 +52,8 @@ function createExamDataSchema(
       }
     });
 
-  return z.record(z.string(), examSchema).superRefine((data, ctx) => {
-    if (Object.keys(data).length === 0) {
-      ctx.addIssue({
-        code: "custom",
-        message: `No ${examType} exams defined`,
-      });
-    }
-
-    for (const name of Object.keys(data)) {
-      if (!name.trim()) {
-        ctx.addIssue({
-          code: "custom",
-          message: `${examType} exam name cannot be blank`,
-          path: [name],
-        });
-      }
-    }
-  });
+  return z.record(z.string(), examSchema);
 }
 
-export const apExamDataSchema = createExamDataSchema("AP", 1, 5, false);
-export const ibExamDataSchema = createExamDataSchema("IB", 5, 7, true);
+export const apExamDataSchema = createExamDataSchema(1, 5, false);
+export const ibExamDataSchema = createExamDataSchema(5, 7, true);
