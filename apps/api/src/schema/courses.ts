@@ -140,23 +140,70 @@ export const coursesByCursorQuerySchema = z.object({
   }),
 });
 
+const standingPrerequisiteSchema = z.object({
+  prereqType: z.literal("standing"),
+  standing: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("classLevel"),
+      value: z.enum([
+        "SENIOR",
+        "JUNIOR",
+        "LOWER DIVISION",
+        "UPPER DIVISION",
+        "NEW TRANSFERS",
+        // Not yet observed in WebSoc, but expected to exist:
+        // "FRESHMAN",
+        // "SOPHOMORE",
+        // "GRADUATE",
+      ]),
+    }),
+    z.object({
+      type: z.literal("writingRequirement"),
+      value: z.enum(["LOWER DIVISION WRITING", "ENTRY LEVEL WRITING"]),
+    }),
+  ]),
+});
+
+const affiliationPrerequisiteSchema = z.object({
+  prereqType: z.literal("affiliation"),
+  affiliation: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("major"),
+      value: z.string().openapi({
+        description: "Students must be in this major to enroll in this course.",
+        example: "COMPUTER SCI & ENGR",
+      }),
+    }),
+    z.object({
+      type: z.literal("school"),
+      value: z.string().openapi({
+        description: "Students must be in this school to enroll in this course.",
+        example: "I&C SCI",
+      }),
+    }),
+    z.object({
+      type: z.literal("CHC"),
+    }),
+  ]),
+});
+
 export const prerequisiteSchema = z.union([
   z.object({
     prereqType: z.literal("course"),
-    coreq: z.literal(false),
+    coreq: z.boolean().openapi({
+      description:
+        "Prerequisites must be taken strictly before their dependents. If this field is true, this is a corequisite, meaning these two courses may instead be taken concurrently.",
+    }),
     courseId: z.string(),
     minGrade: z.string().optional(),
-  }),
-  z.object({
-    prereqType: z.literal("course"),
-    coreq: z.literal(true),
-    courseId: z.string(),
   }),
   z.object({
     prereqType: z.literal("exam"),
     examName: z.string(),
     minGrade: z.string().optional(),
   }),
+  standingPrerequisiteSchema,
+  affiliationPrerequisiteSchema,
 ]);
 
 export const prerequisiteTreeSchema: z.ZodType<PrerequisiteTree> = z.object({

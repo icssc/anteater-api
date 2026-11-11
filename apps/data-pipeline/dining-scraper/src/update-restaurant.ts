@@ -1,4 +1,5 @@
 import type { database } from "@packages/db";
+import { inArray } from "@packages/db/drizzle";
 import {
   diningDietRestriction,
   diningDish,
@@ -192,6 +193,7 @@ export async function updateRestaurant(
     const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
     const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
     const dishToPeriodRowsToUpsert = new Map<string, Set<string>>();
+    const scrapedPeriods = new Set<string>();
     let numDishToPeriodRows = 0;
 
     type DietRestrictionBase = Omit<
@@ -230,6 +232,7 @@ export async function updateRestaurant(
         ...baseDietRestriction,
       };
 
+      scrapedPeriods.add(periodId);
       dishesToUpsert.set(dish.id, { ...dish, updatedAt });
       dietRestrictionsToUpsert.set(dish.id, dietRestriction);
       nutritionInfosToUpsert.set(dish.id, { ...nutritionInfo, updatedAt });
@@ -267,6 +270,19 @@ export async function updateRestaurant(
           target: [diningNutritionInfo.dishId],
           set: conflictUpdateSetAllCols(diningNutritionInfo),
         });
+
+      const removedDishes = await tx
+        .delete(diningDishToPeriod)
+        .where(inArray(diningDishToPeriod.periodId, Array.from(scrapedPeriods)))
+        .returning()
+        .then((rows) =>
+          rows.filter((outdated) => {
+            return !getFromMapOrThrow(dishToPeriodRowsToUpsert, outdated.periodId).has(
+              outdated.dishId,
+            );
+          }),
+        );
+      console.log(`Removed ${removedDishes.length} outdated dishes`);
 
       console.log(`Upserting ${numDishToPeriodRows} dish-to-period rows...`);
       await tx

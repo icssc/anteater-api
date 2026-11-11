@@ -1,0 +1,1 @@
+ALTER TABLE "study_room" ADD COLUMN "image_url" varchar;

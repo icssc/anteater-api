@@ -25,6 +25,7 @@ export const studyRoom = pgTable(
     directions: varchar("directions").notNull(),
     techEnhanced: boolean("tech_enhanced"),
     url: varchar("url"),
+    imageUrl: varchar("image_url"),
     studyLocationId: varchar("study_location_id")
       .references(() => studyLocation.id)
       .notNull(),

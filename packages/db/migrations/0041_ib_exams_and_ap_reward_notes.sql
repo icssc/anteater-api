@@ -28,6 +28,7 @@ CREATE TABLE "ib_exam_to_reward" (
 	"reward" uuid NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "ap_exam_reward" ADD COLUMN "notes" text;--> statement-breakpoint
 ALTER TABLE "ib_exam_to_reward" ADD CONSTRAINT "ib_exam_to_reward_exam_id_ib_exam_id_fk" FOREIGN KEY ("exam_id") REFERENCES "public"."ib_exam"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ib_exam_to_reward" ADD CONSTRAINT "ib_exam_to_reward_reward_ib_exam_reward_id_fk" FOREIGN KEY ("reward") REFERENCES "public"."ib_exam_reward"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "ib_exam_to_reward_exam_id_score_index" ON "ib_exam_to_reward" USING btree ("exam_id","score");
