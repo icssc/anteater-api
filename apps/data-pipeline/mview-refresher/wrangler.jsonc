@@ -8,7 +8,7 @@
   "minify": true,
 
   "triggers": {
-    "crons": ["0 0 * * *"],
+    "crons": ["5 0 * * *"],
   },
 
   "observability": {
