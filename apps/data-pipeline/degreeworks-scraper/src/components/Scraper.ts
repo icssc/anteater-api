@@ -402,9 +402,14 @@ export class Scraper {
 
         foundMajorAssured.specs.push(specCode);
 
+        const collegeCode = majorToCollegeCode.get(foundMajorAssured.code);
+        if (collegeCode === undefined) {
+          throw new Error(`No college code found for major ${foundMajorAssured.code}`);
+        }
+
         foundMajorSpecPairs.push({
           schoolCode: foundMajorAssured.degreeType?.startsWith("B") ? "U" : "G",
-          collegeCode: majorToCollegeCode.get(foundMajorAssured.code),
+          collegeCode,
           degreeCode: foundMajorAssured.degreeType as string,
           majorCode: foundMajorAssured.code,
           specCode,

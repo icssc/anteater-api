@@ -120,7 +120,9 @@ export class DegreeworksClient {
     majorCode,
     specCode,
     collegeCode,
-  }: ProgramCodes): Promise<
+  }: Omit<ProgramCodes, "collegeCode"> & {
+    collegeCode?: string;
+  }): Promise<
     | {
         college?: Block;
         major?: Block;
