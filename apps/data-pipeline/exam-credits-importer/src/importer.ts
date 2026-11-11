@@ -1,6 +1,17 @@
-import { geCategoryToColumn } from "@packages/db/utils";
+import type { database } from "@packages/db";
+import { eq, notInArray } from "@packages/db/drizzle";
+import {
+  apExam,
+  apExamReward,
+  apExamToReward,
+  ibExam,
+  ibExamReward,
+  ibExamToReward,
+} from "@packages/db/schema";
+import { conflictUpdateSetAllCols, geCategoryToColumn } from "@packages/db/utils";
 import { type Exam, type GECategory, geCategories } from "@packages/stdlib";
 
+type ExamType = "ap" | "ib";
 type GEColumn = (typeof geCategoryToColumn)[GECategory];
 
 function rewardValues(reward: Exam["rewards"][number]) {
@@ -13,29 +24,65 @@ function rewardValues(reward: Exam["rewards"][number]) {
     electiveUnitsGranted: reward.electiveUnitsGranted,
     ...geColumns,
     coursesGranted: reward.coursesGranted,
-    notes: reward.notes ?? null,
+    notes: reward.notes,
   };
 }
 
-export type ImportHandlers = {
-  upsertExam: (fullName: string, catalogueName: string | null) => Promise<void>;
-  clearMappings: (fullName: string) => Promise<void>;
-  createReward: (values: ReturnType<typeof rewardValues>) => Promise<string>;
-  addScoreMappings: (fullName: string, scores: number[], rewardId: string) => Promise<void>;
-  removeOrphanedRewards: () => Promise<void>;
-};
+export async function importExams(
+  db: ReturnType<typeof database>,
+  examType: ExamType,
+  exams: Record<string, Exam>,
+) {
+  const { examTable, rewardTable, mappingTable } = {
+    ap: {
+      examTable: apExam,
+      rewardTable: apExamReward,
+      mappingTable: apExamToReward,
+    },
+    ib: {
+      examTable: ibExam,
+      rewardTable: ibExamReward,
+      mappingTable: ibExamToReward,
+    },
+  }[examType];
 
-export async function importExams(exams: Record<string, Exam>, handlers: ImportHandlers) {
-  for (const [fullName, exam] of Object.entries(exams)) {
-    await handlers.upsertExam(fullName, exam.catalogueName ?? null);
-    await handlers.clearMappings(fullName);
+  await db.transaction(async (tx) => {
+    for (const [fullName, exam] of Object.entries(exams)) {
+      const catalogueName = exam.catalogueName ?? null;
 
-    for (const reward of exam.rewards) {
-      const rewardId = await handlers.createReward(rewardValues(reward));
+      // Update the exam record.
+      await tx
+        .insert(examTable)
+        .values({ id: fullName, catalogueName })
+        .onConflictDoUpdate({
+          target: examTable.id,
+          set: examType === "ap" ? conflictUpdateSetAllCols(examTable) : { catalogueName },
+        });
 
-      await handlers.addScoreMappings(fullName, reward.acceptableScores, rewardId);
+      // Replace the existing score mappings for this exam.
+      await tx.delete(mappingTable).where(eq(mappingTable.examId, fullName));
+
+      for (const reward of exam.rewards) {
+        const [created] = await tx
+          .insert(rewardTable)
+          .values(rewardValues(reward))
+          .returning({ id: rewardTable.id });
+
+        if (reward.acceptableScores.length > 0) {
+          await tx.insert(mappingTable).values(
+            reward.acceptableScores.map((score) => ({
+              examId: fullName,
+              score,
+              reward: created.id,
+            })),
+          );
+        }
+      }
     }
-  }
 
-  await handlers.removeOrphanedRewards();
+    // Remove rewards no longer referenced by any score.
+    await tx
+      .delete(rewardTable)
+      .where(notInArray(rewardTable.id, tx.select({ id: mappingTable.reward }).from(mappingTable)));
+  });
 }
