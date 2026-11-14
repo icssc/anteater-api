@@ -15,6 +15,7 @@ export * from "./course-materials.ts";
 export * from "./courses.ts";
 export * from "./degreeworks.ts";
 export * from "./dining.ts";
+export * from "./ib-exams.ts";
 export * from "./instructors.ts";
 export * from "./larc.ts";
 export * from "./library-traffic.ts";

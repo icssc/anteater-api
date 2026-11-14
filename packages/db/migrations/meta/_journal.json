@@ -288,6 +288,13 @@
       "when": 1793203159404,
       "tag": "0040_study_room_images",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794390750272,
+      "tag": "0041_ib_exams_and_ap_reward_notes",
+      "breakpoints": true
     }
   ]
 }

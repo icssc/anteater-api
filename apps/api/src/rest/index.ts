@@ -1,12 +1,12 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { defaultHook } from "$hooks";
-import { apExamsRouter } from "./routes/ap-exams.ts";
 import { calendarRouter } from "./routes/calendar";
 import { catalogueRouter } from "./routes/catalogue.ts";
 import { courseMaterialsRouter } from "./routes/course-materials.ts";
 import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { diningRouter } from "./routes/dining";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
+import { apExamsRouter, ibExamsRouter } from "./routes/exam-credits";
 import { gradesRouter } from "./routes/grades";
 import { instructorsCursorRouter, instructorsRouter } from "./routes/instructors";
 import { larcRouter } from "./routes/larc.ts";
@@ -21,6 +21,7 @@ import { weekRouter } from "./routes/week";
 const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
 restRouter.route("/apExams", apExamsRouter);
+restRouter.route("/ibExams", ibExamsRouter);
 restRouter.route("/calendar", calendarRouter);
 restRouter.route("/courseMaterials", courseMaterialsRouter);
 restRouter.route("/courses", coursesRouter);

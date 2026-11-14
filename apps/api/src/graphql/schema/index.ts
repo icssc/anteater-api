@@ -2,12 +2,12 @@ import { mergeTypeDefs } from "@graphql-tools/merge";
 import { catalogueSchema } from "$graphql/schema/catalogue.ts";
 import { courseMaterialsSchema } from "$graphql/schema/course-materials.ts";
 import { programsSchema } from "$graphql/schema/programs.ts";
-import { apExamsSchema } from "./ap-exams";
 import { calendarSchema } from "./calendar";
 import { coursesSchema } from "./courses";
 import { diningSchema } from "./dining";
 import { enrollmentHistorySchema } from "./enrollment-history";
 import { enums } from "./enums";
+import { examCreditsSchema } from "./exam-credits";
 import { gradesSchema } from "./grades";
 import { instructorsSchema } from "./instructors";
 import { larcSchema } from "./larc";
@@ -38,12 +38,12 @@ type Query {
 export const typeDefs = mergeTypeDefs([
   baseSchema,
   enums,
-  apExamsSchema,
   calendarSchema,
   courseMaterialsSchema,
   coursesSchema,
   diningSchema,
   enrollmentHistorySchema,
+  examCreditsSchema,
   gradesSchema,
   instructorsSchema,
   larcSchema,

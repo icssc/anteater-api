@@ -1,12 +1,5 @@
-import { integer, json, pgTable, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-
-export type APCoursesGrantedTree =
-  | {
-      AND: (APCoursesGrantedTree | string)[];
-    }
-  | {
-      OR: (APCoursesGrantedTree | string)[];
-    };
+import type { ExamCoursesGrantedTree } from "@packages/stdlib";
+import { integer, json, pgTable, text, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const apExam = pgTable("ap_exam", {
   id: varchar("id").primaryKey(),
@@ -42,5 +35,6 @@ export const apExamReward = pgTable("ap_exam_reward", {
   ge6CoursesGranted: integer("ge_6_courses_granted").notNull().default(0),
   ge7CoursesGranted: integer("ge_7_courses_granted").notNull().default(0),
   ge8CoursesGranted: integer("ge_8_courses_granted").notNull().default(0),
-  coursesGranted: json("courses_granted").$type<APCoursesGrantedTree>().notNull(),
+  coursesGranted: json("courses_granted").$type<ExamCoursesGrantedTree>().notNull(),
+  notes: text("notes"),
 });
