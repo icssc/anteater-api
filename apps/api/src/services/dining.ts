@@ -226,6 +226,7 @@ export class DiningService {
           endTime: diningPeriod.endTime,
           updatedAt: diningPeriod.updatedAt,
           stationToDishes: sql<Record<string, string[]>>`JSONB_BUILD_OBJECT()`,
+          stationToFirstDish: sql<Record<string, string>>`JSONB_BUILD_OBJECT()`,
         },
         station: {
           id: diningStation.id,
@@ -234,6 +235,9 @@ export class DiningService {
         dishes: sql<
           (typeof diningDish.$inferSelect.id)[]
         >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
+        firstDish: sql<
+          typeof diningDish.$inferSelect.id | null
+        >`(ARRAY_AGG(${diningDish.id}) FILTER (WHERE ${diningDishToPeriod.isFirst}))[1]`,
       })
       .from(diningRestaurant)
       .innerJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
@@ -266,12 +270,14 @@ export class DiningService {
     type PeriodsRecord = z.infer<typeof restaurantTodayResponseSchema>["periods"];
     const periods = new Map<keyof PeriodsRecord, PeriodsRecord[string]>();
 
-    for (const { period, station, dishes } of rows) {
+    for (const { period, station, dishes, firstDish } of rows) {
       if (!periods.has(period.id)) {
         periods.set(period.id, period);
       }
 
       getFromMapOrThrow(periods, period.id).stationToDishes[station.id] = dishes;
+      if (firstDish)
+        getFromMapOrThrow(periods, period.id).stationToFirstDish[station.id] = firstDish;
     }
 
     return {
