@@ -68,7 +68,7 @@ function toISODateString(d: Date) {
 
 export type GetLocationRecipesVariables = {
   date: string;
-  locationUrlKey: "brandywine" | "the-anteatery";
+  locationUrlKey: (typeof restaurantIDToURL)[RestaurantId];
   mealPeriod: number | null;
   viewType: "WEEKLY";
 };

@@ -2,6 +2,7 @@ export const diningSchema = `#graphql
 enum RestaurantId {
   anteatery
   brandywine
+  oasis
 }
 
 type DietRestriction @cacheControl(maxAge: 3600) {

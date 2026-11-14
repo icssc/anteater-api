@@ -311,7 +311,7 @@ export async function updateRestaurant(
 /**
  * Upserts the meal period types, schedules, and per-schedule weekly hours for a restaurant.
  * @param db the Drizzle database instance
- * @param restaurantId the restaurant to upsert data for ("anteatery", "brandywine")
+ * @param restaurantId the restaurant to upsert data for ("anteatery", "brandywine", "oasis")
  * @param schedules the schedules to upsert
  * @param updatedAt the timestamp to use for the updatedAt field for all upserted rows in this scrape
  */

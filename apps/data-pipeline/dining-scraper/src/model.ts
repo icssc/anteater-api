@@ -1,11 +1,12 @@
 import type { LocationResponse } from "./fetch-location.ts";
 
-export const restaurantIds = ["anteatery", "brandywine"] as const;
+export const restaurantIds = ["anteatery", "brandywine", "oasis"] as const;
 export type RestaurantId = (typeof restaurantIds)[number];
 
 export const restaurantIDToURL = {
   anteatery: "the-anteatery",
   brandywine: "brandywine",
+  oasis: "the-oasis-dining-hall",
 } as Record<RestaurantId, string>;
 
 export type MealPeriod = LocationResponse["data"]["Commerce_mealPeriods"][0];
