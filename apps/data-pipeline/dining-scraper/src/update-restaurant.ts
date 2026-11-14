@@ -192,7 +192,7 @@ export async function updateRestaurant(
     const dishesToUpsert = new Map<string, typeof diningDish.$inferInsert>();
     const dietRestrictionsToUpsert = new Map<string, typeof diningDietRestriction.$inferInsert>();
     const nutritionInfosToUpsert = new Map<string, typeof diningNutritionInfo.$inferInsert>();
-    const dishToPeriodRowsToUpsert = new Map<string, Set<string>>();
+    const dishToPeriodRowsToUpsert = new Map<string, Map<string, boolean>>();
     const scrapedPeriods = new Set<string>();
     let numDishToPeriodRows = 0;
 
@@ -201,7 +201,7 @@ export async function updateRestaurant(
       "dishId" | "createdAt" | "updatedAt"
     >;
     for (const {
-      fetchedDish: { dish, nutritionInfo, recipeAllergenCodes, recipePreferenceCodes },
+      fetchedDish: { dish, nutritionInfo, recipeAllergenCodes, recipePreferenceCodes, isFirst },
       periodId,
       updatedAt,
     } of dishBundlesToInsert) {
@@ -237,10 +237,10 @@ export async function updateRestaurant(
       dietRestrictionsToUpsert.set(dish.id, dietRestriction);
       nutritionInfosToUpsert.set(dish.id, { ...nutritionInfo, updatedAt });
       if (!dishToPeriodRowsToUpsert.has(periodId)) {
-        dishToPeriodRowsToUpsert.set(periodId, new Set());
+        dishToPeriodRowsToUpsert.set(periodId, new Map());
       }
       numDishToPeriodRows += 1;
-      dishToPeriodRowsToUpsert.get(periodId)?.add(dish.id);
+      dishToPeriodRowsToUpsert.get(periodId)?.set(dish.id, isFirst);
     }
 
     await db.transaction(async (tx) => {
@@ -291,10 +291,11 @@ export async function updateRestaurant(
           dishToPeriodRowsToUpsert
             .entries()
             .flatMap(([periodId, dishes]) =>
-              dishes.keys().map((dishId) => {
+              dishes.entries().map(([dishId, isFirst]) => {
                 return {
                   periodId,
                   dishId,
+                  isFirst,
                 };
               }),
             )

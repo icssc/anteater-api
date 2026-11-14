@@ -206,7 +206,8 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
       stationToDishes: z.record(
         z.string().openapi({ description: "The ID of a station." }),
         z.string().array().openapi({
-          description: "The ID(s) of the dish(es) served at this station in this period.",
+          description:
+            "The ID(s) of the dish(es) served at this station in this period. If a dish was listed first at this station (typically the entree), it comes first.",
         }),
       ),
       updatedAt: z.date(),
