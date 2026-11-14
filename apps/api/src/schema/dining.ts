@@ -209,6 +209,12 @@ export const restaurantTodayResponseSchema = restaurantSchema.extend({
           description: "The ID(s) of the dish(es) served at this station in this period.",
         }),
       ),
+      stationToFirstDish: z.record(
+        z.string().openapi({ description: "The ID of a station" }),
+        z.string().openapi({
+          description: "The ID of the dish listed first at this station in this period.",
+        }),
+      ),
       updatedAt: z.date(),
     }),
   ),

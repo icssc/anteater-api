@@ -55,6 +55,10 @@ export type FetchedDish = {
   nutritionInfo: typeof diningNutritionInfo.$inferInsert;
   recipeAllergenCodes: Set<number>;
   recipePreferenceCodes: Set<number>;
+  /**
+   * Whether this dish was listed first at its station for this meal.
+   * True for the first dish in the station's list (typically the entree); false for the rest.
+   */
   isFirst: boolean;
 };
 
