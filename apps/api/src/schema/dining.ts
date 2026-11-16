@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 export const restaurantIdSchema = z
-  .enum(["anteatery", "brandywine"])
+  .enum(["anteatery", "brandywine", "oasis"])
   .openapi({ example: "anteatery" });
 
 export const diningEventsQuerySchema = z
