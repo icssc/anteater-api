@@ -65,7 +65,7 @@ type DirectoryEntry = {
 
 type DirectoryResponse = [number, DirectoryEntry][];
 
-async function fetchDirectoryWithDelay(name: string, delayMs = 800): Promise<DirectoryResponse> {
+async function fetchDirectoryWithDelay(name: string, delayMs = 500): Promise<DirectoryResponse> {
   try {
     logger.info("Making request to UCI Directory");
     await sleep(delayMs);

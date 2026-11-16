@@ -50,8 +50,8 @@ CREATE MATERIALIZED VIEW "public"."course_view" AS (select "course"."id", "cours
             'title', "instructor"."title",
             'email', "instructor"."email",
             'department', "instructor"."department",
-            'shortenedNames', ARRAY_DISTINCT(
-              SELECT "websoc_instructor"."name"
+            'shortenedNames', ARRAY(
+              SELECT DISTINCT "websoc_instructor"."name"
               FROM "instructor_to_websoc_instructor"
               JOIN "websoc_instructor" 
               ON "instructor_to_websoc_instructor"."websoc_instructor_id" = "websoc_instructor"."id"

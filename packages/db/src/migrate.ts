@@ -7,7 +7,7 @@ import { database } from "./index.ts";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
-  const url = process.env.DB_URL;
+  const url = process.env.DB_URL || "postgres://postgres:postgres@localhost:5432/anteater_api";
   if (!url) throw new Error("Database URL not provided. Please check your .env file.");
   const db = database(url);
   await migrate(db, { migrationsFolder: join(__dirname, "../migrations") });

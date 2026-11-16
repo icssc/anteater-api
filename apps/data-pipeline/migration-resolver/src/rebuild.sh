@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Rebuilds all WebSoc-derived tables from scratch and dumps them to $OUT_DIR as JSON chunks.
-#
-# Resumable: completed steps are recorded in $PROGRESS_FILE, so re-running after a crash
-# (e.g. redeploying on Railway) skips the migration/truncation and any term already scraped.
-# Delete $PROGRESS_FILE to start over from scratch.
 set -uo pipefail
 
 : "${DB_URL:?DB_URL must be set}"
@@ -51,6 +46,9 @@ for year in $(seq "${START_YEAR:-1996}" "${END_YEAR:-$(date +%Y)}"); do
     fi
   done
 done
+
+echo "Scraping instructor data..."
+"$TSX" "$HERE/../instructor-scraper/src/index.ts" || exit 1
 
 echo "Storing all data from affected tables in $OUT_DIR..."
 
