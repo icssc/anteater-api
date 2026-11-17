@@ -417,9 +417,30 @@ export class WebsocService {
     return { schools };
   }
 
+  async buildFromSingleQuery(input: WebsocServiceInput) {
+    return this.makeSelect(
+      {
+        school: getTableColumns(websocSchool),
+        department: getTableColumns(websocDepartment),
+        course: getTableColumns(websocCourse),
+        section: getTableColumns(websocSection),
+      },
+      true,
+    )
+      .where(buildQuery(input))
+      .then((rows) => rows as JoinedRow[])
+      .then(this.transformJoinedRows);
+  }
+
   async getWebsocResponse(
     input: WebsocServiceInput,
   ): Promise<z.infer<typeof websocResponseSchema>> {
+    // compute this upper bound as eagerly as possible; if a list of section codes is provided
+    // (which it commonly is, use that immediately)
+    // NB that related courses may expand the query so we can't do this in that case
+    let sectionsUpperBound =
+      input.sectionCodes && !input.includeRelatedCourses ? input.sectionCodes.length : undefined;
+
     let matchingSectionRows: { sectionId: string }[] = [];
 
     if (input.includeRelatedCourses) {
@@ -432,36 +453,27 @@ export class WebsocService {
       matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, false)
         .rightJoin(sub, eq(websocCourse.id, sub.courseId))
         .then((rows) => rows as { sectionId: string }[]);
-    } else {
+      sectionsUpperBound = matchingSectionRows.length;
+    }
+
+    if (sectionsUpperBound === undefined) {
+      // our convenient estimates did not apply; get an upper bound (which will be true by equality)
       matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
         .where(buildQuery(input))
         .then((row) => row as { sectionId: string }[]);
+      sectionsUpperBound = matchingSectionRows.length;
     }
 
-    const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
-    if (sectionIds.length === 0) {
+    if (sectionsUpperBound === 0) {
       return { schools: [] };
-    }
-
-    if (sectionIds.length > 1000) {
+    } else if (sectionsUpperBound < 1000) {
+      // we know the query will be small enough
+      return this.buildFromSingleQuery(input);
+    } else {
       // we sometimes OOM on big (e.g. entire term) requests...
       // do multiple queries to avoid thousands of copies of dept/school object coming from sql and being gc'd too slowly
+      const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
       return this.buildFromRequeries(sectionIds);
-    } else {
-      // when set is small enough, short round-trip time is preferable for slightly higher memory
-      // and this set is small enough to never OOM
-      return this.makeSelect(
-        {
-          school: getTableColumns(websocSchool),
-          department: getTableColumns(websocDepartment),
-          course: getTableColumns(websocCourse),
-          section: getTableColumns(websocSection),
-        },
-        true,
-      )
-        .where(buildQuery(input))
-        .then((rows) => rows as JoinedRow[])
-        .then(this.transformJoinedRows);
     }
   }
 
