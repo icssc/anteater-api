@@ -436,7 +436,7 @@ export class WebsocService {
     input: WebsocServiceInput,
   ): Promise<z.infer<typeof websocResponseSchema>> {
     // compute this upper bound as eagerly as possible; if a list of section codes is provided
-    // (which it commonly is, use that immediately)
+    // (which it commonly is), use that immediately
     // NB that related courses may expand the query so we can't do this in that case
     let sectionsUpperBound =
       input.sectionCodes && !input.includeRelatedCourses ? input.sectionCodes.length : undefined;
