@@ -435,6 +435,9 @@ export class WebsocService {
   async getWebsocResponse(
     input: WebsocServiceInput,
   ): Promise<z.infer<typeof websocResponseSchema>> {
+    // compute this upper bound as eagerly as possible; if a list of section codes is provided
+    // (which it commonly is, use that immediately)
+    // NB that related courses may expand the query so we can't do this in that case
     let sectionsUpperBound =
       input.sectionCodes && !input.includeRelatedCourses ? input.sectionCodes.length : undefined;
 
@@ -454,7 +457,7 @@ export class WebsocService {
     }
 
     if (sectionsUpperBound === undefined) {
-      // don't do this query unless we really don't know the upper bound
+      // our convenient estimates did not apply; get an upper bound (which will be true by equality)
       matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
         .where(buildQuery(input))
         .then((row) => row as { sectionId: string }[]);
