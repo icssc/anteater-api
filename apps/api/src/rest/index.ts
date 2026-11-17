@@ -6,7 +6,7 @@ import { courseMaterialsRouter } from "./routes/course-materials.ts";
 import { coursesCursorRouter, coursesRouter } from "./routes/courses";
 import { diningRouter } from "./routes/dining";
 import { enrollmentHistoryRouter } from "./routes/enrollment-history";
-import { apExamsRouter, ibExamsRouter } from "./routes/exam-credits";
+import { examCreditsRouter } from "./routes/exam-credits";
 import { gradesRouter } from "./routes/grades";
 import { instructorsCursorRouter, instructorsRouter } from "./routes/instructors";
 import { larcRouter } from "./routes/larc.ts";
@@ -20,14 +20,13 @@ import { weekRouter } from "./routes/week";
 
 const restRouter = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
 
-restRouter.route("/apExams", apExamsRouter);
-restRouter.route("/ibExams", ibExamsRouter);
 restRouter.route("/calendar", calendarRouter);
 restRouter.route("/courseMaterials", courseMaterialsRouter);
 restRouter.route("/courses", coursesRouter);
 restRouter.route("/coursesCursor", coursesCursorRouter);
 restRouter.route("/dining", diningRouter);
 restRouter.route("/enrollmentHistory", enrollmentHistoryRouter);
+restRouter.route("/", examCreditsRouter);
 restRouter.route("/grades", gradesRouter);
 restRouter.route("/instructors", instructorsRouter);
 restRouter.route("/instructorsCursor", instructorsCursorRouter);

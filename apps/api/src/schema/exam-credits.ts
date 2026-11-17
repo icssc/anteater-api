@@ -31,7 +31,7 @@ export const coursesGrantedTreeSchema: z.ZodType<ExamCoursesGrantedTree> = z
 function createExamQuerySchema(
   examType: ExamType,
   fullNameExample: string,
-  catalogueNameExample: string,
+  catalogueNameExample?: string,
 ) {
   return z.object({
     fullName: z
@@ -46,7 +46,7 @@ function createExamQuerySchema(
       .optional()
       .openapi({
         description: `If provided, the catalogue name of an ${examType} Exam`,
-        example: catalogueNameExample,
+        ...(catalogueNameExample ? { example: catalogueNameExample } : {}),
       }),
   });
 }
@@ -57,7 +57,7 @@ export const apExamsQuerySchema = createExamQuerySchema(
   "AP ECONOMICS:MICRO",
 );
 
-export const ibExamsQuerySchema = createExamQuerySchema("IB", "IB Chemistry (HL)", "Chemistry");
+export const ibExamsQuerySchema = createExamQuerySchema("IB", "IB Chemistry (HL)");
 
 function createExamRewardSchema(examType: ExamType, minScore: number, maxScore: number) {
   return z.object({
@@ -101,7 +101,7 @@ export const ibExamsRewardSchema = createExamRewardSchema("IB", 5, 7);
 function createExamResponseSchema(
   examType: ExamType,
   fullNameExample: string,
-  catalogueNameExample: string,
+  catalogueNameExample: string | undefined,
   rewardSchema: ReturnType<typeof createExamRewardSchema>,
 ) {
   return z.array(
@@ -116,7 +116,7 @@ function createExamResponseSchema(
         .nullable()
         .openapi({
           description: `The name given to this ${examType} Exam in the UCI Catalogue, if available`,
-          example: catalogueNameExample,
+          ...(catalogueNameExample ? { example: catalogueNameExample } : {}),
         }),
 
       rewards: rewardSchema.array().openapi({
@@ -136,6 +136,6 @@ export const apExamsResponseSchema = createExamResponseSchema(
 export const ibExamsResponseSchema = createExamResponseSchema(
   "IB",
   "IB Chemistry (HL)",
-  "Chemistry",
+  undefined,
   ibExamsRewardSchema,
 );

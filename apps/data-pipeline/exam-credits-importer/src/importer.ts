@@ -4,11 +4,12 @@ import {
   apExam,
   apExamReward,
   apExamToReward,
+  geCategoryToColumn,
   ibExam,
   ibExamReward,
   ibExamToReward,
 } from "@packages/db/schema";
-import { conflictUpdateSetAllCols, geCategoryToColumn } from "@packages/db/utils";
+import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import { type Exam, type GECategory, geCategories } from "@packages/stdlib";
 
 type ExamType = "ap" | "ib";
@@ -56,7 +57,7 @@ export async function importExams(
         .values({ id: fullName, catalogueName })
         .onConflictDoUpdate({
           target: examTable.id,
-          set: examType === "ap" ? conflictUpdateSetAllCols(examTable) : { catalogueName },
+          set: conflictUpdateSetAllCols(examTable),
         });
 
       // Replace the existing score mappings for this exam.
@@ -68,15 +69,13 @@ export async function importExams(
           .values(rewardValues(reward))
           .returning({ id: rewardTable.id });
 
-        if (reward.acceptableScores.length > 0) {
-          await tx.insert(mappingTable).values(
-            reward.acceptableScores.map((score) => ({
-              examId: fullName,
-              score,
-              reward: created.id,
-            })),
-          );
-        }
+        await tx.insert(mappingTable).values(
+          reward.acceptableScores.map((score) => ({
+            examId: fullName,
+            score,
+            reward: created.id,
+          })),
+        );
       }
     }
 

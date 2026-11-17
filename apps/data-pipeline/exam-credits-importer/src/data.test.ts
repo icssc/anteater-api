@@ -13,6 +13,7 @@ function reward(scores: number[], units = 8, electiveUnits = 8) {
   };
 }
 
+// Prevent scores from mapping to multiple rewards.
 test("Rejects overlapping qualifying scores", () => {
   const data = {
     "IB Test": {
@@ -23,6 +24,7 @@ test("Rejects overlapping qualifying scores", () => {
   assert.equal(ibExamDataSchema.safeParse(data).success, false);
 });
 
+// Elective credit cannot exceed the total units awarded.
 test("Rejects elective units greater than total units", () => {
   const data = {
     "IB Test": {
@@ -33,6 +35,7 @@ test("Rejects elective units greater than total units", () => {
   assert.equal(ibExamDataSchema.safeParse(data).success, false);
 });
 
+// Support legacy AP exams with no rewards, like AP Computer Science AB.
 test("AP exams can have no rewards", () => {
   const data = {
     "AP Test": {

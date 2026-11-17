@@ -30,15 +30,19 @@ type ExamRouteConfig = {
   ) => ReturnType<APExamsService["getAPExams"]>;
 };
 
-function createExamRouter(config: ExamRouteConfig) {
-  const router = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+const examCreditsRouter = new OpenAPIHono<{ Bindings: Env }>({
+  defaultHook,
+});
+
+function registerExamRoute(config: ExamRouteConfig) {
+  const path = config.examType === "AP" ? "/apExams" : "/ibExams";
 
   const route = createRoute({
     summary: `Retrieve ${config.examType} Exam names and rewards`,
     operationId: config.examType === "AP" ? "apExams" : "ibExams",
     tags: [`${config.examType} Exams`],
     method: "get",
-    path: "/",
+    path,
     description: config.description,
     request: { query: config.querySchema },
     responses: {
@@ -48,15 +52,16 @@ function createExamRouter(config: ExamRouteConfig) {
     },
   });
 
-  router.get(
-    "*",
+  // Cache only exam routes
+  examCreditsRouter.get(
+    path,
     productionCache({
       cacheName: "anteater-api",
       cacheControl: "max-age=86400",
     }),
   );
 
-  router.openapi(route, async (c) => {
+  examCreditsRouter.openapi(route, async (c) => {
     const query = c.req.valid("query");
     const db = database(c.env.DB.connectionString);
     const exams = await config.getExams(db, query);
@@ -71,11 +76,9 @@ function createExamRouter(config: ExamRouteConfig) {
           404,
         );
   });
-
-  return router;
 }
 
-export const apExamsRouter = createExamRouter({
+registerExamRoute({
   examType: "AP",
   querySchema: apExamsQuerySchema,
   responseSchema: apExamsResponseSchema,
@@ -84,7 +87,7 @@ export const apExamsRouter = createExamRouter({
   getExams: (db, query) => new APExamsService(db).getAPExams(query),
 });
 
-export const ibExamsRouter = createExamRouter({
+registerExamRoute({
   examType: "IB",
   querySchema: ibExamsQuerySchema,
   responseSchema: ibExamsResponseSchema,
@@ -93,5 +96,6 @@ export const ibExamsRouter = createExamRouter({
   getExams: (db, query) => new IBExamsService(db).getIBExams(query),
 });
 
-// Register the shared recursive schema once.
-apExamsRouter.openAPIRegistry.register("coursesGrantedTree", coursesGrantedTreeSchema);
+examCreditsRouter.openAPIRegistry.register("coursesGrantedTree", coursesGrantedTreeSchema);
+
+export { examCreditsRouter };

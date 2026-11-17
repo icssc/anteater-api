@@ -4,11 +4,11 @@ import {
   apExam,
   apExamReward,
   apExamToReward,
+  geCategoryToColumn,
   ibExam,
   ibExamReward,
   ibExamToReward,
 } from "@packages/db/schema";
-import { geCategoryToColumn } from "@packages/db/utils";
 import { type ExamCoursesGrantedTree, type GECategory, geCategories } from "@packages/stdlib";
 
 type ExamQuery = {
