@@ -617,7 +617,7 @@ const doChunkUpsert = async (
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }
-    //Clear old meeting-location links for sections in the current batch.
+    // Clear old meeting-location links for sections in the current batch.
     const sectionIds = sections.values().toArray();
     const previousMeetingIds = tx
       .select({ id: websocSectionMeeting.id })
