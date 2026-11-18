@@ -3,13 +3,8 @@ import { dirname } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
-import { desc, eq, inArray, or } from "@packages/db/drizzle";
-import type {
-  ClassLevel,
-  CoursePrerequisite,
-  Prerequisite,
-  PrerequisiteTree,
-} from "@packages/db/schema";
+import { desc, eq, inArray } from "@packages/db/drizzle";
+import type { ClassLevel, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
 import {
   course,
   courseView,
@@ -25,6 +20,7 @@ import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
 import winston from "winston";
+import { patchEquivalentCourses, prereqTreeToList } from "./prereq-tree";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -600,21 +596,6 @@ function parseRepeatability(
   };
 }
 
-const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
-
-// Standing/affiliation prerequisites don't belong in the prerequisite
-// junction table, so they are excluded from the resulting list.
-function prereqTreeToList(tree: PrerequisiteTree): string[] {
-  const children = tree.AND ?? tree.OR ?? [];
-
-  return children.flatMap((x) => {
-    if (!isPrereq(x)) return prereqTreeToList(x);
-    if (x.prereqType === "standing" || x.prereqType === "affiliation") return [];
-
-    return [x.prereqType === "course" ? x.courseId.replaceAll(" ", "") : x.examName];
-  });
-}
-
 // check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parentheses balances out, otherwise the text is definitely truncated.
 // ( ANTHRO 2A ( min grade = D- ) OR PSYCH 7A ( min grade = D- ) OR COGS 7A ( min grade = D- ) OR PSY BEH 9 ( min grade = D- ) OR
 function isBalancedPrereqText(prereqList: string): boolean {
@@ -800,74 +781,9 @@ async function scrapeCoursesInDepartment(meta: {
   logger.info(`Finished scraping courses for ${deptCode}`);
 }
 
-const isCoursePrereqWithId =
-  (id: string) =>
-  (x: Prerequisite | PrerequisiteTree): x is CoursePrerequisite =>
-    isPrereq(x) && x.prereqType === "course" && x.courseId === id;
-
-/**
- * The renaming of I&C SCI 32A to I&C SCI H32 is, as of the 2024-25 academic year, not internally consistent.
- * Some courses that require 32A have been modified to require H32 only, while others still require 32A only.
- * This shim finds all courses that require 32A or H32 (but not both),
- * and adds the other course to the appropriate subtree of the course's prerequisite tree.
- * Since 32A appears only in OR-clauses of courses' prereq trees, this should be a simple change.
- */
-async function patchH32(meta: { db: ReturnType<typeof database> }) {
-  const { db } = meta;
-  const courses = await db
-    .select({ id: course.id, prerequisiteTree: course.prerequisiteTree })
-    .from(prerequisite)
-    .innerJoin(course, eq(course.id, prerequisite.dependencyId))
-    .where(
-      or(
-        eq(prerequisite.prerequisiteId, "I&CSCI32A"),
-        eq(prerequisite.prerequisiteId, "I&CSCIH32"),
-      ),
-    )
-    .then((x) => new Map(x.map(({ id, prerequisiteTree }) => [id, prerequisiteTree])));
-  for (const [id, prerequisiteTree] of courses) {
-    const newPrereqTree = JSON.parse(JSON.stringify(prerequisiteTree)) as PrerequisiteTree;
-    // pathological case; these courses should all have non-empty prerequisite trees
-    if (!newPrereqTree.AND) continue;
-    // Prereq tree is an AND of one OR, so 32A/H32 must be in this block
-    if (newPrereqTree.AND.length === 1) {
-      const orNode = newPrereqTree.AND[0] as PrerequisiteTree;
-      const node32A = orNode.OR?.find(isCoursePrereqWithId("I&C SCI 32A"));
-      const nodeH32 = orNode.OR?.find(isCoursePrereqWithId("I&C SCI H32"));
-      // if both exist then don't do anything
-      if (!node32A || !nodeH32) {
-        const originalNode = (node32A ?? nodeH32) as CoursePrerequisite;
-        (newPrereqTree.AND[0] as PrerequisiteTree).OR?.push({
-          ...originalNode,
-          courseId: originalNode.courseId === "I&C SCI 32A" ? "I&C SCI H32" : "I&C SCI 32A",
-        });
-      }
-    } else {
-      const orNodeIndex = newPrereqTree.AND.findIndex(
-        (x) =>
-          !isPrereq(x) &&
-          x.OR?.some(
-            (y) =>
-              isPrereq(y) &&
-              y.prereqType === "course" &&
-              (y.courseId === "I&C SCI 32A" || y.courseId === "I&C SCI H32"),
-          ),
-      );
-      const orNode = newPrereqTree.AND[orNodeIndex] as PrerequisiteTree;
-      const node32A = orNode.OR?.find(isCoursePrereqWithId("I&C SCI 32A"));
-      const nodeH32 = orNode.OR?.find(isCoursePrereqWithId("I&C SCI H32"));
-      // if both exist then don't do anything
-      if (!node32A || !nodeH32) {
-        const originalNode = (node32A ?? nodeH32) as CoursePrerequisite;
-        (newPrereqTree.AND[orNodeIndex] as PrerequisiteTree).OR?.push({
-          ...originalNode,
-          courseId: originalNode.courseId === "I&C SCI 32A" ? "I&C SCI H32" : "I&C SCI 32A",
-        });
-      }
-    }
-    await db.update(course).set({ prerequisiteTree: newPrereqTree }).where(eq(course.id, id));
-  }
-}
+// Renamed courses that should satisfy each other in any prerequisite tree.
+// I&C SCI 32A became I&C SCI H32 in 2024-25.
+const EQUIVALENT_COURSES = [["I&C SCI 32A", "I&C SCI H32"]];
 
 async function main() {
   const url = process.env.DB_URL;
@@ -926,8 +842,10 @@ async function main() {
       prereqs: prerequisites.get(deptCode),
     });
   }
-  logger.info("Running I&C SCI 32A/H32 shim...");
-  await patchH32({ db });
+  for (const courseIds of EQUIVALENT_COURSES) {
+    logger.info(`Running ${courseIds.join("/")} shim...`);
+    await patchEquivalentCourses({ db, courseIds });
+  }
   await db.refreshMaterializedView(courseView);
 
   logger.info("All done!");
