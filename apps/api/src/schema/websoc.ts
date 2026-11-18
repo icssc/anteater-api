@@ -2,6 +2,7 @@ import { z } from "@hono/zod-openapi";
 import type { FinalExamStatus } from "@packages/db/schema";
 import { courseLevels, terms, websocSectionTypes, websocStatuses } from "@packages/db/schema";
 import { isBaseTenInt } from "@packages/stdlib";
+import { aggregateGradeByCourseSchema, aggregateGradeByOfferingSchema } from "./grades";
 import { courseNumberSchema, daysSchema, timeSchema, yearSchema } from "./lib";
 
 const anyArray = ["ANY"] as const;
@@ -210,6 +211,11 @@ export const websocQuerySchema = z.object({
       description:
         "Returns all sections from courses that contain at least one section matching your filters, even if those additional sections don't meet your existing filter criteria.",
     }),
+  includeGradesOfferingsLimit: z.coerce.number().int().nonnegative().max(100).optional().openapi({
+    description:
+      "Include historical course and instructor grades for the first N returned sections, rounding up to include the entire last course. Omit or set to 0 to skip grades.",
+    example: 11,
+  }),
 });
 
 export const hourMinuteSchema = z.object({
@@ -262,6 +268,30 @@ export const websocSectionSchema = z.object({
   finalExam: websocSectionFinalExamSchema,
   sectionNum: z.string(),
   instructors: z.string().array(),
+  gradesByInstructor: z
+    .record(z.string(), aggregateGradeByOfferingSchema.nullable())
+    .optional()
+    .openapi({
+      description:
+        "Historical grade totals and GPA by section instructor. Null indicates no grades.",
+      example: {
+        "WONG-MA, J.": {
+          department: "I&C SCI",
+          courseNumber: "31",
+          instructor: "WONG-MA, J.",
+          gradeACount: 55,
+          gradeBCount: 24,
+          gradeCCount: 9,
+          gradeDCount: 2,
+          gradeFCount: 1,
+          gradePCount: 3,
+          gradeNPCount: 0,
+          gradeWCount: 1,
+          averageGPA: 3.41,
+        },
+        STAFF: null,
+      },
+    }),
   maxCapacity: z.string(),
   sectionCode: z.string(),
   sectionType: z.enum(websocSectionTypes),
@@ -288,6 +318,9 @@ export const websocSectionSchema = z.object({
 
 export const websocCourseSchema = z.object({
   sections: websocSectionSchema.array(),
+  gradeDistribution: aggregateGradeByCourseSchema.nullable().optional().openapi({
+    description: "Historical grade totals and GPA for the course across all instructors and terms.",
+  }),
   deptCode: z.string(),
   courseTitle: z.string(),
   courseNumber: z.string(),
