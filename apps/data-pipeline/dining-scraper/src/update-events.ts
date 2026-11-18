@@ -61,7 +61,7 @@ const aemEventListSchema = z.object({
   }),
 });
 
-export type AEMEventListQueryRestaurant = "The Anteatery" | "Brandywine";
+export type AEMEventListQueryRestaurant = "The Anteatery" | "Brandywine" | "The Oasis";
 
 /**
  * Fetches list of events for a given location
@@ -99,6 +99,7 @@ async function getAEMEvents(
     {
       "The Anteatery": "anteatery",
       Brandywine: "brandywine",
+      "The Oasis": "oasis",
     } as const
   )[location];
 
@@ -125,12 +126,13 @@ async function getAEMEvents(
  */
 export async function updateEvents(db: ReturnType<typeof database>): Promise<void> {
   try {
-    const [brandywineEvents, anteateryEvents] = [
+    const [brandywineEvents, anteateryEvents, oasisEvents] = [
       await getAEMEvents("Brandywine"),
       await getAEMEvents("The Anteatery"),
+      await getAEMEvents("The Oasis"),
     ];
 
-    const allEvents = [...brandywineEvents, ...anteateryEvents];
+    const allEvents = [...brandywineEvents, ...anteateryEvents, ...oasisEvents];
     const eventImages = await fetchEventImages();
 
     console.log(`Found images for events ${Array.from(eventImages.keys()).join(", ")}`);

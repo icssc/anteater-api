@@ -84,7 +84,7 @@ export const specializationRequirementsQuerySchema = z.object({
   catalogYear: catalogYearInputSchema,
 });
 
-export const UgradRequirementsBlockIds = ["UC", "GE", "CHC4", "CHC2"] as const;
+export const UgradRequirementsBlockIds = ["UC", "GE", "CHC2", "CHC4"] as const;
 
 export const ugradRequirementsQuerySchema = z.object({
   id: z.enum(UgradRequirementsBlockIds).openapi({ description: "The requirements block to fetch" }),
