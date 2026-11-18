@@ -137,6 +137,7 @@ export const diningDishToPeriod = pgTable(
     dishId: varchar("dish_id")
       .notNull()
       .references(() => diningDish.id),
+    isFirst: boolean("is_first").notNull().default(false),
   },
   (table) => [
     {

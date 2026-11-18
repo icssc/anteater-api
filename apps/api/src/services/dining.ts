@@ -233,7 +233,7 @@ export class DiningService {
         },
         dishes: sql<
           (typeof diningDish.$inferSelect.id)[]
-        >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id}), NULL)`,
+        >`ARRAY_REMOVE(ARRAY_AGG(${diningDish.id} ORDER BY ${diningDishToPeriod.isFirst} DESC), NULL)`,
       })
       .from(diningRestaurant)
       .innerJoin(diningPeriod, eq(diningRestaurant.id, diningPeriod.restaurantId))
