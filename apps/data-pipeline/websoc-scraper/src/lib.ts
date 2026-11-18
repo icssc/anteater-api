@@ -617,9 +617,20 @@ const doChunkUpsert = async (
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }
+    //Clear old meeting-location links for sections in the current batch.
+    const sectionIds = sections.values().toArray();
+    const previousMeetingIds = tx
+      .select({ id: websocSectionMeeting.id })
+      .from(websocSectionMeeting)
+      .where(inArray(websocSectionMeeting.sectionId, sectionIds));
+
+    await tx
+      .delete(websocSectionMeetingToLocation)
+      .where(inArray(websocSectionMeetingToLocation.meetingId, previousMeetingIds));
+
     await tx
       .delete(websocSectionMeeting)
-      .where(inArray(websocSectionMeeting.sectionId, sections.values().toArray()));
+      .where(inArray(websocSectionMeeting.sectionId, sectionIds));
     const meetings = await tx
       .insert(websocSectionMeeting)
       .values(
