@@ -834,11 +834,7 @@ function addEquivalentCourses(tree: PrerequisiteTree, courseIds: string[]): Prer
   return result;
 }
 
-async function patchEquivalentCourses(meta: {
-  db: ReturnType<typeof database>;
-  courseIds: string[];
-}) {
-  const { db, courseIds } = meta;
+async function patchEquivalentCourses(db: ReturnType<typeof database>, courseIds: string[]) {
   const prerequisiteIds = courseIds.map((id) => id.replaceAll(" ", ""));
   const courses = await db
     .select({
@@ -868,11 +864,6 @@ async function patchEquivalentCourses(meta: {
     }
   });
 }
-
-const EQUIVALENT_COURSES = [
-  ["I&C SCI 32A", "I&C SCI H32"],
-  ["IN4MATX 43", "SWE 43"],
-];
 
 async function main() {
   const url = process.env.DB_URL;
@@ -931,10 +922,10 @@ async function main() {
       prereqs: prerequisites.get(deptCode),
     });
   }
-  for (const courseIds of EQUIVALENT_COURSES) {
-    logger.info(`Running ${courseIds.join("/")} shim...`);
-    await patchEquivalentCourses({ db, courseIds });
-  }
+  logger.info("Running I&C SCI 32A/H32 shim...");
+  await patchEquivalentCourses(db, ["I&C SCI 32A", "I&C SCI H32"]);
+  logger.info("Running IN4MATX 43/SWE 43 shim...");
+  await patchEquivalentCourses(db, ["IN4MATX 43", "SWE 43"]);
   await db.refreshMaterializedView(courseView);
 
   logger.info("All done!");
