@@ -806,24 +806,24 @@ const isCoursePrereqIn =
     isPrereq(x) && x.prereqType === "course" && courseIds.includes(x.courseId);
 
 function addEquivalentCourses(tree: PrerequisiteTree, courseIds: string[]): PrerequisiteTree {
-  const isEquivalent = isCoursePrereqIn(courseIds);
-  const recurse = (x: Prerequisite | PrerequisiteTree) =>
+  const isTargetCourse = isCoursePrereqIn(courseIds);
+  const expandChild = (x: Prerequisite | PrerequisiteTree) =>
     isPrereq(x) ? x : addEquivalentCourses(x, courseIds);
   const result = { ...tree };
 
   if (tree.AND) {
     result.AND = tree.AND.map((x) =>
-      isEquivalent(x)
+      isTargetCourse(x)
         ? { OR: courseIds.map((id) => (id === x.courseId ? x : { ...x, courseId: id })) }
-        : recurse(x),
+        : expandChild(x),
     );
   }
 
   if (tree.OR) {
-    const children = tree.OR.map(recurse);
-    for (const x of children.filter(isEquivalent)) {
+    const children = tree.OR.map(expandChild);
+    for (const x of children.filter(isTargetCourse)) {
       for (const id of courseIds) {
-        if (!children.some((y) => isEquivalent(y) && y.courseId === id && y.coreq === x.coreq)) {
+        if (!children.some((y) => isTargetCourse(y) && y.courseId === id && y.coreq === x.coreq)) {
           children.push({ ...x, courseId: id });
         }
       }
