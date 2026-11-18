@@ -837,18 +837,17 @@ function addEquivalentCourses(tree: PrerequisiteTree, courseIds: string[]): Prer
 async function patchEquivalentCourses(db: ReturnType<typeof database>, courseIds: string[]) {
   const prerequisiteIds = courseIds.map((id) => id.replaceAll(" ", ""));
   const courses = await db
-    .select({
+    .selectDistinctOn([course.id], {
       id: course.id,
       prerequisiteTree: course.prerequisiteTree,
       dependencyDept: prerequisite.dependencyDept,
     })
     .from(prerequisite)
     .innerJoin(course, eq(course.id, prerequisite.dependencyId))
-    .where(inArray(prerequisite.prerequisiteId, prerequisiteIds))
-    .then((x) => new Map(x.map((row) => [row.id, row])));
+    .where(inArray(prerequisite.prerequisiteId, prerequisiteIds));
 
   await db.transaction(async (tx) => {
-    for (const { id, prerequisiteTree, dependencyDept } of courses.values()) {
+    for (const { id, prerequisiteTree, dependencyDept } of courses) {
       const newPrereqTree = addEquivalentCourses(prerequisiteTree, courseIds);
       if (JSON.stringify(newPrereqTree) !== JSON.stringify(prerequisiteTree)) {
         await tx.update(course).set({ prerequisiteTree: newPrereqTree }).where(eq(course.id, id));
