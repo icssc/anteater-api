@@ -107,6 +107,8 @@ type Specialization implements Program @cacheControl(maxAge: 86400) {
 enum UgradRequirementsBlockId {
     UC
     GE
+    CHC2
+    CHC4
 }
 
 type UgradRequirements @cacheControl(maxAge: 86400) {
