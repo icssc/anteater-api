@@ -4,7 +4,12 @@ import { exit } from "node:process";
 import { fileURLToPath } from "node:url";
 import { database } from "@packages/db";
 import { desc, eq, inArray } from "@packages/db/drizzle";
-import type { ClassLevel, Prerequisite, PrerequisiteTree } from "@packages/db/schema";
+import type {
+  ClassLevel,
+  CoursePrerequisite,
+  Prerequisite,
+  PrerequisiteTree,
+} from "@packages/db/schema";
 import {
   course,
   courseView,
@@ -20,7 +25,6 @@ import { diffString } from "json-diff";
 import readlineSync from "readline-sync";
 import sortKeys from "sort-keys";
 import winston from "winston";
-import { patchEquivalentCourses, prereqTreeToList } from "./prereq-tree";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -596,6 +600,21 @@ function parseRepeatability(
   };
 }
 
+const isPrereq = (x: Prerequisite | PrerequisiteTree): x is Prerequisite => "prereqType" in x;
+
+// Standing/affiliation prerequisites don't belong in the prerequisite
+// junction table, so they are excluded from the resulting list.
+function prereqTreeToList(tree: PrerequisiteTree): string[] {
+  const children = tree.AND ?? tree.OR ?? [];
+
+  return children.flatMap((x) => {
+    if (!isPrereq(x)) return prereqTreeToList(x);
+    if (x.prereqType === "standing" || x.prereqType === "affiliation") return [];
+
+    return [x.prereqType === "course" ? x.courseId.replaceAll(" ", "") : x.examName];
+  });
+}
+
 // check for cliff-hanging source text like for PSYCH 173A. ensure open and closed parentheses balances out, otherwise the text is definitely truncated.
 // ( ANTHRO 2A ( min grade = D- ) OR PSYCH 7A ( min grade = D- ) OR COGS 7A ( min grade = D- ) OR PSY BEH 9 ( min grade = D- ) OR
 function isBalancedPrereqText(prereqList: string): boolean {
@@ -781,8 +800,75 @@ async function scrapeCoursesInDepartment(meta: {
   logger.info(`Finished scraping courses for ${deptCode}`);
 }
 
-// Renamed courses that should satisfy each other in any prerequisite tree.
-// I&C SCI 32A became I&C SCI H32 in 2024-25; IN4MATX 43 became SWE 43 in 2026-27.
+const isCoursePrereqIn =
+  (courseIds: string[]) =>
+  (x: Prerequisite | PrerequisiteTree): x is CoursePrerequisite =>
+    isPrereq(x) && x.prereqType === "course" && courseIds.includes(x.courseId);
+
+function addEquivalentCourses(tree: PrerequisiteTree, courseIds: string[]): PrerequisiteTree {
+  const isEquivalent = isCoursePrereqIn(courseIds);
+  const recurse = (x: Prerequisite | PrerequisiteTree) =>
+    isPrereq(x) ? x : addEquivalentCourses(x, courseIds);
+  const result = { ...tree };
+
+  if (tree.AND) {
+    result.AND = tree.AND.map((x) =>
+      isEquivalent(x)
+        ? { OR: courseIds.map((id) => (id === x.courseId ? x : { ...x, courseId: id })) }
+        : recurse(x),
+    );
+  }
+
+  if (tree.OR) {
+    const children = tree.OR.map(recurse);
+    for (const x of children.filter(isEquivalent)) {
+      for (const id of courseIds) {
+        if (!children.some((y) => isEquivalent(y) && y.courseId === id && y.coreq === x.coreq)) {
+          children.push({ ...x, courseId: id });
+        }
+      }
+    }
+    result.OR = children;
+  }
+
+  return result;
+}
+
+async function patchEquivalentCourses(meta: {
+  db: ReturnType<typeof database>;
+  courseIds: string[];
+}) {
+  const { db, courseIds } = meta;
+  const prerequisiteIds = courseIds.map((id) => id.replaceAll(" ", ""));
+  const courses = await db
+    .select({
+      id: course.id,
+      prerequisiteTree: course.prerequisiteTree,
+      dependencyDept: prerequisite.dependencyDept,
+    })
+    .from(prerequisite)
+    .innerJoin(course, eq(course.id, prerequisite.dependencyId))
+    .where(inArray(prerequisite.prerequisiteId, prerequisiteIds))
+    .then((x) => new Map(x.map((row) => [row.id, row])));
+
+  await db.transaction(async (tx) => {
+    for (const { id, prerequisiteTree, dependencyDept } of courses.values()) {
+      const newPrereqTree = addEquivalentCourses(prerequisiteTree, courseIds);
+      if (JSON.stringify(newPrereqTree) !== JSON.stringify(prerequisiteTree)) {
+        await tx.update(course).set({ prerequisiteTree: newPrereqTree }).where(eq(course.id, id));
+      }
+
+      const prereqList = prereqTreeToList(newPrereqTree);
+      const prereqRows = prerequisiteIds
+        .filter((p) => prereqList.includes(p))
+        .map((p) => ({ prerequisiteId: p, dependencyId: id, dependencyDept }));
+      if (prereqRows.length) {
+        await tx.insert(prerequisite).values(prereqRows).onConflictDoNothing();
+      }
+    }
+  });
+}
+
 const EQUIVALENT_COURSES = [
   ["I&C SCI 32A", "I&C SCI H32"],
   ["IN4MATX 43", "SWE 43"],
