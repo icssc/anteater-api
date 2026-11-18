@@ -782,8 +782,11 @@ async function scrapeCoursesInDepartment(meta: {
 }
 
 // Renamed courses that should satisfy each other in any prerequisite tree.
-// I&C SCI 32A became I&C SCI H32 in 2024-25.
-const EQUIVALENT_COURSES = [["I&C SCI 32A", "I&C SCI H32"]];
+// I&C SCI 32A became I&C SCI H32 in 2024-25; IN4MATX 43 became SWE 43 in 2026-27.
+const EQUIVALENT_COURSES = [
+  ["I&C SCI 32A", "I&C SCI H32"],
+  ["IN4MATX 43", "SWE 43"],
+];
 
 async function main() {
   const url = process.env.DB_URL;
