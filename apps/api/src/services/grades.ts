@@ -1,6 +1,8 @@
 import type { database } from "@packages/db";
 import { and, avg, eq, gt, inArray, or, sql, sum } from "@packages/db/drizzle";
 import {
+  gradesByCourseInstructorView,
+  gradesByCourseView,
   websocCourse,
   websocSection,
   websocSectionGrade,
@@ -12,6 +14,35 @@ import type { aggregateGradesSchema, gradesQuerySchema, rawGradeSchema } from "$
 import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
+
+export const gradeCourseSelection = {
+  department: gradesByCourseView.deptCode,
+  courseNumber: gradesByCourseView.courseNumber,
+  gradeACount: gradesByCourseView.gradeACount,
+  gradeBCount: gradesByCourseView.gradeBCount,
+  gradeCCount: gradesByCourseView.gradeCCount,
+  gradeDCount: gradesByCourseView.gradeDCount,
+  gradeFCount: gradesByCourseView.gradeFCount,
+  gradePCount: gradesByCourseView.gradePCount,
+  gradeNPCount: gradesByCourseView.gradeNPCount,
+  gradeWCount: gradesByCourseView.gradeWCount,
+  averageGPA: gradesByCourseView.averageGPA,
+};
+
+export const gradeOfferingSelection = {
+  department: gradesByCourseInstructorView.deptCode,
+  courseNumber: gradesByCourseInstructorView.courseNumber,
+  gradeACount: gradesByCourseInstructorView.gradeACount,
+  gradeBCount: gradesByCourseInstructorView.gradeBCount,
+  gradeCCount: gradesByCourseInstructorView.gradeCCount,
+  gradeDCount: gradesByCourseInstructorView.gradeDCount,
+  gradeFCount: gradesByCourseInstructorView.gradeFCount,
+  gradePCount: gradesByCourseInstructorView.gradePCount,
+  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
+  gradeWCount: gradesByCourseInstructorView.gradeWCount,
+  averageGPA: gradesByCourseInstructorView.averageGPA,
+  instructor: gradesByCourseInstructorView.instructorName,
+};
 
 function buildQuery(input: GradesServiceInput) {
   const conditions = [];
@@ -256,6 +287,19 @@ export class GradesService {
   }
 
   async getAggregateGradesByCourse(input: GradesServiceInput) {
+    const { department, courseNumber, ...sectionFilters } = input;
+    if (!Object.values(sectionFilters).some(Boolean)) {
+      return this.db
+        .select(gradeCourseSelection)
+        .from(gradesByCourseView)
+        .where(
+          and(
+            department ? eq(gradesByCourseView.deptCode, department) : undefined,
+            courseNumber ? eq(gradesByCourseView.courseNumber, courseNumber) : undefined,
+          ),
+        );
+    }
+
     return this.db
       .select({
         department: websocCourse.deptCode,
@@ -282,6 +326,21 @@ export class GradesService {
   }
 
   async getAggregateGradesByOffering(input: GradesServiceInput) {
+    const { department, courseNumber, instructor, ...sectionFilters } = input;
+    // The summary covers all-time results for named instructors. Unmapped sections appear as STAFF.
+    if (instructor && !Object.values(sectionFilters).some(Boolean)) {
+      return this.db
+        .select(gradeOfferingSelection)
+        .from(gradesByCourseInstructorView)
+        .where(
+          and(
+            eq(gradesByCourseInstructorView.instructorName, instructor),
+            department ? eq(gradesByCourseInstructorView.deptCode, department) : undefined,
+            courseNumber ? eq(gradesByCourseInstructorView.courseNumber, courseNumber) : undefined,
+          ),
+        );
+    }
+
     return this.db
       .select({
         department: websocCourse.deptCode,
