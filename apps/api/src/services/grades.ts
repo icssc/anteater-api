@@ -310,7 +310,6 @@ export class GradesService {
 
   async getAggregateGradesByOffering(input: GradesServiceInput) {
     const { department, courseNumber, instructor, ...sectionFilters } = input;
-    // The summary covers all-time results for named instructors. Unmapped sections appear as STAFF.
     if (instructor && !Object.values(sectionFilters).some(Boolean)) {
       return this.db
         .select({
