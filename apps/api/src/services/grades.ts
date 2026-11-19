@@ -15,19 +15,37 @@ import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
-const GRADES_COURSE_INSTRUCTOR_SELECTION = {
-  department: gradesByCourseInstructorView.deptCode,
-  courseNumber: gradesByCourseInstructorView.courseNumber,
-  gradeACount: gradesByCourseInstructorView.gradeACount,
-  gradeBCount: gradesByCourseInstructorView.gradeBCount,
-  gradeCCount: gradesByCourseInstructorView.gradeCCount,
-  gradeDCount: gradesByCourseInstructorView.gradeDCount,
-  gradeFCount: gradesByCourseInstructorView.gradeFCount,
-  gradePCount: gradesByCourseInstructorView.gradePCount,
-  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
-  gradeWCount: gradesByCourseInstructorView.gradeWCount,
-  averageGPA: gradesByCourseInstructorView.averageGPA,
-};
+function gradesSelection(
+  selectable:
+    | typeof gradesByCourseInstructorView
+    | typeof gradesByCourseView
+    | typeof websocSectionGrade,
+  aggregate: boolean,
+) {
+  return !aggregate
+    ? {
+        gradeACount: selectable.gradeACount,
+        gradeBCount: selectable.gradeBCount,
+        gradeCCount: selectable.gradeCCount,
+        gradeDCount: selectable.gradeDCount,
+        gradeFCount: selectable.gradeFCount,
+        gradePCount: selectable.gradePCount,
+        gradeNPCount: selectable.gradeNPCount,
+        gradeWCount: selectable.gradeWCount,
+        averageGPA: selectable.averageGPA,
+      }
+    : {
+        gradeACount: sum(selectable.gradeACount).mapWith(Number),
+        gradeBCount: sum(selectable.gradeBCount).mapWith(Number),
+        gradeCCount: sum(selectable.gradeCCount).mapWith(Number),
+        gradeDCount: sum(selectable.gradeDCount).mapWith(Number),
+        gradeFCount: sum(selectable.gradeFCount).mapWith(Number),
+        gradePCount: sum(selectable.gradePCount).mapWith(Number),
+        gradeNPCount: sum(selectable.gradeNPCount).mapWith(Number),
+        gradeWCount: sum(selectable.gradeWCount).mapWith(Number),
+        averageGPA: avg(selectable.averageGPA).mapWith(Number),
+      };
+}
 
 function buildQuery(input: GradesServiceInput) {
   const conditions = [];
@@ -88,15 +106,7 @@ export class GradesService {
         isGE6: websocCourse.isGE6,
         isGE7: websocCourse.isGE7,
         isGE8: websocCourse.isGE8,
-        gradeACount: websocSectionGrade.gradeACount,
-        gradeBCount: websocSectionGrade.gradeBCount,
-        gradeCCount: websocSectionGrade.gradeCCount,
-        gradeDCount: websocSectionGrade.gradeDCount,
-        gradeFCount: websocSectionGrade.gradeFCount,
-        gradePCount: websocSectionGrade.gradePCount,
-        gradeNPCount: websocSectionGrade.gradeNPCount,
-        gradeWCount: websocSectionGrade.gradeWCount,
-        averageGPA: websocSectionGrade.averageGPA,
+        ...gradesSelection(websocSectionGrade, false),
         instructors: websocSection.instructors,
       })
       .from(websocCourse)
@@ -276,7 +286,11 @@ export class GradesService {
     if (!Object.values(sectionFilters).some(Boolean)) {
       if (sectionFilters.instructor) {
         return this.db
-          .select(GRADES_COURSE_INSTRUCTOR_SELECTION)
+          .select({
+            department: gradesByCourseView.deptCode,
+            courseNumber: gradesByCourseView.courseNumber,
+            ...gradesSelection(gradesByCourseView, false),
+          })
           .from(gradesByCourseInstructorView)
           .where(
             and(
@@ -292,15 +306,7 @@ export class GradesService {
           .select({
             department: gradesByCourseView.deptCode,
             courseNumber: gradesByCourseView.courseNumber,
-            gradeACount: gradesByCourseView.gradeACount,
-            gradeBCount: gradesByCourseView.gradeBCount,
-            gradeCCount: gradesByCourseView.gradeCCount,
-            gradeDCount: gradesByCourseView.gradeDCount,
-            gradeFCount: gradesByCourseView.gradeFCount,
-            gradePCount: gradesByCourseView.gradePCount,
-            gradeNPCount: gradesByCourseView.gradeNPCount,
-            gradeWCount: gradesByCourseView.gradeWCount,
-            averageGPA: gradesByCourseView.averageGPA,
+            ...gradesSelection(gradesByCourseView, false),
           })
           .from(gradesByCourseView)
           .where(
@@ -316,15 +322,7 @@ export class GradesService {
       .select({
         department: websocCourse.deptCode,
         courseNumber: websocCourse.courseNumber,
-        gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
-        gradeBCount: sum(websocSectionGrade.gradeBCount).mapWith(Number),
-        gradeCCount: sum(websocSectionGrade.gradeCCount).mapWith(Number),
-        gradeDCount: sum(websocSectionGrade.gradeDCount).mapWith(Number),
-        gradeFCount: sum(websocSectionGrade.gradeFCount).mapWith(Number),
-        gradePCount: sum(websocSectionGrade.gradePCount).mapWith(Number),
-        gradeNPCount: sum(websocSectionGrade.gradeNPCount).mapWith(Number),
-        gradeWCount: sum(websocSectionGrade.gradeWCount).mapWith(Number),
-        averageGPA: avg(websocSectionGrade.averageGPA).mapWith(Number),
+        ...gradesSelection(websocSectionGrade, true),
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
@@ -342,7 +340,9 @@ export class GradesService {
     if (instructor && !Object.values(sectionFilters).some(Boolean)) {
       return this.db
         .select({
-          ...GRADES_COURSE_INSTRUCTOR_SELECTION,
+          department: gradesByCourseInstructorView.deptCode,
+          courseNumber: gradesByCourseInstructorView.courseNumber,
+          ...gradesSelection(gradesByCourseInstructorView, false),
           instructor: gradesByCourseInstructorView.instructorName,
         })
         .from(gradesByCourseInstructorView)
@@ -363,15 +363,7 @@ export class GradesService {
                 ${websocSectionToInstructor.instructorName},
                 'STAFF'
                 )`,
-        gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
-        gradeBCount: sum(websocSectionGrade.gradeBCount).mapWith(Number),
-        gradeCCount: sum(websocSectionGrade.gradeCCount).mapWith(Number),
-        gradeDCount: sum(websocSectionGrade.gradeDCount).mapWith(Number),
-        gradeFCount: sum(websocSectionGrade.gradeFCount).mapWith(Number),
-        gradePCount: sum(websocSectionGrade.gradePCount).mapWith(Number),
-        gradeNPCount: sum(websocSectionGrade.gradeNPCount).mapWith(Number),
-        gradeWCount: sum(websocSectionGrade.gradeWCount).mapWith(Number),
-        averageGPA: avg(websocSectionGrade.averageGPA).mapWith(Number),
+        ...gradesSelection(websocSectionGrade, true),
       })
       .from(websocCourse)
       .innerJoin(websocSection, eq(websocSection.courseId, websocCourse.id))
