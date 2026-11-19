@@ -261,17 +261,7 @@ export class GradesService {
         },
       };
     const [gradeDistribution] = await this.db
-      .select({
-        gradeACount: sum(websocSectionGrade.gradeACount).mapWith(Number),
-        gradeBCount: sum(websocSectionGrade.gradeBCount).mapWith(Number),
-        gradeCCount: sum(websocSectionGrade.gradeCCount).mapWith(Number),
-        gradeDCount: sum(websocSectionGrade.gradeDCount).mapWith(Number),
-        gradeFCount: sum(websocSectionGrade.gradeFCount).mapWith(Number),
-        gradePCount: sum(websocSectionGrade.gradePCount).mapWith(Number),
-        gradeNPCount: sum(websocSectionGrade.gradeNPCount).mapWith(Number),
-        gradeWCount: sum(websocSectionGrade.gradeWCount).mapWith(Number),
-        averageGPA: avg(websocSectionGrade.averageGPA).mapWith(Number),
-      })
+      .select(GRADES_SELECTION_AGGREGATE)
       .from(websocSectionGrade)
       .where(inArray(websocSectionGrade.sectionId, sectionMapping.keys().toArray()));
     return {
