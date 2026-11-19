@@ -15,6 +15,20 @@ import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
+const GRADES_COURSE_INSTRUCTOR_SELECTION = {
+  department: gradesByCourseInstructorView.deptCode,
+  courseNumber: gradesByCourseInstructorView.courseNumber,
+  gradeACount: gradesByCourseInstructorView.gradeACount,
+  gradeBCount: gradesByCourseInstructorView.gradeBCount,
+  gradeCCount: gradesByCourseInstructorView.gradeCCount,
+  gradeDCount: gradesByCourseInstructorView.gradeDCount,
+  gradeFCount: gradesByCourseInstructorView.gradeFCount,
+  gradePCount: gradesByCourseInstructorView.gradePCount,
+  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
+  gradeWCount: gradesByCourseInstructorView.gradeWCount,
+  averageGPA: gradesByCourseInstructorView.averageGPA,
+};
+
 function buildQuery(input: GradesServiceInput) {
   const conditions = [];
   if (input.year) {
@@ -260,27 +274,42 @@ export class GradesService {
   async getAggregateGradesByCourse(input: GradesServiceInput) {
     const { department, courseNumber, ...sectionFilters } = input;
     if (!Object.values(sectionFilters).some(Boolean)) {
-      return this.db
-        .select({
-          department: gradesByCourseView.deptCode,
-          courseNumber: gradesByCourseView.courseNumber,
-          gradeACount: gradesByCourseView.gradeACount,
-          gradeBCount: gradesByCourseView.gradeBCount,
-          gradeCCount: gradesByCourseView.gradeCCount,
-          gradeDCount: gradesByCourseView.gradeDCount,
-          gradeFCount: gradesByCourseView.gradeFCount,
-          gradePCount: gradesByCourseView.gradePCount,
-          gradeNPCount: gradesByCourseView.gradeNPCount,
-          gradeWCount: gradesByCourseView.gradeWCount,
-          averageGPA: gradesByCourseView.averageGPA,
-        })
-        .from(gradesByCourseView)
-        .where(
-          and(
-            department ? eq(gradesByCourseView.deptCode, department) : undefined,
-            courseNumber ? eq(gradesByCourseView.courseNumber, courseNumber) : undefined,
-          ),
-        );
+      if (sectionFilters.instructor) {
+        return this.db
+          .select(GRADES_COURSE_INSTRUCTOR_SELECTION)
+          .from(gradesByCourseInstructorView)
+          .where(
+            and(
+              eq(gradesByCourseInstructorView.instructorName, sectionFilters.instructor),
+              department ? eq(gradesByCourseInstructorView.deptCode, department) : undefined,
+              courseNumber
+                ? eq(gradesByCourseInstructorView.courseNumber, courseNumber)
+                : undefined,
+            ),
+          );
+      } else {
+        return this.db
+          .select({
+            department: gradesByCourseView.deptCode,
+            courseNumber: gradesByCourseView.courseNumber,
+            gradeACount: gradesByCourseView.gradeACount,
+            gradeBCount: gradesByCourseView.gradeBCount,
+            gradeCCount: gradesByCourseView.gradeCCount,
+            gradeDCount: gradesByCourseView.gradeDCount,
+            gradeFCount: gradesByCourseView.gradeFCount,
+            gradePCount: gradesByCourseView.gradePCount,
+            gradeNPCount: gradesByCourseView.gradeNPCount,
+            gradeWCount: gradesByCourseView.gradeWCount,
+            averageGPA: gradesByCourseView.averageGPA,
+          })
+          .from(gradesByCourseView)
+          .where(
+            and(
+              department ? eq(gradesByCourseView.deptCode, department) : undefined,
+              courseNumber ? eq(gradesByCourseView.courseNumber, courseNumber) : undefined,
+            ),
+          );
+      }
     }
 
     return this.db
@@ -313,17 +342,7 @@ export class GradesService {
     if (instructor && !Object.values(sectionFilters).some(Boolean)) {
       return this.db
         .select({
-          department: gradesByCourseInstructorView.deptCode,
-          courseNumber: gradesByCourseInstructorView.courseNumber,
-          gradeACount: gradesByCourseInstructorView.gradeACount,
-          gradeBCount: gradesByCourseInstructorView.gradeBCount,
-          gradeCCount: gradesByCourseInstructorView.gradeCCount,
-          gradeDCount: gradesByCourseInstructorView.gradeDCount,
-          gradeFCount: gradesByCourseInstructorView.gradeFCount,
-          gradePCount: gradesByCourseInstructorView.gradePCount,
-          gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
-          gradeWCount: gradesByCourseInstructorView.gradeWCount,
-          averageGPA: gradesByCourseInstructorView.averageGPA,
+          ...GRADES_COURSE_INSTRUCTOR_SELECTION,
           instructor: gradesByCourseInstructorView.instructorName,
         })
         .from(gradesByCourseInstructorView)
