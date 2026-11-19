@@ -15,35 +15,6 @@ import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
-export const gradeCourseSelection = {
-  department: gradesByCourseView.deptCode,
-  courseNumber: gradesByCourseView.courseNumber,
-  gradeACount: gradesByCourseView.gradeACount,
-  gradeBCount: gradesByCourseView.gradeBCount,
-  gradeCCount: gradesByCourseView.gradeCCount,
-  gradeDCount: gradesByCourseView.gradeDCount,
-  gradeFCount: gradesByCourseView.gradeFCount,
-  gradePCount: gradesByCourseView.gradePCount,
-  gradeNPCount: gradesByCourseView.gradeNPCount,
-  gradeWCount: gradesByCourseView.gradeWCount,
-  averageGPA: gradesByCourseView.averageGPA,
-};
-
-export const gradeOfferingSelection = {
-  department: gradesByCourseInstructorView.deptCode,
-  courseNumber: gradesByCourseInstructorView.courseNumber,
-  gradeACount: gradesByCourseInstructorView.gradeACount,
-  gradeBCount: gradesByCourseInstructorView.gradeBCount,
-  gradeCCount: gradesByCourseInstructorView.gradeCCount,
-  gradeDCount: gradesByCourseInstructorView.gradeDCount,
-  gradeFCount: gradesByCourseInstructorView.gradeFCount,
-  gradePCount: gradesByCourseInstructorView.gradePCount,
-  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
-  gradeWCount: gradesByCourseInstructorView.gradeWCount,
-  averageGPA: gradesByCourseInstructorView.averageGPA,
-  instructor: gradesByCourseInstructorView.instructorName,
-};
-
 function buildQuery(input: GradesServiceInput) {
   const conditions = [];
   if (input.year) {
@@ -290,7 +261,19 @@ export class GradesService {
     const { department, courseNumber, ...sectionFilters } = input;
     if (!Object.values(sectionFilters).some(Boolean)) {
       return this.db
-        .select(gradeCourseSelection)
+        .select({
+          department: gradesByCourseView.deptCode,
+          courseNumber: gradesByCourseView.courseNumber,
+          gradeACount: gradesByCourseView.gradeACount,
+          gradeBCount: gradesByCourseView.gradeBCount,
+          gradeCCount: gradesByCourseView.gradeCCount,
+          gradeDCount: gradesByCourseView.gradeDCount,
+          gradeFCount: gradesByCourseView.gradeFCount,
+          gradePCount: gradesByCourseView.gradePCount,
+          gradeNPCount: gradesByCourseView.gradeNPCount,
+          gradeWCount: gradesByCourseView.gradeWCount,
+          averageGPA: gradesByCourseView.averageGPA,
+        })
         .from(gradesByCourseView)
         .where(
           and(
@@ -330,7 +313,20 @@ export class GradesService {
     // The summary covers all-time results for named instructors. Unmapped sections appear as STAFF.
     if (instructor && !Object.values(sectionFilters).some(Boolean)) {
       return this.db
-        .select(gradeOfferingSelection)
+        .select({
+          department: gradesByCourseInstructorView.deptCode,
+          courseNumber: gradesByCourseInstructorView.courseNumber,
+          gradeACount: gradesByCourseInstructorView.gradeACount,
+          gradeBCount: gradesByCourseInstructorView.gradeBCount,
+          gradeCCount: gradesByCourseInstructorView.gradeCCount,
+          gradeDCount: gradesByCourseInstructorView.gradeDCount,
+          gradeFCount: gradesByCourseInstructorView.gradeFCount,
+          gradePCount: gradesByCourseInstructorView.gradePCount,
+          gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
+          gradeWCount: gradesByCourseInstructorView.gradeWCount,
+          averageGPA: gradesByCourseInstructorView.averageGPA,
+          instructor: gradesByCourseInstructorView.instructorName,
+        })
         .from(gradesByCourseInstructorView)
         .where(
           and(
