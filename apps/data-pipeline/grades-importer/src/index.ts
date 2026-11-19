@@ -1,9 +1,14 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { and, eq, or } from "@packages/db/drizzle";
+import { and, eq, or, sql } from "@packages/db/drizzle";
 import type { Term } from "@packages/db/schema";
-import { websocSection, websocSectionGrade } from "@packages/db/schema";
+import {
+  gradeCourseSummary,
+  gradeOfferingSummary,
+  websocSection,
+  websocSectionGrade,
+} from "@packages/db/schema";
 import { chunkUpsertData } from "@packages/db/utils";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
@@ -95,11 +100,17 @@ async function main() {
     values.push({ sectionId: row.sectionId, ...data });
   }
   await db.transaction(async (tx) => {
+    // lock so only one import can occur at a time
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended('anteater:grade_offering_summary', 0))`,
+    );
     const insertChunks = chunkUpsertData(websocSectionGrade, values);
     console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
     for (const chunk of insertChunks) {
       await tx.insert(websocSectionGrade).values(chunk).onConflictDoNothing();
     }
+    await tx.refreshMaterializedView(gradeOfferingSummary).concurrently();
+    await tx.refreshMaterializedView(gradeCourseSummary).concurrently();
   });
   exit(0);
 }
