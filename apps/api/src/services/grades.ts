@@ -16,10 +16,7 @@ import { buildCourseLevelQuery, buildGEQuery } from "./util.ts";
 type GradesServiceInput = z.infer<typeof gradesQuerySchema>;
 
 function gradesSelection(
-  selectable:
-    | typeof gradesByCourseInstructorView
-    | typeof gradesByCourseView
-    | typeof websocSectionGrade,
+  selectable: typeof gradesByCourseInstructorView | typeof gradesByCourseView,
 ) {
   return {
     gradeACount: selectable.gradeACount,
@@ -105,7 +102,15 @@ export class GradesService {
         isGE6: websocCourse.isGE6,
         isGE7: websocCourse.isGE7,
         isGE8: websocCourse.isGE8,
-        ...gradesSelection(websocSectionGrade),
+        gradeACount: websocSectionGrade.gradeACount,
+        gradeBCount: websocSectionGrade.gradeBCount,
+        gradeCCount: websocSectionGrade.gradeCCount,
+        gradeDCount: websocSectionGrade.gradeDCount,
+        gradeFCount: websocSectionGrade.gradeFCount,
+        gradePCount: websocSectionGrade.gradePCount,
+        gradeNPCount: websocSectionGrade.gradeNPCount,
+        gradeWCount: websocSectionGrade.gradeWCount,
+        averageGPA: websocSectionGrade.averageGPA,
         instructors: websocSection.instructors,
       })
       .from(websocCourse)
