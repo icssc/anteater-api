@@ -278,7 +278,7 @@ export class GradesService {
   async getAggregateGradesByCourse(input: GradesServiceInput) {
     const { department, courseNumber, instructor, ...sectionFilters } = input;
     if (!Object.values(sectionFilters).some(Boolean)) {
-      if (input.instructor) {
+      if (instructor) {
         return this.db
           .select({
             department: gradesByCourseInstructorView.deptCode,
@@ -288,7 +288,7 @@ export class GradesService {
           .from(gradesByCourseInstructorView)
           .where(
             and(
-              eq(gradesByCourseInstructorView.instructorName, input.instructor),
+              eq(gradesByCourseInstructorView.instructorName, instructor),
               department ? eq(gradesByCourseInstructorView.deptCode, department) : undefined,
               courseNumber
                 ? eq(gradesByCourseInstructorView.courseNumber, courseNumber)
