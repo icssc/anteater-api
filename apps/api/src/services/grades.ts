@@ -276,19 +276,19 @@ export class GradesService {
   }
 
   async getAggregateGradesByCourse(input: GradesServiceInput) {
-    const { department, courseNumber, ...sectionFilters } = input;
+    const { department, courseNumber, instructor, ...sectionFilters } = input;
     if (!Object.values(sectionFilters).some(Boolean)) {
-      if (sectionFilters.instructor) {
+      if (instructor) {
         return this.db
           .select({
-            department: gradesByCourseView.deptCode,
-            courseNumber: gradesByCourseView.courseNumber,
-            ...gradesSelection(gradesByCourseView),
+            department: gradesByCourseInstructorView.deptCode,
+            courseNumber: gradesByCourseInstructorView.courseNumber,
+            ...gradesSelection(gradesByCourseInstructorView),
           })
           .from(gradesByCourseInstructorView)
           .where(
             and(
-              eq(gradesByCourseInstructorView.instructorName, sectionFilters.instructor),
+              eq(gradesByCourseInstructorView.instructorName, instructor),
               department ? eq(gradesByCourseInstructorView.deptCode, department) : undefined,
               courseNumber
                 ? eq(gradesByCourseInstructorView.courseNumber, courseNumber)
