@@ -14,6 +14,8 @@ import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
+  courseView,
+  instructorView,
   websocCourse,
   websocDepartment,
   websocInstructor,
@@ -910,6 +912,33 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(JSON.stringify({ event: "ge_scrape_summary", term: termToName(term), categories }));
 }
 
+async function termHasSections(db: ReturnType<typeof database>, term: Term): Promise<boolean> {
+  const [row] = await db
+    .select({ id: websocSection.id })
+    .from(websocSection)
+    .where(and(eq(websocSection.year, term.year), eq(websocSection.quarter, term.quarter)))
+    .limit(1);
+  return row !== undefined;
+}
+
+async function getSectionCodeBounds(
+  db: ReturnType<typeof database>,
+  term: Term,
+): Promise<number[]> {
+  return db
+    .execute<{ section_code: number }>(
+      sql<{ section_code: number }>`
+    SELECT section_code FROM (
+        SELECT section_code,
+        (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
+        FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
+    )
+    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0;
+  `,
+    )
+    .then((xs) => xs.map((x) => x.section_code));
+}
+
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
@@ -984,18 +1013,17 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     shouldSnapshot,
     scraperStartTime: scraperTimestamp,
   };
-  const sectionCodeBounds = await db
-    .execute<{ section_code: number }>(
-      sql<{ section_code: number }>`
-    SELECT section_code FROM (
-        SELECT section_code,
-        (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
-        FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
-    )
-    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0;
-  `,
-    )
-    .then((xs) => xs.map((x) => x.section_code));
+  const isFirstScrape = !(await termHasSections(db, term));
+  let sectionCodeBounds: number[];
+  if (isFirstScrape) {
+    const seedTerm: Term = { year: String(Number(term.year) - 1), quarter: term.quarter };
+    sectionCodeBounds = await getSectionCodeBounds(db, seedTerm);
+    console.log(
+      `First scrape of ${name}; seeding with ${termToName(seedTerm)} distribution (${sectionCodeBounds.length + 1} chunks).`,
+    );
+  } else {
+    sectionCodeBounds = await getSectionCodeBounds(db, term);
+  }
 
   console.log("Performing chunk-wise scrape.");
   let lastKnownCode = 0;
@@ -1019,6 +1047,19 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     .insert(websocMeta)
     .values(values)
     .onConflictDoUpdate({ target: websocMeta.name, set: values });
+
+  if (isFirstScrape) {
+    try {
+      console.log(`Refreshing materialized views after first scrape of ${name}.`);
+      await db.refreshMaterializedView(instructorView);
+      await db.refreshMaterializedView(courseView);
+    } catch (e) {
+      console.error(
+        `[scrapeTerm] materialized view refresh after first scrape of ${name} failed`,
+        e,
+      );
+    }
+  }
 }
 
 async function ingestChunk(
@@ -1039,7 +1080,8 @@ async function ingestChunk(
     await sleep(1000);
   } catch (e) {
     // this isn't necessarily fatal; it's possible that we would have gotten more than 900 sections, which is disallowed
-    // let's just try again here; after the first scrape of this term, we'll get the code ranges right >95% of the time
+    // let's just try again here; ranges come from this term's known codes (or last year's same quarter on a first
+    // scrape), so overflows are rare and only cost a split or two
     const rangeLength = upper - lower + 1;
     if (rangeLength < 900) {
       // okay, no way this was a chunk overrun
