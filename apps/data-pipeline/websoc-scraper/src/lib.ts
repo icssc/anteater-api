@@ -913,12 +913,10 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
 }
 
 async function termHasSections(db: ReturnType<typeof database>, term: Term): Promise<boolean> {
-  const [row] = await db
-    .select({ id: websocSection.id })
-    .from(websocSection)
-    .where(and(eq(websocSection.year, term.year), eq(websocSection.quarter, term.quarter)))
-    .limit(1);
-  return row !== undefined;
+  const [{ exists }] = await db.execute<{ exists: boolean }>(
+    sql`SELECT EXISTS (SELECT 1 FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter})`,
+  );
+  return exists;
 }
 
 async function getSectionCodeBounds(
@@ -1019,7 +1017,9 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     const seedTerm: Term = { year: String(Number(term.year) - 1), quarter: term.quarter };
     sectionCodeBounds = await getSectionCodeBounds(db, seedTerm);
     console.log(
-      `First scrape of ${name}; seeding with ${termToName(seedTerm)} distribution (${sectionCodeBounds.length + 1} chunks).`,
+      sectionCodeBounds.length
+        ? `First scrape of ${name}; seeding with ${termToName(seedTerm)} distribution (${sectionCodeBounds.length + 1} chunks).`
+        : `First scrape of ${name}; not enough ${termToName(seedTerm)} data to seed, scraping the full range.`,
     );
   } else {
     sectionCodeBounds = await getSectionCodeBounds(db, term);
