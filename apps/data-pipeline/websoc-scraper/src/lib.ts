@@ -1019,7 +1019,7 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     console.log(
       sectionCodeBounds.length
         ? `First scrape of ${name}; seeding with ${termToName(seedTerm)} distribution (${sectionCodeBounds.length + 1} chunks).`
-        : `First scrape of ${name}; not enough ${termToName(seedTerm)} data to seed, scraping the full range.`,
+        : `First scrape of ${name}; no ${termToName(seedTerm)} data to seed with, scraping the full range.`,
     );
   } else {
     sectionCodeBounds = await getSectionCodeBounds(db, term);
