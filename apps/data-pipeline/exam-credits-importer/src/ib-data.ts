@@ -704,6 +704,122 @@ const ibExamData: IBExamMapping = {
       },
     ],
   },
+
+  "IB Language A: Hebrew Literature (HL)": {
+    rewards: [
+      // Satisfies the School of Humanities language requirement.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+        notes:
+          "Satisfies the School of Humanities language other than English requirement for School of Humanities majors.",
+      },
+    ],
+  },
+
+  "IB Language A: Persian Literature (HL)": {
+    rewards: [
+      // PERSIAN 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["PERSIAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Portuguese Literature (HL)": {
+    rewards: [
+      // Elective credit only.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Language A: Portuguese Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Portuguese Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 8,
+        geGranted: {},
+        coursesGranted: { AND: [] },
+      },
+    ],
+  },
+
+  "IB Language A: Russian Literature (HL)": {
+    rewards: [
+      // RUSSIAN 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["RUSSIAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Russian Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Russian Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["RUSSIAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Vietnamese Literature (HL)": {
+    rewards: [
+      // VIETMSE 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["VIETMSE 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Vietnamese Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Vietnamese Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["VIETMSE 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
 };
 
 export default ibExamData;
