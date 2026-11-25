@@ -2,45 +2,62 @@ import { z } from "@hono/zod-openapi";
 import { courseLevels, terms } from "@packages/db/schema";
 import { geCategories, yearSchema } from "./lib";
 
-export const gradesQuerySchema = z.object({
-  year: yearSchema.optional(),
-  quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
-  instructor: z.string().optional().openapi({
-    description: "Only include courses taught by the specified instructor (case-insensitive)",
-    example: "KLEFSTAD, R.",
-  }),
-  department: z.string().optional().openapi({
-    description: "Only include courses offered by the specified department code",
-    example: "I&C SCI",
-  }),
-  courseNumber: z.string().optional().openapi({
-    description: "Only include courses exactly matching the specified course number",
-    example: "45C",
-  }),
-  sectionCode: z
-    .string()
-    .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
-    .optional()
-    .openapi({ description: "The 5-digit section code", example: "35630" }),
-  division: z
-    .enum(courseLevels)
-    .or(z.literal("ANY"))
-    .optional()
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  ge: z
-    .enum(geCategories)
-    .optional()
-    .or(z.literal("ANY"))
-    .transform((x) => (x === "ANY" ? undefined : x)),
-  excludePNP: z.coerce
-    .string()
-    .optional()
-    .transform((x) => x === "true")
-    .openapi({
-      description: "If true, excludes courses that are graded only on a Pass/No Pass basis",
-      example: "true",
+export const gradesQuerySchema = z
+  .object({
+    year: yearSchema.optional(),
+    quarter: z.enum(terms, { error: (_issue) => "Invalid quarter provided" }).optional(),
+    instructor: z.string().optional().openapi({
+      description: "Only include courses taught by the specified instructor (case-insensitive)",
+      example: "KLEFSTAD, R.",
     }),
-});
+    department: z.string().optional().openapi({
+      description: "Only include courses offered by the specified department code",
+      example: "I&C SCI",
+    }),
+    courseNumber: z.string().optional().openapi({
+      description: "Only include courses exactly matching the specified course number",
+      example: "45C",
+    }),
+    sectionCode: z
+      .string()
+      .regex(/^\d{5}$/, { error: "Invalid sectionCode provided" })
+      .optional()
+      .openapi({ description: "The 5-digit section code", example: "35630" }),
+    division: z
+      .enum(courseLevels)
+      .or(z.literal("ANY"))
+      .optional()
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    ge: z
+      .enum(geCategories)
+      .optional()
+      .or(z.literal("ANY"))
+      .transform((x) => (x === "ANY" ? undefined : x)),
+    excludePNP: z.coerce
+      .string()
+      .optional()
+      .transform((x) => x === "true")
+      .openapi({
+        description: "If true, excludes courses that are graded only on a Pass/No Pass basis",
+        example: "true",
+      }),
+  })
+  .refine(
+    (q) => {
+      return (
+        (q.year && q.quarter) ||
+        q.instructor ||
+        (q.department && q.courseNumber) ||
+        q.sectionCode ||
+        q.division ||
+        q.ge
+      );
+    },
+    {
+      error:
+        "One of (year and quarter) or instructor or (department and course number) or sectionCode or division or GE is required",
+    },
+  );
 
 const gradeBaseShape = z.object({
   gradeACount: z.number(),

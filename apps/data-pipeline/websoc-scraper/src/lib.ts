@@ -14,6 +14,8 @@ import { and, asc, eq, gte, inArray, lte, sql } from "@packages/db/drizzle";
 import type { WebsocSectionFinalExam } from "@packages/db/schema";
 import {
   calendarTerm,
+  courseView,
+  instructorView,
   websocCourse,
   websocDepartment,
   websocInstructor,
@@ -605,9 +607,20 @@ const doChunkUpsert = async (
     if (instructorAssociationsToInsert.length) {
       await tx.insert(websocSectionToInstructor).values(instructorAssociationsToInsert);
     }
+    // Clear old meeting-location links for sections in the current batch.
+    const sectionIds = sections.values().toArray();
+    const previousMeetingIds = tx
+      .select({ id: websocSectionMeeting.id })
+      .from(websocSectionMeeting)
+      .where(inArray(websocSectionMeeting.sectionId, sectionIds));
+
+    await tx
+      .delete(websocSectionMeetingToLocation)
+      .where(inArray(websocSectionMeetingToLocation.meetingId, previousMeetingIds));
+
     await tx
       .delete(websocSectionMeeting)
-      .where(inArray(websocSectionMeeting.sectionId, sections.values().toArray()));
+      .where(inArray(websocSectionMeeting.sectionId, sectionIds));
     const meetings = await tx
       .insert(websocSectionMeeting)
       .values(
@@ -898,6 +911,31 @@ async function scrapeGEsForTerm(db: ReturnType<typeof database>, term: Term) {
   console.log(JSON.stringify({ event: "ge_scrape_summary", term: termToName(term), categories }));
 }
 
+async function termHasSections(db: ReturnType<typeof database>, term: Term): Promise<boolean> {
+  const [{ exists }] = await db.execute<{ exists: boolean }>(
+    sql`SELECT EXISTS (SELECT 1 FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter})`,
+  );
+  return exists;
+}
+
+async function getSectionCodeBounds(
+  db: ReturnType<typeof database>,
+  term: Term,
+): Promise<number[]> {
+  return db
+    .execute<{ section_code: number }>(
+      sql<{ section_code: number }>`
+    SELECT section_code FROM (
+        SELECT section_code,
+        (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
+        FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
+    )
+    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0;
+  `,
+    )
+    .then((xs) => xs.map((x) => x.section_code));
+}
+
 export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
   const name = termToName(term);
   console.log(`Scraping term ${name}`);
@@ -972,18 +1010,19 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     shouldSnapshot,
     scraperStartTime: scraperTimestamp,
   };
-  const sectionCodeBounds = await db
-    .execute<{ section_code: number }>(
-      sql<{ section_code: number }>`
-    SELECT section_code FROM (
-        SELECT section_code,
-        (ROW_NUMBER() OVER (ORDER BY section_code)) AS rownum
-        FROM ${websocSection} WHERE ${websocSection.year} = ${term.year} AND ${websocSection.quarter} = ${term.quarter}
-    )
-    WHERE MOD(rownum, ${SECTIONS_PER_CHUNK}) = 0;
-  `,
-    )
-    .then((xs) => xs.map((x) => x.section_code));
+  const isFirstScrape = !(await termHasSections(db, term));
+  let sectionCodeBounds: number[];
+  if (isFirstScrape) {
+    const seedTerm: Term = { year: String(Number(term.year) - 1), quarter: term.quarter };
+    sectionCodeBounds = await getSectionCodeBounds(db, seedTerm);
+    console.log(
+      sectionCodeBounds.length
+        ? `First scrape of ${name}; seeding with ${termToName(seedTerm)} distribution (${sectionCodeBounds.length + 1} chunks).`
+        : `First scrape of ${name}; no ${termToName(seedTerm)} data to seed with, scraping the full range.`,
+    );
+  } else {
+    sectionCodeBounds = await getSectionCodeBounds(db, term);
+  }
 
   console.log("Performing chunk-wise scrape.");
   let lastKnownCode = 0;
@@ -1007,6 +1046,19 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     .insert(websocMeta)
     .values(values)
     .onConflictDoUpdate({ target: websocMeta.name, set: values });
+
+  if (isFirstScrape) {
+    try {
+      console.log(`Refreshing materialized views after first scrape of ${name}.`);
+      await db.refreshMaterializedView(instructorView);
+      await db.refreshMaterializedView(courseView);
+    } catch (e) {
+      console.error(
+        `[scrapeTerm] materialized view refresh after first scrape of ${name} failed`,
+        e,
+      );
+    }
+  }
 }
 
 async function ingestChunk(
@@ -1027,7 +1079,8 @@ async function ingestChunk(
     await sleep(1000);
   } catch (e) {
     // this isn't necessarily fatal; it's possible that we would have gotten more than 900 sections, which is disallowed
-    // let's just try again here; after the first scrape of this term, we'll get the code ranges right >95% of the time
+    // let's just try again here; ranges come from this term's known codes (or last year's same quarter on a first
+    // scrape), so overflows are rare and only cost a split or two
     const rangeLength = upper - lower + 1;
     if (rangeLength < 900) {
       // okay, no way this was a chunk overrun

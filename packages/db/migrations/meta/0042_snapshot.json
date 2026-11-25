@@ -1,9 +1,221 @@
 {
-  "id": "05ac21ea-380d-4774-aea6-7f904d148e21",
+  "id": "4fa7f0f2-466c-4ebb-8331-796560b7b60d",
   "prevId": "95c8462e-62ba-44a2-8d28-d6b0e7b60c40",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.ap_exam": {
+      "name": "ap_exam",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "catalogue_name": {
+          "name": "catalogue_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_reward": {
+      "name": "ap_exam_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "units_granted": {
+          "name": "units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "elective_units_granted": {
+          "name": "elective_units_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ge_1a_courses_granted": {
+          "name": "ge_1a_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_1b_courses_granted": {
+          "name": "ge_1b_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_2_courses_granted": {
+          "name": "ge_2_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_3_courses_granted": {
+          "name": "ge_3_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_4_courses_granted": {
+          "name": "ge_4_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_5a_courses_granted": {
+          "name": "ge_5a_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_5b_courses_granted": {
+          "name": "ge_5b_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_6_courses_granted": {
+          "name": "ge_6_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_7_courses_granted": {
+          "name": "ge_7_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ge_8_courses_granted": {
+          "name": "ge_8_courses_granted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "courses_granted": {
+          "name": "courses_granted",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ap_exam_to_reward": {
+      "name": "ap_exam_to_reward",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "exam_id": {
+          "name": "exam_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reward": {
+          "name": "reward",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ap_exam_to_reward_exam_id_score_index": {
+          "name": "ap_exam_to_reward_exam_id_score_index",
+          "columns": [
+            {
+              "expression": "exam_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ap_exam_to_reward_exam_id_ap_exam_id_fk": {
+          "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam",
+          "columnsFrom": ["exam_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ap_exam_to_reward_reward_ap_exam_reward_id_fk": {
+          "name": "ap_exam_to_reward_reward_ap_exam_reward_id_fk",
+          "tableFrom": "ap_exam_to_reward",
+          "tableTo": "ap_exam_reward",
+          "columnsFrom": ["reward"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.calendar_term": {
       "name": "calendar_term",
       "schema": "",
@@ -2145,442 +2357,6 @@
           "tableFrom": "dining_station",
           "tableTo": "dining_restaurant",
           "columnsFrom": ["restaurant_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ap_exam": {
-      "name": "ap_exam",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "catalogue_name": {
-          "name": "catalogue_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ap_exam_reward": {
-      "name": "ap_exam_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "units_granted": {
-          "name": "units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "elective_units_granted": {
-          "name": "elective_units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ge_1a_courses_granted": {
-          "name": "ge_1a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_1b_courses_granted": {
-          "name": "ge_1b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_2_courses_granted": {
-          "name": "ge_2_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_3_courses_granted": {
-          "name": "ge_3_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_4_courses_granted": {
-          "name": "ge_4_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5a_courses_granted": {
-          "name": "ge_5a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5b_courses_granted": {
-          "name": "ge_5b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_6_courses_granted": {
-          "name": "ge_6_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_7_courses_granted": {
-          "name": "ge_7_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_8_courses_granted": {
-          "name": "ge_8_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "courses_granted": {
-          "name": "courses_granted",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "notes": {
-          "name": "notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ap_exam_to_reward": {
-      "name": "ap_exam_to_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "exam_id": {
-          "name": "exam_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reward": {
-          "name": "reward",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "ap_exam_to_reward_exam_id_score_index": {
-          "name": "ap_exam_to_reward_exam_id_score_index",
-          "columns": [
-            {
-              "expression": "exam_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "score",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ap_exam_to_reward_exam_id_ap_exam_id_fk": {
-          "name": "ap_exam_to_reward_exam_id_ap_exam_id_fk",
-          "tableFrom": "ap_exam_to_reward",
-          "tableTo": "ap_exam",
-          "columnsFrom": ["exam_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "ap_exam_to_reward_reward_ap_exam_reward_id_fk": {
-          "name": "ap_exam_to_reward_reward_ap_exam_reward_id_fk",
-          "tableFrom": "ap_exam_to_reward",
-          "tableTo": "ap_exam_reward",
-          "columnsFrom": ["reward"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ib_exam": {
-      "name": "ib_exam",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "catalogue_name": {
-          "name": "catalogue_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ib_exam_reward": {
-      "name": "ib_exam_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "units_granted": {
-          "name": "units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "elective_units_granted": {
-          "name": "elective_units_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ge_1a_courses_granted": {
-          "name": "ge_1a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_1b_courses_granted": {
-          "name": "ge_1b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_2_courses_granted": {
-          "name": "ge_2_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_3_courses_granted": {
-          "name": "ge_3_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_4_courses_granted": {
-          "name": "ge_4_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5a_courses_granted": {
-          "name": "ge_5a_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_5b_courses_granted": {
-          "name": "ge_5b_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_6_courses_granted": {
-          "name": "ge_6_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_7_courses_granted": {
-          "name": "ge_7_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "ge_8_courses_granted": {
-          "name": "ge_8_courses_granted",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "courses_granted": {
-          "name": "courses_granted",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "notes": {
-          "name": "notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ib_exam_to_reward": {
-      "name": "ib_exam_to_reward",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "exam_id": {
-          "name": "exam_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reward": {
-          "name": "reward",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "ib_exam_to_reward_exam_id_score_index": {
-          "name": "ib_exam_to_reward_exam_id_score_index",
-          "columns": [
-            {
-              "expression": "exam_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "score",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ib_exam_to_reward_exam_id_ib_exam_id_fk": {
-          "name": "ib_exam_to_reward_exam_id_ib_exam_id_fk",
-          "tableFrom": "ib_exam_to_reward",
-          "tableTo": "ib_exam",
-          "columnsFrom": ["exam_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "ib_exam_to_reward_reward_ib_exam_reward_id_fk": {
-          "name": "ib_exam_to_reward_reward_ib_exam_reward_id_fk",
-          "tableFrom": "ib_exam_to_reward",
-          "tableTo": "ib_exam_reward",
-          "columnsFrom": ["reward"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -5548,6 +5324,54 @@
       },
       "definition": "with \"shortened_names_cte\" as (select \"instructor_ucinetid\", ARRAY_AGG(\"websoc_instructor_name\") as \"shortened_names\" from \"instructor_to_websoc_instructor\" group by \"instructor_to_websoc_instructor\".\"instructor_ucinetid\"), \"courses_cte\" as (with \"terms_cte\" as (select \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT\n            CASE WHEN \"websoc_course\".\"year\" IS NULL THEN NULL\n            ELSE CONCAT(\"websoc_course\".\"year\", ' ', \"websoc_course\".\"quarter\")\n            END\n          ), NULL) as \"terms\" from \"course\" left join \"websoc_course\" on \"websoc_course\".\"course_id\" = \"course\".\"id\" left join \"websoc_section\" on \"websoc_section\".\"course_id\" = \"websoc_course\".\"id\" left join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" left join \"websoc_instructor\" on \"websoc_instructor\".\"name\" = \"websoc_section_to_instructor\".\"instructor_name\" left join \"instructor_to_websoc_instructor\" on \"instructor_to_websoc_instructor\".\"websoc_instructor_name\" = \"websoc_instructor\".\"name\" group by \"course\".\"id\", \"instructor_to_websoc_instructor\".\"instructor_ucinetid\") select \"terms_cte\".\"instructor_ucinetid\", \"course\".\"id\", \n          CASE WHEN \"course\".\"id\" IS NULL\n          THEN NULL\n          ELSE JSONB_BUILD_OBJECT(\n               'id', \"course\".\"id\",\n               'title', \"course\".\"title\",\n               'department', \"course\".\"department\",\n               'courseNumber', \"course\".\"course_number\",\n               'terms', COALESCE(\"terms\", ARRAY[]::TEXT[])\n          )\n          END\n           as \"course_info\" from \"course\" left join \"terms_cte\" on \"terms_cte\".\"id\" = \"course\".\"id\" group by \"course\".\"id\", \"terms_cte\".\"instructor_ucinetid\", \"terms\") select \"instructor\".\"ucinetid\", \"instructor\".\"name\", \"instructor\".\"title\", \"instructor\".\"email\", \"instructor\".\"department\", COALESCE(\"shortened_names\", ARRAY[]::TEXT[]) as \"shortened_names\", \n          ARRAY_REMOVE(ARRAY_AGG(DISTINCT \"course_info\"), NULL)\n         as \"courses\" from \"instructor\" left join \"shortened_names_cte\" on \"shortened_names_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" left join \"courses_cte\" on \"courses_cte\".\"instructor_ucinetid\" = \"instructor\".\"ucinetid\" where \"instructor\".\"ucinetid\" <> 'student' group by \"instructor\".\"ucinetid\", \"shortened_names\"",
       "name": "instructor_view",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": true
+    },
+    "public.grades_by_course_instructor_view": {
+      "columns": {
+        "dept_code": {
+          "name": "dept_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "course_number": {
+          "name": "course_number",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instructor_name": {
+          "name": "instructor_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "definition": "select \"websoc_course\".\"dept_code\", \"websoc_course\".\"course_number\", \"websoc_section_to_instructor\".\"instructor_name\", avg(\"websoc_section_grade\".\"average_gpa\") as \"average_gpa\", sum(\"websoc_section_grade\".\"grade_a_count\") as \"grade_a_count\", sum(\"websoc_section_grade\".\"grade_b_count\") as \"grade_b_count\", sum(\"websoc_section_grade\".\"grade_c_count\") as \"grade_c_count\", sum(\"websoc_section_grade\".\"grade_d_count\") as \"grade_d_count\", sum(\"websoc_section_grade\".\"grade_f_count\") as \"grade_f_count\", sum(\"websoc_section_grade\".\"grade_p_count\") as \"grade_p_count\", sum(\"websoc_section_grade\".\"grade_np_count\") as \"grade_np_count\", sum(\"websoc_section_grade\".\"grade_w_count\") as \"grade_w_count\" from \"websoc_section_grade\" inner join \"websoc_section\" on \"websoc_section\".\"id\" = \"websoc_section_grade\".\"section_id\" inner join \"websoc_course\" on \"websoc_course\".\"id\" = \"websoc_section\".\"course_id\" inner join \"websoc_section_to_instructor\" on \"websoc_section_to_instructor\".\"section_id\" = \"websoc_section\".\"id\" group by \"websoc_course\".\"dept_code\", \"websoc_course\".\"course_number\", \"websoc_section_to_instructor\".\"instructor_name\"",
+      "name": "grades_by_course_instructor_view",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": true
+    },
+    "public.grades_by_course_view": {
+      "columns": {
+        "dept_code": {
+          "name": "dept_code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "course_number": {
+          "name": "course_number",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "definition": "select \"websoc_course\".\"dept_code\", \"websoc_course\".\"course_number\", avg(\"websoc_section_grade\".\"average_gpa\") as \"average_gpa\", sum(\"websoc_section_grade\".\"grade_a_count\") as \"grade_a_count\", sum(\"websoc_section_grade\".\"grade_b_count\") as \"grade_b_count\", sum(\"websoc_section_grade\".\"grade_c_count\") as \"grade_c_count\", sum(\"websoc_section_grade\".\"grade_d_count\") as \"grade_d_count\", sum(\"websoc_section_grade\".\"grade_f_count\") as \"grade_f_count\", sum(\"websoc_section_grade\".\"grade_p_count\") as \"grade_p_count\", sum(\"websoc_section_grade\".\"grade_np_count\") as \"grade_np_count\", sum(\"websoc_section_grade\".\"grade_w_count\") as \"grade_w_count\" from \"websoc_section_grade\" inner join \"websoc_section\" on \"websoc_section\".\"id\" = \"websoc_section_grade\".\"section_id\" inner join \"websoc_course\" on \"websoc_course\".\"id\" = \"websoc_section\".\"course_id\" group by \"websoc_course\".\"dept_code\", \"websoc_course\".\"course_number\"",
+      "name": "grades_by_course_view",
       "schema": "public",
       "isExisting": false,
       "materialized": true

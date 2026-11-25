@@ -2,8 +2,13 @@ import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
 import { and, eq, or } from "@packages/db/drizzle";
-import type { Term } from "@packages/db/schema";
-import { websocSection, websocSectionGrade } from "@packages/db/schema";
+import {
+  gradesByCourseInstructorView,
+  gradesByCourseView,
+  type Term,
+  websocSection,
+  websocSectionGrade,
+} from "@packages/db/schema";
 import { chunkUpsertData } from "@packages/db/utils";
 import { getFromMapOrThrow } from "@packages/stdlib";
 import xlsx from "node-xlsx";
@@ -100,6 +105,9 @@ async function main() {
     for (const chunk of insertChunks) {
       await tx.insert(websocSectionGrade).values(chunk).onConflictDoNothing();
     }
+
+    await tx.refreshMaterializedView(gradesByCourseView);
+    await tx.refreshMaterializedView(gradesByCourseInstructorView);
   });
   exit(0);
 }
