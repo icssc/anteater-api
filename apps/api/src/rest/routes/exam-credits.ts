@@ -40,7 +40,7 @@ function registerExamRoute(config: ExamRouteConfig) {
   const route = createRoute({
     summary: `Retrieve ${config.examType} Exam names and rewards`,
     operationId: config.examType === "AP" ? "apExams" : "ibExams",
-    tags: [`${config.examType} Exams`],
+    tags: ["Exam Credits"],
     method: "get",
     path,
     description: config.description,

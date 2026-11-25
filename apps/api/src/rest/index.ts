@@ -26,7 +26,7 @@ restRouter.route("/courses", coursesRouter);
 restRouter.route("/coursesCursor", coursesCursorRouter);
 restRouter.route("/dining", diningRouter);
 restRouter.route("/enrollmentHistory", enrollmentHistoryRouter);
-restRouter.route("/", examCreditsRouter);
+restRouter.route("/examCredits", examCreditsRouter);
 restRouter.route("/grades", gradesRouter);
 restRouter.route("/instructors", instructorsRouter);
 restRouter.route("/instructorsCursor", instructorsCursorRouter);
