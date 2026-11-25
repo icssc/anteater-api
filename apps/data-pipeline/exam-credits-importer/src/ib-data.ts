@@ -554,6 +554,156 @@ const ibExamData: IBExamMapping = {
       },
     ],
   },
+
+  "IB Language A: Arabic Literature (HL)": {
+    rewards: [
+      // ARABIC 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["ARABIC 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Arabic Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Arabic Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["ARABIC 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: German Literature (HL)": {
+    rewards: [
+      // GERMAN 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["GERMAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: German Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: German Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["GERMAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Italian Literature (HL)": {
+    rewards: [
+      // ITALIAN 2C; satisfies language and GE requirements.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["ITALIAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Italian Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Italian Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["ITALIAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements.",
+      },
+    ],
+  },
+
+  "IB Language A: Japanese Literature (HL)": {
+    rewards: [
+      // JAPANSE 2C; placement testing still required.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["JAPANSE 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements. Placement testing is still required for enrollment in Japanese courses.",
+      },
+    ],
+  },
+
+  "IB Language A: Japanese Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Japanese Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["JAPANSE 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements. Placement testing is still required for enrollment in Japanese courses.",
+      },
+    ],
+  },
+
+  "IB Language A: Korean Literature (HL)": {
+    rewards: [
+      // KOREAN 2C; placement testing still required.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["KOREAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements. Placement testing is still required for enrollment in Korean courses.",
+      },
+    ],
+  },
+
+  "IB Language A: Korean Language and Literature (HL)": {
+    rewards: [
+      // Same credit as Language A: Korean Literature.
+      {
+        acceptableScores: [5, 6, 7],
+        unitsGranted: 8,
+        electiveUnitsGranted: 0,
+        geGranted: {},
+        coursesGranted: { AND: ["KOREAN 2C"] },
+        notes:
+          "Satisfies GE categories VI and VIII and the applicable School of Humanities and International Studies language requirements. Placement testing is still required for enrollment in Korean courses.",
+      },
+    ],
+  },
 };
 
 export default ibExamData;
