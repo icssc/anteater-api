@@ -2,7 +2,6 @@ import { terms } from "@packages/stdlib";
 import { type SQL, sql } from "drizzle-orm";
 import {
   boolean,
-  decimal,
   index,
   integer,
   json,
@@ -346,25 +345,4 @@ export const websocSectionEnrollment = pgTable(
     status: websocStatus("status"),
   },
   (table) => [index().on(table.sectionId), uniqueIndex().on(table.sectionId, table.createdAt)],
-);
-
-export const websocSectionGrade = pgTable(
-  "websoc_section_grade",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    sectionId: uuid("section_id")
-      .references(() => websocSection.id)
-      .unique()
-      .notNull(),
-    gradeACount: integer("grade_a_count").notNull(),
-    gradeBCount: integer("grade_b_count").notNull(),
-    gradeCCount: integer("grade_c_count").notNull(),
-    gradeDCount: integer("grade_d_count").notNull(),
-    gradeFCount: integer("grade_f_count").notNull(),
-    gradePCount: integer("grade_p_count").notNull(),
-    gradeNPCount: integer("grade_np_count").notNull(),
-    gradeWCount: integer("grade_w_count").notNull(),
-    averageGPA: decimal("average_gpa", { precision: 3, scale: 2 }),
-  },
-  (table) => [index().on(table.sectionId)],
 );
