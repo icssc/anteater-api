@@ -2,8 +2,8 @@ import type { database } from "@packages/db";
 import { inArray, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { toUciNaive } from "@packages/stdlib";
 import { z } from "zod";
-import { losAngelesNowNaive } from "./time";
 
 // Schemas
 const bookingsServiceSchema = z.object({
@@ -256,7 +256,7 @@ async function scrapePlazaVerde(): Promise<{
   // Plaza Verde represents the study rooms using "staff members", each with their own availability. The set of staff IDs is the set of unique rooms:
   const allStaffIds = [...new Set(services.flatMap((service) => service.staffMemberIds))];
 
-  const now = losAngelesNowNaive();
+  const now = toUciNaive();
 
   // Get today's date formatted in LA timezone as a string (M/D/YYYY)
   const dateInLA = new Intl.DateTimeFormat("en-US", {

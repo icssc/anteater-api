@@ -29,6 +29,7 @@ import {
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
 import {
   baseTenIntOrNull,
+  getUciParts,
   getWeek,
   HOUR_MS,
   intersectAll,
@@ -69,28 +70,6 @@ function getPeriod(week: number): EnrollmentSnapshotPeriod {
   if (week >= 0 && week <= 2) return "ADD_DROP";
   if (week >= 8 && week <= 10) return "ENROLLMENT";
   return "REGULAR";
-}
-
-/**
- * Gets the hour and day of week in UCI's local timezone (America/Los_Angeles).
- */
-function getPacificTimeParts(date: Date): { hour: number; currentDayOfWeek: number } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    hour: "numeric",
-    weekday: "short",
-    hour12: false,
-  }).formatToParts(date);
-
-  const hourPart = parts.find((p) => p.type === "hour");
-  const weekdayPart = parts.find((p) => p.type === "weekday");
-
-  const hour = hourPart ? Number.parseInt(hourPart.value, 10) : 0;
-  const currentDayOfWeek = weekdayPart
-    ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekdayPart.value)
-    : 0;
-
-  return { hour, currentDayOfWeek };
 }
 
 const geCategories = [
@@ -948,7 +927,7 @@ export async function scrapeTerm(db: ReturnType<typeof database>, term: Term) {
     const week = getWeek(scraperTimestamp, currentTerm.instructionStart, currentTerm.quarter);
     // Summer enrollment activity is low priority, so all summer sessions snapshot weekly like REGULAR.
     const period = currentTerm.quarter.startsWith("Summer") ? "REGULAR" : getPeriod(week);
-    const { hour, currentDayOfWeek } = getPacificTimeParts(scraperTimestamp);
+    const { hour, weekday: currentDayOfWeek } = getUciParts(scraperTimestamp);
 
     switch (period) {
       case "ENROLLMENT":
