@@ -2,6 +2,7 @@ import type { database } from "@packages/db";
 import { lt } from "@packages/db/drizzle";
 import { libraryTraffic, libraryTrafficHistory } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { getUciParts } from "@packages/stdlib";
 import { load } from "cheerio";
 import { z } from "zod";
 
@@ -162,11 +163,7 @@ async function fetchLocation(id: string): Promise<RawRespOK["data"] | null> {
 type ScrapeStatus = "active" | "idle" | "skip";
 
 export function getScrapeStatus(library: "LL" | "SL" | "LGSC"): ScrapeStatus {
-  const pacificTime = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }),
-  );
-  const hour = pacificTime.getHours();
-  const day = pacificTime.getDay();
+  const { hour, weekday: day } = getUciParts();
 
   // Langson Library (LL) and Science Library (SL) - same operating hours
   if (library === "LL" || library === "SL") {

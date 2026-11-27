@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@packages/db": "workspace:*",
+    "@packages/stdlib": "workspace:*",
     "cheerio": "catalog:",
     "zod": "catalog:"
   },

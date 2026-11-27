@@ -8,3 +8,4 @@ export * from "./set-utils";
 export * from "./sleep";
 export * from "./terms";
 export * from "./time-utils";
+export * from "./timezone-utils";

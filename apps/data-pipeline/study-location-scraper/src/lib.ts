@@ -2,10 +2,10 @@ import type { database } from "@packages/db";
 import { lt, sql } from "@packages/db/drizzle";
 import { studyLocation, studyRoom, studyRoomSlot } from "@packages/db/schema";
 import { conflictUpdateSetAllCols } from "@packages/db/utils";
+import { toUciNaive } from "@packages/stdlib";
 import type { Cheerio, CheerioAPI } from "cheerio";
 import { load } from "cheerio";
 import type { AnyNode } from "domhandler";
-import { losAngelesNowNaive } from "./time";
 
 type LocationSite = "spaces.lib.uci.edu" | "scheduler.oit.uci.edu";
 
@@ -291,7 +291,7 @@ export async function doSpringshareScrape(db: ReturnType<typeof database>) {
     rooms.map((room) => ({ ...room, studyLocationId })),
   );
   const slotRows = roomRows.flatMap((room) => room.slots);
-  const now = losAngelesNowNaive();
+  const now = toUciNaive();
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET TIME ZONE 'America/Los_Angeles';`);
     await tx
