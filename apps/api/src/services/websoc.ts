@@ -456,7 +456,11 @@ export class WebsocService {
       sectionsUpperBound = matchingSectionRows.length;
     }
 
-    if (sectionsUpperBound === undefined) {
+    if (
+      sectionsUpperBound === undefined ||
+      // fetch ids when requery is forced and nothing has been fetched yet
+      (input.strategy === "requery" && matchingSectionRows.length === 0)
+    ) {
       // our convenient estimates did not apply; get an upper bound (which will be true by equality)
       matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
         .where(buildQuery(input))
@@ -466,7 +470,11 @@ export class WebsocService {
 
     if (sectionsUpperBound === 0) {
       return { schools: [] };
-    } else if (sectionsUpperBound < 1000) {
+    } else if (
+      input.strategy === "single" ||
+      (input.strategy !== "requery" && sectionsUpperBound < 1000)
+    ) {
+      // if force single query or query small enough
       // we know the query will be small enough
       return this.buildFromSingleQuery(input);
     } else {

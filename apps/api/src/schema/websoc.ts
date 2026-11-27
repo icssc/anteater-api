@@ -210,6 +210,10 @@ export const websocQuerySchema = z.object({
       description:
         "Returns all sections from courses that contain at least one section matching your filters, even if those additional sections don't meet your existing filter criteria.",
     }),
+  strategy: z.enum(["single", "requery"]).optional().openapi({
+    description:
+      "For benchmarking: force single joined query or re-querying instead of by section count (1000)",
+  }),
 });
 
 export const hourMinuteSchema = z.object({
