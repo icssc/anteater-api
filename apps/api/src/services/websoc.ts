@@ -49,35 +49,6 @@ import {
   buildMultiCourseNumberQuery,
 } from "./util.ts";
 
-export const gradeCourseSelection = {
-  department: gradesByCourseView.deptCode,
-  courseNumber: gradesByCourseView.courseNumber,
-  gradeACount: gradesByCourseView.gradeACount,
-  gradeBCount: gradesByCourseView.gradeBCount,
-  gradeCCount: gradesByCourseView.gradeCCount,
-  gradeDCount: gradesByCourseView.gradeDCount,
-  gradeFCount: gradesByCourseView.gradeFCount,
-  gradePCount: gradesByCourseView.gradePCount,
-  gradeNPCount: gradesByCourseView.gradeNPCount,
-  gradeWCount: gradesByCourseView.gradeWCount,
-  averageGPA: gradesByCourseView.averageGPA,
-};
-
-export const gradeOfferingSelection = {
-  department: gradesByCourseInstructorView.deptCode,
-  courseNumber: gradesByCourseInstructorView.courseNumber,
-  gradeACount: gradesByCourseInstructorView.gradeACount,
-  gradeBCount: gradesByCourseInstructorView.gradeBCount,
-  gradeCCount: gradesByCourseInstructorView.gradeCCount,
-  gradeDCount: gradesByCourseInstructorView.gradeDCount,
-  gradeFCount: gradesByCourseInstructorView.gradeFCount,
-  gradePCount: gradesByCourseInstructorView.gradePCount,
-  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
-  gradeWCount: gradesByCourseInstructorView.gradeWCount,
-  averageGPA: gradesByCourseInstructorView.averageGPA,
-  instructor: gradesByCourseInstructorView.instructorName,
-};
-
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
 function buildQuery(input: WebsocServiceInput) {
@@ -654,7 +625,17 @@ export class WebsocService {
 
     const courseRows = this.db
       .select({
-        ...gradeCourseSelection,
+        department: gradesByCourseView.deptCode,
+        courseNumber: gradesByCourseView.courseNumber,
+        gradeACount: gradesByCourseView.gradeACount,
+        gradeBCount: gradesByCourseView.gradeBCount,
+        gradeCCount: gradesByCourseView.gradeCCount,
+        gradeDCount: gradesByCourseView.gradeDCount,
+        gradeFCount: gradesByCourseView.gradeFCount,
+        gradePCount: gradesByCourseView.gradePCount,
+        gradeNPCount: gradesByCourseView.gradeNPCount,
+        gradeWCount: gradesByCourseView.gradeWCount,
+        averageGPA: gradesByCourseView.averageGPA,
         instructor: sql<string | null>`null::varchar`,
       })
       .from(requestedCourses)
@@ -666,7 +647,20 @@ export class WebsocService {
         ),
       );
     const offeringRows = this.db
-      .select(gradeOfferingSelection)
+      .select({
+        department: gradesByCourseInstructorView.deptCode,
+        courseNumber: gradesByCourseInstructorView.courseNumber,
+        gradeACount: gradesByCourseInstructorView.gradeACount,
+        gradeBCount: gradesByCourseInstructorView.gradeBCount,
+        gradeCCount: gradesByCourseInstructorView.gradeCCount,
+        gradeDCount: gradesByCourseInstructorView.gradeDCount,
+        gradeFCount: gradesByCourseInstructorView.gradeFCount,
+        gradePCount: gradesByCourseInstructorView.gradePCount,
+        gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
+        gradeWCount: gradesByCourseInstructorView.gradeWCount,
+        averageGPA: gradesByCourseInstructorView.averageGPA,
+        instructor: gradesByCourseInstructorView.instructorName,
+      })
       .from(requestedOfferings)
       .innerJoin(
         gradesByCourseInstructorView,
