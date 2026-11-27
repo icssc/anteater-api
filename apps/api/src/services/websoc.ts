@@ -468,6 +468,16 @@ export class WebsocService {
       sectionsUpperBound = matchingSectionRows.length;
     }
 
+    // log how the strategy decision was made
+    console.log(
+      "websoc strategy check:",
+      JSON.stringify({
+        sectionCodesItems: input.sectionCodes?.length,
+        sectionsUpperBound,
+        forced: input.strategy ?? "none",
+      }),
+    );
+
     if (sectionsUpperBound === 0) {
       return { schools: [] };
     } else if (
@@ -476,11 +486,13 @@ export class WebsocService {
     ) {
       // if force single query or query small enough
       // we know the query will be small enough
+      console.log("websoc strategy used: single");
       return this.buildFromSingleQuery(input);
     } else {
       // we sometimes OOM on big (e.g. entire term) requests...
       // do multiple queries to avoid thousands of copies of dept/school object coming from sql and being gc'd too slowly
       const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
+      console.log("websoc strategy used: requery");
       return this.buildFromRequeries(sectionIds);
     }
   }
