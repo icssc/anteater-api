@@ -456,7 +456,11 @@ export class WebsocService {
       sectionsUpperBound = matchingSectionRows.length;
     }
 
-    if (sectionsUpperBound === undefined) {
+    if (
+      sectionsUpperBound === undefined ||
+      // fetch ids when requery is forced and nothing has been fetched yet
+      (input.strategy === "requery" && matchingSectionRows.length === 0)
+    ) {
       // our convenient estimates did not apply; get an upper bound (which will be true by equality)
       matchingSectionRows = await this.makeSelect({ sectionId: websocSection.id }, true)
         .where(buildQuery(input))
@@ -464,15 +468,31 @@ export class WebsocService {
       sectionsUpperBound = matchingSectionRows.length;
     }
 
+    // log how the strategy decision was made
+    console.log(
+      "websoc strategy check:",
+      JSON.stringify({
+        sectionCodesItems: input.sectionCodes?.length,
+        sectionsUpperBound,
+        forced: input.strategy ?? "none",
+      }),
+    );
+
     if (sectionsUpperBound === 0) {
       return { schools: [] };
-    } else if (sectionsUpperBound < 1000) {
+    } else if (
+      input.strategy === "single" ||
+      (input.strategy !== "requery" && sectionsUpperBound < 1000)
+    ) {
+      // if force single query or query small enough
       // we know the query will be small enough
+      console.log("websoc strategy used: single");
       return this.buildFromSingleQuery(input);
     } else {
       // we sometimes OOM on big (e.g. entire term) requests...
       // do multiple queries to avoid thousands of copies of dept/school object coming from sql and being gc'd too slowly
       const sectionIds = matchingSectionRows.map(({ sectionId }) => sectionId);
+      console.log("websoc strategy used: requery");
       return this.buildFromRequeries(sectionIds);
     }
   }
