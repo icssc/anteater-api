@@ -1,8 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anteater-api",
-  "compatibility_date": "2026-07-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2026-12-01",
+  "compatibility_flags": [],
 
   "kv_namespaces": [
     {

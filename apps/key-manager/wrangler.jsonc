@@ -2,8 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "anteater-api-key-manager",
-  "compatibility_date": "2026-07-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2026-12-01",
+  "compatibility_flags": [],
 
   "kv_namespaces": [
     {
