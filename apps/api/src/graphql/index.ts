@@ -7,8 +7,9 @@ import type { GraphQLContext } from "$graphql/graphql-context";
 import { YogaKVCache } from "$graphql/plugins";
 import { resolvers } from "$graphql/resolvers";
 import { typeDefs } from "$graphql/schema";
+import type { HonoEnvironment } from "$middleware";
 
-const graphqlRouter = new Hono<{ Bindings: Env }>();
+const graphqlRouter = new Hono<HonoEnvironment>();
 
 graphqlRouter.use("*", async (c) => {
   const context = { db: database(c.env.DB.connectionString), honoContext: c };

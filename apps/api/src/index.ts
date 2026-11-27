@@ -7,6 +7,7 @@ import { graphqlRouter } from "$graphql";
 import { defaultHook } from "$hooks";
 import {
   globalRateLimiter,
+  type HonoEnvironment,
   headerInjector,
   ipBasedRateLimiter,
   keyVerifier,
@@ -17,7 +18,7 @@ import {
 import { restRouter } from "$rest";
 import type { ErrorSchema } from "$schema";
 
-const app = new OpenAPIHono<{ Bindings: Env }>({ defaultHook });
+const app = new OpenAPIHono<HonoEnvironment>({ defaultHook });
 
 // OpenAPI and API reference configuration
 
