@@ -16,10 +16,10 @@ import {
   or,
   sql,
 } from "@packages/db/drizzle";
-import type { Term } from "@packages/db/schema";
 import {
-  gradeCourseSummary,
-  gradeOfferingSummary,
+  gradesByCourseInstructorView,
+  gradesByCourseView,
+  type Term,
   websocCourse,
   websocDepartment,
   websocInstructor,
@@ -42,13 +42,41 @@ import type {
   websocResponseSchema,
   websocSectionSchema,
 } from "$schema";
-import { gradeCourseSelection, gradeOfferingSelection } from "./grades.ts";
 import {
   buildCourseLevelQuery,
   buildDaysOfWeekQuery,
   buildGEQuery,
   buildMultiCourseNumberQuery,
 } from "./util.ts";
+
+export const gradeCourseSelection = {
+  department: gradesByCourseView.deptCode,
+  courseNumber: gradesByCourseView.courseNumber,
+  gradeACount: gradesByCourseView.gradeACount,
+  gradeBCount: gradesByCourseView.gradeBCount,
+  gradeCCount: gradesByCourseView.gradeCCount,
+  gradeDCount: gradesByCourseView.gradeDCount,
+  gradeFCount: gradesByCourseView.gradeFCount,
+  gradePCount: gradesByCourseView.gradePCount,
+  gradeNPCount: gradesByCourseView.gradeNPCount,
+  gradeWCount: gradesByCourseView.gradeWCount,
+  averageGPA: gradesByCourseView.averageGPA,
+};
+
+export const gradeOfferingSelection = {
+  department: gradesByCourseInstructorView.deptCode,
+  courseNumber: gradesByCourseInstructorView.courseNumber,
+  gradeACount: gradesByCourseInstructorView.gradeACount,
+  gradeBCount: gradesByCourseInstructorView.gradeBCount,
+  gradeCCount: gradesByCourseInstructorView.gradeCCount,
+  gradeDCount: gradesByCourseInstructorView.gradeDCount,
+  gradeFCount: gradesByCourseInstructorView.gradeFCount,
+  gradePCount: gradesByCourseInstructorView.gradePCount,
+  gradeNPCount: gradesByCourseInstructorView.gradeNPCount,
+  gradeWCount: gradesByCourseInstructorView.gradeWCount,
+  averageGPA: gradesByCourseInstructorView.averageGPA,
+  instructor: gradesByCourseInstructorView.instructorName,
+};
 
 type WebsocServiceInput = z.infer<typeof websocQuerySchema>;
 
@@ -480,111 +508,6 @@ export class WebsocService {
     return response;
   }
 
-  private async addGradeDistributions(
-    response: z.infer<typeof websocResponseSchema>,
-    sectionLimit: number,
-  ) {
-    const courses = response.schools.flatMap((school) =>
-      school.departments.flatMap((department) => department.courses),
-    );
-    const coursesWithGrades = [];
-    let remainingSections = sectionLimit;
-    for (const course of courses) {
-      if (remainingSections <= 0) break;
-      coursesWithGrades.push(course);
-      remainingSections -= course.sections.length;
-    }
-    if (!coursesWithGrades.length) return;
-
-    const courseKey = (deptCode: string, courseNumber: string) =>
-      JSON.stringify([deptCode, courseNumber]);
-    const offeringKey = (deptCode: string, courseNumber: string, instructorName: string) =>
-      JSON.stringify([deptCode, courseNumber, instructorName]);
-    const courseKeys = new Map<string, { dept_code: string; course_number: string }>();
-    const pairs = new Map<
-      string,
-      { dept_code: string; course_number: string; instructor_name: string }
-    >();
-
-    for (const { deptCode, courseNumber, sections } of coursesWithGrades) {
-      courseKeys.set(courseKey(deptCode, courseNumber), {
-        dept_code: deptCode,
-        course_number: courseNumber,
-      });
-      for (const section of sections) {
-        for (const instructorName of section.instructors) {
-          pairs.set(offeringKey(deptCode, courseNumber, instructorName), {
-            dept_code: deptCode,
-            course_number: courseNumber,
-            instructor_name: instructorName,
-          });
-        }
-      }
-    }
-
-    const courseBatch = JSON.stringify([...courseKeys.values()]);
-    const requestedCourses = sql`
-      jsonb_to_recordset(${courseBatch}::jsonb)
-        as requested_courses(dept_code varchar, course_number varchar)
-    `;
-    const offeringBatch = JSON.stringify([...pairs.values()]);
-    const requestedOfferings = sql`
-      jsonb_to_recordset(${offeringBatch}::jsonb)
-        as pairs(dept_code varchar, course_number varchar, instructor_name varchar)
-    `;
-
-    const courseRows = this.db
-      .select({
-        ...gradeCourseSelection,
-        instructor: sql<string | null>`null::varchar`,
-      })
-      .from(requestedCourses)
-      .innerJoin(
-        gradeCourseSummary,
-        and(
-          eq(gradeCourseSummary.deptCode, sql`requested_courses.dept_code`),
-          eq(gradeCourseSummary.courseNumber, sql`requested_courses.course_number`),
-        ),
-      );
-    const offeringRows = this.db
-      .select(gradeOfferingSelection)
-      .from(requestedOfferings)
-      .innerJoin(
-        gradeOfferingSummary,
-        and(
-          eq(gradeOfferingSummary.deptCode, sql`pairs.dept_code`),
-          eq(gradeOfferingSummary.courseNumber, sql`pairs.course_number`),
-          eq(gradeOfferingSummary.instructorName, sql`pairs.instructor_name`),
-        ),
-      );
-
-    const courseGrades = new Map<string, z.infer<typeof aggregateGradeByCourseSchema>>();
-    const offeringGrades = new Map<string, z.infer<typeof aggregateGradeByOfferingSchema>>();
-    for (const { instructor, ...grade } of await courseRows.unionAll(offeringRows)) {
-      if (instructor === null) {
-        courseGrades.set(courseKey(grade.department, grade.courseNumber), grade);
-      } else {
-        offeringGrades.set(offeringKey(grade.department, grade.courseNumber, instructor), {
-          ...grade,
-          instructor,
-        });
-      }
-    }
-
-    for (const course of coursesWithGrades) {
-      const { deptCode, courseNumber } = course;
-      course.gradeDistribution = courseGrades.get(courseKey(deptCode, courseNumber)) ?? null;
-      for (const section of course.sections) {
-        section.gradesByInstructor = Object.fromEntries(
-          section.instructors.map((name) => [
-            name,
-            offeringGrades.get(offeringKey(deptCode, courseNumber, name)) ?? null,
-          ]),
-        );
-      }
-    }
-  }
-
   async getAllTerms() {
     return this.db
       .select({ year: websocSchool.year, quarter: websocSchool.quarter })
@@ -670,5 +593,114 @@ export class WebsocService {
       .where(and(...conditions))
       .groupBy(websocSection.year, websocSection.quarter, websocSection.webURL)
       .orderBy(desc(websocSection.year), desc(websocTermSortOrder(websocSection.quarter)));
+  }
+
+  private async addGradeDistributions(
+    response: z.infer<typeof websocResponseSchema>,
+    sectionLimit: number,
+  ) {
+    const courses = response.schools.flatMap((school) =>
+      school.departments.flatMap((department) => department.courses),
+    );
+    const coursesWithGrades = [];
+    let remainingSections = sectionLimit;
+    for (const course of courses) {
+      if (remainingSections <= 0) break;
+      coursesWithGrades.push(course);
+      remainingSections -= course.sections.length;
+    }
+    if (!coursesWithGrades.length) return;
+
+    const courseKey = (deptCode: string, courseNumber: string) =>
+      JSON.stringify([deptCode, courseNumber]);
+    const offeringKey = (deptCode: string, courseNumber: string, instructorName: string) =>
+      JSON.stringify([deptCode, courseNumber, instructorName]);
+    const courseKeys = new Map<string, { dept_code: string; course_number: string }>();
+    const pairs = new Map<
+      string,
+      { dept_code: string; course_number: string; instructor_name: string }
+    >();
+
+    for (const { deptCode, courseNumber, sections } of coursesWithGrades) {
+      courseKeys.set(courseKey(deptCode, courseNumber), {
+        dept_code: deptCode,
+        course_number: courseNumber,
+      });
+      for (const section of sections) {
+        for (const instructorName of section.instructors) {
+          pairs.set(offeringKey(deptCode, courseNumber, instructorName), {
+            dept_code: deptCode,
+            course_number: courseNumber,
+            instructor_name: instructorName,
+          });
+        }
+      }
+    }
+
+    const courseBatch = JSON.stringify([...courseKeys.values()]);
+    const requestedCourses = sql<{ dept_code: string; course_number: string }>`
+      jsonb_to_recordset(${courseBatch}::jsonb)
+        as requested_courses(dept_code varchar, course_number varchar)
+    `;
+    const offeringBatch = JSON.stringify([...pairs.values()]);
+    const requestedOfferings = sql<{
+      dept_code: string;
+      course_number: string;
+      instructor_name: string;
+    }>`
+      jsonb_to_recordset(${offeringBatch}::jsonb)
+        as pairs(dept_code varchar, course_number varchar, instructor_name varchar)
+    `;
+
+    const courseRows = this.db
+      .select({
+        ...gradeCourseSelection,
+        instructor: sql<string | null>`null::varchar`,
+      })
+      .from(requestedCourses)
+      .innerJoin(
+        gradesByCourseView,
+        and(
+          eq(gradesByCourseView.deptCode, sql`requested_courses.dept_code`),
+          eq(gradesByCourseView.courseNumber, sql`requested_courses.course_number`),
+        ),
+      );
+    const offeringRows = this.db
+      .select(gradeOfferingSelection)
+      .from(requestedOfferings)
+      .innerJoin(
+        gradesByCourseInstructorView,
+        and(
+          eq(gradesByCourseInstructorView.deptCode, sql`pairs.dept_code`),
+          eq(gradesByCourseInstructorView.courseNumber, sql`pairs.course_number`),
+          eq(gradesByCourseInstructorView.instructorName, sql`pairs.instructor_name`),
+        ),
+      );
+
+    const courseGrades = new Map<string, z.infer<typeof aggregateGradeByCourseSchema>>();
+    const offeringGrades = new Map<string, z.infer<typeof aggregateGradeByOfferingSchema>>();
+    for (const { instructor, ...grade } of await courseRows.unionAll(offeringRows)) {
+      if (instructor === null) {
+        courseGrades.set(courseKey(grade.department, grade.courseNumber), grade);
+      } else {
+        offeringGrades.set(offeringKey(grade.department, grade.courseNumber, instructor), {
+          ...grade,
+          instructor,
+        });
+      }
+    }
+
+    for (const course of coursesWithGrades) {
+      const { deptCode, courseNumber } = course;
+      course.gradeDistribution = courseGrades.get(courseKey(deptCode, courseNumber)) ?? null;
+      for (const section of course.sections) {
+        section.gradesByInstructor = Object.fromEntries(
+          section.instructors.map((name) => [
+            name,
+            offeringGrades.get(offeringKey(deptCode, courseNumber, name)) ?? null,
+          ]),
+        );
+      }
+    }
   }
 }
