@@ -1,4 +1,5 @@
 import type { OpenAPIObjectConfigure } from "@hono/zod-openapi";
+import type { HonoEnvironment } from "./index.ts";
 
 const productionServerUrl = "https://anteaterapi.com";
 const localServerUrl = "http://localhost:8787";
@@ -25,7 +26,7 @@ const getServers = (requestUrl: string) => {
   });
 };
 
-export const openapiMeta: OpenAPIObjectConfigure<{ Bindings: Env }, string> = (c) => ({
+export const openapiMeta: OpenAPIObjectConfigure<HonoEnvironment, string> = (c) => ({
   openapi: "3.0.0",
   info: {
     version: "2.0.0",
