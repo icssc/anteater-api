@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { exit } from "node:process";
 import { database } from "@packages/db";
-import { and, eq, or } from "@packages/db/drizzle";
+import { and, eq, or, sql } from "@packages/db/drizzle";
 import {
   gradesByCourseInstructorView,
   gradesByCourseView,
@@ -100,6 +100,11 @@ async function main() {
     values.push({ sectionId: row.sectionId, ...data });
   }
   await db.transaction(async (tx) => {
+    // lock so only one import can occur at a time
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended('anteater:grade_offering_summary', 0))`,
+    );
+
     const insertChunks = chunkUpsertData(websocSectionGrade, values);
     console.log(`split data into ${insertChunks.length} chunk(s) to insert`);
     for (const chunk of insertChunks) {
