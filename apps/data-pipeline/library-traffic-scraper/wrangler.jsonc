@@ -1,8 +1,8 @@
 {
   "name": "anteater-api_library-traffic-scraper",
   "main": "src/handler.ts",
-  "compatibility_date": "2026-07-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2026-12-01",
+  "compatibility_flags": [],
   "workers_dev": false,
   "minify": true,
 

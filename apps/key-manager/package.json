@@ -14,7 +14,7 @@
   "dependencies": {
     "@auth/drizzle-adapter": "1.11.2",
     "@hookform/resolvers": "5.4.0",
-    "@opennextjs/cloudflare": "1.20.15",
+    "@opennextjs/cloudflare": "1.20.19",
     "@paralleldrive/cuid2": "3.3.0",
     "@radix-ui/react-avatar": "^1.2.1",
     "@radix-ui/react-dialog": "1.1.18",
@@ -29,7 +29,7 @@
     "clsx": "2.1.1",
     "drizzle-orm": "catalog:",
     "lucide-react": "1.23.0",
-    "next": "16.4.2",
+    "next": "16.4.6",
     "next-auth": "5.0.0-beta.32",
     "react": "19.2.7",
     "react-dom": "19.2.7",
