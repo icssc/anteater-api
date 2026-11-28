@@ -1,4 +1,3 @@
-export * from "./ap-exams";
 export * from "./base";
 export * from "./calendar";
 export * from "./catalogue";
@@ -6,6 +5,7 @@ export * from "./course-materials";
 export * from "./courses";
 export * from "./dining";
 export * from "./enrollment-history";
+export * from "./exam-credits";
 export * from "./grades";
 export * from "./instructors";
 export * from "./larc";

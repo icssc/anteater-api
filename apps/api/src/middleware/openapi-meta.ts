@@ -78,7 +78,11 @@ export const openapiMeta: OpenAPIObjectConfigure<HonoEnvironment, string> = (c) 
       description:
         "Data sourced from the [UCI Libraries reservation site](https://spaces.lib.uci.edu/), [UCI OIT Space Scheduler site](https://scheduler.oit.uci.edu/reserve/), and [Plaza Verde amenity reservations site](https://outlook.office365.com/book/PlazaVerde3@americancampus.onmicrosoft.com/).",
     },
-    { name: "AP Exams", description: "Data concerning AP Exams as they relate to UCI." },
+    {
+      name: "Exam Credits",
+      description:
+        "AP and IB exam credit at UCI, including course equivalencies, GE credit, and elective units.",
+    },
     {
       name: "Catalogue",
       description: "Data sourced from the [UCI Catalogue](https://catalogue.uci.edu).",
